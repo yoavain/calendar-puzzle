@@ -13,11 +13,16 @@ h1 {
 }
 
 .board {
-    display: grid;
-    grid-template-columns: repeat(7, 50px);
+    display: flex;
+    flex-direction: column;
     gap: 2px;
     background-color: #eee;
     padding: 10px;
+}
+
+.board-row {
+    display: flex;
+    gap: 2px;
 }
 
 .board-cell {
