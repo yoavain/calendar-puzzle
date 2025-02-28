@@ -11,7 +11,7 @@ interface PieceControlsProps {
 const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH, onFlipV }) => {
     return (
         <div className="piece-controls">
-            <button onClick={onRotate}>Rotate</button>
+            <button onClick={onRotate}>⟳</button>
             <button onClick={onFlipH}>↔️</button>
             <button onClick={onFlipV}>↕️</button>
         </div>

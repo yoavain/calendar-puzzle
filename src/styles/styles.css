@@ -130,4 +130,27 @@ h1 {
     background-color: #f0f0f0;
     cursor: not-allowed;
     color: #ccc;
+}
+
+.piece-controls button {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.piece-controls button:hover {
+    background: #f0f0f0;
+    border-color: #999;
+}
+
+.piece-controls button:active {
+    background: #e0e0e0;
 } 
