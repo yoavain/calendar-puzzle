@@ -48,7 +48,7 @@ const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }
                                 onDragOver={handleDragOver}
                                 onDrop={(e) => handleDrop(e, { x, y })}
                             >
-                                {cell.content}
+                                {!piece && cell.content}
                             </div>
                         );
                     })}
