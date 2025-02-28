@@ -4,7 +4,13 @@ import Board from './Board';
 import Piece from './Piece';
 import PieceControls from './PieceControls';
 import { initializeGame } from '../utils/initialize';
-import { rotatePiece, flipPiece, isValidPlacement, clearPieceFromBoard } from '../utils/gameLogic';
+import { 
+    rotatePiece, 
+    flipPieceHorizontal, 
+    flipPieceVertical, 
+    isValidPlacement, 
+    clearPieceFromBoard 
+} from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
 
 const Game: React.FC = () => {
@@ -55,7 +61,7 @@ const Game: React.FC = () => {
         });
     };
 
-    const handleFlip = () => {
+    const handleFlipH = () => {
         if (gameState.selectedPieceId === null) return;
         
         const newState = (() => {
@@ -63,12 +69,9 @@ const Game: React.FC = () => {
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
             
-            const newShape = flipPiece(piece);
-            
             newPieces[pieceIndex] = {
                 ...piece,
-                isFlipped: !piece.isFlipped,
-                shape: newShape
+                isFlippedH: !piece.isFlippedH
             };
             
             return {
@@ -78,7 +81,32 @@ const Game: React.FC = () => {
         })();
 
         pushState(newState, {
-            type: 'FLIP_PIECE',
+            type: 'FLIP_PIECE_H',
+            pieceId: gameState.selectedPieceId
+        });
+    };
+
+    const handleFlipV = () => {
+        if (gameState.selectedPieceId === null) return;
+        
+        const newState = (() => {
+            const newPieces = [...gameState.pieces];
+            const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
+            const piece = newPieces[pieceIndex];
+            
+            newPieces[pieceIndex] = {
+                ...piece,
+                isFlippedV: !piece.isFlippedV
+            };
+            
+            return {
+                ...gameState,
+                pieces: newPieces
+            };
+        })();
+
+        pushState(newState, {
+            type: 'FLIP_PIECE_V',
             pieceId: gameState.selectedPieceId
         });
     };
@@ -216,7 +244,8 @@ const Game: React.FC = () => {
                             <PieceControls
                                 piece={piece}
                                 onRotate={handleRotate}
-                                onFlip={handleFlip}
+                                onFlipH={handleFlipH}
+                                onFlipV={handleFlipV}
                             />
                         )}
                     </div>

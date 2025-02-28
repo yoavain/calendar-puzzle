@@ -69,7 +69,8 @@ function createInitialPieces(): Piece[] {
                 [true, false, false]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -79,7 +80,8 @@ function createInitialPieces(): Piece[] {
                 [true, false, false, false]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -90,7 +92,8 @@ function createInitialPieces(): Piece[] {
                 [false, false, true]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -102,7 +105,8 @@ function createInitialPieces(): Piece[] {
                 [true, false]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -114,7 +118,8 @@ function createInitialPieces(): Piece[] {
                 [true, false]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -126,7 +131,8 @@ function createInitialPieces(): Piece[] {
                 [true, false, false]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -136,7 +142,8 @@ function createInitialPieces(): Piece[] {
                 [false, false, false, true]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         },
         {
@@ -148,7 +155,8 @@ function createInitialPieces(): Piece[] {
                 [true, false, false]
             ],
             position: null,
-            isFlipped: false,
+            isFlippedH: false,
+            isFlippedV: false,
             rotation: 0
         }
     ];

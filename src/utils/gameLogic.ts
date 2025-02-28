@@ -15,15 +15,30 @@ export function rotatePiece(piece: Piece): boolean[][] {
     return rotated;
 }
 
-export function flipPiece(piece: Piece): boolean[][] {
+export function flipPieceHorizontal(piece: Piece): boolean[][] {
     const height = piece.shape.length;
     const width = piece.shape[0].length;
     const flipped: boolean[][] = Array(height).fill(null).map(() => Array(width).fill(false));
 
-    // Flip horizontally
+    // Flip horizontally (left-right)
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             flipped[y][width - 1 - x] = piece.shape[y][x];
+        }
+    }
+
+    return flipped;
+}
+
+export function flipPieceVertical(piece: Piece): boolean[][] {
+    const height = piece.shape.length;
+    const width = piece.shape[0].length;
+    const flipped: boolean[][] = Array(height).fill(null).map(() => Array(width).fill(false));
+
+    // Flip vertically (up-down)
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            flipped[height - 1 - y][x] = piece.shape[y][x];
         }
     }
 
@@ -34,15 +49,18 @@ export function flipPiece(piece: Piece): boolean[][] {
 export function getTransformedShape(piece: Piece): boolean[][] {
     let shape = [...piece.shape.map(row => [...row])];
     
-    // Apply rotations one at a time
+    // Apply rotations
     const rotations = piece.rotation / 90;
     for (let i = 0; i < rotations; i++) {
         shape = rotatePiece({ ...piece, shape });
     }
     
-    // Apply flip if needed
-    if (piece.isFlipped) {
-        shape = flipPiece({ ...piece, shape });
+    // Apply flips
+    if (piece.isFlippedH) {
+        shape = flipPieceHorizontal({ ...piece, shape });
+    }
+    if (piece.isFlippedV) {
+        shape = flipPieceVertical({ ...piece, shape });
     }
     
     return shape;

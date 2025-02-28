@@ -7,7 +7,8 @@ export interface Piece {
     id: number;
     shape: boolean[][];  // true represents filled cells
     position: Position | null;  // null when not placed on board
-    isFlipped: boolean;
+    isFlippedH: boolean;  // Horizontal flip
+    isFlippedV: boolean;  // Vertical flip
     rotation: 0 | 90 | 180 | 270;  // degrees
 }
 
@@ -38,7 +39,7 @@ export interface GameHistory {
 }
 
 export interface GameStateAction {
-    type: 'PLACE_PIECE' | 'REMOVE_PIECE' | 'ROTATE_PIECE' | 'FLIP_PIECE' | 'SELECT_PIECE';
+    type: 'PLACE_PIECE' | 'REMOVE_PIECE' | 'ROTATE_PIECE' | 'FLIP_PIECE_H' | 'FLIP_PIECE_V' | 'SELECT_PIECE';
     pieceId: number;
     position?: Position;
 } 

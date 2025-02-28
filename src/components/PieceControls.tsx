@@ -4,14 +4,16 @@ import { Piece } from '../types/types';
 interface PieceControlsProps {
     piece: Piece;
     onRotate: () => void;
-    onFlip: () => void;
+    onFlipH: () => void;
+    onFlipV: () => void;
 }
 
-const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlip }) => {
+const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH, onFlipV }) => {
     return (
         <div className="piece-controls">
             <button onClick={onRotate}>Rotate</button>
-            <button onClick={onFlip}>Flip</button>
+            <button onClick={onFlipH}>↔️</button>
+            <button onClick={onFlipV}>↕️</button>
         </div>
     );
 };
