@@ -234,55 +234,69 @@ const Game: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
+    // Format current date as DD/MM
+    const formattedDate = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit'
+    });
+
+    // Update document title when date changes
+    React.useEffect(() => {
+        document.title = `Calendar Puzzle - ${formattedDate}`;
+    }, [formattedDate]);
+
     return (
-        <div className="game">
-            <div className="game-controls">
-                <button 
-                    onClick={undo} 
-                    disabled={!canUndo}
-                    className="control-button"
+        <div className="app">
+            <h1>Calendar Puzzle - {formattedDate}</h1>
+            <main className="game">
+                <div className="game-controls">
+                    <button 
+                        onClick={undo} 
+                        disabled={!canUndo}
+                        className="control-button"
+                    >
+                        Undo
+                    </button>
+                    <button 
+                        onClick={redo} 
+                        disabled={!canRedo}
+                        className="control-button"
+                    >
+                        Redo
+                    </button>
+                </div>
+                <Board 
+                    board={gameState.board} 
+                    pieces={gameState.pieces}
+                    onCellClick={handleCellClick}
+                    onPieceDrop={handlePieceDrop}
+                />
+                <div 
+                    className="pieces-container"
+                    onDragOver={handlePileDropZoneDragOver}
+                    onDrop={handlePileDropZoneDrop}
                 >
-                    Undo
-                </button>
-                <button 
-                    onClick={redo} 
-                    disabled={!canRedo}
-                    className="control-button"
-                >
-                    Redo
-                </button>
-            </div>
-            <Board 
-                board={gameState.board} 
-                pieces={gameState.pieces}
-                onCellClick={handleCellClick}
-                onPieceDrop={handlePieceDrop}
-            />
-            <div 
-                className="pieces-container"
-                onDragOver={handlePileDropZoneDragOver}
-                onDrop={handlePileDropZoneDrop}
-            >
-                {gameState.pieces
-                    .filter(piece => !piece.position) // Only show unplaced pieces
-                    .map(piece => (
-                        <div key={piece.id} className="piece-wrapper">
-                            <Piece
-                                piece={piece}
-                                isSelected={piece.id === gameState.selectedPieceId}
-                                onClick={() => handlePieceSelect(piece.id)}
-                            />
-                            {piece.id === gameState.selectedPieceId && (
-                                <PieceControls
+                    {gameState.pieces
+                        .filter(piece => !piece.position) // Only show unplaced pieces
+                        .map(piece => (
+                            <div key={piece.id} className="piece-wrapper">
+                                <Piece
                                     piece={piece}
-                                    onRotate={handleRotate}
-                                    onFlipH={handleFlipH}
-                                    onFlipV={handleFlipV}
+                                    isSelected={piece.id === gameState.selectedPieceId}
+                                    onClick={() => handlePieceSelect(piece.id)}
                                 />
-                            )}
-                        </div>
-                    ))}
-            </div>
+                                {piece.id === gameState.selectedPieceId && (
+                                    <PieceControls
+                                        piece={piece}
+                                        onRotate={handleRotate}
+                                        onFlipH={handleFlipH}
+                                        onFlipV={handleFlipV}
+                                    />
+                                )}
+                            </div>
+                        ))}
+                </div>
+            </main>
         </div>
     );
 };

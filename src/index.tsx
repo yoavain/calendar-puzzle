@@ -10,7 +10,6 @@ const root = ReactDOM.createRoot(
 root.render(
     <React.StrictMode>
         <div className="app">
-            <h1>Calendar Puzzle</h1>
             <Game />
         </div>
     </React.StrictMode>
