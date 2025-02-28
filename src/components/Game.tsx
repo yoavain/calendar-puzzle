@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { GameState, Position, Piece as PieceType, DragItem, GameStateAction } from '../types/types';
+import { GameState, Position, Piece as PieceType, DragItem, GameStateAction, BoardCell } from '../types/types';
 import Board from './Board';
 import Piece from './Piece';
 import PieceControls from './PieceControls';
@@ -9,7 +9,8 @@ import {
     flipPieceHorizontal, 
     flipPieceVertical, 
     isValidPlacement, 
-    clearPieceFromBoard 
+    clearPieceFromBoard,
+    getTransformedShape
 } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
 
@@ -112,86 +113,94 @@ const Game: React.FC = () => {
     };
 
     const handleCellClick = (position: Position) => {
-        // Implement piece placement logic
+        // For now, do nothing when clicking cells
+        // Remove this function if cell clicks aren't needed
     };
 
-    const handlePieceDrop = (position: Position, dragItem: DragItem) => {
-        const { pieceId, shape } = dragItem;
+    const updateBoardAndPieces = (
+        piece: PieceType,
+        newPosition: Position | null,
+        currentBoard: BoardCell[][]
+    ): { board: BoardCell[][], pieces: PieceType[] } => {
+        // Create new board
+        let newBoard = currentBoard.map(row => [...row]);
         
-        const newState = (() => {
-            // Check if placement is valid
-            const piece = gameState.pieces.find(p => p.id === pieceId);
-            if (!piece || !isValidPlacement(gameState.board, piece, position)) {
-                return gameState;
-            }
+        // Clear old position if exists
+        if (piece.position) {
+            newBoard = clearPieceFromBoard(newBoard, piece);
+        }
 
-            // Create new board with piece placed
-            const newBoard = gameState.board.map(row => [...row]);
-            for (let y = 0; y < shape.length; y++) {
-                for (let x = 0; x < shape[0].length; x++) {
-                    if (shape[y][x]) {
-                        const boardY = position.y + y;
-                        const boardX = position.x + x;
+        // Place in new position if provided
+        if (newPosition) {
+            const transformedShape = getTransformedShape(piece);
+            for (let y = 0; y < transformedShape.length; y++) {
+                for (let x = 0; x < transformedShape[0].length; x++) {
+                    if (transformedShape[y][x]) {
+                        const boardY = newPosition.y + y;
+                        const boardX = newPosition.x + x;
                         if (boardY < newBoard.length && boardX < newBoard[0].length) {
                             newBoard[boardY][boardX].isOccupied = true;
                         }
                     }
                 }
             }
-
-            // Update piece position
-            const newPieces = gameState.pieces.map(p => 
-                p.id === pieceId 
-                    ? { ...p, position }
-                    : p
-            );
-
-            return {
-                ...gameState,
-                board: newBoard,
-                pieces: newPieces,
-                selectedPieceId: null
-            };
-        })();
-
-        if (newState !== gameState) {
-            pushState(newState, {
-                type: 'PLACE_PIECE',
-                pieceId,
-                position
-            });
         }
+
+        // Update pieces array
+        const newPieces = gameState.pieces.map(p => 
+            p.id === piece.id 
+                ? { ...p, position: newPosition }
+                : p
+        );
+
+        return { board: newBoard, pieces: newPieces };
+    };
+
+    const handlePieceDrop = (position: Position, dragItem: DragItem) => {
+        const { pieceId } = dragItem;
+        
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (!piece || !isValidPlacement(gameState.board, piece, position)) {
+            return;
+        }
+
+        const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
+            piece,
+            position,
+            gameState.board
+        );
+
+        pushState({
+            ...gameState,
+            board: newBoard,
+            pieces: newPieces,
+            selectedPieceId: null
+        }, {
+            type: 'PLACE_PIECE',
+            pieceId,
+            position
+        });
     };
 
     const handlePiecePickup = (pieceId: number) => {
-        const newState = (() => {
-            const piece = gameState.pieces.find(p => p.id === pieceId);
-            if (!piece || !piece.position) return gameState;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (!piece || !piece.position) return;
 
-            // Create new board with piece removed
-            const newBoard = clearPieceFromBoard(gameState.board, piece);
+        const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
+            piece,
+            null,
+            gameState.board
+        );
 
-            // Update piece position to null
-            const newPieces = gameState.pieces.map(p => 
-                p.id === pieceId 
-                    ? { ...p, position: null }
-                    : p
-            );
-
-            return {
-                ...gameState,
-                board: newBoard,
-                pieces: newPieces,
-                selectedPieceId: pieceId
-            };
-        })();
-
-        if (newState !== gameState) {
-            pushState(newState, {
-                type: 'REMOVE_PIECE',
-                pieceId
-            });
-        }
+        pushState({
+            ...gameState,
+            board: newBoard,
+            pieces: newPieces,
+            selectedPieceId: pieceId
+        }, {
+            type: 'REMOVE_PIECE',
+            pieceId
+        });
     };
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
