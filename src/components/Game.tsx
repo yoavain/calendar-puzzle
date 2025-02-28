@@ -185,28 +185,38 @@ const Game: React.FC = () => {
         });
     };
 
-    const handlePiecePickup = (pieceId: number) => {
+    const handlePieceReturnToPile = (pieceId: number) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece || !piece.position) return;
+        if (!piece) return;
 
         const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
             piece,
-            null,
+            null,  // Setting position to null returns it to the pile
             gameState.board
         );
 
-        // Create a completely new state object
         const newState = {
             ...gameState,
             board: newBoard,
             pieces: newPieces,
-            selectedPieceId: pieceId
+            selectedPieceId: null
         };
 
         pushState(newState, {
             type: 'REMOVE_PIECE',
             pieceId
         });
+    };
+
+    const handlePileDropZoneDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+    };
+
+    const handlePileDropZoneDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('application/json');
+        const { pieceId } = JSON.parse(data) as DragItem;
+        handlePieceReturnToPile(pieceId);
     };
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -248,13 +258,17 @@ const Game: React.FC = () => {
                 onCellClick={handleCellClick}
                 onPieceDrop={handlePieceDrop}
             />
-            <div className="pieces-container">
+            <div 
+                className="pieces-container"
+                onDragOver={handlePileDropZoneDragOver}
+                onDrop={handlePileDropZoneDrop}
+            >
                 {gameState.pieces.map(piece => (
                     <div key={piece.id} className="piece-wrapper">
                         <Piece
                             piece={piece}
                             isSelected={piece.id === gameState.selectedPieceId}
-                            onClick={() => piece.position ? handlePiecePickup(piece.id) : handlePieceSelect(piece.id)}
+                            onClick={() => piece.position ? handlePieceReturnToPile(piece.id) : handlePieceSelect(piece.id)}
                         />
                         {piece.id === gameState.selectedPieceId && (
                             <PieceControls

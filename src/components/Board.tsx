@@ -1,5 +1,11 @@
 import React from 'react';
-import { BoardCell, Position, DragItem, GameState } from '../types/types';
+import { 
+    BoardCell, 
+    Position, 
+    DragItem, 
+    GameState, 
+    Piece as PieceType  // Add this import
+} from '../types/types';
 import { getTransformedShape } from '../utils/gameLogic';
 
 interface BoardProps {
@@ -12,10 +18,16 @@ interface BoardProps {
 const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }) => {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    };
+
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        e.currentTarget.classList.remove('drag-over');
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: Position) => {
         e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
         const data = e.dataTransfer.getData('application/json');
         const dragItem: DragItem = JSON.parse(data);
         onPieceDrop(position, dragItem);
@@ -34,19 +46,56 @@ const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }
         });
     };
 
+    // Check if this cell is the top-left corner of a piece
+    const isFirstCellOfPiece = (x: number, y: number, piece: PieceType): boolean => {
+        if (!piece.position) return false;
+        return piece.position.x === x && piece.position.y === y;
+    };
+
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            pieceId: piece.id,
+            shape: getTransformedShape(piece)
+        }));
+
+        // Create a drag image that represents the entire piece
+        const dragPreview = document.createElement('div');
+        dragPreview.className = 'piece-drag-preview';
+        const shape = getTransformedShape(piece);
+        
+        shape.forEach(row => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'preview-row';
+            row.forEach(cell => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = `preview-cell ${cell ? 'filled' : ''}`;
+                rowDiv.appendChild(cellDiv);
+            });
+            dragPreview.appendChild(rowDiv);
+        });
+
+        document.body.appendChild(dragPreview);
+        e.dataTransfer.setDragImage(dragPreview, 25, 25);
+        setTimeout(() => document.body.removeChild(dragPreview), 0);
+    };
+
     return (
         <div className="board">
             {board.map((row, y) => (
                 <div key={y} className="board-row">
                     {row.map((cell, x) => {
                         const piece = getPieceAtCell(x, y);
+                        const isDraggable = piece && isFirstCellOfPiece(x, y, piece);
                         return (
                             <div
                                 key={`${x}-${y}`}
                                 className={`board-cell ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''}`}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, { x, y })}
+                                draggable={isDraggable}
+                                onDragStart={(e) => isDraggable && handleDragStart(e, piece)}
                             >
                                 {!piece && cell.content}
                             </div>
