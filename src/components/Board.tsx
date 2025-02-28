@@ -46,19 +46,13 @@ const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }
         });
     };
 
-    // Check if this cell is the top-left corner of a piece
-    const isFirstCellOfPiece = (x: number, y: number, piece: PieceType): boolean => {
-        if (!piece.position) return false;
-        return piece.position.x === x && piece.position.y === y;
-    };
-
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
         e.dataTransfer.setData('application/json', JSON.stringify({
             pieceId: piece.id,
             shape: getTransformedShape(piece)
         }));
 
-        // Create a drag image that represents the entire piece
+        // Create a drag preview that represents the entire piece
         const dragPreview = document.createElement('div');
         dragPreview.className = 'piece-drag-preview';
         const shape = getTransformedShape(piece);
@@ -85,7 +79,6 @@ const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }
                 <div key={y} className="board-row">
                     {row.map((cell, x) => {
                         const piece = getPieceAtCell(x, y);
-                        const isDraggable = piece && isFirstCellOfPiece(x, y, piece);
                         return (
                             <div
                                 key={`${x}-${y}`}
@@ -94,8 +87,8 @@ const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, { x, y })}
-                                draggable={isDraggable}
-                                onDragStart={(e) => isDraggable && handleDragStart(e, piece)}
+                                draggable={!!piece}
+                                onDragStart={(e) => piece && handleDragStart(e, piece)}
                             >
                                 {!piece && cell.content}
                             </div>

@@ -13,17 +13,38 @@ const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     const width = shape[0].length;
     const height = shape.length;
 
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            pieceId: piece.id,
+            shape
+        }));
+
+        // Create a drag preview that represents the entire piece
+        const dragPreview = document.createElement('div');
+        dragPreview.className = 'piece-drag-preview';
+        
+        shape.forEach(row => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'preview-row';
+            row.forEach(cell => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = `preview-cell ${cell ? 'filled' : ''}`;
+                rowDiv.appendChild(cellDiv);
+            });
+            dragPreview.appendChild(rowDiv);
+        });
+
+        document.body.appendChild(dragPreview);
+        e.dataTransfer.setDragImage(dragPreview, 25, 25);
+        setTimeout(() => document.body.removeChild(dragPreview), 0);
+    };
+
     return (
         <div
             className={`piece ${isSelected ? 'selected' : ''} ${piece.position ? 'placed' : ''}`}
             onClick={onClick}
             draggable={!piece.position}
-            onDragStart={(e) => {
-                e.dataTransfer.setData('application/json', JSON.stringify({
-                    pieceId: piece.id,
-                    shape
-                }));
-            }}
+            onDragStart={handleDragStart}
         >
             <div 
                 className="piece-grid"
@@ -37,7 +58,6 @@ const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
                         <div
                             key={`${x}-${y}`}
                             className={`piece-cell ${cell ? 'filled' : 'empty'}`}
-                            style={{ visibility: cell ? 'visible' : 'hidden' }}
                         />
                     ))
                 )}

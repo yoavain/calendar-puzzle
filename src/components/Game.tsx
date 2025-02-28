@@ -263,23 +263,25 @@ const Game: React.FC = () => {
                 onDragOver={handlePileDropZoneDragOver}
                 onDrop={handlePileDropZoneDrop}
             >
-                {gameState.pieces.map(piece => (
-                    <div key={piece.id} className="piece-wrapper">
-                        <Piece
-                            piece={piece}
-                            isSelected={piece.id === gameState.selectedPieceId}
-                            onClick={() => piece.position ? handlePieceReturnToPile(piece.id) : handlePieceSelect(piece.id)}
-                        />
-                        {piece.id === gameState.selectedPieceId && (
-                            <PieceControls
+                {gameState.pieces
+                    .filter(piece => !piece.position) // Only show unplaced pieces
+                    .map(piece => (
+                        <div key={piece.id} className="piece-wrapper">
+                            <Piece
                                 piece={piece}
-                                onRotate={handleRotate}
-                                onFlipH={handleFlipH}
-                                onFlipV={handleFlipV}
+                                isSelected={piece.id === gameState.selectedPieceId}
+                                onClick={() => handlePieceSelect(piece.id)}
                             />
-                        )}
-                    </div>
-                ))}
+                            {piece.id === gameState.selectedPieceId && (
+                                <PieceControls
+                                    piece={piece}
+                                    onRotate={handleRotate}
+                                    onFlipH={handleFlipH}
+                                    onFlipV={handleFlipV}
+                                />
+                            )}
+                        </div>
+                    ))}
             </div>
         </div>
     );
