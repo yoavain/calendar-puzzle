@@ -64,9 +64,10 @@ function createInitialPieces(): Piece[] {
         {
             id: 1,
             shape: [
-                [true, true, true],
-                [true, false, false],
-                [true, false, false]
+                [true, false],
+                [true, false],
+                [true, true],
+                [true, false]
             ],
             position: null,
             isFlippedH: false,
@@ -76,8 +77,8 @@ function createInitialPieces(): Piece[] {
         {
             id: 2,
             shape: [
-                [true, true, true, true],
-                [true, false, false, false]
+                [true, true, true],
+                [true, false, true]
             ],
             position: null,
             isFlippedH: false,
@@ -87,8 +88,8 @@ function createInitialPieces(): Piece[] {
         {
             id: 3,
             shape: [
+                [true, false, false],
                 [true, true, true],
-                [false, false, true],
                 [false, false, true]
             ],
             position: null,
@@ -99,9 +100,9 @@ function createInitialPieces(): Piece[] {
         {
             id: 4,
             shape: [
+                [false, true],
+                [false, true],
                 [true, true],
-                [true, false],
-                [true, false],
                 [true, false]
             ],
             position: null,
@@ -112,10 +113,9 @@ function createInitialPieces(): Piece[] {
         {
             id: 5,
             shape: [
-                [true, false],
-                [true, false],
+                [false, true],
                 [true, true],
-                [true, false]
+                [true, true]
             ],
             position: null,
             isFlippedH: false,
@@ -125,10 +125,9 @@ function createInitialPieces(): Piece[] {
         {
             id: 6,
             shape: [
-                [true, true, true],
-                [true, false, false],
-                [true, false, false],
-                [true, false, false]
+                [false, false, true],
+                [false, false, true],
+                [true, true, true]
             ],
             position: null,
             isFlippedH: false,
@@ -138,8 +137,9 @@ function createInitialPieces(): Piece[] {
         {
             id: 7,
             shape: [
-                [true, true, true, true],
-                [false, false, false, true]
+                [true, true],
+                [true, true],
+                [true, true]
             ],
             position: null,
             isFlippedH: false,
@@ -149,10 +149,10 @@ function createInitialPieces(): Piece[] {
         {
             id: 8,
             shape: [
-                [true, true, true],
-                [true, false, false],
-                [true, false, false],
-                [true, false, false]
+                [true, false],
+                [true, false],
+                [true, false],
+                [true, true]
             ],
             position: null,
             isFlippedH: false,
