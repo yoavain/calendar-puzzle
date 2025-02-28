@@ -35,13 +35,12 @@ const Game: React.FC = () => {
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
             
+            // Update rotation by 90 degrees clockwise
             const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
-            const newShape = rotatePiece(piece);
             
             newPieces[pieceIndex] = {
                 ...piece,
-                rotation: newRotation,
-                shape: newShape
+                rotation: newRotation
             };
             
             return {

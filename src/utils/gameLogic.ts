@@ -34,8 +34,8 @@ export function flipPiece(piece: Piece): boolean[][] {
 export function getTransformedShape(piece: Piece): boolean[][] {
     let shape = [...piece.shape.map(row => [...row])];
     
-    // Apply rotations
-    const rotations = (piece.rotation / 90) % 4;
+    // Apply rotations one at a time
+    const rotations = piece.rotation / 90;
     for (let i = 0; i < rotations; i++) {
         shape = rotatePiece({ ...piece, shape });
     }
