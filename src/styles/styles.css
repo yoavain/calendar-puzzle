@@ -36,8 +36,10 @@ h1 {
     cursor: pointer;
 }
 
-.board-cell.occupied {
-    background-color: #ddd;
+/* When a cell is part of a piece */
+.board-cell.piece-cell {
+    background-color: #007bff;
+    color: white;  /* Make the text white for better visibility */
 }
 
 .piece {
@@ -80,11 +82,11 @@ h1 {
 
 .piece.placed {
     cursor: move;
-    opacity: 0.7;
+    opacity: 1;
 }
 
 .piece.placed:hover {
-    opacity: 0.9;
+    opacity: 1;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 

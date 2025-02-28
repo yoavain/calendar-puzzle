@@ -170,12 +170,15 @@ const Game: React.FC = () => {
             gameState.board
         );
 
-        pushState({
+        // Create a completely new state object
+        const newState = {
             ...gameState,
             board: newBoard,
             pieces: newPieces,
             selectedPieceId: null
-        }, {
+        };
+
+        pushState(newState, {
             type: 'PLACE_PIECE',
             pieceId,
             position
@@ -192,12 +195,15 @@ const Game: React.FC = () => {
             gameState.board
         );
 
-        pushState({
+        // Create a completely new state object
+        const newState = {
             ...gameState,
             board: newBoard,
             pieces: newPieces,
             selectedPieceId: pieceId
-        }, {
+        };
+
+        pushState(newState, {
             type: 'REMOVE_PIECE',
             pieceId
         });
@@ -238,6 +244,7 @@ const Game: React.FC = () => {
             </div>
             <Board 
                 board={gameState.board} 
+                pieces={gameState.pieces}
                 onCellClick={handleCellClick}
                 onPieceDrop={handlePieceDrop}
             />

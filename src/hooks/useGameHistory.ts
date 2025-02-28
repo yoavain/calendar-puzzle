@@ -1,27 +1,35 @@
 import { useState, useCallback } from 'react';
-import { GameState, GameHistory, GameStateAction } from '../types/types';
+import { GameState, GameStateAction } from '../types/types';
 
 const MAX_HISTORY = 50; // Maximum number of undo steps
 
+// Helper function to deep clone the game state
+function cloneGameState(state: GameState): GameState {
+    return {
+        ...state,
+        board: state.board.map(row => [...row.map(cell => ({ ...cell }))]),
+        pieces: state.pieces.map(piece => ({ ...piece })),
+        currentDate: new Date(state.currentDate)
+    };
+}
+
 export function useGameHistory(initialState: GameState) {
-    const [history, setHistory] = useState<GameHistory>({
+    const [history, setHistory] = useState<{
+        past: GameState[];
+        present: GameState;
+        future: GameState[];
+    }>({
         past: [],
         present: initialState,
         future: []
     });
 
-    const canUndo = history.past.length > 0;
-    const canRedo = history.future.length > 0;
-
     const pushState = useCallback((newState: GameState, action: GameStateAction) => {
-        setHistory(prev => {
-            const past = [...prev.past, prev.present].slice(-MAX_HISTORY);
-            return {
-                past,
-                present: newState,
-                future: []
-            };
-        });
+        setHistory(prev => ({
+            past: [...prev.past, cloneGameState(prev.present)],
+            present: cloneGameState(newState),
+            future: []
+        }));
     }, []);
 
     const undo = useCallback(() => {
@@ -33,8 +41,8 @@ export function useGameHistory(initialState: GameState) {
 
             return {
                 past: newPast,
-                present: previous,
-                future: [prev.present, ...prev.future]
+                present: cloneGameState(previous),
+                future: [cloneGameState(prev.present), ...prev.future]
             };
         });
     }, []);
@@ -47,8 +55,8 @@ export function useGameHistory(initialState: GameState) {
             const newFuture = prev.future.slice(1);
 
             return {
-                past: [...prev.past, prev.present],
-                present: next,
+                past: [...prev.past, cloneGameState(prev.present)],
+                present: cloneGameState(next),
                 future: newFuture
             };
         });
@@ -59,7 +67,7 @@ export function useGameHistory(initialState: GameState) {
         pushState,
         undo,
         redo,
-        canUndo,
-        canRedo
+        canUndo: history.past.length > 0,
+        canRedo: history.future.length > 0
     };
 } 
