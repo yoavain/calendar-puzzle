@@ -71,24 +71,32 @@ export function isValidPlacement(
     piece: Piece,
     position: Position
 ): boolean {
-    const shape = getTransformedShape(piece);
-    const height = shape.length;
-    const width = shape[0].length;
-
-    // Check if piece fits within board boundaries
-    if (position.y + height > board.length || 
-        position.x + width > board[0].length) {
-        return false;
+    // First create a copy of the board
+    let tempBoard = board.map(row => [...row]);
+    
+    // If the piece is already on the board, clear it first
+    if (piece.position) {
+        tempBoard = clearPieceFromBoard(tempBoard, piece);
     }
 
-    // Check if all cells are unoccupied and playable
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            if (shape[y][x]) {
+    const shape = getTransformedShape(piece);
+    
+    // Check each filled cell of the piece
+    for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < shape[0].length; x++) {
+            if (shape[y][x]) {  // Only check filled cells
                 const boardY = position.y + y;
                 const boardX = position.x + x;
-                if (!board[boardY][boardX].isPlayable || 
-                    board[boardY][boardX].isOccupied) {
+                
+                // Check if this cell is within board boundaries
+                if (boardY < 0 || boardY >= tempBoard.length ||
+                    boardX < 0 || boardX >= tempBoard[0].length) {
+                    return false;
+                }
+                
+                // Check if the cell is playable and unoccupied
+                if (!tempBoard[boardY][boardX].isPlayable || 
+                    tempBoard[boardY][boardX].isOccupied) {
                     return false;
                 }
             }

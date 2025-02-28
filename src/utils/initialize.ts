@@ -8,26 +8,26 @@ function createBoard(): BoardCell[][] {
     
     // First row: Jan through Jun
     const firstRow: BoardCell[] = [];
-    for (let x = 0; x < 6; x++) {  // Only 6 months
+    for (let x = 0; x < 7; x++) {  // Create all 7 columns
         firstRow.push({
             x,
             y: 0,
-            content: MONTHS[x],
+            content: x < 6 ? MONTHS[x] : '',
             isOccupied: false,
-            isPlayable: true
+            isPlayable: x < 6  // Only first 6 cells are playable
         });
     }
     board.push(firstRow);
 
     // Second row: Jul through Dec
     const secondRow: BoardCell[] = [];
-    for (let x = 0; x < 6; x++) {  // Only 6 months
+    for (let x = 0; x < 7; x++) {  // Create all 7 columns
         secondRow.push({
             x,
             y: 1,
-            content: MONTHS[x + 6],
+            content: x < 6 ? MONTHS[x + 6] : '',
             isOccupied: false,
-            isPlayable: true
+            isPlayable: x < 6  // Only first 6 cells are playable
         });
     }
     board.push(secondRow);
