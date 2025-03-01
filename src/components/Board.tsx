@@ -1,11 +1,5 @@
 import React from 'react';
-import { 
-    BoardCell, 
-    Position, 
-    DragItem, 
-    GameState, 
-    Piece as PieceType  // Add this import
-} from '../types/types';
+import { BoardCell, DragItem, GameState, Piece as PieceType, Position } from '../types/types';
 import { getTransformedShape } from '../utils/gameLogic';
 
 interface BoardProps {
@@ -15,7 +9,7 @@ interface BoardProps {
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
 }
 
-const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }) => {
+export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }) => {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.currentTarget.classList.add('drag-over');
@@ -99,5 +93,3 @@ const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }
         </div>
     );
 };
-
-export default Board; 

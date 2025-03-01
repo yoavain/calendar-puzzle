@@ -1,21 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { GameState, Position, Piece as PieceType, DragItem, GameStateAction, BoardCell } from '../types/types';
-import Board from './Board';
-import Piece from './Piece';
-import PieceControls from './PieceControls';
+import React, { useCallback } from 'react';
+import { BoardCell, DragItem, Piece as PieceType, Position } from '../types/types';
+import { Board } from './Board';
+import { Piece } from './Piece';
+import { PieceControls } from './PieceControls';
 import { initializeGame } from '../utils/initialize';
-import { 
-    rotatePiece, 
-    flipPieceHorizontal, 
-    flipPieceVertical, 
-    isValidPlacement, 
-    clearPieceFromBoard,
-    getTransformedShape,
-    isPuzzleSolved
-} from '../utils/gameLogic';
+import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
 
-const Game: React.FC = () => {
+export const Game: React.FC = () => {
     const {
         gameState,
         pushState,
@@ -135,11 +127,11 @@ const Game: React.FC = () => {
         if (newPosition) {
             const transformedShape = getTransformedShape(piece);
             for (let y = 0; y < transformedShape.length; y++) {
-                for (let x = 0; x < transformedShape[0].length; x++) {
+                for (let x = 0; x < transformedShape[y].length; x++) {
                     if (transformedShape[y][x]) {
                         const boardY = newPosition.y + y;
                         const boardX = newPosition.x + x;
-                        if (boardY < newBoard.length && boardX < newBoard[0].length) {
+                        if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
                             newBoard[boardY][boardX].isOccupied = true;
                         }
                     }
@@ -313,5 +305,3 @@ const Game: React.FC = () => {
         </div>
     );
 };
-
-export default Game; 

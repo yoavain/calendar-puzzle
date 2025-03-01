@@ -8,7 +8,7 @@ interface PieceProps {
     onClick: () => void;
 }
 
-const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
+export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     const shape = getTransformedShape(piece);
     const width = shape[0].length;
     const height = shape.length;
@@ -65,5 +65,3 @@ const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         </div>
     );
 };
-
-export default Piece; 

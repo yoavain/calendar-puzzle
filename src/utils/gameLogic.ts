@@ -1,5 +1,5 @@
 import { Piece, BoardCell, Position } from '../types/types';
-import { MONTHS } from '../utils/initialize'; // Import the MONTHS array
+import { MONTHS } from './initialize';
 
 export function rotatePiece(piece: Piece): boolean[][] {
     const height = piece.shape.length;
@@ -111,47 +111,6 @@ export function isValidPlacement(
     }
 
     return true;
-}
-
-export function isSolutionValid(
-    board: BoardCell[][],
-    currentDate: Date
-): boolean {
-    const month = currentDate.getMonth(); // 0-11
-    const day = currentDate.getDate() - 1; // 0-30
-
-    // Count uncovered cells and check if they match current date
-    let uncoveredCells = 0;
-    let monthUncovered = false;
-    let dayUncovered = false;
-
-    // Check months (first two rows)
-    for (let y = 0; y < 2; y++) {
-        for (let x = 0; x < 7; x++) {
-            if (!board[y][x].isOccupied) {
-                uncoveredCells++;
-                const monthIndex = y * 7 + x;
-                if (monthIndex === month) {
-                    monthUncovered = true;
-                }
-            }
-        }
-    }
-
-    // Check days (remaining rows)
-    for (let y = 2; y < board.length; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            if (!board[y][x].isOccupied) {
-                uncoveredCells++;
-                const dayIndex = (y - 2) * 7 + x;
-                if (dayIndex === day) {
-                    dayUncovered = true;
-                }
-            }
-        }
-    }
-
-    return uncoveredCells === 2 && monthUncovered && dayUncovered;
 }
 
 export function clearPieceFromBoard(board: BoardCell[][], piece: Piece): BoardCell[][] {

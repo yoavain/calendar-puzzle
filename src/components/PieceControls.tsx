@@ -8,7 +8,7 @@ interface PieceControlsProps {
     onFlipV: () => void;
 }
 
-const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH, onFlipV }) => {
+export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH, onFlipV }) => {
     return (
         <div className="piece-controls">
             <button onClick={onRotate}>⟳</button>
@@ -17,5 +17,3 @@ const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH,
         </div>
     );
 };
-
-export default PieceControls; 
