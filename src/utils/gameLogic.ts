@@ -71,32 +71,38 @@ export function isValidPlacement(
     piece: Piece,
     position: Position
 ): boolean {
-    // First create a copy of the board
     let tempBoard = board.map(row => [...row]);
     
-    // If the piece is already on the board, clear it first
     if (piece.position) {
         tempBoard = clearPieceFromBoard(tempBoard, piece);
     }
 
     const shape = getTransformedShape(piece);
     
-    // Check each filled cell of the piece
+    // Debugging: Log the shape being checked
+    console.log('Shape being checked:', shape);
+
     for (let y = 0; y < shape.length; y++) {
         for (let x = 0; x < shape[0].length; x++) {
-            if (shape[y][x]) {  // Only check filled cells
-                const boardY = position.y + y;
-                const boardX = position.x + x;
-                
-                // Check if this cell is within board boundaries
+            if (shape[y][x]) {
+                const boardY = position.y + y; // Calculate the board Y position
+                const boardX = position.x + x; // Calculate the board X position
+
+                // Check if the position is within bounds before accessing the board
                 if (boardY < 0 || boardY >= tempBoard.length ||
-                    boardX < 0 || boardX >= tempBoard[0].length) {
+                    boardX < 0 || boardX >= tempBoard[boardY].length) {
+                    console.log(`Position out of bounds: (${boardX}, ${boardY})`);
                     return false;
                 }
-                
+
+                // Debugging output
+                console.log(`Checking position: (${boardX}, ${boardY})`);
+                console.log(`Cell state:`, tempBoard[boardY]?.[boardX]);
+
                 // Check if the cell is playable and unoccupied
                 if (!tempBoard[boardY][boardX].isPlayable || 
                     tempBoard[boardY][boardX].isOccupied) {
+                    console.log(`Cell not playable or occupied: (${boardX}, ${boardY})`);
                     return false;
                 }
             }
