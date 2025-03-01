@@ -6,30 +6,26 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 function createBoard(): BoardCell[][] {
     const board: BoardCell[][] = [];
     
-    // First row: Jan through Jun
+    // Combined first and second row creation
     const firstRow: BoardCell[] = [];
-    for (let x = 0; x < 7; x++) {  // Create all 7 columns
+    const secondRow: BoardCell[] = [];
+    for (let x = 0; x < 6; x++) {  // Create all 6 columns
         firstRow.push({
             x,
             y: 0,
-            content: x < 6 ? MONTHS[x] : '',
+            content: MONTHS[x],
             isOccupied: false,
-            isPlayable: x < 6  // Only first 6 cells are playable
+            isPlayable: true
         });
-    }
-    board.push(firstRow);
-
-    // Second row: Jul through Dec
-    const secondRow: BoardCell[] = [];
-    for (let x = 0; x < 7; x++) {  // Create all 7 columns
         secondRow.push({
             x,
             y: 1,
-            content: x < 6 ? MONTHS[x + 6] : '',
+            content: MONTHS[x + 6],
             isOccupied: false,
-            isPlayable: x < 6  // Only first 6 cells are playable
+            isPlayable: true
         });
     }
+    board.push(firstRow);
     board.push(secondRow);
 
     // Days: 5 rows with specific numbers
