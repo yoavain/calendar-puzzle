@@ -10,7 +10,8 @@ import {
     flipPieceVertical, 
     isValidPlacement, 
     clearPieceFromBoard,
-    getTransformedShape
+    getTransformedShape,
+    isPuzzleSolved
 } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
 
@@ -183,6 +184,12 @@ const Game: React.FC = () => {
             pieceId,
             position
         });
+
+        // Check if the puzzle is solved
+        if (isPuzzleSolved(newBoard, newState.currentDate)) {
+            console.log("Puzzle Solved!");
+            // You can add additional logic here, like showing a message or triggering an event
+        }
     };
 
     const handlePieceReturnToPile = (pieceId: number) => {
@@ -206,6 +213,12 @@ const Game: React.FC = () => {
             type: 'REMOVE_PIECE',
             pieceId
         });
+
+        // Check if the puzzle is solved
+        if (isPuzzleSolved(newBoard, newState.currentDate)) {
+            console.log("Puzzle Solved!");
+            // You can add additional logic here, like showing a message or triggering an event
+        }
     };
 
     const handlePileDropZoneDragOver = (e: React.DragEvent<HTMLDivElement>) => {

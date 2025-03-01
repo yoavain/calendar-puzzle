@@ -1,4 +1,5 @@
 import { Piece, BoardCell, Position } from '../types/types';
+import { MONTHS } from '../utils/initialize'; // Import the MONTHS array
 
 export function rotatePiece(piece: Piece): boolean[][] {
     const height = piece.shape.length;
@@ -172,4 +173,40 @@ export function clearPieceFromBoard(board: BoardCell[][], piece: Piece): BoardCe
     }
 
     return newBoard;
+}
+
+export function isPuzzleSolved(board: BoardCell[][], currentDate: Date): boolean {
+    const month = currentDate.getMonth(); // 0-11
+    const day = currentDate.getDate(); // 1-31 (1-based)
+
+    let occupiedCount = 0;
+    let uncoveredCells = 0;
+    let monthUncovered = false;
+    let dayUncovered = false;
+
+    // Check all cells in the board
+    for (let y = 0; y < board.length; y++) {
+        for (let x = 0; x < board[y].length; x++) {
+            const cell = board[y][x];
+            if (cell.isOccupied) {
+                occupiedCount++;
+            } else {
+                uncoveredCells++;
+                // Check if the uncovered cell corresponds to the current month
+                if (y < 2 && cell.content === MONTHS[month]) {
+                    monthUncovered = true; // Check if the content matches the current month
+                }
+                // Check if the uncovered cell corresponds to the current day
+                if (y >= 2 && parseInt(cell.content) === day) {
+                    dayUncovered = true; // Check if the content matches the current day
+                }
+            }
+        }
+    }
+
+    // Total cells on the board
+    const totalCells = board.reduce((sum, row) => sum + row.length, 0);
+
+    // There should be exactly two uncovered cells (month and day)
+    return occupiedCount === (totalCells - 2) && monthUncovered && dayUncovered;
 } 

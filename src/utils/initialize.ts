@@ -1,6 +1,6 @@
 import { GameState, BoardCell, Piece } from '../types/types';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
 
 function createBoard(): BoardCell[][] {
