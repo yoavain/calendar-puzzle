@@ -25,6 +25,7 @@ export interface GameState {
     pieces: Piece[];
     selectedPieceId: number | null;
     currentDate: Date;
+    isSolved: boolean;
 }
 
 export interface DragItem {

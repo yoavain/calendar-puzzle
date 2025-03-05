@@ -5,7 +5,7 @@ export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
 
 function createBoard(): BoardCell[][] {
     const board: BoardCell[][] = [];
-    
+
     // Combined first and second row creation
     const firstRow: BoardCell[] = [];
     const secondRow: BoardCell[] = [];
@@ -163,6 +163,7 @@ export function initializeGame(): GameState {
         board: createBoard(),
         pieces: createInitialPieces(),
         selectedPieceId: null,
-        currentDate: new Date()
+        currentDate: new Date(),
+        isSolved: false
     };
 } 

@@ -4,6 +4,7 @@ import { Board } from './Board';
 import { Piece } from './Piece';
 import { PieceControls } from './PieceControls';
 import ThemeToggle from './ThemeToggle';
+import { SuccessMessage } from './SuccessMessage';
 import { initializeGame } from '../utils/initialize';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
@@ -19,6 +20,8 @@ export const Game: React.FC = () => {
     } = useGameHistory(initializeGame());
 
     const handlePieceSelect = (pieceId: number) => {
+        if (gameState.isSolved) return;
+
         pushState(
             {
                 ...gameState,
@@ -29,7 +32,7 @@ export const Game: React.FC = () => {
     };
 
     const handleRotate = () => {
-        if (gameState.selectedPieceId === null) return;
+        if (gameState.selectedPieceId === null || gameState.isSolved) return;
 
         const newState = (() => {
             const newPieces = [...gameState.pieces];
@@ -57,7 +60,7 @@ export const Game: React.FC = () => {
     };
 
     const handleFlipH = () => {
-        if (gameState.selectedPieceId === null) return;
+        if (gameState.selectedPieceId === null || gameState.isSolved) return;
 
         const newState = (() => {
             const newPieces = [...gameState.pieces];
@@ -82,7 +85,7 @@ export const Game: React.FC = () => {
     };
 
     const handleFlipV = () => {
-        if (gameState.selectedPieceId === null) return;
+        if (gameState.selectedPieceId === null || gameState.isSolved) return;
 
         const newState = (() => {
             const newPieces = [...gameState.pieces];
@@ -151,6 +154,8 @@ export const Game: React.FC = () => {
     };
 
     const handlePieceDrop = (position: Position, dragItem: DragItem) => {
+        if (gameState.isSolved) return;
+
         const { pieceId } = dragItem;
 
         const piece = gameState.pieces.find(p => p.id === pieceId);
@@ -181,11 +186,13 @@ export const Game: React.FC = () => {
         // Check if the puzzle is solved
         if (isPuzzleSolved(newBoard, newState.currentDate)) {
             console.log("Puzzle Solved!");
-            // You can add additional logic here, like showing a message or triggering an event
+            newState.isSolved = true;
         }
     };
 
     const handlePieceReturnToPile = (pieceId: number) => {
+        if (gameState.isSolved) return;
+
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (!piece) return;
 
@@ -210,7 +217,7 @@ export const Game: React.FC = () => {
         // Check if the puzzle is solved
         if (isPuzzleSolved(newBoard, newState.currentDate)) {
             console.log("Puzzle Solved!");
-            // You can add additional logic here, like showing a message or triggering an event
+            newState.isSolved = true;
         }
     };
 
@@ -255,6 +262,7 @@ export const Game: React.FC = () => {
         <div className="app">
             <ThemeToggle />
             <h1>Calendar Puzzle - {formattedDate}</h1>
+            <SuccessMessage isVisible={gameState.isSolved} />
             <main className="game">
                 <div className="game-controls">
                     <button 
@@ -277,6 +285,7 @@ export const Game: React.FC = () => {
                     pieces={gameState.pieces}
                     onCellClick={handleCellClick}
                     onPieceDrop={handlePieceDrop}
+                    data-testid="board"
                 />
                 <div 
                     className="pieces-container"
@@ -291,6 +300,7 @@ export const Game: React.FC = () => {
                                     piece={piece}
                                     isSelected={piece.id === gameState.selectedPieceId}
                                     onClick={() => handlePieceSelect(piece.id)}
+                                    data-testid={`piece-${piece.id}`}
                                 />
                                 {piece.id === gameState.selectedPieceId && (
                                     <PieceControls
