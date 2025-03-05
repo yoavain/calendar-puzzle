@@ -3,6 +3,7 @@ import { BoardCell, DragItem, Piece as PieceType, Position } from '../types/type
 import { Board } from './Board';
 import { Piece } from './Piece';
 import { PieceControls } from './PieceControls';
+import ThemeToggle from './ThemeToggle';
 import { initializeGame } from '../utils/initialize';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
@@ -29,20 +30,20 @@ export const Game: React.FC = () => {
 
     const handleRotate = () => {
         if (gameState.selectedPieceId === null) return;
-        
+
         const newState = (() => {
             const newPieces = [...gameState.pieces];
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
-            
+
             // Update rotation by 90 degrees clockwise
             const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
-            
+
             newPieces[pieceIndex] = {
                 ...piece,
                 rotation: newRotation
             };
-            
+
             return {
                 ...gameState,
                 pieces: newPieces
@@ -57,17 +58,17 @@ export const Game: React.FC = () => {
 
     const handleFlipH = () => {
         if (gameState.selectedPieceId === null) return;
-        
+
         const newState = (() => {
             const newPieces = [...gameState.pieces];
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
-            
+
             newPieces[pieceIndex] = {
                 ...piece,
                 isFlippedH: !piece.isFlippedH
             };
-            
+
             return {
                 ...gameState,
                 pieces: newPieces
@@ -82,17 +83,17 @@ export const Game: React.FC = () => {
 
     const handleFlipV = () => {
         if (gameState.selectedPieceId === null) return;
-        
+
         const newState = (() => {
             const newPieces = [...gameState.pieces];
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
-            
+
             newPieces[pieceIndex] = {
                 ...piece,
                 isFlippedV: !piece.isFlippedV
             };
-            
+
             return {
                 ...gameState,
                 pieces: newPieces
@@ -117,7 +118,7 @@ export const Game: React.FC = () => {
     ): { board: BoardCell[][], pieces: PieceType[] } => {
         // Create new board
         let newBoard = currentBoard.map(row => [...row]);
-        
+
         // Clear old position if exists
         if (piece.position) {
             newBoard = clearPieceFromBoard(newBoard, piece);
@@ -151,7 +152,7 @@ export const Game: React.FC = () => {
 
     const handlePieceDrop = (position: Position, dragItem: DragItem) => {
         const { pieceId } = dragItem;
-        
+
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (!piece || !isValidPlacement(gameState.board, piece, position)) {
             return;
@@ -252,6 +253,7 @@ export const Game: React.FC = () => {
 
     return (
         <div className="app">
+            <ThemeToggle />
             <h1>Calendar Puzzle - {formattedDate}</h1>
             <main className="game">
                 <div className="game-controls">
