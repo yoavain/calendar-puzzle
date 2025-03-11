@@ -83,6 +83,8 @@ h1 {
     padding: 10px;
     background-color: transparent;
     border-radius: 4px;
+    width: 210px;
+    height: 210px;
 }
 
 .board-cell.drag-over {
