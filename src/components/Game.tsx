@@ -119,16 +119,24 @@ export const Game: React.FC = () => {
         newPosition: Position | null,
         currentBoard: BoardCell[][]
     ): { board: BoardCell[][], pieces: PieceType[] } => {
+        console.log('Updating board and pieces:', {
+            pieceId: piece.id,
+            currentPosition: piece.position,
+            newPosition: newPosition
+        });
+
         // Create new board
         let newBoard = currentBoard.map(row => [...row]);
 
         // Clear old position if exists
         if (piece.position) {
+            console.log('Clearing piece from old position');
             newBoard = clearPieceFromBoard(newBoard, piece);
         }
 
         // Place in new position if provided
         if (newPosition) {
+            console.log('Placing piece in new position');
             const transformedShape = getTransformedShape(piece);
             for (let y = 0; y < transformedShape.length; y++) {
                 for (let x = 0; x < transformedShape[y].length; x++) {
@@ -136,6 +144,7 @@ export const Game: React.FC = () => {
                         const boardY = newPosition.y + y;
                         const boardX = newPosition.x + x;
                         if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
+                            console.log(`Setting cell occupied at (${boardX}, ${boardY})`);
                             newBoard[boardY][boardX].isOccupied = true;
                         }
                     }
@@ -150,6 +159,7 @@ export const Game: React.FC = () => {
                 : p
         );
 
+        console.log('Board update complete');
         return { board: newBoard, pieces: newPieces };
     };
 
