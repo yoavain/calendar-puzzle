@@ -48,22 +48,29 @@ export function flipPieceVertical(piece: Piece): boolean[][] {
 
 // Helper function to get the transformed shape based on rotation and flip
 export function getTransformedShape(piece: Piece): boolean[][] {
+    console.log('Getting transformed shape for piece:', piece.id, 'rotation:', piece.rotation, 'flips:', piece.isFlippedH, piece.isFlippedV);
+    
     let shape = [...piece.shape.map(row => [...row])];
+    console.log('Original shape:', shape);
     
     // Apply rotations
     const rotations = piece.rotation / 90;
     for (let i = 0; i < rotations; i++) {
         shape = rotatePiece({ ...piece, shape });
     }
+    console.log('After rotation:', shape);
     
     // Apply flips
     if (piece.isFlippedH) {
         shape = flipPieceHorizontal({ ...piece, shape });
+        console.log('After horizontal flip:', shape);
     }
     if (piece.isFlippedV) {
         shape = flipPieceVertical({ ...piece, shape });
+        console.log('After vertical flip:', shape);
     }
     
+    console.log('Final transformed shape:', shape);
     return shape;
 }
 
@@ -72,67 +79,108 @@ export function isValidPlacement(
     piece: Piece,
     position: Position
 ): boolean {
+    console.error('VALIDATING_PLACEMENT', {
+        pieceId: piece.id,
+        position,
+        rotation: piece.rotation,
+        isFlippedH: piece.isFlippedH,
+        isFlippedV: piece.isFlippedV
+    });
+    
     let tempBoard = board.map(row => [...row]);
     
     if (piece.position) {
+        console.error('PIECE_ALREADY_ON_BOARD', {
+            pieceId: piece.id,
+            oldPosition: piece.position
+        });
         tempBoard = clearPieceFromBoard(tempBoard, piece);
+        console.error('CLEARED_FROM_BOARD');
     }
 
     const shape = getTransformedShape(piece);
-    
-    // Debugging: Log the shape being checked
-    console.log('Shape being checked:', shape);
+    console.error('VALIDATION_SHAPE', shape);
 
     for (let y = 0; y < shape.length; y++) {
         for (let x = 0; x < shape[0].length; x++) {
             if (shape[y][x]) {
-                const boardY = position.y + y; // Calculate the board Y position
-                const boardX = position.x + x; // Calculate the board X position
+                const boardY = position.y + y;
+                const boardX = position.x + x;
 
-                // Check if the position is within bounds before accessing the board
                 if (boardY < 0 || boardY >= tempBoard.length ||
                     boardX < 0 || boardX >= tempBoard[boardY].length) {
-                    console.log(`Position out of bounds: (${boardX}, ${boardY})`);
+                    console.error('POSITION_OUT_OF_BOUNDS', { x: boardX, y: boardY });
                     return false;
                 }
 
-                // Debugging output
-                console.log(`Checking position: (${boardX}, ${boardY})`);
-                console.log(`Cell state:`, tempBoard[boardY]?.[boardX]);
+                console.error('CHECKING_CELL', {
+                    x: boardX,
+                    y: boardY,
+                    isPlayable: tempBoard[boardY][boardX].isPlayable,
+                    isOccupied: tempBoard[boardY][boardX].isOccupied
+                });
 
-                // Check if the cell is playable and unoccupied
                 if (!tempBoard[boardY][boardX].isPlayable || 
                     tempBoard[boardY][boardX].isOccupied) {
-                    console.log(`Cell not playable or occupied: (${boardX}, ${boardY})`);
+                    console.error('CELL_BLOCKED', {
+                        x: boardX,
+                        y: boardY,
+                        isPlayable: tempBoard[boardY][boardX].isPlayable,
+                        isOccupied: tempBoard[boardY][boardX].isOccupied
+                    });
                     return false;
                 }
             }
         }
     }
 
+    console.error('PLACEMENT_VALID');
     return true;
 }
 
-export function clearPieceFromBoard(board: BoardCell[][], piece: Piece): BoardCell[][] {
-    if (!piece.position) return board;
+export const clearPieceFromBoard = (board: BoardCell[][], piece: Piece): BoardCell[][] => {
+    if (!piece.position) {
+        console.error('NO_POSITION_TO_CLEAR');
+        return board;
+    }
 
+    console.error('CLEARING_PIECE', {
+        pieceId: piece.id,
+        position: piece.position,
+        rotation: piece.rotation,
+        isFlippedH: piece.isFlippedH,
+        isFlippedV: piece.isFlippedV,
+        hasPlacedShape: piece.placedShape ? true : false
+    });
+
+    // Use the stored shape from when the piece was placed, or fall back to current transformed shape
+    const shape = piece.placedShape || getTransformedShape(piece);
+    console.error('USING_SHAPE', shape);
+
+    // Create a new board to avoid mutating the original
     const newBoard = board.map(row => [...row]);
-    const shape = getTransformedShape(piece);
 
+    // Clear all cells that were occupied by the piece
     for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < shape[0].length; x++) {
+        for (let x = 0; x < shape[y].length; x++) {
             if (shape[y][x]) {
                 const boardY = piece.position.y + y;
                 const boardX = piece.position.x + x;
-                if (boardY < newBoard.length && boardX < newBoard[0].length) {
+                if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
+                    console.error('CLEARING_CELL', {
+                        x: boardX,
+                        y: boardY,
+                        wasOccupied: newBoard[boardY][boardX].isOccupied
+                    });
                     newBoard[boardY][boardX].isOccupied = false;
                 }
             }
         }
     }
 
+    console.error('CLEARING_COMPLETE');
     return newBoard;
-}
+};
 
 export function isPuzzleSolved(board: BoardCell[][], currentDate: Date): boolean {
     const month = currentDate.getMonth(); // 0-11

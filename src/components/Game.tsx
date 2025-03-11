@@ -119,37 +119,75 @@ export const Game: React.FC = () => {
         newPosition: Position | null,
         currentBoard: BoardCell[][]
     ): { board: BoardCell[][], pieces: PieceType[] } => {
+        console.error('UPDATE_START', {
+            pieceId: piece.id,
+            oldPosition: piece.position,
+            newPosition,
+            rotation: piece.rotation,
+            isFlippedH: piece.isFlippedH,
+            isFlippedV: piece.isFlippedV
+        });
+        
         // Create new board
         let newBoard = currentBoard.map(row => [...row]);
 
         // Clear old position if exists
         if (piece.position) {
+            console.error('CLEARING_OLD_POSITION', piece.position);
             newBoard = clearPieceFromBoard(newBoard, piece);
+            console.error('CLEARING_COMPLETE');
         }
+
+        // Get the transformed shape for the new position
+        const transformedShape = getTransformedShape(piece);
+        console.error('NEW_POSITION_SHAPE', transformedShape);
 
         // Place in new position if provided
         if (newPosition) {
-            const transformedShape = getTransformedShape(piece);
+            console.error('PLACING_AT', newPosition);
+            
+            // First verify all cells can be placed
+            const cellsToOccupy: Position[] = [];
             for (let y = 0; y < transformedShape.length; y++) {
                 for (let x = 0; x < transformedShape[y].length; x++) {
                     if (transformedShape[y][x]) {
                         const boardY = newPosition.y + y;
                         const boardX = newPosition.x + x;
                         if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
-                            newBoard[boardY][boardX].isOccupied = true;
+                            cellsToOccupy.push({ x: boardX, y: boardY });
                         }
                     }
                 }
             }
+
+            console.error('CELLS_TO_OCCUPY', cellsToOccupy);
+
+            // Occupy all the cells
+            for (const cell of cellsToOccupy) {
+                console.error('SETTING_CELL_OCCUPIED', cell.x, cell.y);
+                newBoard[cell.y][cell.x].isOccupied = true;
+            }
+            console.error('PLACEMENT_COMPLETE');
         }
 
         // Update pieces array
         const newPieces = gameState.pieces.map(p => 
             p.id === piece.id 
-                ? { ...p, position: newPosition }
+                ? { 
+                    ...p, 
+                    position: newPosition,
+                    // Store the shape when placing, clear it when removing
+                    placedShape: newPosition ? transformedShape : undefined
+                }
                 : p
         );
 
+        console.error('UPDATE_COMPLETE', {
+            pieceId: piece.id,
+            newPosition,
+            hasPlacedShape: newPosition ? true : false
+        });
+        
         return { board: newBoard, pieces: newPieces };
     };
 

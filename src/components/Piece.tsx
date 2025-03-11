@@ -14,6 +14,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     const height = shape.length;
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+        console.log('Piece: Starting drag for piece:', piece.id, 'position:', piece.position, 'rotation:', piece.rotation);
         e.dataTransfer.setData('application/json', JSON.stringify({
             pieceId: piece.id,
             shape

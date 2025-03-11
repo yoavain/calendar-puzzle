@@ -23,8 +23,15 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
         const data = e.dataTransfer.getData('application/json');
-        const dragItem: DragItem = JSON.parse(data);
-        onPieceDrop(position, dragItem);
+        console.log('Board: Dropping at position:', position, 'data:', data);
+        
+        try {
+            const dragItem: DragItem = JSON.parse(data);
+            console.log('Board: Parsed drag item:', dragItem);
+            onPieceDrop(position, dragItem);
+        } catch (error) {
+            console.error('Board: Error parsing drag data:', error);
+        }
     };
 
     // Function to check if a cell is part of a placed piece
@@ -41,6 +48,8 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
+        console.log('Board: Starting drag for piece:', piece.id, 'position:', piece.position);
+        
         e.dataTransfer.setData('application/json', JSON.stringify({
             pieceId: piece.id,
             shape: getTransformedShape(piece)

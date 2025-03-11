@@ -10,6 +10,7 @@ export interface Piece {
     isFlippedH: boolean;  // Horizontal flip
     isFlippedV: boolean;  // Vertical flip
     rotation: 0 | 90 | 180 | 270;  // degrees
+    placedShape?: boolean[][];  // The shape when the piece was placed on the board
 }
 
 export interface BoardCell {
