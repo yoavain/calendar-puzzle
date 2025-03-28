@@ -1,6 +1,6 @@
 import React from 'react';
 import { Piece as PieceType } from '../types/types';
-import { getTransformedShape } from '../utils/gameLogic';
+import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../utils/gameLogic';
 
 interface PieceProps {
     piece: PieceType;
@@ -22,13 +22,27 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         // Create a drag preview that represents the entire piece
         const dragPreview = document.createElement('div');
         dragPreview.className = 'piece-drag-preview';
-        
-        shape.forEach(row => {
+
+        shape.forEach((row, y) => {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'preview-row';
-            row.forEach(cell => {
+            row.forEach((cell, x) => {
                 const cellDiv = document.createElement('div');
-                cellDiv.className = `preview-cell ${cell ? 'filled' : ''}`;
+                let className = `preview-cell ${cell ? 'filled' : ''}`;
+
+                if (cell) {
+                    const isEdge = isEdgeCell(shape, x, y);
+                    if (isEdge) {
+                        // Add direction-specific edge classes
+                        const edgeDirections = getEdgeDirections(shape, x, y);
+                        if (edgeDirections.top) className += ' edge-top';
+                        if (edgeDirections.right) className += ' edge-right';
+                        if (edgeDirections.bottom) className += ' edge-bottom';
+                        if (edgeDirections.left) className += ' edge-left';
+                    }
+                }
+
+                cellDiv.className = className;
                 rowDiv.appendChild(cellDiv);
             });
             dragPreview.appendChild(rowDiv);
@@ -54,12 +68,25 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
                 }}
             >
                 {shape.map((row, y) =>
-                    row.map((cell, x) => (
-                        <div
-                            key={`${x}-${y}`}
-                            className={`piece-cell ${cell ? 'filled' : 'empty'}`}
-                        />
-                    ))
+                    row.map((cell, x) => {
+                        let className = `piece-cell ${cell ? 'filled' : 'empty'}`;
+
+                        if (cell && isEdgeCell(shape, x, y)) {
+                            // Add direction-specific edge classes
+                            const edgeDirections = getEdgeDirections(shape, x, y);
+                            if (edgeDirections.top) className += ' edge-top';
+                            if (edgeDirections.right) className += ' edge-right';
+                            if (edgeDirections.bottom) className += ' edge-bottom';
+                            if (edgeDirections.left) className += ' edge-left';
+                        }
+
+                        return (
+                            <div
+                                key={`${x}-${y}`}
+                                className={className}
+                            />
+                        );
+                    })
                 )}
             </div>
         </div>
