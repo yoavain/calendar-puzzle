@@ -49,13 +49,13 @@ export function flipPieceVertical(piece: Piece): boolean[][] {
 // Helper function to get the transformed shape based on rotation and flip
 export function getTransformedShape(piece: Piece): boolean[][] {
     let shape = [...piece.shape.map(row => [...row])];
-    
+
     // Apply rotations
     const rotations = piece.rotation / 90;
     for (let i = 0; i < rotations; i++) {
         shape = rotatePiece({ ...piece, shape });
     }
-    
+
     // Apply flips
     if (piece.isFlippedH) {
         shape = flipPieceHorizontal({ ...piece, shape });
@@ -63,7 +63,7 @@ export function getTransformedShape(piece: Piece): boolean[][] {
     if (piece.isFlippedV) {
         shape = flipPieceVertical({ ...piece, shape });
     }
-    
+
     return shape;
 }
 
@@ -73,13 +73,13 @@ export function isValidPlacement(
     position: Position
 ): boolean {
     let tempBoard = board.map(row => [...row]);
-    
+
     if (piece.position) {
         tempBoard = clearPieceFromBoard(tempBoard, piece);
     }
 
     const shape = getTransformedShape(piece);
-    
+
     // Debugging: Log the shape being checked
     console.log('Shape being checked:', shape);
 
@@ -132,6 +132,65 @@ export function clearPieceFromBoard(board: BoardCell[][], piece: Piece): BoardCe
     }
 
     return newBoard;
+}
+
+// Helper function to determine if a cell is on the edge of a piece
+export function isEdgeCell(shape: boolean[][], x: number, y: number): boolean {
+    if (!shape[y][x]) return false; // Empty cell is not an edge
+
+    // Check all adjacent cells (up, right, down, left)
+    const directions = [
+        { dx: 0, dy: -1 }, // up
+        { dx: 1, dy: 0 },  // right
+        { dx: 0, dy: 1 },  // down
+        { dx: -1, dy: 0 }  // left
+    ];
+
+    for (const { dx, dy } of directions) {
+        const newY = y + dy;
+        const newX = x + dx;
+
+        // If adjacent cell is outside the shape or is empty, this is an edge cell
+        if (
+            newY < 0 || newY >= shape.length ||
+            newX < 0 || newX >= shape[0].length ||
+            !shape[newY][newX]
+        ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Helper function to determine which directions of a cell are on the edge
+export function getEdgeDirections(shape: boolean[][], x: number, y: number): { top: boolean, right: boolean, bottom: boolean, left: boolean } {
+    if (!shape[y][x]) return { top: false, right: false, bottom: false, left: false }; // Empty cell has no edges
+
+    // Initialize result with all edges as false
+    const result = { top: false, right: false, bottom: false, left: false };
+
+    // Check top edge
+    if (y === 0 || !shape[y - 1][x]) {
+        result.top = true;
+    }
+
+    // Check right edge
+    if (x === shape[0].length - 1 || !shape[y][x + 1]) {
+        result.right = true;
+    }
+
+    // Check bottom edge
+    if (y === shape.length - 1 || !shape[y + 1][x]) {
+        result.bottom = true;
+    }
+
+    // Check left edge
+    if (x === 0 || !shape[y][x - 1]) {
+        result.left = true;
+    }
+
+    return result;
 }
 
 export function isPuzzleSolved(board: BoardCell[][], currentDate: Date): boolean {
