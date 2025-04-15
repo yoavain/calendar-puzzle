@@ -72,44 +72,77 @@ export function isValidPlacement(
     piece: Piece,
     position: Position
 ): boolean {
+    console.log('Attempting to place piece:', piece.id);
+    console.log('At position:', position);
+    console.log('Piece current position:', piece.position);
+    
     let tempBoard = board.map(row => [...row]);
 
+    // Debug: Log the entire board state
+    console.log('Current board state:');
+    tempBoard.forEach((row, y) => {
+        const occupiedCells = row.filter(cell => cell.isOccupied);
+        if (occupiedCells.length > 0) {
+            console.log(`Row ${y} occupied cells:`, occupiedCells.map(cell => ({
+                x: cell.x,
+                y: cell.y,
+                content: cell.content
+            })));
+        }
+    });
+
+    // Debug: Check specifically cell (6,2)
+    const cell62 = tempBoard[2][6];
+    console.log('Cell (6,2) current state:', {
+        content: cell62.content,
+        isOccupied: cell62.isOccupied,
+        isPlayable: cell62.isPlayable
+    });
+
     if (piece.position) {
+        console.log('Clearing piece from current position:', piece.position);
         tempBoard = clearPieceFromBoard(tempBoard, piece);
+        
+        // Debug: Check cell (6,2) after clearing
+        const cell62AfterClearing = tempBoard[2][6];
+        console.log('Cell (6,2) state after clearing:', {
+            content: cell62AfterClearing.content,
+            isOccupied: cell62AfterClearing.isOccupied,
+            isPlayable: cell62AfterClearing.isPlayable
+        });
     }
 
     const shape = getTransformedShape(piece);
-
-    // Debugging: Log the shape being checked
-    console.log('Shape being checked:', shape);
+    console.log('Transformed shape:', shape);
 
     for (let y = 0; y < shape.length; y++) {
         for (let x = 0; x < shape[0].length; x++) {
             if (shape[y][x]) {
-                const boardY = position.y + y; // Calculate the board Y position
-                const boardX = position.x + x; // Calculate the board X position
+                const boardY = position.y + y;
+                const boardX = position.x + x;
 
-                // Check if the position is within bounds before accessing the board
                 if (boardY < 0 || boardY >= tempBoard.length ||
                     boardX < 0 || boardX >= tempBoard[boardY].length) {
-                    console.log(`Position out of bounds: (${boardX}, ${boardY})`);
+                    console.log(`❌ Position out of bounds: (${boardX}, ${boardY})`);
                     return false;
                 }
 
-                // Debugging output
-                console.log(`Checking position: (${boardX}, ${boardY})`);
-                console.log(`Cell state:`, tempBoard[boardY]?.[boardX]);
+                const cell = tempBoard[boardY][boardX];
+                console.log(`Checking cell at (${boardX}, ${boardY}):`, {
+                    isPlayable: cell.isPlayable,
+                    isOccupied: cell.isOccupied,
+                    content: cell.content
+                });
 
-                // Check if the cell is playable and unoccupied
-                if (!tempBoard[boardY][boardX].isPlayable || 
-                    tempBoard[boardY][boardX].isOccupied) {
-                    console.log(`Cell not playable or occupied: (${boardX}, ${boardY})`);
+                if (!cell.isPlayable || cell.isOccupied) {
+                    console.log(`❌ Cell at (${boardX}, ${boardY}) is ${!cell.isPlayable ? 'not playable' : 'occupied'}`);
                     return false;
                 }
             }
         }
     }
 
+    console.log('✅ Placement is valid!');
     return true;
 }
 
@@ -124,7 +157,9 @@ export function clearPieceFromBoard(board: BoardCell[][], piece: Piece): BoardCe
             if (shape[y][x]) {
                 const boardY = piece.position.y + y;
                 const boardX = piece.position.x + x;
-                if (boardY < newBoard.length && boardX < newBoard[0].length) {
+                // Check all bounds including negative coordinates
+                if (boardY >= 0 && boardY < newBoard.length && 
+                    boardX >= 0 && boardX < newBoard[boardY].length) {
                     newBoard[boardY][boardX].isOccupied = false;
                 }
             }
