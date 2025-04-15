@@ -40,9 +40,7 @@ h1 {
     width: var(--cell-size);
     height: var(--cell-size);
     border: 1px solid var(--color-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     background-color: var(--color-background);
     color: var(--color-text);
     cursor: pointer;
@@ -55,30 +53,44 @@ h1 {
 .board-cell.piece-cell {
     background-color: var(--piece-color);
     color: #ffffff;
-    border: 0 none;
+    border: 0;
     outline: none;
     cursor: move;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    display: block;
 }
 
-
-/* Direction-specific edge styling for board cells */
+/* Add borders for edge cells based on direction */
 .board-cell.piece-cell.edge-top {
-    border-top: var(--piece-border-width) solid var(--piece-border-color);
+    border-top: 2px solid var(--color-border) !important;
 }
 
 .board-cell.piece-cell.edge-right {
-    border-right: var(--piece-border-width) solid var(--piece-border-color);
+    border-right: 2px solid var(--color-border) !important;
 }
 
 .board-cell.piece-cell.edge-bottom {
-    border-bottom: var(--piece-border-width) solid var(--piece-border-color);
+    border-bottom: 2px solid var(--color-border) !important;
 }
 
 .board-cell.piece-cell.edge-left {
-    border-left: var(--piece-border-width) solid var(--piece-border-color);
+    border-left: 2px solid var(--color-border) !important;
+}
+
+/* Regular board cell borders */
+.board-cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border: 1px solid var(--color-border);
+    display: block;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .piece {
@@ -208,31 +220,20 @@ h1 {
 .piece-cell {
     width: var(--cell-size);
     height: var(--cell-size);
-    border: 0 none;
+    border: none !important;
     outline: none;
     margin: 0;
     padding: 0;
     background-color: var(--piece-color);
     color: #ffffff;
     box-sizing: border-box;
+    display: block;
 }
 
-
-/* Direction-specific edge styling */
-.piece-cell.edge-top {
-    border-top: var(--piece-border-width) solid var(--piece-border-color);
-}
-
-.piece-cell.edge-right {
-    border-right: var(--piece-border-width) solid var(--piece-border-color);
-}
-
-.piece-cell.edge-bottom {
-    border-bottom: var(--piece-border-width) solid var(--piece-border-color);
-}
-
-.piece-cell.edge-left {
-    border-left: var(--piece-border-width) solid var(--piece-border-color);
+/* Edge styling for both board pieces and piece pool */
+.piece-cell.edge {
+    outline: var(--piece-border-width) solid var(--piece-border-color);
+    outline-offset: calc(-1 * var(--piece-border-width));
 }
 
 /* Clean up preview styles */
@@ -246,21 +247,9 @@ h1 {
     background-color: var(--piece-color);
 }
 
-/* Direction-specific edge styling for preview cells */
-.preview-cell.edge-top {
-    border-top: var(--piece-border-width) solid var(--piece-border-color);
-}
-
-.preview-cell.edge-right {
-    border-right: var(--piece-border-width) solid var(--piece-border-color);
-}
-
-.preview-cell.edge-bottom {
-    border-bottom: var(--piece-border-width) solid var(--piece-border-color);
-}
-
-.preview-cell.edge-left {
-    border-left: var(--piece-border-width) solid var(--piece-border-color);
+.preview-cell.edge {
+    outline: var(--piece-border-width) solid var(--piece-border-color);
+    outline-offset: calc(-1 * var(--piece-border-width));
 }
 
 .piece-cell.empty {
@@ -294,6 +283,11 @@ h1 {
     background-color: var(--piece-color);
 }
 
+.preview-cell.edge {
+    outline: var(--piece-border-width) solid var(--piece-border-color);
+    outline-offset: calc(-1 * var(--piece-border-width));
+}
+
 .preview-cell:not(.filled) {
     visibility: hidden;
 }
@@ -321,13 +315,13 @@ h1 {
 
 .piece-grid {
     display: grid;
-    grid-gap: 0;
     gap: 0;
     background-color: transparent;
     cursor: grab;
     border: none;
     margin: 0;
     padding: 0;
+    border-collapse: collapse;
 }
 
 .piece-grid:active {
@@ -339,7 +333,6 @@ h1 {
     /* Base sizes */
     --cell-size: 50px;
     --cell-gap: 0;
-    --piece-border-width: 2px;
 
     /* Light theme colors (default) */
     --color-background: #fff;
@@ -359,6 +352,7 @@ h1 {
     /* Piece-specific colors */
     --piece-color: #007bff;
     --piece-border-color: #0056b3;
+    --piece-border-width: 2px;
 }
 
 /* Dark theme colors */
@@ -503,3 +497,4 @@ input:checked + .slider:before {
     color: var(--color-text);
     margin: 0;
 }
+
