@@ -1,9 +1,9 @@
 import React from 'react';
-import { BoardCell, DragItem, GameState, Piece as PieceType, Position } from '../types/types';
+import { BoardCell, DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../types/types';
 import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../utils/gameLogic';
 
 interface BoardProps {
-    board: BoardCell[][];
+    board: BoardType;
     pieces: GameState['pieces'];  // Add pieces to props
     onCellClick: (position: Position) => void;
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
@@ -110,7 +110,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                         return (
                             <div
                                 key={`${x}-${y}`}
-                                className={`board-cell ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${edgeClasses}`}
+                                className={`board-cell ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}`}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
