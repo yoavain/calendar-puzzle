@@ -106,9 +106,38 @@ h1 {
 }
 
 .piece-controls {
-    display: flex;
+    display: flex !important;
     gap: 10px;
-    margin: 10px 0;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-background);
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+/* Show controls for all unplaced pieces, regardless of selection */
+.pieces-container .piece:not(.placed) .piece-controls {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Hide controls only for placed pieces */
+.piece.placed .piece-controls {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Remove any selection-dependent visibility */
+.piece-wrapper .piece-controls,
+.piece:not(.selected) .piece-controls {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* Styles moved to consolidated section */
@@ -121,11 +150,12 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0;
-    background-color: transparent;
+    padding: 10px;
+    background-color: var(--color-background);
     border-radius: 4px;
-    width: 210px;
-    height: 210px;
+    width: 250px;
+    height: 300px;
+    position: relative;
     margin: 10px;
 }
 
@@ -204,6 +234,8 @@ h1 {
     color: var(--color-text);
     cursor: pointer;
     transition: all 0.2s;
+    opacity: 1;
+    visibility: visible;
 }
 
 .piece-controls button:hover {
@@ -302,15 +334,7 @@ h1 {
     background-color: var(--color-background-tertiary);
     border-radius: 8px;
     min-height: 100px;
-}
-
-.piece-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0;
-    background-color: var(--color-background);
-    border-radius: 4px;
+    justify-content: center;
 }
 
 .piece-grid {
@@ -322,6 +346,10 @@ h1 {
     margin: 0;
     padding: 0;
     border-collapse: collapse;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .piece-grid:active {
@@ -496,5 +524,68 @@ input:checked + .slider:before {
 .success-content p {
     color: var(--color-text);
     margin: 0;
+}
+
+.pieces-container .piece-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--color-background);
+    border-radius: 4px;
+    width: 250px;
+    height: 300px;
+    position: relative;
+    margin: 10px;
+}
+
+.pieces-container .piece-controls {
+    display: flex !important;
+    gap: 10px;
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--color-background);
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Only hide controls for placed pieces */
+.board .piece-controls {
+    display: none !important;
+}
+
+.piece-controls button {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-light);
+    border-radius: 4px;
+    background: var(--color-background);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Remove any other rules that might affect visibility */
+.piece-wrapper:not(:hover) .piece-controls,
+.piece:not(.selected) .piece-controls,
+.piece .piece-controls {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
 }
 
