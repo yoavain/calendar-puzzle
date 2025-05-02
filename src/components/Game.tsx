@@ -1,13 +1,15 @@
-import React, { useCallback } from 'react';
-import { BoardCell, DragItem, Piece as PieceType, Position } from '../types/types';
-import { Board } from './Board';
+import React, { useCallback, useState } from 'react';
+import { DragItem, Piece as PieceType, Position, Board } from '../types/types';
+import { Board as BoardComponent } from './Board';
 import { Piece } from './Piece';
 import { PieceControls } from './PieceControls';
 import ThemeToggle from './ThemeToggle';
 import { SuccessMessage } from './SuccessMessage';
+import { SolutionButton } from './SolutionButton';
 import { initializeGame } from '../utils/initialize';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
+import { findSolution as findPuzzleSolution } from '../utils/puzzleSolver';
 
 export const Game: React.FC = () => {
     const {
@@ -18,6 +20,10 @@ export const Game: React.FC = () => {
         canUndo,
         canRedo
     } = useGameHistory(initializeGame());
+
+    // State for the puzzle solver
+    const [isLoading, setIsLoading] = useState(false);
+    const [solverError, setSolverError] = useState<string | null>(null);
 
     const handlePieceSelect = (pieceId: number) => {
         if (gameState.isSolved) return;
@@ -117,14 +123,14 @@ export const Game: React.FC = () => {
     const updateBoardAndPieces = (
         piece: PieceType,
         newPosition: Position | null,
-        currentBoard: BoardCell[][]
-    ): { board: BoardCell[][], pieces: PieceType[] } => {
+        currentBoard: Board
+    ): { board: Board, pieces: PieceType[] } => {
         // Create new board
         let newBoard = currentBoard.map(row => [...row]);
 
         // Clear old position if exists
         if (piece.position) {
-            newBoard = clearPieceFromBoard(newBoard, piece);
+            clearPieceFromBoard(newBoard, piece);
         }
 
         // Place in new position if provided
@@ -258,6 +264,51 @@ export const Game: React.FC = () => {
         document.title = `Calendar Puzzle - ${formattedDate}`;
     }, [formattedDate]);
 
+    const handleSolve = async () => {
+        if (gameState.isSolved || isLoading) return;
+
+        // Reset any previous errors
+        setSolverError(null);
+        setIsLoading(true);
+
+        try {
+            // Remove all pieces from the board first
+            const clearedPieces = gameState.pieces.map(piece => ({
+                ...piece,
+                position: null
+            }));
+
+            // Use the improved puzzle solver
+            const solution = findPuzzleSolution(
+                gameState.board, 
+                clearedPieces, 
+                gameState.currentDate
+            );
+
+            if (solution) {
+                // Push the solved GameState directly
+                pushState(solution, { 
+                    type: 'SOLVE_PUZZLE',
+                    pieceId: -1 // We need to provide a pieceId even though it's not used for solve
+                });
+
+                if (solution.isSolved) {
+                    console.log("Puzzle Solved!");
+                }
+            } else {
+                // No solution found
+                setSolverError('No solution found for the current date.');
+            }
+        } catch (error) {
+            // Handle any errors
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            setSolverError(errorMessage);
+            console.error('Error finding solution:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="app">
             <ThemeToggle />
@@ -279,8 +330,15 @@ export const Game: React.FC = () => {
                     >
                         Redo
                     </button>
+                    <div style={{ flex: 1 }}></div>
+                    {solverError && (
+                        <div className="error-message" style={{ color: 'red', marginRight: '10px' }}>
+                            {solverError}
+                        </div>
+                    )}
+                    <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
                 </div>
-                <Board 
+                <BoardComponent 
                     board={gameState.board} 
                     pieces={gameState.pieces}
                     onCellClick={handleCellClick}

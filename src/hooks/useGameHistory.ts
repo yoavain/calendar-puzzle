@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { GameState, GameStateAction } from '../types/types';
+import { GameState, GameStateAction, Board } from '../types/types';
 
 const MAX_HISTORY = 50; // Maximum number of undo steps
 
@@ -7,7 +7,7 @@ const MAX_HISTORY = 50; // Maximum number of undo steps
 function cloneGameState(state: GameState): GameState {
     return {
         ...state,
-        board: state.board.map(row => [...row.map(cell => ({ ...cell }))]),
+        board: state.board.map(row => [...row.map(cell => ({ ...cell }))]) as Board,
         pieces: state.pieces.map(piece => ({ ...piece })),
         currentDate: new Date(state.currentDate)
     };
