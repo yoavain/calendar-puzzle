@@ -18,14 +18,18 @@ export interface BoardCell {
     content: string;  // month name or day number
     isOccupied: boolean;
     isPlayable: boolean;  // Add this field to mark cells that are valid for piece placement
+    isHighlighted: boolean;  // Indicates if this cell is the current day or month
 }
 
+export type Board = BoardCell[][];
+
 export interface GameState {
-    board: BoardCell[][];
+    board: Board;
     pieces: Piece[];
     selectedPieceId: number | null;
     currentDate: Date;
     isSolved: boolean;
+    isGameComplete: boolean;
 }
 
 export interface DragItem {
@@ -40,7 +44,7 @@ export interface GameHistory {
 }
 
 export interface GameStateAction {
-    type: 'PLACE_PIECE' | 'REMOVE_PIECE' | 'ROTATE_PIECE' | 'FLIP_PIECE_H' | 'FLIP_PIECE_V' | 'SELECT_PIECE';
+    type: 'PLACE_PIECE' | 'REMOVE_PIECE' | 'ROTATE_PIECE' | 'FLIP_PIECE_H' | 'FLIP_PIECE_V' | 'SELECT_PIECE' | 'SOLVE_PUZZLE';
     pieceId: number;
     position?: Position;
 } 

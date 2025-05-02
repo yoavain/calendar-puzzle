@@ -93,6 +93,13 @@ h1 {
     box-sizing: border-box;
 }
 
+/* Highlighted cells (current day and month) */
+.board-cell.highlighted {
+    background-color: #ffeb3b; /* Yellow color */
+    color: #000000; /* Black text for better contrast */
+    font-weight: bold;
+}
+
 .piece {
     cursor: grab;
     border: none;
@@ -588,4 +595,3 @@ input:checked + .slider:before {
     visibility: visible !important;
     pointer-events: auto !important;
 }
-
