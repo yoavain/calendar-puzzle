@@ -309,6 +309,35 @@ export const Game: React.FC = () => {
         }
     };
 
+    // Add new handlers for per-piece controls
+    const handleRotatePiece = (pieceId: number) => {
+        if (gameState.isSolved) return;
+        const newPieces = [...gameState.pieces];
+        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
+        const piece = newPieces[pieceIndex];
+        const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+        newPieces[pieceIndex] = { ...piece, rotation: newRotation };
+        pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
+    };
+
+    const handleFlipHPiece = (pieceId: number) => {
+        if (gameState.isSolved) return;
+        const newPieces = [...gameState.pieces];
+        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
+        const piece = newPieces[pieceIndex];
+        newPieces[pieceIndex] = { ...piece, isFlippedH: !piece.isFlippedH };
+        pushState({ ...gameState, pieces: newPieces }, { type: 'FLIP_PIECE_H', pieceId });
+    };
+
+    const handleFlipVPiece = (pieceId: number) => {
+        if (gameState.isSolved) return;
+        const newPieces = [...gameState.pieces];
+        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
+        const piece = newPieces[pieceIndex];
+        newPieces[pieceIndex] = { ...piece, isFlippedV: !piece.isFlippedV };
+        pushState({ ...gameState, pieces: newPieces }, { type: 'FLIP_PIECE_V', pieceId });
+    };
+
     return (
         <div className="app">
             <ThemeToggle />
@@ -360,14 +389,12 @@ export const Game: React.FC = () => {
                                     onClick={() => handlePieceSelect(piece.id)}
                                     data-testid={`piece-${piece.id}`}
                                 />
-                                {piece.id === gameState.selectedPieceId && (
-                                    <PieceControls
-                                        piece={piece}
-                                        onRotate={handleRotate}
-                                        onFlipH={handleFlipH}
-                                        onFlipV={handleFlipV}
-                                    />
-                                )}
+                                <PieceControls
+                                    piece={piece}
+                                    onRotate={() => handleRotatePiece(piece.id)}
+                                    onFlipH={() => handleFlipHPiece(piece.id)}
+                                    onFlipV={() => handleFlipVPiece(piece.id)}
+                                />
                             </div>
                         ))}
                 </div>
