@@ -107,10 +107,16 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                             }
                         }
 
+                        // Add hidden-cell class for the 6 redundant cells
+                        const isHiddenCell =
+                            (y === 0 && x === 6) ||
+                            (y === 1 && x === 6) ||
+                            (y === 6 && x >= 3 && x <= 6);
+
                         return (
                             <div
                                 key={`${x}-${y}`}
-                                className={`board-cell ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}`}
+                                className={`board-cell ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}`}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
