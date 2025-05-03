@@ -113,10 +113,17 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                             (y === 1 && x === 6) ||
                             (y === 6 && x >= 3 && x <= 6);
 
+                        // Identify month cells (Rows 0,1 and Cols 0-5)
+                        const isMonthCell = y < 2 && x < 6;
+                        // Identify day number cells (Rows 2-6, playable, with content)
+                        const isDayCell = y >= 2 && cell.isPlayable && cell.content;
+
+                        const isStyledCell = isMonthCell || isDayCell;
+
                         return (
                             <div
                                 key={`${x}-${y}`}
-                                className={`board-cell ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}`}
+                                className={`board-cell${isStyledCell ? ' styled-cell' : ''} ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}`}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
@@ -124,7 +131,10 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 draggable={!!piece}
                                 onDragStart={(e) => piece && handleDragStart(e, piece)}
                             >
-                                {!piece && cell.content}
+                                {!piece && isStyledCell && cell.content && (
+                                    <span className="styled-cell-text">{cell.content.toUpperCase()}</span>
+                                )}
+                                {!piece && !isStyledCell && cell.content}
                             </div>
                         );
                     })}
