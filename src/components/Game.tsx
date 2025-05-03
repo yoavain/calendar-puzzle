@@ -340,10 +340,9 @@ export const Game: React.FC = () => {
 
     return (
         <div className="app">
-            <ThemeToggle />
-            <h1>Calendar Puzzle - {formattedDate}</h1>
-            <SuccessMessage isVisible={gameState.isSolved} />
-            <main className="game">
+            <div className="top-bar">
+                <ThemeToggle />
+                <h1>Calendar Puzzle - {formattedDate}</h1>
                 <div className="game-controls">
                     <button 
                         onClick={undo} 
@@ -359,7 +358,6 @@ export const Game: React.FC = () => {
                     >
                         Redo
                     </button>
-                    <div style={{ flex: 1 }}></div>
                     {solverError && (
                         <div className="error-message" style={{ color: 'red', marginRight: '10px' }}>
                             {solverError}
@@ -367,6 +365,9 @@ export const Game: React.FC = () => {
                     )}
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
                 </div>
+            </div>
+            <SuccessMessage isVisible={gameState.isSolved} />
+            <main className="game">
                 <BoardComponent 
                     board={gameState.board} 
                     pieces={gameState.pieces}
