@@ -605,3 +605,8 @@ input:checked + .slider:before {
     visibility: visible !important;
     pointer-events: auto !important;
 }
+
+.hidden-cell {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
