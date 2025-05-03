@@ -342,7 +342,6 @@ export const Game: React.FC = () => {
         <div className="app">
             <div className="top-bar">
                 <ThemeToggle />
-                <h1>Calendar Puzzle - {formattedDate}</h1>
                 <div className="game-controls">
                     <button 
                         onClick={undo} 
@@ -366,6 +365,7 @@ export const Game: React.FC = () => {
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
                 </div>
             </div>
+            <h1 className="main-title">Calendar Puzzle - {formattedDate}</h1>
             <SuccessMessage isVisible={gameState.isSolved} />
             <main className="game">
                 <BoardComponent 
