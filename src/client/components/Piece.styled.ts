@@ -109,6 +109,8 @@ export const PieceGrid = styled('div')<PieceGridProps>(({ theme, columns, rows, 
     transform: transformStyle,
     transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.25s ease',
     borderRadius: 2,
+    // Prevent sub-pixel gaps between cells during transforms
+    backfaceVisibility: 'hidden',
     // Default shadow for depth perception
     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15)) drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
 
@@ -145,9 +147,11 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, piece
         visibility: 'hidden',
     }),
 
-    // Filled cell styling
+    // Filled cell styling - use box-shadow to fill gaps during transforms
     ...(isFilled && {
         backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
         color: '#ffffff',
+        // Prevent sub-pixel gaps by extending color with box-shadow
+        boxShadow: `inset 0 0 0 1px ${pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0]}`,
     }),
 }));
