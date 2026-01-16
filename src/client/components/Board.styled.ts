@@ -86,6 +86,7 @@ export const BoardCell = styled('div')<BoardCellProps>(({
     margin: 0,
     padding: 0,
     boxSizing: 'border-box',
+    transition: 'background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.15s ease, transform 0.15s ease',
 
     // Hidden cell
     ...(isHidden && {
@@ -103,14 +104,20 @@ export const BoardCell = styled('div')<BoardCellProps>(({
     // Highlighted cell (current day and month)
     ...(isHighlighted && {
         backgroundColor: theme.game.highlightColor,
-        color: '#000000',
+        color: theme.game.highlightTextColor,
         fontWeight: 'bold',
+        boxShadow: `0 0 0 2px ${theme.game.highlightColor}, 0 2px 8px rgba(255, 235, 59, 0.4)`,
     }),
 
-    // Drag over feedback
+    // Drag over feedback - enhanced visual cue for valid drop zones
     ...(isDragOver && {
-        backgroundColor: `${theme.palette.primary.main}1A`, // 10% opacity
-        outline: `2px dashed ${theme.palette.primary.main}`,
+        backgroundColor: `${theme.palette.primary.main}26`, // 15% opacity for stronger highlight
+        boxShadow: `inset 0 0 12px ${theme.palette.primary.main}40, 0 0 8px ${theme.palette.primary.main}30`,
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: -2,
+        transform: 'scale(1.02)',
+        zIndex: 5,
+        position: 'relative' as const,
     }),
 
     // Playable cell hover (only when not a piece cell)
@@ -134,9 +141,12 @@ export const BoardCell = styled('div')<BoardCellProps>(({
         padding: 0,
         boxSizing: 'border-box',
         display: 'block',
+        // Subtle inset gradient for depth perception on placed pieces
+        backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)`,
         
         '&:hover': {
-            opacity: isLocked ? 1 : 0.8,
+            opacity: isLocked ? 1 : 0.85,
+            filter: 'brightness(1.08)',
         },
 
         // Edge borders for pieces on board
@@ -175,6 +185,7 @@ export const StyledCellText = styled('span')({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    transition: 'color 0.2s ease',
 });
 
 // Drag preview container
@@ -208,6 +219,8 @@ export const PreviewCell = styled('div')<PreviewCellProps>(({ theme, isFilled, e
 
     ...(isFilled && {
         backgroundColor: theme.game.pieceColor,
+        // Subtle gradient for depth perception in drag preview
+        backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)`,
 
         ...(edges?.top && {
             borderTop: `2px solid ${theme.game.pieceBorderColor}`,

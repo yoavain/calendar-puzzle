@@ -17,6 +17,7 @@ declare module '@mui/material/styles' {
             activeColor: string;
             disabledColor: string;
             highlightColor: string;
+            highlightTextColor: string;
             invalidDropColor: string;
             invalidDropBorderColor: string;
             backgroundTertiary: string;
@@ -37,6 +38,7 @@ declare module '@mui/material/styles' {
             activeColor?: string;
             disabledColor?: string;
             highlightColor?: string;
+            highlightTextColor?: string;
             invalidDropColor?: string;
             invalidDropBorderColor?: string;
             backgroundTertiary?: string;
@@ -59,6 +61,7 @@ const lightGameTokens = {
     activeColor: '#e0e0e0',
     disabledColor: '#ccc',
     highlightColor: '#ffeb3b',
+    highlightTextColor: 'rgba(0, 0, 0, 0.87)',
     invalidDropColor: 'rgba(220, 53, 69, 0.5)',
     invalidDropBorderColor: '#dc3545',
     backgroundTertiary: '#eee',
@@ -79,6 +82,7 @@ const darkGameTokens = {
     activeColor: '#4d4d4d',
     disabledColor: '#555',
     highlightColor: '#ffeb3b',
+    highlightTextColor: 'rgba(0, 0, 0, 0.87)',
     invalidDropColor: 'rgba(255, 82, 82, 0.4)',
     invalidDropBorderColor: '#ff5252',
     backgroundTertiary: '#333333',

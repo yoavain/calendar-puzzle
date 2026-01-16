@@ -1,7 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import { lightTheme, darkTheme, ThemeMode } from './theme';
+
+// Global styles for smooth theme transitions
+const themeTransitionStyles = {
+    '*, *::before, *::after': {
+        transition: 'background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, fill 0.25s ease, stroke 0.25s ease',
+    },
+};
 
 interface ColorModeContextType {
     mode: ThemeMode;
@@ -52,6 +60,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         <ColorModeContext.Provider value={colorMode}>
             <MuiThemeProvider theme={theme}>
                 <CssBaseline />
+                <GlobalStyles styles={themeTransitionStyles} />
                 {children}
             </MuiThemeProvider>
         </ColorModeContext.Provider>
