@@ -40,22 +40,14 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     const transformedShape = getTransformedShape(piece);
 
     // Build CSS transform string
-    const transforms: string[] = [];
-    
-    // Apply cumulative rotation (always increases for smooth animation)
-    if (cumulativeRotation !== 0) {
-        transforms.push(`rotate(${cumulativeRotation}deg)`);
-    }
-    
-    // Apply flips
-    if (piece.isFlippedH) {
-        transforms.push('scaleX(-1)');
-    }
-    if (piece.isFlippedV) {
-        transforms.push('scaleY(-1)');
-    }
-    
-    const transformStyle = transforms.length > 0 ? transforms.join(' ') : 'none';
+    // CSS applies transforms RIGHT-TO-LEFT, so we need to reverse the order
+    // to match getTransformedShape which applies: rotation → flipH → flipV
+    // Always include all transforms to maintain consistent structure for smooth animations
+    const transformStyle = [
+        `scaleY(${piece.isFlippedV ? -1 : 1})`,
+        `scaleX(${piece.isFlippedH ? -1 : 1})`,
+        `rotate(${cumulativeRotation}deg)`
+    ].join(' ');
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         // Use transformed shape for drag preview (for accurate placement)
