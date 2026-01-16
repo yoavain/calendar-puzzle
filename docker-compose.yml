@@ -1,9 +1,25 @@
 services:
-  app:
+  calendar-puzzle:
     build: .
     ports:
       - "23222:3001"
     environment:
       - TZ=Asia/Jerusalem
       - NODE_ENV=production
+      - DATABASE_URL=postgresql://puzzle:puzzle@postgres:5432/puzzle
+    depends_on:
+      - postgres
     restart: unless-stopped
+
+  postgres:
+    image: postgres:18.1-alpine3.23
+    environment:
+      - POSTGRES_USER=puzzle
+      - POSTGRES_PASSWORD=puzzle
+      - POSTGRES_DB=puzzle
+    volumes:
+      - calendar_puzzle_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  calendar_puzzle_postgres_data:
