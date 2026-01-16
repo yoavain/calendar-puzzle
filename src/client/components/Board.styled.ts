@@ -100,7 +100,7 @@ export const BoardCell = styled('div')<BoardCellProps>(({
         backgroundColor: theme.game.highlightColor,
         color: theme.game.highlightTextColor,
         fontWeight: 'bold',
-        boxShadow: `0 0 0 2px ${theme.game.highlightColor}, 0 2px 8px rgba(255, 235, 59, 0.4)`,
+        boxShadow: `inset 0 0 8px rgba(255, 200, 0, 0.5)`,
     }),
 
     // Drag over feedback - enhanced visual cue for valid drop zones
