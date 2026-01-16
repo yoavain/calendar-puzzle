@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { DragItem, Piece as PieceType, Position, Board } from '../../common/types';
+import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
 import { Piece } from './Piece';
@@ -8,11 +8,15 @@ import ThemeToggle from './ThemeToggle';
 import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
 import { HintButton } from './HintButton';
+import { DatePicker } from './DatePicker';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
 
 export const Game: React.FC = () => {
+    // State for the playing date (initialized to today)
+    const [playingDate, setPlayingDate] = useState<PuzzleDate>(() => toPuzzleDate(new Date()));
+    
     const {
         gameState,
         pushState,
@@ -21,12 +25,23 @@ export const Game: React.FC = () => {
         clearHistory,
         canUndo,
         canRedo
-    } = useGameHistory(initializeGame());
+    } = useGameHistory(initializeGame(new Date()));
 
     // State for the puzzle solver
     const [isLoading, setIsLoading] = useState(false);
     const [isHintLoading, setIsHintLoading] = useState(false);
     const [solverError, setSolverError] = useState<string | null>(null);
+
+    // Handle date change from date picker
+    const handleDateChange = (newDate: PuzzleDate) => {
+        setPlayingDate(newDate);
+        // Create a new Date object from PuzzleDate for initialization
+        // We use a fixed year (2024) since the puzzle only cares about month and day
+        const jsDate = new Date(2024, newDate.month, newDate.day);
+        const newGameState = initializeGame(jsDate);
+        clearHistory(newGameState);
+        setSolverError(null);
+    };
 
     // Check if board is empty (no pieces placed)
     const isBoardEmpty = gameState.pieces.every(piece => piece.position === null);
@@ -196,7 +211,7 @@ export const Game: React.FC = () => {
         });
 
         // Check if the puzzle is solved
-        if (isPuzzleSolved(newBoard, newState.currentDate)) {
+        if (isPuzzleSolved(newBoard, playingDate)) {
             console.log("Puzzle Solved!");
             newState.isSolved = true;
         }
@@ -227,7 +242,7 @@ export const Game: React.FC = () => {
         });
 
         // Check if the puzzle is solved
-        if (isPuzzleSolved(newBoard, newState.currentDate)) {
+        if (isPuzzleSolved(newBoard, playingDate)) {
             console.log("Puzzle Solved!");
             newState.isSolved = true;
         }
@@ -259,11 +274,8 @@ export const Game: React.FC = () => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
-    // Format current date as DD/MM
-    const formattedDate = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit'
-    });
+    // Format playing date as DD/MM
+    const formattedDate = `${String(playingDate.day).padStart(2, '0')}/${String(playingDate.month + 1).padStart(2, '0')}`;
 
     // Update document title when date changes
     React.useEffect(() => {
@@ -278,8 +290,8 @@ export const Game: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Call the server to get the solution
-            const solutionPieces = await getSolution(gameState.currentDate);
+            // Call the server to get the solution using the playing date
+            const solutionPieces = await getSolution(playingDate);
 
             // Build the new board state with the solution pieces placed
             let newBoard = gameState.board.map(row => 
@@ -340,8 +352,8 @@ export const Game: React.FC = () => {
         setIsHintLoading(true);
 
         try {
-            // Call the server to get a hint (one random piece placement)
-            const hintPiece = await getHint(gameState.currentDate);
+            // Call the server to get a hint (one random piece placement) using the playing date
+            const hintPiece = await getHint(playingDate);
 
             // Find the original piece to get its shape
             const originalPiece = gameState.pieces.find(p => p.id === hintPiece.id);
@@ -437,6 +449,7 @@ export const Game: React.FC = () => {
             <div className="top-bar">
                 <ThemeToggle />
                 <div className="game-controls">
+                    <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
                     <button 
                         onClick={undo} 
                         disabled={!canUndo}
@@ -460,7 +473,7 @@ export const Game: React.FC = () => {
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
                 </div>
             </div>
-            <h1 className="main-title">Calendar Puzzle - {formattedDate}</h1>
+            <h1 className="main-title">Calendar Puzzle</h1>
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
             <main className="game">
                 <BoardComponent 
