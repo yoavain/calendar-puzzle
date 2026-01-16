@@ -539,11 +539,15 @@ export const Game: React.FC = () => {
                                 className="piece-wrapper"
                                 sx={{
                                     position: 'relative',
-                                    p: 0.5,
+                                    p: 1,
                                     bgcolor: 'background.default',
-                                    borderRadius: 1,
+                                    borderRadius: 2,
                                     width: 210,
                                     height: 280,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start',
                                 }}
                             >
                                 <Piece
