@@ -1,5 +1,4 @@
-import { GameState, BoardCell, Piece, Board } from '../../common/types';
-import { MONTHS } from '../../common/gameLogic';
+import {Board, GameState, MONTHS, Piece, toPuzzleDate} from '../../common/types';
 
 /**
  * Initialize the game board with month and day cells
@@ -183,7 +182,7 @@ export function initializeGame(date: Date = new Date()): GameState {
         board: initializeBoard(date),
         pieces: initializePieces(),
         selectedPieceId: null,
-        currentDate: date,
+        currentDate: toPuzzleDate(date),
         isSolved: false,
         isGameComplete: false
     };
