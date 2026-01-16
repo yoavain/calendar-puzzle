@@ -11,9 +11,7 @@ const root = ReactDOM.createRoot(
 root.render(
     <React.StrictMode>
         <ThemeProvider>
-            <div className="app">
-                <Game />
-            </div>
+            <Game />
         </ThemeProvider>
     </React.StrictMode>
 );
