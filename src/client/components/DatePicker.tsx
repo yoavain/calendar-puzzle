@@ -9,7 +9,6 @@ interface DatePickerProps {
 }
 
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Using 29 for Feb (leap year max)
-const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
     const showButton = useQueryParam('code');
@@ -103,11 +102,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
 
         return (
             <div className="date-picker-calendar">
-                <div className="date-picker-weekdays">
-                    {WEEKDAYS.map(day => (
-                        <div key={day} className="date-picker-weekday">{day}</div>
-                    ))}
-                </div>
                 <div className="date-picker-days">
                     {days.map(day => (
                         <button
