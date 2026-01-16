@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -22,6 +22,12 @@ import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
 
+// Type for invalid drop feedback
+export interface InvalidDropCell {
+    x: number;
+    y: number;
+}
+
 export const Game: React.FC = () => {
     // State for the playing date (initialized to today)
     const [playingDate, setPlayingDate] = useState<PuzzleDate>(() => toPuzzleDate(new Date()));
@@ -40,6 +46,10 @@ export const Game: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isHintLoading, setIsHintLoading] = useState(false);
     const [solverError, setSolverError] = useState<string | null>(null);
+
+    // State for invalid drop visual feedback
+    const [invalidDropCells, setInvalidDropCells] = useState<InvalidDropCell[]>([]);
+    const invalidDropTimeoutRef = useRef<number | null>(null);
 
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
@@ -197,13 +207,48 @@ export const Game: React.FC = () => {
         return { board: newBoard, pieces: newPieces };
     };
 
+    // Helper function to trigger invalid drop feedback
+    const triggerInvalidDropFeedback = (piece: PieceType, position: Position) => {
+        // Clear any existing timeout
+        if (invalidDropTimeoutRef.current) {
+            window.clearTimeout(invalidDropTimeoutRef.current);
+        }
+
+        // Calculate which cells the piece would occupy
+        const transformedShape = getTransformedShape(piece);
+        const cells: InvalidDropCell[] = [];
+
+        for (let y = 0; y < transformedShape.length; y++) {
+            for (let x = 0; x < transformedShape[y].length; x++) {
+                if (transformedShape[y][x]) {
+                    cells.push({
+                        x: position.x + x,
+                        y: position.y + y
+                    });
+                }
+            }
+        }
+
+        setInvalidDropCells(cells);
+
+        // Clear the feedback after animation duration (500ms)
+        invalidDropTimeoutRef.current = window.setTimeout(() => {
+            setInvalidDropCells([]);
+            invalidDropTimeoutRef.current = null;
+        }, 500);
+    };
+
     const handlePieceDrop = (position: Position, dragItem: DragItem) => {
         if (gameState.isSolved) return;
 
         const { pieceId } = dragItem;
 
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece || !isValidPlacement(gameState.board, piece, position)) {
+        if (!piece) return;
+        
+        if (!isValidPlacement(gameState.board, piece, position)) {
+            // Trigger visual feedback for invalid drop
+            triggerInvalidDropFeedback(piece, position);
             return;
         }
 
@@ -531,6 +576,7 @@ export const Game: React.FC = () => {
                     pieces={gameState.pieces}
                     onCellClick={handleCellClick}
                     onPieceDrop={handlePieceDrop}
+                    invalidDropCells={invalidDropCells}
                     data-testid="board"
                 />
                 <Box 
