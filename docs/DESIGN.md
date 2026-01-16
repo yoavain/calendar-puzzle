@@ -223,3 +223,65 @@ Ensure the color scheme is cohesive and works well in both light and dark modes.
 - Use CSS transitions for background, color, and border changes.
 - Audit all components for theme compatibility and adjust as needed.
 - Test theme switching for smoothness and visual consistency.
+
+### Confetti Animation on Puzzle Completion
+
+Celebrate the user's success with a satisfying confetti animation when they complete the puzzle. This provides positive reinforcement and makes the achievement feel rewarding.
+
+**Low-level design:**
+- Use a lightweight confetti library (e.g., `canvas-confetti` or `react-confetti`).
+- Trigger the animation when the puzzle is solved (all pieces placed correctly).
+- Configure confetti to burst from the center of the screen with puzzle-themed colors.
+- Animation should last 2-3 seconds and not block user interaction.
+- Ensure the animation respects `prefers-reduced-motion` for accessibility.
+- Clean up canvas/DOM elements after animation completes to prevent memory leaks.
+
+---
+
+## Features
+
+### Statistics & Progress
+
+Track user puzzle completion history to provide insights into their progress and encourage daily engagement through streak tracking.
+
+#### Solving Streak Tracking
+
+Display the user's current streak of consecutive days with completed puzzles. Streaks motivate daily engagement and create a sense of accomplishment.
+
+**Low-level design:**
+- Extend `users_results` query to calculate streak from completion dates.
+- A streak is defined as consecutive calendar days with at least one completed puzzle.
+- Calculate current streak: count backwards from today (or yesterday if today not yet completed).
+- Calculate longest streak: find the maximum consecutive day sequence in history.
+- Store computed streak in session/cache to avoid recalculating on every request.
+- Display streak prominently in the UI with a flame or calendar icon.
+- Consider streak freeze/grace period for premium features (future).
+
+**API additions:**
+```typescript
+// GET /api/stats
+Response: {
+  currentStreak: number,
+  longestStreak: number,
+  totalCompleted: number,
+  completionRate: number  // totalCompleted / 365
+}
+```
+
+#### Personal Statistics Dashboard
+
+Provide users with a dashboard showing their puzzle completion progress across the year. This gives a sense of accomplishment and highlights which dates remain unsolved.
+
+**Low-level design:**
+- Create a new `StatsPage` or `StatsModal` component.
+- Display a year calendar heatmap showing completed vs. incomplete dates.
+- Show key metrics:
+  - Total puzzles completed (X / 365)
+  - Completion percentage
+  - Current streak
+  - Longest streak
+  - Average solve time (if tracking time)
+- Use color coding: green for completed, gray for incomplete, gold for today.
+- Allow clicking on a date to navigate to that puzzle.
+- Fetch stats from `/api/stats` endpoint (requires authentication).
+- Cache stats client-side and invalidate on new completion.
