@@ -21,6 +21,7 @@ import { DatePicker } from './DatePicker';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
+import { PiecesContainer, PiecePoolWrapper } from './Game.styled';
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {
@@ -579,42 +580,14 @@ export const Game: React.FC = () => {
                     invalidDropCells={invalidDropCells}
                     data-testid="board"
                 />
-                <Box 
-                    className="pieces-container"
+                <PiecesContainer
                     onDragOver={handlePileDropZoneDragOver}
                     onDrop={handlePileDropZoneDrop}
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: 1,
-                        mt: 2,
-                        p: 2,
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        justifyItems: 'center',
-                        maxWidth: 900,
-                        mx: 'auto',
-                    }}
                 >
                     {gameState.pieces
                         .filter(piece => !piece.position)
                         .map(piece => (
-                            <Box 
-                                key={piece.id} 
-                                className="piece-wrapper"
-                                sx={{
-                                    position: 'relative',
-                                    p: 1,
-                                    bgcolor: 'background.default',
-                                    borderRadius: 2,
-                                    width: 210,
-                                    height: 280,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                }}
-                            >
+                            <PiecePoolWrapper key={piece.id}>
                                 <Piece
                                     piece={piece}
                                     isSelected={piece.id === gameState.selectedPieceId}
@@ -627,9 +600,9 @@ export const Game: React.FC = () => {
                                     onFlipH={() => handleFlipHPiece(piece.id)}
                                     onFlipV={() => handleFlipVPiece(piece.id)}
                                 />
-                            </Box>
+                            </PiecePoolWrapper>
                         ))}
-                </Box>
+                </PiecesContainer>
             </Box>
         </Container>
     );
