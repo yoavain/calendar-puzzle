@@ -1,7 +1,10 @@
 import {parentPort} from 'worker_threads';
+import pino from 'pino';
 import {Piece, PuzzleDate} from '../../common/types.js';
 import {findSolution} from '../../common/puzzleSolver.js';
 import {initializeBoard, initializePieces} from '../utils/gameInit.js';
+
+const logger = pino();
 
 // SolverRequest matches PuzzleDate structure
 type SolverRequest = PuzzleDate;
@@ -36,7 +39,7 @@ if (parentPort) {
             }
         } catch (error) {
             // Log error details but return generic message
-            console.error('Solver worker error:', error);
+            logger.error(error, 'Solver worker error');
             parentPort!.postMessage({
                 success: false,
                 error: 'Failed to solve puzzle'

@@ -35,7 +35,7 @@ export function registerHintRoutes(app: FastifyInstance): void {
             try {
                 // Solve the puzzle to get all piece placements
                 // parseDate returns PuzzleDate with 0-indexed month
-                const pieces = await solvePuzzle(month, day);
+                const pieces = await solvePuzzle(month, day, request.log);
 
                 // Filter to only pieces that have a position (are placed)
                 const placedPieces = pieces.filter(p => p.position !== null);
@@ -54,8 +54,7 @@ export function registerHintRoutes(app: FastifyInstance): void {
                 return reply.send({ piece: hintPiece });
             } catch (error) {
                 // Log detailed error on server, but return generic message to client
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                app.log.error(`Failed to get hint for ${month}/${day}: ${errorMessage}`);
+                request.log.error(error, `[HintRoute] Failed to get hint for ${month}/${day}`);
                 return reply.code(500).send({
                     error: 'Unable to generate hint for this date. Please try again.'
                 });

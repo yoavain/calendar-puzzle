@@ -1,5 +1,6 @@
 services:
   calendar-puzzle:
+    image: calendar-puzzle
     build: .
     ports:
       - "23222:3001"

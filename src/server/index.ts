@@ -5,16 +5,19 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const HOST = process.env.HOST || '0.0.0.0';
 
 const start = async () => {
-    // Run database migrations before starting the server
-    await runMigrations();
-
     const app = buildApp();
+    const log = app.log.child({});
+    
+    log.info('[Server] Starting calendar-puzzle server');
+    
+    // Run database migrations before starting the server
+    await runMigrations(log);
 
     try {
         await app.listen({ port: PORT, host: HOST });
-        console.log(`Server listening on http://${HOST}:${PORT}`);
+        log.info({ host: HOST, port: PORT }, '[Server] Listening');
     } catch (err) {
-        app.log.error(err);
+        log.error(err, '[Server] Failed to start');
         process.exit(1);
     }
 };
