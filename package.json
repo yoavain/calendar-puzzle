@@ -6,7 +6,9 @@
     "dependencies": {
         "@fastify/static": "9.0.0",
         "dlx": "0.2.1",
+        "drizzle-orm": "0.45.1",
         "fastify": "5.7.0",
+        "pg": "8.17.1",
         "react": "19.2.3",
         "react-dom": "19.2.3"
     },
@@ -16,10 +18,12 @@
         "@testing-library/user-event": "14.6.1",
         "@types/jest": "30.0.0",
         "@types/node": "25.0.9",
+        "@types/pg": "8.16.0",
         "@types/react": "19.2.8",
         "@types/react-dom": "19.2.3",
         "@vitejs/plugin-react": "5.1.2",
         "concurrently": "9.2.1",
+        "drizzle-kit": "0.31.8",
         "esbuild": "0.27.2",
         "jest": "30.2.0",
         "ts-jest": "29.4.6",
@@ -29,6 +33,9 @@
         "vite": "7.3.1"
     },
     "scripts": {
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:studio": "drizzle-kit studio",
         "dev": "vite",
         "dev:all": "concurrently \"tsx watch src/server/index.ts\" \"vite\"",
         "build": "npm run build:client && npm run build:server",
@@ -40,8 +47,8 @@
         "test": "jest",
         "prebuild:image": "npm run build",
         "build:image": "docker build --tag calendar-puzzle --progress=plain --no-cache --file Dockerfile .",
-        "prestart:docker": "(docker stop calendar-puzzle || echo.) && (docker rm calendar-puzzle || echo.) && npm run build:image",
-        "start:docker": "docker run -p 23222:3001 --name calendar-puzzle --restart unless-stopped calendar-puzzle"
+        "prestart:docker": "npm run build:image && docker-compose down",
+        "start:docker": "docker-compose up"
     },
     "keywords": [],
     "author": "",
