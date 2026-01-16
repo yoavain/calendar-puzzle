@@ -51,8 +51,8 @@
         "test": "jest",
         "prebuild:image": "npm run build",
         "build:image": "docker build --tag calendar-puzzle --progress=plain --no-cache --file Dockerfile .",
-        "predeploy:docker": "npm run build:image && docker-compose down",
-        "deploy:docker": "docker-compose up -d"
+        "predeploy:docker": "npm run build:image && docker compose down",
+        "deploy:docker": "docker compose up -d"
     },
     "keywords": [],
     "author": "",

@@ -65,14 +65,14 @@ npm run start:docker
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start Vite dev server (frontend only) |
-| `npm run dev:all` | Start both frontend and backend |
-| `npm run build` | Build client and server |
-| `npm start` | Run production server |
-| `npm test` | Run tests |
-| `npm run start:docker` | Build and run with Docker |
+| Script                  | Description |
+|-------------------------|-------------|
+| `npm run dev`           | Start Vite dev server (frontend only) |
+| `npm run dev:all`       | Start both frontend and backend |
+| `npm run build`         | Build client and server |
+| `npm start`             | Run production server |
+| `npm test`              | Run tests |
+| `npm run deploy:docker` | Build and run with Docker |
 
 ## Documentation
 
