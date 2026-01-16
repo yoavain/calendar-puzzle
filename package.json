@@ -27,6 +27,7 @@
         "@types/react-dom": "19.2.3",
         "@vitejs/plugin-react": "5.1.2",
         "concurrently": "9.2.1",
+        "cross-env": "10.1.0",
         "drizzle-kit": "0.31.8",
         "esbuild": "0.27.2",
         "jest": "30.2.0",
@@ -51,8 +52,10 @@
         "test": "jest",
         "prebuild:image": "npm run build",
         "build:image": "docker build --tag calendar-puzzle --progress=plain --no-cache --file Dockerfile .",
-        "predeploy:docker": "npm run build:image && docker compose down",
-        "deploy:docker": "docker compose up -d"
+        "predeploy:docker:dev": "npm run build:image && docker compose -p calendar-puzzle-dev down --remove-orphans",
+        "deploy:docker:dev": "cross-env PORT=23229 docker compose -p calendar-puzzle-dev up -d",
+        "predeploy:docker:production": "npm run build:image && docker compose -p calendar-puzzle-production down --remove-orphans",
+        "deploy:docker:production": "cross-env PORT=23222 docker compose -p calendar-puzzle-production up -d"
     },
     "keywords": [],
     "author": "",
