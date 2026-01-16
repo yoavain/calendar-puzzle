@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles/styles.css';
 import { Game } from './components/Game';
+import { ThemeProvider } from './theme';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
@@ -9,8 +10,8 @@ const root = ReactDOM.createRoot(
 
 root.render(
     <React.StrictMode>
-        <div className="app">
+        <ThemeProvider>
             <Game />
-        </div>
+        </ThemeProvider>
     </React.StrictMode>
-); 
+);

@@ -100,8 +100,8 @@ export function isValidPlacement(board: Board, piece: Piece, position: Position,
 
                 const cell = board[boardY][boardX];
 
-                // If the cell is occupied or highlighted, the placement is invalid
-                if (cell.isOccupied || (checkHighlight && cell.isHighlighted)) {
+                // If the cell is not playable, occupied, or highlighted, the placement is invalid
+                if (!cell.isPlayable || cell.isOccupied || (checkHighlight && cell.isHighlighted)) {
                     isValid = false;
                     break;
                 }

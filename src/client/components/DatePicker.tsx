@@ -1,7 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { PuzzleDate, MONTHS } from '../../common/types';
 import { useQueryParam } from '../hooks/useQueryParam';
-import './DatePicker.css';
 
 interface DatePickerProps {
     currentDate: PuzzleDate;
@@ -16,42 +24,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
     const [isOpen, setIsOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
     const [selectedDay, setSelectedDay] = useState(currentDate.day);
-    const popupRef = useRef<HTMLDivElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
 
-    // Close popup when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                popupRef.current &&
-                !popupRef.current.contains(event.target as Node) &&
-                buttonRef.current &&
-                !buttonRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen]);
-
-    // Handle escape key
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && isOpen) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [isOpen]);
-
-    // Only render if 'code' query param is present (same as Hint/Solution buttons)
+    // Only render if 'code' query param is present
     if (!showButton) {
         return null;
     }
@@ -63,16 +37,18 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
         return `${day}/${month}`;
     };
 
-    // Reset selection when opening
     const handleOpen = () => {
         setSelectedMonth(currentDate.month);
         setSelectedDay(currentDate.day);
         setIsOpen(true);
     };
 
+    const handleClose = () => {
+        setIsOpen(false);
+    };
+
     const handleMonthChange = (month: number) => {
         setSelectedMonth(month);
-        // Adjust day if it exceeds days in new month
         const maxDays = DAYS_IN_MONTH[month];
         if (selectedDay > maxDays) {
             setSelectedDay(maxDays);
@@ -88,76 +64,105 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
         setIsOpen(false);
     };
 
-    const handleCancel = () => {
-        setIsOpen(false);
-    };
-
-    // Generate calendar grid for selected month
-    const renderCalendar = () => {
-        const daysInMonth = DAYS_IN_MONTH[selectedMonth];
-        const days: number[] = [];
-        for (let i = 1; i <= daysInMonth; i++) {
-            days.push(i);
-        }
-
-        return (
-            <div className="date-picker-calendar">
-                <div className="date-picker-days">
-                    {days.map(day => (
-                        <button
-                            key={day}
-                            className={`date-picker-day ${day === selectedDay ? 'selected' : ''}`}
-                            onClick={() => handleDayClick(day)}
-                        >
-                            {day}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        );
-    };
+    // Generate days array
+    const daysInMonth = DAYS_IN_MONTH[selectedMonth];
+    const days: number[] = [];
+    for (let i = 1; i <= daysInMonth; i++) {
+        days.push(i);
+    }
 
     return (
-        <div className="date-picker-container">
-            <button
-                ref={buttonRef}
-                className="date-picker-button control-button"
+        <>
+            <Button
+                variant="contained"
                 onClick={handleOpen}
-                title="Change playing date"
+                startIcon={<CalendarMonthIcon />}
+                size="small"
             >
-                📅 {formatDate(currentDate)}
-            </button>
+                {formatDate(currentDate)}
+            </Button>
 
-            {isOpen && (
-                <div className="date-picker-popup" ref={popupRef}>
-                    <div className="date-picker-header">
-                        <span className="date-picker-title">Select Date</span>
-                    </div>
-
-                    <div className="date-picker-month-selector">
+            <Dialog 
+                open={isOpen} 
+                onClose={handleClose}
+                maxWidth="xs"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 }
+                }}
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    Select Date
+                </DialogTitle>
+                
+                <DialogContent sx={{ pt: 1 }}>
+                    {/* Month Selector */}
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                        Month
+                    </Typography>
+                    <Grid container spacing={0.5} sx={{ mb: 2 }}>
                         {MONTHS.map((monthName, index) => (
-                            <button
-                                key={monthName}
-                                className={`date-picker-month ${index === selectedMonth ? 'selected' : ''}`}
-                                onClick={() => handleMonthChange(index)}
-                            >
-                                {monthName}
-                            </button>
+                            <Grid size={{ xs: 4, sm: 2 }} key={monthName}>
+                                <Button
+                                    fullWidth
+                                    size="small"
+                                    variant={index === selectedMonth ? 'contained' : 'outlined'}
+                                    onClick={() => handleMonthChange(index)}
+                                    sx={{ 
+                                        minWidth: 0,
+                                        px: 1,
+                                        fontSize: '0.75rem',
+                                    }}
+                                >
+                                    {monthName}
+                                </Button>
+                            </Grid>
                         ))}
-                    </div>
+                    </Grid>
 
-                    {renderCalendar()}
+                    {/* Day Selector */}
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                        Day
+                    </Typography>
+                    <Box 
+                        sx={{ 
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(7, 1fr)',
+                            gap: 0.5,
+                        }}
+                    >
+                        {days.map(day => (
+                            <Button
+                                key={day}
+                                size="small"
+                                variant={day === selectedDay ? 'contained' : 'text'}
+                                onClick={() => handleDayClick(day)}
+                                sx={{
+                                    minWidth: 0,
+                                    aspectRatio: '1',
+                                    p: 0,
+                                    fontSize: '0.875rem',
+                                    bgcolor: day === selectedDay ? 'primary.main' : 'action.hover',
+                                    '&:hover': {
+                                        bgcolor: day === selectedDay ? 'primary.dark' : 'action.selected',
+                                    }
+                                }}
+                            >
+                                {day}
+                            </Button>
+                        ))}
+                    </Box>
+                </DialogContent>
 
-                    <div className="date-picker-actions">
-                        <button className="date-picker-cancel" onClick={handleCancel}>
-                            Cancel
-                        </button>
-                        <button className="date-picker-confirm" onClick={handleConfirm}>
-                            Play This Date
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={handleClose} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirm} variant="contained">
+                        Play This Date
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 };

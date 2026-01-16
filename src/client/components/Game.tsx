@@ -1,4 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
@@ -12,6 +21,12 @@ import { DatePicker } from './DatePicker';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
+
+// Type for invalid drop feedback
+export interface InvalidDropCell {
+    x: number;
+    y: number;
+}
 
 export const Game: React.FC = () => {
     // State for the playing date (initialized to today)
@@ -32,12 +47,24 @@ export const Game: React.FC = () => {
     const [isHintLoading, setIsHintLoading] = useState(false);
     const [solverError, setSolverError] = useState<string | null>(null);
 
+    // State for invalid drop visual feedback
+    const [invalidDropCells, setInvalidDropCells] = useState<InvalidDropCell[]>([]);
+    const invalidDropTimeoutRef = useRef<number | null>(null);
+
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
         setPlayingDate(newDate);
         // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, newDate.month, newDate.day);
+        const newGameState = initializeGame(jsDate);
+        clearHistory(newGameState);
+        setSolverError(null);
+    };
+
+    // Handle reset button - reinitialize game for current date
+    const handleReset = () => {
+        const jsDate = new Date(2024, playingDate.month, playingDate.day);
         const newGameState = initializeGame(jsDate);
         clearHistory(newGameState);
         setSolverError(null);
@@ -180,13 +207,48 @@ export const Game: React.FC = () => {
         return { board: newBoard, pieces: newPieces };
     };
 
+    // Helper function to trigger invalid drop feedback
+    const triggerInvalidDropFeedback = (piece: PieceType, position: Position) => {
+        // Clear any existing timeout
+        if (invalidDropTimeoutRef.current) {
+            window.clearTimeout(invalidDropTimeoutRef.current);
+        }
+
+        // Calculate which cells the piece would occupy
+        const transformedShape = getTransformedShape(piece);
+        const cells: InvalidDropCell[] = [];
+
+        for (let y = 0; y < transformedShape.length; y++) {
+            for (let x = 0; x < transformedShape[y].length; x++) {
+                if (transformedShape[y][x]) {
+                    cells.push({
+                        x: position.x + x,
+                        y: position.y + y
+                    });
+                }
+            }
+        }
+
+        setInvalidDropCells(cells);
+
+        // Clear the feedback after animation duration (500ms)
+        invalidDropTimeoutRef.current = window.setTimeout(() => {
+            setInvalidDropCells([]);
+            invalidDropTimeoutRef.current = null;
+        }, 500);
+    };
+
     const handlePieceDrop = (position: Position, dragItem: DragItem) => {
         if (gameState.isSolved) return;
 
         const { pieceId } = dragItem;
 
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece || !isValidPlacement(gameState.board, piece, position)) {
+        if (!piece) return;
+        
+        if (!isValidPlacement(gameState.board, piece, position, true)) {
+            // Trigger visual feedback for invalid drop
+            triggerInvalidDropFeedback(piece, position);
             return;
         }
 
@@ -445,53 +507,114 @@ export const Game: React.FC = () => {
     };
 
     return (
-        <div className="app">
-            <div className="top-bar">
+        <Container maxWidth="lg" sx={{ py: 2, minHeight: '100vh' }}>
+            {/* Top Bar */}
+            <Stack 
+                direction="row" 
+                justifyContent="space-between" 
+                alignItems="center" 
+                sx={{ mb: 2 }}
+            >
                 <ThemeToggle />
-                <div className="game-controls">
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
-                    <button 
+                    <Button 
+                        variant="contained"
                         onClick={undo} 
                         disabled={!canUndo}
-                        className="control-button"
+                        size="small"
+                        startIcon={<UndoIcon />}
                     >
                         Undo
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
+                        variant="contained"
                         onClick={redo} 
                         disabled={!canRedo}
-                        className="control-button"
+                        size="small"
+                        startIcon={<RedoIcon />}
                     >
                         Redo
-                    </button>
+                    </Button>
+                    <Button 
+                        variant="outlined"
+                        onClick={handleReset}
+                        disabled={isBoardEmpty}
+                        size="small"
+                        startIcon={<RestartAltIcon />}
+                        color="warning"
+                    >
+                        Reset
+                    </Button>
                     {solverError && (
-                        <div className="error-message" style={{ color: 'red', marginRight: '10px' }}>
+                        <Alert severity="error" sx={{ py: 0 }}>
                             {solverError}
-                        </div>
+                        </Alert>
                     )}
                     <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty} />
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
-                </div>
-            </div>
-            <h1 className="main-title">Calendar Puzzle</h1>
+                </Stack>
+            </Stack>
+
+            {/* Title */}
+            <Typography 
+                variant="h4" 
+                component="h1" 
+                align="center" 
+                sx={{ mb: 2, fontWeight: 'bold' }}
+            >
+                Calendar Puzzle
+            </Typography>
+
+            {/* Success Message Dialog */}
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
-            <main className="game">
+
+            {/* Game Area */}
+            <Box component="main">
                 <BoardComponent 
                     board={gameState.board} 
                     pieces={gameState.pieces}
                     onCellClick={handleCellClick}
                     onPieceDrop={handlePieceDrop}
+                    invalidDropCells={invalidDropCells}
                     data-testid="board"
                 />
-                <div 
+                <Box 
                     className="pieces-container"
                     onDragOver={handlePileDropZoneDragOver}
                     onDrop={handlePileDropZoneDrop}
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: 1,
+                        mt: 2,
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        justifyItems: 'center',
+                        maxWidth: 900,
+                        mx: 'auto',
+                    }}
                 >
                     {gameState.pieces
-                        .filter(piece => !piece.position) // Only show unplaced pieces
+                        .filter(piece => !piece.position)
                         .map(piece => (
-                            <div key={piece.id} className="piece-wrapper">
+                            <Box 
+                                key={piece.id} 
+                                className="piece-wrapper"
+                                sx={{
+                                    position: 'relative',
+                                    p: 1,
+                                    bgcolor: 'background.default',
+                                    borderRadius: 2,
+                                    width: 210,
+                                    height: 280,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start',
+                                }}
+                            >
                                 <Piece
                                     piece={piece}
                                     isSelected={piece.id === gameState.selectedPieceId}
@@ -504,10 +627,10 @@ export const Game: React.FC = () => {
                                     onFlipH={() => handleFlipHPiece(piece.id)}
                                     onFlipV={() => handleFlipVPiece(piece.id)}
                                 />
-                            </div>
+                            </Box>
                         ))}
-                </div>
-            </main>
-        </div>
+                </Box>
+            </Box>
+        </Container>
     );
 };
