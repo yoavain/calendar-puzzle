@@ -1,7 +1,4 @@
-import { Board, Piece, Position } from './types';
-
-// Array of month names (January = 0, December = 11)
-export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+import { Board, Piece, Position, MONTHS, PuzzleDate } from './types';
 
 /**
  * Get the transformed shape of a piece based on its rotation and flips
@@ -124,9 +121,8 @@ export function isValidPlacement(board: Board, piece: Piece, position: Position,
 /**
  * Check if the puzzle is solved for the current date
  */
-export function isPuzzleSolved(board: Board, currentDate: Date): boolean {
-    const month = currentDate.getMonth(); // 0-11
-    const day = currentDate.getDate(); // 1-31
+export function isPuzzleSolved(board: Board, currentDate: PuzzleDate): boolean {
+    const { month, day } = currentDate;
     
     // Check if the month cell is visible (not covered)
     let monthVisible = false;

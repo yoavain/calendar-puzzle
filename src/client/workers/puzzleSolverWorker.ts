@@ -1,6 +1,6 @@
 // puzzleSolverWorker.ts
-import { Piece, Position, Board } from '../../common/types';
-import { getTransformedShape, isPuzzleSolved, isValidPlacement, MONTHS } from '../../common/gameLogic';
+import { Piece, Position, Board, MONTHS, PuzzleDate, toPuzzleDate } from '../../common/types';
+import { getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 
 interface SolverPiece extends Piece {
     tried: {
@@ -36,7 +36,7 @@ interface SolverMessage {
 function findSolution(
     initialBoard: Board,
     pieces: Piece[],
-    currentDate: Date
+    currentDate: PuzzleDate
 ): Piece[] | null {
     // Convert pieces to solver pieces with tracking of tried positions
     const solverPieces: SolverPiece[] = pieces.map(piece => ({
@@ -81,7 +81,7 @@ function findSolution(
 function solve(
     board: Board,
     remainingPieces: SolverPiece[],
-    currentDate: Date
+    currentDate: PuzzleDate
 ): boolean {
     // If no pieces left, we've found a solution
     if (remainingPieces.length === 0) {
@@ -96,8 +96,7 @@ function solve(
     }
 
     // Get the month and day cells that should remain uncovered
-    const month = currentDate.getMonth(); // 0-11
-    const day = currentDate.getDate(); // 1-31 (1-based)
+    const { month, day } = currentDate;
 
     // Find the coordinates of the month and day cells
     let monthCell: { x: number, y: number } | null = null;
@@ -255,8 +254,8 @@ ctx.onmessage = (event: MessageEvent<SolverRequest>) => {
     try {
         const { board, pieces, currentDate } = event.data;
 
-        // Convert ISO string back to Date
-        const date = new Date(currentDate);
+        // Convert ISO string back to PuzzleDate
+        const date = toPuzzleDate(new Date(currentDate));
 
         // Find solution
         const solution = findSolution(board, pieces, date);

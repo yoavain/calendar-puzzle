@@ -3,6 +3,19 @@ export interface Position {
     y: number;
 }
 
+export interface PuzzleDate {
+    month: number;  // 0-11 (like JavaScript Date.getMonth())
+    day: number;    // 1-31 (like JavaScript Date.getDate())
+}
+
+/** Convert a Date to a PuzzleDate */
+export const toPuzzleDate = (date: Date): PuzzleDate => {
+    return { month: date.getMonth(), day: date.getDate() };
+};
+
+// Array of month names (January = 0, December = 11)
+export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export interface Piece {
     id: number;
     shape: boolean[][];  // true represents filled cells
@@ -27,7 +40,7 @@ export interface GameState {
     board: Board;
     pieces: Piece[];
     selectedPieceId: number | null;
-    currentDate: Date;
+    currentDate: PuzzleDate;
     isSolved: boolean;
     isGameComplete: boolean;
 }

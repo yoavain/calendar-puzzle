@@ -1,5 +1,6 @@
-import type { GameState, Board, Piece, Position, BoardCell } from './types';
-import { getTransformedShape, MONTHS } from './gameLogic';
+import type { GameState, Board, Piece, Position, BoardCell, PuzzleDate } from './types';
+import { MONTHS } from './types';
+import { getTransformedShape } from './gameLogic';
 import dlx from 'dlx';
 
 class DLXSolver {
@@ -7,7 +8,7 @@ class DLXSolver {
     private rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, 'shape' | 'id' | 'color'>}>;
     private solution: number[] | null = null;
 
-    constructor(board: Board, pieces: Piece[], date: Date) {
+    constructor(board: Board, pieces: Piece[], date: PuzzleDate) {
         this.rowData = new Map();
         const { matrix, rowData } = this.buildMatrix(board, pieces, date);
         this.matrix = matrix;
@@ -24,13 +25,13 @@ class DLXSolver {
         return playableCells;
     }
 
-    private isDateCell(cell: BoardCell, date: Date): boolean {
-        const monthName = MONTHS[date.getMonth()];
-        const dayNum = date.getDate();
+    private isDateCell(cell: BoardCell, date: PuzzleDate): boolean {
+        const monthName = MONTHS[date.month];
+        const dayNum = date.day;
         return (cell.y < 2 && cell.content === monthName) || (cell.y >= 2 && parseInt(cell.content || '-1') === dayNum);
     }
 
-    private buildMatrix(board: Board, pieces: Piece[], date: Date): { 
+    private buildMatrix(board: Board, pieces: Piece[], date: PuzzleDate): { 
         matrix: number[][], 
         rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, 'shape' | 'id' | 'color'>}>
     } {
@@ -204,7 +205,7 @@ class DLXSolver {
 /**
  * Main solution finder using DLX
  */
-export function findSolution(initialBoard: Board, initialPieces: Piece[], date: Date): GameState | null {
+export function findSolution(initialBoard: Board, initialPieces: Piece[], date: PuzzleDate): GameState | null {
     try {
         const solver = new DLXSolver(initialBoard, initialPieces, date);
         const found = solver.search();
