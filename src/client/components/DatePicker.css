@@ -87,22 +87,6 @@
     margin-bottom: 12px;
 }
 
-.date-picker-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-    margin-bottom: 8px;
-}
-
-.date-picker-weekday {
-    text-align: center;
-    font-size: 0.75em;
-    font-weight: 600;
-    color: var(--color-text);
-    opacity: 0.6;
-    padding: 4px 0;
-}
-
 .date-picker-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
