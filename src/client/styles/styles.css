@@ -53,6 +53,8 @@ h1 {
     border-radius: 22px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08);
     border-collapse: separate;
+    /* Use content-box to preserve original width behavior (width = content only, not including padding/border) */
+    box-sizing: content-box;
     width: calc(var(--cell-size) * 7);
     min-width: calc(var(--cell-size) * 7);
     max-width: calc(var(--cell-size) * 7);

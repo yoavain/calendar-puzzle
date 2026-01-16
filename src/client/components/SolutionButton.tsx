@@ -1,4 +1,6 @@
 import React from 'react';
+import Button from '@mui/material/Button';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useQueryParam } from '../hooks/useQueryParam';
 
 interface SolutionButtonProps {
@@ -8,21 +10,22 @@ interface SolutionButtonProps {
 
 export const SolutionButton: React.FC<SolutionButtonProps> = ({ onSolve, isLoading = false }) => {
     const showButton = useQueryParam('code');
-    console.log('SolutionButton - showButton:', showButton);
 
     if (!showButton) {
-        console.log('SolutionButton - Not rendering button');
         return null;
     }
 
-    console.log('SolutionButton - Rendering button');
     return (
-        <button
+        <Button
+            variant="contained"
+            color="success"
             onClick={onSolve}
-            className="control-button"
-            disabled={isLoading}
+            loading={isLoading}
+            loadingPosition="start"
+            startIcon={<AutoFixHighIcon />}
+            size="small"
         >
             {isLoading ? 'Solving...' : 'Solution'}
-        </button>
+        </Button>
     );
 };
