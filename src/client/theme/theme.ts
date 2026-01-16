@@ -9,7 +9,7 @@ const pieceColors = [
     '#DB5B80', // 5: Rose
     '#E8AA14', // 6: Marigold
     '#8DA547', // 7: Olive
-    '#5B7FC3', // 8: Slate
+    '#4169E1', // 8: Royal blue
 ];
 
 // Extend MUI theme interface with custom game tokens
