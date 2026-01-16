@@ -1,7 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import { Piece as PieceType } from '../../common/types';
 import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
+import { PieceWrapper, PieceGrid, PieceCell, EdgeDirections } from './Piece.styled';
 
 interface PieceProps {
     piece: PieceType;
@@ -10,10 +11,12 @@ interface PieceProps {
 }
 
 export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
+    const theme = useTheme();
+    
     // Track cumulative rotation to ensure smooth clockwise animation
     // (avoids counter-clockwise jump when going from 270° to 0°)
-    const prevRotation = useRef(piece.rotation);
-    const [cumulativeRotation, setCumulativeRotation] = useState(piece.rotation);
+    const prevRotation = useRef<number>(piece.rotation);
+    const [cumulativeRotation, setCumulativeRotation] = useState<number>(piece.rotation);
 
     useEffect(() => {
         const prev = prevRotation.current;
@@ -58,27 +61,40 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
 
         // Create a drag preview that represents the transformed piece
         const dragPreview = document.createElement('div');
-        dragPreview.className = 'piece-drag-preview';
+        dragPreview.style.cssText = `
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            display: grid;
+            gap: 0;
+            background-color: transparent;
+        `;
 
         transformedShape.forEach((row, y) => {
             const rowDiv = document.createElement('div');
-            rowDiv.className = 'preview-row';
+            rowDiv.style.cssText = 'display: flex; gap: 0;';
             row.forEach((cell, x) => {
                 const cellDiv = document.createElement('div');
-                let className = `preview-cell ${cell ? 'filled' : ''}`;
+                cellDiv.style.cssText = `
+                    width: ${theme.game.cellSize}px;
+                    height: ${theme.game.cellSize}px;
+                    border: none;
+                `;
 
                 if (cell) {
+                    cellDiv.style.backgroundColor = theme.game.pieceColor;
                     const isEdge = isEdgeCell(transformedShape, x, y);
                     if (isEdge) {
                         const edgeDirections = getEdgeDirections(transformedShape, x, y);
-                        if (edgeDirections.top) className += ' edge-top';
-                        if (edgeDirections.right) className += ' edge-right';
-                        if (edgeDirections.bottom) className += ' edge-bottom';
-                        if (edgeDirections.left) className += ' edge-left';
+                        if (edgeDirections.top) cellDiv.style.borderTop = `2px solid ${theme.game.pieceBorderColor}`;
+                        if (edgeDirections.right) cellDiv.style.borderRight = `2px solid ${theme.game.pieceBorderColor}`;
+                        if (edgeDirections.bottom) cellDiv.style.borderBottom = `2px solid ${theme.game.pieceBorderColor}`;
+                        if (edgeDirections.left) cellDiv.style.borderLeft = `2px solid ${theme.game.pieceBorderColor}`;
                     }
+                } else {
+                    cellDiv.style.visibility = 'hidden';
                 }
 
-                cellDiv.className = className;
                 rowDiv.appendChild(cellDiv);
             });
             dragPreview.appendChild(rowDiv);
@@ -90,53 +106,36 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     };
 
     return (
-        <Box
-            className={`piece ${isSelected ? 'selected' : ''} ${piece.position ? 'placed' : ''}`}
+        <PieceWrapper
+            isSelected={isSelected}
+            isPlaced={!!piece.position}
             onClick={onClick}
             draggable={!piece.position}
             onDragStart={handleDragStart}
-            sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: 'calc(100% - 50px)',
-                minHeight: 200,
-            }}
         >
-            <Box 
-                className="piece-grid"
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${baseWidth}, var(--cell-size))`,
-                    gridTemplateRows: `repeat(${baseHeight}, var(--cell-size))`,
-                    // Smooth CSS rotation/flip animation
-                    transform: transformStyle,
-                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
+            <PieceGrid
+                columns={baseWidth}
+                rows={baseHeight}
+                transformStyle={transformStyle}
             >
                 {baseShape.map((row, y) =>
                     row.map((cell, x) => {
-                        let className = `piece-cell ${cell ? 'filled' : 'empty'}`;
-
                         // Calculate edges based on base shape
+                        let edges: EdgeDirections | undefined;
                         if (cell && isEdgeCell(baseShape, x, y)) {
-                            const edgeDirections = getEdgeDirections(baseShape, x, y);
-                            if (edgeDirections.top) className += ' edge-top';
-                            if (edgeDirections.right) className += ' edge-right';
-                            if (edgeDirections.bottom) className += ' edge-bottom';
-                            if (edgeDirections.left) className += ' edge-left';
+                            edges = getEdgeDirections(baseShape, x, y);
                         }
 
                         return (
-                            <div
+                            <PieceCell
                                 key={`${x}-${y}`}
-                                className={className}
+                                isFilled={cell}
+                                edges={edges}
                             />
                         );
                     })
                 )}
-            </Box>
-        </Box>
+            </PieceGrid>
+        </PieceWrapper>
     );
 };
