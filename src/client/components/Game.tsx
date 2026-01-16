@@ -304,21 +304,25 @@ export const Game: React.FC = () => {
                 }
             }
 
+            // Mark all pieces as locked when showing solution
+            const lockedPieces = solutionPieces.map(piece => ({
+                ...piece,
+                isLocked: true
+            }));
+
             const solvedState = {
                 ...gameState,
                 board: newBoard,
-                pieces: solutionPieces,
+                pieces: lockedPieces,
                 isSolved: true,
+                solutionRevealed: true,  // Mark that solution was revealed, not solved by user
                 selectedPieceId: null
             };
 
-            // Push the solved GameState
-            pushState(solvedState, { 
-                type: 'SOLVE_PUZZLE',
-                pieceId: -1
-            });
+            // Clear history to prevent undoing the solution (like hint)
+            clearHistory(solvedState);
 
-            console.log("Puzzle Solved!");
+            console.log("Solution revealed!");
         } catch (error) {
             // Handle any errors
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -457,7 +461,7 @@ export const Game: React.FC = () => {
                 </div>
             </div>
             <h1 className="main-title">Calendar Puzzle - {formattedDate}</h1>
-            <SuccessMessage isVisible={gameState.isSolved} />
+            <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
             <main className="game">
                 <BoardComponent 
                     board={gameState.board} 
