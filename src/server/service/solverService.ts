@@ -2,6 +2,7 @@ import { Worker } from 'worker_threads';
 import path from 'path';
 import fs from 'fs';
 import { Piece, PuzzleDate } from '../../common/types.js';
+import * as solutionRepository from '../db/solutionRepository.js';
 
 // Worker message format matches PuzzleDate structure
 type SolverRequest = PuzzleDate;
@@ -30,12 +31,16 @@ function getWorkerPath(): string {
 }
 
 /**
- * Solve the puzzle for a given date using a worker thread
- * @param month - 0-indexed month (0-11) from PuzzleDate
- * @param day - 1-indexed day (1-31) from PuzzleDate
- * @returns Promise resolving to the solution pieces or null if no solution
+ * Format month and day into a date key for caching (MM-DD format)
  */
-export async function solvePuzzle(month: number, day: number): Promise<Piece[]> {
+function toDateKey(month: number, day: number): string {
+    return `${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * Solve the puzzle using a worker thread (internal implementation)
+ */
+function solveWithWorker(month: number, day: number): Promise<Piece[]> {
     return new Promise((resolve, reject) => {
         const workerPath = getWorkerPath();
         
@@ -70,4 +75,25 @@ export async function solvePuzzle(month: number, day: number): Promise<Piece[]> 
         const request: SolverRequest = { month, day };
         worker.postMessage(request);
     });
+}
+
+/**
+ * Solve the puzzle for a given date, using cache when available
+ * @param month - 0-indexed month (0-11) from PuzzleDate
+ * @param day - 1-indexed day (1-31) from PuzzleDate
+ * @returns Promise resolving to the solution pieces
+ */
+export async function solvePuzzle(month: number, day: number): Promise<Piece[]> {
+    const dateKey = toDateKey(month, day);
+    
+    // Check cache first
+    const cached = await solutionRepository.getSolution(dateKey);
+    if (cached) {
+        return cached;
+    }
+    
+    // Solve with worker and cache the result
+    const pieces = await solveWithWorker(month, day);
+    await solutionRepository.saveSolution(dateKey, pieces);
+    return pieces;
 }
