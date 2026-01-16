@@ -7,7 +7,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ### Project Setup
 - [x] Add Fastify backend server
 - [x] Restructure project into `client/`, `server/`, and `common/` folders under the `src/` folder
-- [x] Server serves client files and static assets from `src/resources/`
+- [x] Server serves client files and static assets from `build/`
  
 
 ### Shared Game Logic
@@ -45,7 +45,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### Accessibility
 - [x] Add ARIA labels and roles (partial: controls have aria-labels)
-- [x] Full keyboard navigation (Ctrl+Z/Ctrl+Shift+Z for undo/redo)
+- [x] Full keyboard navigation (Ctrl+Z for undo, Ctrl+Y or Ctrl+Shift+Z for redo)
 - [ ] High contrast mode
 
 ### Visual Polish
@@ -53,7 +53,14 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] Grid highlight on hover (playable cells have hover effects)
 - [x] Piece shadows for depth (box-shadows on pieces and board)
 - [x] Theme consistency (cohesive colors, smooth theme transitions)
+- [ ] Confetti animation on puzzle completion
 
 ### User Guidance
 - [x] Help system (tutorial overlay, tooltips, help button) (partial: tooltips on controls)
 - [x] Game state feedback (highlight selected piece, distinguish placed/unplaced pieces)
+
+## Features
+
+### Statistics & Progress
+- [ ] Solving streak tracking (consecutive days completed)
+- [ ] Personal statistics dashboard (puzzles / 365 completed)

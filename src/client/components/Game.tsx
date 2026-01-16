@@ -5,6 +5,7 @@ import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
+import Tooltip from '@mui/material/Tooltip';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -319,14 +320,25 @@ export const Game: React.FC = () => {
     };
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
             if (e.shiftKey) {
                 if (canRedo) redo();
             } else {
                 if (canUndo) undo();
             }
         }
-    }, [canUndo, canRedo, undo, redo]);
+        // Alternative: Ctrl+Y for redo (common on Windows)
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            e.preventDefault();
+            if (canRedo) redo();
+        }
+        // Escape to reset
+        if (e.key === 'Escape' && !isBoardEmpty) {
+            e.preventDefault();
+            handleReset();
+        }
+    }, [canUndo, canRedo, undo, redo, isBoardEmpty, handleReset]);
 
     React.useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
@@ -526,34 +538,46 @@ export const Game: React.FC = () => {
                 <ThemeToggle />
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
-                    <Button 
-                        variant="contained"
-                        onClick={undo} 
-                        disabled={!canUndo}
-                        size="small"
-                        startIcon={<UndoIcon />}
-                    >
-                        Undo
-                    </Button>
-                    <Button 
-                        variant="contained"
-                        onClick={redo} 
-                        disabled={!canRedo}
-                        size="small"
-                        startIcon={<RedoIcon />}
-                    >
-                        Redo
-                    </Button>
-                    <Button 
-                        variant="outlined"
-                        onClick={handleReset}
-                        disabled={isBoardEmpty}
-                        size="small"
-                        startIcon={<RestartAltIcon />}
-                        color="warning"
-                    >
-                        Reset
-                    </Button>
+                    <Tooltip title="Ctrl+Z" arrow>
+                        <span>
+                            <Button 
+                                variant="contained"
+                                onClick={undo} 
+                                disabled={!canUndo}
+                                size="small"
+                                startIcon={<UndoIcon />}
+                            >
+                                Undo
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    <Tooltip title="Ctrl+Y or Ctrl+Shift+Z" arrow>
+                        <span>
+                            <Button 
+                                variant="contained"
+                                onClick={redo} 
+                                disabled={!canRedo}
+                                size="small"
+                                startIcon={<RedoIcon />}
+                            >
+                                Redo
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    <Tooltip title="Esc" arrow>
+                        <span>
+                            <Button 
+                                variant="outlined"
+                                onClick={handleReset}
+                                disabled={isBoardEmpty}
+                                size="small"
+                                startIcon={<RestartAltIcon />}
+                                color="warning"
+                            >
+                                Reset
+                            </Button>
+                        </span>
+                    </Tooltip>
                     {solverError && (
                         <Alert severity="error" sx={{ py: 0 }}>
                             {solverError}
