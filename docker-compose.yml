@@ -1,10 +1,9 @@
 services:
   calendar-puzzle:
     image: calendar-puzzle
-    container_name: server
     build: .
     ports:
-      - "23222:3001"
+      - "${PORT}:3001"
     environment:
       - TZ=Asia/Jerusalem
       - NODE_ENV=production
@@ -15,7 +14,6 @@ services:
 
   postgres:
     image: postgres:18.1-alpine3.23
-    container_name: postgres
     environment:
       - POSTGRES_USER=puzzle
       - POSTGRES_PASSWORD=puzzle
@@ -26,4 +24,3 @@ services:
 
 volumes:
   calendar_puzzle_postgres_data:
-    name: calendar_puzzle_postgres_data
