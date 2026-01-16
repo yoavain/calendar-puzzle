@@ -73,6 +73,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             display: grid;
             gap: 0;
             background-color: transparent;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
         `;
         const shape = getTransformedShape(piece);
 

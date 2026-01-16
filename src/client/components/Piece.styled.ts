@@ -14,6 +14,18 @@ export const pieceDropIn = keyframes`
     }
 `;
 
+export const selectionPulse = keyframes`
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+`;
+
 // Edge directions interface
 export interface EdgeDirections {
     top?: boolean;
@@ -34,19 +46,21 @@ export const PieceWrapper = styled(Box)<PieceWrapperProps>(({ theme, isSelected,
     border: 'none',
     margin: 0,
     padding: 0,
-    transition: 'box-shadow 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1)',
+    transition: 'box-shadow 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1), outline 0.2s ease, outline-offset 0.2s ease',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     height: 'calc(100% - 50px)',
     minHeight: 200,
+    borderRadius: 4,
 
     // Selected state
     ...(isSelected && !isPlaced && {
         outline: `${theme.game.pieceBorderWidth}px solid ${theme.palette.primary.main}`,
         outlineOffset: 1,
         boxShadow: `0 0 0 3px ${theme.palette.primary.main}, 0 2px 8px rgba(0,0,0,0.16)`,
+        animation: `${selectionPulse} 0.5s ease-out`,
     }),
 
     // Selected and placed state
@@ -101,10 +115,17 @@ export const PieceGrid = styled('div')<PieceGridProps>(({ theme, columns, rows, 
     margin: 0,
     padding: 0,
     transform: transformStyle,
-    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.25s ease',
+    borderRadius: 2,
+    // Default shadow for depth perception
+    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15)) drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
 
     '&:active': {
         cursor: 'grabbing',
+    },
+
+    '&:hover': {
+        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2)) drop-shadow(0 2px 4px rgba(0,0,0,0.12))',
     },
 }));
 
@@ -124,6 +145,7 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges
     padding: 0,
     boxSizing: 'border-box',
     display: 'block',
+    transition: 'background-color 0.2s ease, border-color 0.2s ease',
 
     // Empty cell styling
     ...(!isFilled && {
