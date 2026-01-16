@@ -2,51 +2,56 @@
     "name": "calendar-puzzle",
     "version": "0.1.0",
     "private": true,
+    "type": "module",
     "dependencies": {
-        "@types/react": "18.3.20",
-        "@types/react-dom": "18.3.6",
-        "react": "18.3.1",
-        "react-dom": "18.3.1",
-        "react-scripts": "5.0.1",
-        "typescript": "4.9.5",
-        "dlx": "0.2.1"
+        "@fastify/static": "9.0.0",
+        "dlx": "0.2.1",
+        "drizzle-orm": "0.45.1",
+        "fastify": "5.7.0",
+        "pg": "8.17.1",
+        "react": "19.2.3",
+        "react-dom": "19.2.3"
     },
     "devDependencies": {
-        "@jest/types": "29.6.3",
-        "@testing-library/jest-dom": "5.17.0",
-        "@testing-library/react": "14.3.1",
+        "@testing-library/jest-dom": "6.9.1",
+        "@testing-library/react": "16.3.1",
         "@testing-library/user-event": "14.6.1",
-        "@types/jest": "29.5.14",
-        "jest": "29.7.0",
-        "ts-jest": "29.3.2",
-        "ts-node": "10.9.2"
+        "@types/jest": "30.0.0",
+        "@types/node": "25.0.9",
+        "@types/pg": "8.16.0",
+        "@types/react": "19.2.8",
+        "@types/react-dom": "19.2.3",
+        "@vitejs/plugin-react": "5.1.2",
+        "concurrently": "9.2.1",
+        "drizzle-kit": "0.31.8",
+        "esbuild": "0.27.2",
+        "jest": "30.2.0",
+        "ts-jest": "29.4.6",
+        "ts-node": "10.9.2",
+        "tsx": "4.21.0",
+        "typescript": "5.9.3",
+        "vite": "7.3.1"
     },
     "scripts": {
-        "start": "react-scripts start",
-        "build": "react-scripts build",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:studio": "drizzle-kit studio",
+        "dev": "vite",
+        "dev:all": "concurrently \"tsx watch src/server/index.ts\" \"vite\"",
+        "build": "npm run build:client && npm run build:server",
+        "build:client": "vite build",
+        "build:server": "esbuild src/server/index.ts --bundle --platform=node --format=esm --outfile=dist/server/index.js --packages=external && esbuild src/server/workers/puzzleSolverWorker.ts --bundle --platform=node --format=esm --outfile=dist/server/workers/puzzleSolverWorker.js --packages=external",
+        "preview": "vite preview",
+        "prestart": "npm run build",
+        "start": "node dist/server/index.js",
         "test": "jest",
-        "eject": "react-scripts eject"
+        "prebuild:image": "npm run build",
+        "build:image": "docker build --tag calendar-puzzle --progress=plain --no-cache --file Dockerfile .",
+        "prestart:docker": "npm run build:image && docker-compose down",
+        "start:docker": "docker-compose up -d"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
-    "description": "",
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
-    },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
-    }
+    "description": ""
 }
