@@ -33,7 +33,7 @@
         "dev:all": "concurrently \"tsx watch src/server/index.ts\" \"vite\"",
         "build": "npm run build:client && npm run build:server",
         "build:client": "vite build",
-        "build:server": "esbuild src/server/index.ts --bundle --platform=node --format=esm --outfile=dist/server/index.js --packages=external",
+        "build:server": "esbuild src/server/index.ts --bundle --platform=node --format=esm --outfile=dist/server/index.js --packages=external && esbuild src/server/workers/puzzleSolverWorker.ts --bundle --platform=node --format=esm --outfile=dist/server/workers/puzzleSolverWorker.js --packages=external",
         "preview": "vite preview",
         "prestart": "npm run build",
         "start": "node dist/server/index.js",

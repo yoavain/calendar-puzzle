@@ -9,7 +9,7 @@ import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
-import { findSolution as findPuzzleSolution } from '../../common/puzzleSolver';
+import { getSolution } from '../service/puzzleService';
 
 export const Game: React.FC = () => {
     const {
@@ -272,33 +272,47 @@ export const Game: React.FC = () => {
         setIsLoading(true);
 
         try {
-            // Remove all pieces from the board first
-            const clearedPieces = gameState.pieces.map(piece => ({
-                ...piece,
-                position: null
-            }));
+            // Call the server to get the solution
+            const solutionPieces = await getSolution(gameState.currentDate);
 
-            // Use the improved puzzle solver
-            const solution = findPuzzleSolution(
-                gameState.board, 
-                clearedPieces, 
-                gameState.currentDate
+            // Build the new board state with the solution pieces placed
+            let newBoard = gameState.board.map(row => 
+                row.map(cell => ({ ...cell, isOccupied: false }))
             );
 
-            if (solution) {
-                // Push the solved GameState directly
-                pushState(solution, { 
-                    type: 'SOLVE_PUZZLE',
-                    pieceId: -1 // We need to provide a pieceId even though it's not used for solve
-                });
-
-                if (solution.isSolved) {
-                    console.log("Puzzle Solved!");
+            // Place each piece on the board
+            for (const piece of solutionPieces) {
+                if (piece.position) {
+                    const transformedShape = getTransformedShape(piece);
+                    for (let y = 0; y < transformedShape.length; y++) {
+                        for (let x = 0; x < transformedShape[y].length; x++) {
+                            if (transformedShape[y][x]) {
+                                const boardY = piece.position.y + y;
+                                const boardX = piece.position.x + x;
+                                if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
+                                    newBoard[boardY][boardX].isOccupied = true;
+                                }
+                            }
+                        }
+                    }
                 }
-            } else {
-                // No solution found
-                setSolverError('No solution found for the current date.');
             }
+
+            const solvedState = {
+                ...gameState,
+                board: newBoard,
+                pieces: solutionPieces,
+                isSolved: true,
+                selectedPieceId: null
+            };
+
+            // Push the solved GameState
+            pushState(solvedState, { 
+                type: 'SOLVE_PUZZLE',
+                pieceId: -1
+            });
+
+            console.log("Puzzle Solved!");
         } catch (error) {
             // Handle any errors
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

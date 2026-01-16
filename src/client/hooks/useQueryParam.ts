@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 // Pre-computed hash for the secret code
 // Never store or expose the original value
-const VALID_CODE_HASH = 'b4967e11a22aee03ffbca84ecf16bb4cd98e1357198ca52c79c523af70fea6ce';
+const VALID_CODE_HASH = '6c58bc00fea09c8d7fdb97c7b58741ad37bd7ba8e5c76d35076e3b57071b172b';
 
 async function sha256(message: string): Promise<string> {
     const msgBuffer = new TextEncoder().encode(message);
@@ -38,4 +38,10 @@ export const useQueryParam = (param: string): boolean => {
     }, [param]);
 
     return hasValidParam;
-}; 
+};
+
+const main = async () => {
+    const result = await sha256('iddqd');
+    console.log('SHA-256 result:', result);
+}
+main().catch(console.error);
