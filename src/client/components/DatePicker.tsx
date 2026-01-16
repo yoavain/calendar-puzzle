@@ -154,10 +154,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
 
                     {renderCalendar()}
 
-                    <div className="date-picker-preview">
-                        Selected: <strong>{MONTHS[selectedMonth]} {selectedDay}</strong>
-                    </div>
-
                     <div className="date-picker-actions">
                         <button className="date-picker-cancel" onClick={handleCancel}>
                             Cancel
