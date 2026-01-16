@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { DatePathParams, SolutionResponse, ErrorResponse } from '../../common/restTypes';
-import { parseDate } from '../utils/dateUtils';
+import { DatePathParams, SolutionResponse, ErrorResponse } from '../../common/restTypes.js';
+import { parseDate } from '../utils/dateUtils.js';
+import { solvePuzzle } from '../service/solverService.js';
 
 export function registerSolutionRoutes(app: FastifyInstance): void {
     // GET /api/solution/:date - Get full puzzle solution for a date
@@ -18,10 +19,17 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
 
             const { month, day } = parsed;
 
-            // TODO: Implement puzzle solving
-            return reply.code(501).send({
-                error: `Solution for ${month}/${day} not yet implemented`
-            });
+            try {
+                // month from parseDate is 1-indexed, convert to 0-indexed for solver
+                const pieces = await solvePuzzle(month - 1, day);
+                return reply.send({ pieces });
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                app.log.error(`Failed to solve puzzle for ${month}/${day}: ${errorMessage}`);
+                return reply.code(500).send({
+                    error: `Failed to solve puzzle: ${errorMessage}`
+                });
+            }
         }
     );
 }
