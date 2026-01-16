@@ -1,15 +1,17 @@
 import React from 'react';
 import { BoardCell, DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
 import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
+import { InvalidDropCell } from './Game';
 
 interface BoardProps {
     board: BoardType;
     pieces: GameState['pieces'];  // Add pieces to props
     onCellClick: (position: Position) => void;
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
+    invalidDropCells?: InvalidDropCell[];  // Cells to highlight as invalid
 }
 
-export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop }) => {
+export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [] }) => {
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.currentTarget.classList.add('drag-over');
@@ -38,6 +40,11 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                    pieceX >= 0 && pieceX < shape[0].length &&
                    shape[pieceY][pieceX];
         });
+    };
+
+    // Function to check if a cell is in the invalid drop feedback zone
+    const isInvalidDropCell = (x: number, y: number) => {
+        return invalidDropCells.some(cell => cell.x === x && cell.y === y);
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
@@ -123,10 +130,13 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                         // Check if the piece is locked (hint piece)
                         const isLocked = piece?.isLocked ?? false;
 
+                        // Check if this cell is part of an invalid drop attempt
+                        const isInvalid = isInvalidDropCell(x, y);
+
                         return (
                             <div
                                 key={`${x}-${y}`}
-                                className={`board-cell${isStyledCell ? ' styled-cell' : ''} ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}${isLocked ? ' locked' : ''}`}
+                                className={`board-cell${isStyledCell ? ' styled-cell' : ''} ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}${isLocked ? ' locked' : ''}${isInvalid ? ' invalid-drop' : ''}`}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}

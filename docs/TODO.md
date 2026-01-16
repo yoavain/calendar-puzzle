@@ -33,9 +33,9 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ## UX/UI Improvements
 
 ### High Priority
-- [ ] Reset button next to undo/redo
-- [ ] Calendar picker to play different dates (logged-in users only)
-- [ ] Visual feedback for invalid moves (shake animation, red highlight)
+- [x] Reset button next to undo/redo
+- [x] Calendar picker to play different dates
+- [x] Visual feedback for invalid moves (shake animation, red highlight)
 
 ### Controls & Interaction
 - [ ] Enhance piece rotation/flip controls (icons, keyboard shortcuts)
