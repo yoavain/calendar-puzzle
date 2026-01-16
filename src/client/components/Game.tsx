@@ -259,12 +259,20 @@ export const Game: React.FC = () => {
             gameState.board
         );
 
+        // Check if the puzzle is solved BEFORE creating the state
+        const solved = isPuzzleSolved(newBoard, playingDate);
+        if (solved) {
+            console.log("Puzzle Solved!");
+        }
+
         // Create a completely new state object
         const newState = {
             ...gameState,
             board: newBoard,
             pieces: newPieces,
-            selectedPieceId: null
+            selectedPieceId: null,
+            isSolved: solved,
+            solutionRevealed: false  // User solved it manually
         };
 
         pushState(newState, {
@@ -272,12 +280,6 @@ export const Game: React.FC = () => {
             pieceId,
             position
         });
-
-        // Check if the puzzle is solved
-        if (isPuzzleSolved(newBoard, playingDate)) {
-            console.log("Puzzle Solved!");
-            newState.isSolved = true;
-        }
     };
 
     const handlePieceReturnToPile = (pieceId: number) => {
@@ -303,12 +305,6 @@ export const Game: React.FC = () => {
             type: 'REMOVE_PIECE',
             pieceId
         });
-
-        // Check if the puzzle is solved
-        if (isPuzzleSolved(newBoard, playingDate)) {
-            console.log("Puzzle Solved!");
-            newState.isSolved = true;
-        }
     };
 
     const handlePileDropZoneDragOver = (e: React.DragEvent<HTMLDivElement>) => {
