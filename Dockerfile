@@ -15,6 +15,7 @@ COPY package-lock.json /usr/app/
 COPY .npmrc /usr/app/
 COPY dist /usr/app/dist/
 COPY build /usr/app/build/
+COPY src/server/db/migrations /usr/app/src/server/db/migrations/
 RUN mkdir -p /usr/app/ext/logs
 
 # Dependencies

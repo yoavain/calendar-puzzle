@@ -21,12 +21,11 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
 
             try {
                 // parseDate returns PuzzleDate with 0-indexed month
-                const pieces = await solvePuzzle(month, day);
+                const pieces = await solvePuzzle(month, day, request.log);
                 return reply.send({ pieces });
             } catch (error) {
                 // Log detailed error on server, but return generic message to client
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                app.log.error(`Failed to solve puzzle for ${month}/${day}: ${errorMessage}`);
+                request.log.error(error, `[SolutionRoute] Failed to solve puzzle for ${month}/${day}`);
                 return reply.code(500).send({
                     error: 'Unable to solve puzzle for this date. Please try again.'
                 });
