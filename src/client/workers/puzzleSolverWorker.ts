@@ -1,7 +1,6 @@
 // puzzleSolverWorker.ts
-import { Piece, Position, Board } from '../types/types';
-import { getTransformedShape, isPuzzleSolved, isValidPlacement } from '../utils/gameLogic';
-import { MONTHS } from '../utils/initialize';
+import { Piece, Position, Board } from '../../common/types';
+import { getTransformedShape, isPuzzleSolved, isValidPlacement, MONTHS } from '../../common/gameLogic';
 
 interface SolverPiece extends Piece {
     tried: {

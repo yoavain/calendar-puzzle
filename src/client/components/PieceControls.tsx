@@ -1,5 +1,5 @@
 import React from 'react';
-import { Piece } from '../types/types';
+import { Piece } from '../../common/types';
 
 interface PieceControlsProps {
     piece: Piece;

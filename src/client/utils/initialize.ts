@@ -1,7 +1,5 @@
-import { GameState, BoardCell, Piece, Board } from '../types/types';
-
-// Array of month names (January = 0, December = 11)
-export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+import { GameState, BoardCell, Piece, Board } from '../../common/types';
+import { MONTHS } from '../../common/gameLogic';
 
 /**
  * Initialize the game board with month and day cells

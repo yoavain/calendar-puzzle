@@ -1,5 +1,7 @@
-import { Board, Piece, Position } from '../types/types';
-import { MONTHS } from './initialize';
+import { Board, Piece, Position } from './types';
+
+// Array of month names (January = 0, December = 11)
+export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
  * Get the transformed shape of a piece based on its rotation and flips
@@ -244,5 +246,4 @@ export function getEdgeDirections(shape: boolean[][], x: number, y: number): { t
     }
 
     return result;
-} 
-
+}

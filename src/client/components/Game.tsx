@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { DragItem, Piece as PieceType, Position, Board } from '../types/types';
+import { DragItem, Piece as PieceType, Position, Board } from '../../common/types';
+import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
 import { Piece } from './Piece';
 import { PieceControls } from './PieceControls';
@@ -7,9 +8,8 @@ import ThemeToggle from './ThemeToggle';
 import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
 import { initializeGame } from '../utils/initialize';
-import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../utils/gameLogic';
 import { useGameHistory } from '../hooks/useGameHistory';
-import { findSolution as findPuzzleSolution } from '../utils/puzzleSolver';
+import { findSolution as findPuzzleSolution } from '../../common/puzzleSolver';
 
 export const Game: React.FC = () => {
     const {
