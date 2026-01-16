@@ -21,6 +21,7 @@ import { DatePicker } from './DatePicker';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
+import { PiecesContainer, PiecePoolWrapper } from './Game.styled';
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {
@@ -258,12 +259,20 @@ export const Game: React.FC = () => {
             gameState.board
         );
 
+        // Check if the puzzle is solved BEFORE creating the state
+        const solved = isPuzzleSolved(newBoard, playingDate);
+        if (solved) {
+            console.log("Puzzle Solved!");
+        }
+
         // Create a completely new state object
         const newState = {
             ...gameState,
             board: newBoard,
             pieces: newPieces,
-            selectedPieceId: null
+            selectedPieceId: null,
+            isSolved: solved,
+            solutionRevealed: false  // User solved it manually
         };
 
         pushState(newState, {
@@ -271,12 +280,6 @@ export const Game: React.FC = () => {
             pieceId,
             position
         });
-
-        // Check if the puzzle is solved
-        if (isPuzzleSolved(newBoard, playingDate)) {
-            console.log("Puzzle Solved!");
-            newState.isSolved = true;
-        }
     };
 
     const handlePieceReturnToPile = (pieceId: number) => {
@@ -302,12 +305,6 @@ export const Game: React.FC = () => {
             type: 'REMOVE_PIECE',
             pieceId
         });
-
-        // Check if the puzzle is solved
-        if (isPuzzleSolved(newBoard, playingDate)) {
-            console.log("Puzzle Solved!");
-            newState.isSolved = true;
-        }
     };
 
     const handlePileDropZoneDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -488,6 +485,17 @@ export const Game: React.FC = () => {
         pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
     };
 
+    const handleRotateCCWPiece = (pieceId: number) => {
+        if (gameState.isSolved) return;
+        const newPieces = [...gameState.pieces];
+        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
+        const piece = newPieces[pieceIndex];
+        // Counter-clockwise: subtract 90 degrees (add 270 to avoid negative)
+        const newRotation = ((piece.rotation + 270) % 360) as 0 | 90 | 180 | 270;
+        newPieces[pieceIndex] = { ...piece, rotation: newRotation };
+        pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
+    };
+
     const handleFlipHPiece = (pieceId: number) => {
         if (gameState.isSolved) return;
         const newPieces = [...gameState.pieces];
@@ -579,42 +587,14 @@ export const Game: React.FC = () => {
                     invalidDropCells={invalidDropCells}
                     data-testid="board"
                 />
-                <Box 
-                    className="pieces-container"
+                <PiecesContainer
                     onDragOver={handlePileDropZoneDragOver}
                     onDrop={handlePileDropZoneDrop}
-                    sx={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: 1,
-                        mt: 2,
-                        p: 2,
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        justifyItems: 'center',
-                        maxWidth: 900,
-                        mx: 'auto',
-                    }}
                 >
                     {gameState.pieces
                         .filter(piece => !piece.position)
                         .map(piece => (
-                            <Box 
-                                key={piece.id} 
-                                className="piece-wrapper"
-                                sx={{
-                                    position: 'relative',
-                                    p: 1,
-                                    bgcolor: 'background.default',
-                                    borderRadius: 2,
-                                    width: 210,
-                                    height: 280,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'flex-start',
-                                }}
-                            >
+                            <PiecePoolWrapper key={piece.id}>
                                 <Piece
                                     piece={piece}
                                     isSelected={piece.id === gameState.selectedPieceId}
@@ -624,12 +604,13 @@ export const Game: React.FC = () => {
                                 <PieceControls
                                     piece={piece}
                                     onRotate={() => handleRotatePiece(piece.id)}
+                                    onRotateCCW={() => handleRotateCCWPiece(piece.id)}
                                     onFlipH={() => handleFlipHPiece(piece.id)}
                                     onFlipV={() => handleFlipVPiece(piece.id)}
                                 />
-                            </Box>
+                            </PiecePoolWrapper>
                         ))}
-                </Box>
+                </PiecesContainer>
             </Box>
         </Container>
     );

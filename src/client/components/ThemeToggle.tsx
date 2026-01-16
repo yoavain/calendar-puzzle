@@ -31,6 +31,7 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#003892' : '#ffc107',
     width: 32,
     height: 32,
+    transition: 'background-color 0.3s ease',
     '&::before': {
       content: "''",
       position: 'absolute',
@@ -47,6 +48,7 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
     opacity: 1,
     backgroundColor: theme.palette.mode === 'dark' ? '#8796A5' : '#aab4be',
     borderRadius: 20 / 2,
+    transition: 'background-color 0.3s ease',
   },
 }));
 
@@ -67,7 +69,9 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
         sx={{ 
           color: isDark ? 'text.disabled' : 'warning.main',
           fontSize: 20,
-          mr: 0.5
+          mr: 0.5,
+          transition: 'color 0.25s ease, transform 0.25s ease',
+          transform: isDark ? 'scale(0.9)' : 'scale(1.1)',
         }} 
       />
       <ThemeSwitch
@@ -79,7 +83,9 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
         sx={{ 
           color: isDark ? 'primary.main' : 'text.disabled',
           fontSize: 20,
-          ml: 0.5
+          ml: 0.5,
+          transition: 'color 0.25s ease, transform 0.25s ease',
+          transform: isDark ? 'scale(1.1)' : 'scale(0.9)',
         }} 
       />
     </Box>
