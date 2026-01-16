@@ -1,0 +1,194 @@
+.date-picker-container {
+    position: relative;
+    display: inline-block;
+}
+
+.date-picker-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    min-width: 100px;
+}
+
+.date-picker-popup {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    background-color: var(--color-background);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    z-index: 1000;
+    min-width: 320px;
+    animation: datePickerFadeIn 0.2s ease-out;
+}
+
+@keyframes datePickerFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.date-picker-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.date-picker-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.date-picker-month-selector {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.date-picker-month {
+    padding: 6px 4px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-size: 0.85em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.date-picker-month:hover {
+    background-color: var(--color-hover);
+    border-color: var(--color-primary);
+}
+
+.date-picker-month.selected {
+    background-color: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+}
+
+.date-picker-calendar {
+    margin-bottom: 12px;
+}
+
+.date-picker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 8px;
+}
+
+.date-picker-weekday {
+    text-align: center;
+    font-size: 0.75em;
+    font-weight: 600;
+    color: var(--color-text);
+    opacity: 0.6;
+    padding: 4px 0;
+}
+
+.date-picker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.date-picker-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: var(--color-background-secondary);
+    color: var(--color-text);
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.date-picker-day:hover {
+    background-color: var(--color-hover);
+    border-color: var(--color-primary);
+    transform: scale(1.05);
+}
+
+.date-picker-day.selected {
+    background-color: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.4);
+}
+
+.date-picker-preview {
+    text-align: center;
+    padding: 12px;
+    background-color: var(--color-background-tertiary);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    color: var(--color-text);
+    font-size: 0.95em;
+}
+
+.date-picker-preview strong {
+    color: var(--color-primary);
+    font-size: 1.1em;
+}
+
+.date-picker-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.date-picker-cancel,
+.date-picker-confirm {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.date-picker-cancel {
+    background-color: var(--color-background-secondary);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-light);
+}
+
+.date-picker-cancel:hover {
+    background-color: var(--color-hover);
+    border-color: var(--color-border);
+}
+
+.date-picker-confirm {
+    background-color: var(--color-primary);
+    color: #fff;
+}
+
+.date-picker-confirm:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+}
