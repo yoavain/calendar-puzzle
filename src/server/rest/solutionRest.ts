@@ -20,14 +20,15 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
             const { month, day } = parsed;
 
             try {
-                // month from parseDate is 1-indexed, convert to 0-indexed for solver
-                const pieces = await solvePuzzle(month - 1, day);
+                // parseDate returns PuzzleDate with 0-indexed month
+                const pieces = await solvePuzzle(month, day);
                 return reply.send({ pieces });
             } catch (error) {
+                // Log detailed error on server, but return generic message to client
                 const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                 app.log.error(`Failed to solve puzzle for ${month}/${day}: ${errorMessage}`);
                 return reply.code(500).send({
-                    error: `Failed to solve puzzle: ${errorMessage}`
+                    error: 'Unable to solve puzzle for this date. Please try again.'
                 });
             }
         }

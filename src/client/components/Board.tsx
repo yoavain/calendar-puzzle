@@ -120,16 +120,19 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
 
                         const isStyledCell = isMonthCell || isDayCell;
 
+                        // Check if the piece is locked (hint piece)
+                        const isLocked = piece?.isLocked ?? false;
+
                         return (
                             <div
                                 key={`${x}-${y}`}
-                                className={`board-cell${isStyledCell ? ' styled-cell' : ''} ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}`}
+                                className={`board-cell${isStyledCell ? ' styled-cell' : ''} ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}${isLocked ? ' locked' : ''}`}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, { x, y })}
-                                draggable={!!piece}
-                                onDragStart={(e) => piece && handleDragStart(e, piece)}
+                                draggable={!!piece && !isLocked}
+                                onDragStart={(e) => piece && !isLocked && handleDragStart(e, piece)}
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <span className="styled-cell-text">{cell.content.toUpperCase()}</span>

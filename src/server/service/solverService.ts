@@ -1,12 +1,10 @@
 import { Worker } from 'worker_threads';
 import path from 'path';
 import fs from 'fs';
-import { Piece } from '../../common/types.js';
+import { Piece, PuzzleDate } from '../../common/types.js';
 
-interface SolverRequest {
-    month: number; // 0-indexed (0-11)
-    day: number;   // 1-indexed (1-31)
-}
+// Worker message format matches PuzzleDate structure
+type SolverRequest = PuzzleDate;
 
 interface SolverResponse {
     success: boolean;
@@ -33,8 +31,8 @@ function getWorkerPath(): string {
 
 /**
  * Solve the puzzle for a given date using a worker thread
- * @param month - 0-indexed month (0-11)
- * @param day - 1-indexed day (1-31)
+ * @param month - 0-indexed month (0-11) from PuzzleDate
+ * @param day - 1-indexed day (1-31) from PuzzleDate
  * @returns Promise resolving to the solution pieces or null if no solution
  */
 export async function solvePuzzle(month: number, day: number): Promise<Piece[]> {
@@ -68,7 +66,8 @@ export async function solvePuzzle(month: number, day: number): Promise<Piece[]> 
             }
         });
 
-        // Send the solve request
-        worker.postMessage({ month, day } as SolverRequest);
+        // Send the solve request (matches PuzzleDate structure)
+        const request: SolverRequest = { month, day };
+        worker.postMessage(request);
     });
 }

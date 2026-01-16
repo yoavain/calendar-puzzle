@@ -180,6 +180,33 @@ h1 {
 
 /* Styles moved to consolidated section */
 
+/* Locked piece cells (hint pieces) - different color and no hover/drag cursor */
+.board-cell.piece-cell.locked {
+    background-color: var(--piece-locked-color);
+    cursor: not-allowed;
+}
+
+.board-cell.piece-cell.locked.edge-top {
+    border-top-color: var(--piece-locked-border-color) !important;
+}
+
+.board-cell.piece-cell.locked.edge-right {
+    border-right-color: var(--piece-locked-border-color) !important;
+}
+
+.board-cell.piece-cell.locked.edge-bottom {
+    border-bottom-color: var(--piece-locked-border-color) !important;
+}
+
+.board-cell.piece-cell.locked.edge-left {
+    border-left-color: var(--piece-locked-border-color) !important;
+}
+
+.board-cell.piece-cell.locked:hover {
+    opacity: 1;
+    cursor: not-allowed;
+}
+
 .board-cell.piece-cell:hover {
     opacity: 0.8;
 }
@@ -415,6 +442,10 @@ h1 {
     --piece-color: #007bff;
     --piece-border-color: #0056b3;
     --piece-border-width: 2px;
+
+    /* Locked piece colors (hint pieces) */
+    --piece-locked-color: #28a745;
+    --piece-locked-border-color: #1e7e34;
 }
 
 /* Dark theme colors */
@@ -436,6 +467,10 @@ h1 {
     /* Piece-specific colors for dark theme */
     --piece-color: #3391ff;
     --piece-border-color: #1a7fff;
+
+    /* Locked piece colors for dark theme */
+    --piece-locked-color: #2ea043;
+    --piece-locked-border-color: #238636;
 }
 
 /* Theme toggle styles */
