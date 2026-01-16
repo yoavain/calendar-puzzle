@@ -23,12 +23,20 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         const curr = piece.rotation;
 
         if (prev !== curr) {
-            // Calculate the delta, ensuring always clockwise rotation
-            let delta = curr - prev;
-            if (delta < 0) {
-                // Wrapping from 270 to 0 means we need +90, not -270
-                delta += 360;
+            // Calculate the delta, detecting shortest rotation path (CW or CCW)
+            const cwDelta = (curr - prev + 360) % 360;  // Clockwise distance
+            const ccwDelta = (prev - curr + 360) % 360; // Counter-clockwise distance
+            
+            // Choose the shorter path
+            let delta: number;
+            if (cwDelta <= ccwDelta) {
+                // Clockwise is shorter or equal
+                delta = cwDelta;
+            } else {
+                // Counter-clockwise is shorter (use negative delta)
+                delta = -ccwDelta;
             }
+            
             setCumulativeRotation(r => r + delta);
             prevRotation.current = curr;
         }
