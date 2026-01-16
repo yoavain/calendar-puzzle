@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
@@ -46,6 +47,14 @@ export const Game: React.FC = () => {
         // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, newDate.month, newDate.day);
+        const newGameState = initializeGame(jsDate);
+        clearHistory(newGameState);
+        setSolverError(null);
+    };
+
+    // Handle reset button - reinitialize game for current date
+    const handleReset = () => {
+        const jsDate = new Date(2024, playingDate.month, playingDate.day);
         const newGameState = initializeGame(jsDate);
         clearHistory(newGameState);
         setSolverError(null);
@@ -481,6 +490,16 @@ export const Game: React.FC = () => {
                         startIcon={<RedoIcon />}
                     >
                         Redo
+                    </Button>
+                    <Button 
+                        variant="outlined"
+                        onClick={handleReset}
+                        disabled={isBoardEmpty}
+                        size="small"
+                        startIcon={<RestartAltIcon />}
+                        color="warning"
+                    >
+                        Reset
                     </Button>
                     {solverError && (
                         <Alert severity="error" sx={{ py: 0 }}>
