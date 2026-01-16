@@ -26,14 +26,6 @@ export const selectionPulse = keyframes`
     }
 `;
 
-// Edge directions interface
-export interface EdgeDirections {
-    top?: boolean;
-    right?: boolean;
-    bottom?: boolean;
-    left?: boolean;
-}
-
 // Piece wrapper props
 export interface PieceWrapperProps {
     isSelected?: boolean;
@@ -132,11 +124,11 @@ export const PieceGrid = styled('div')<PieceGridProps>(({ theme, columns, rows, 
 // Piece cell props
 export interface PieceCellProps {
     isFilled?: boolean;
-    edges?: EdgeDirections;
+    pieceId?: number;
 }
 
 // Piece cell (individual cells within a piece)
-export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges }) => ({
+export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, pieceId }) => ({
     width: theme.game.cellSize,
     height: theme.game.cellSize,
     border: 'none',
@@ -145,7 +137,7 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges
     padding: 0,
     boxSizing: 'border-box',
     display: 'block',
-    transition: 'background-color 0.2s ease, border-color 0.2s ease',
+    transition: 'background-color 0.2s ease',
 
     // Empty cell styling
     ...(!isFilled && {
@@ -155,21 +147,7 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges
 
     // Filled cell styling
     ...(isFilled && {
-        backgroundColor: theme.game.pieceColor,
+        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
         color: '#ffffff',
-
-        // Edge borders
-        ...(edges?.top && {
-            borderTop: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.right && {
-            borderRight: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.bottom && {
-            borderBottom: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.left && {
-            borderLeft: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
     }),
 }));

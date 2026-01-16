@@ -585,6 +585,7 @@ export const Game: React.FC = () => {
                     onCellClick={handleCellClick}
                     onPieceDrop={handlePieceDrop}
                     invalidDropCells={invalidDropCells}
+                    solutionRevealed={gameState.solutionRevealed}
                     data-testid="board"
                 />
                 <PiecesContainer

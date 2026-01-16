@@ -1,16 +1,27 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 
+// Piece colors - same for both themes
+const pieceColors = [
+    '#E07A5F', // 1: Coral
+    '#3D9970', // 2: Teal
+    '#6B4423', // 3: Chocolate
+    '#8B5CF6', // 4: Violet
+    '#DB5B80', // 5: Rose
+    '#E8AA14', // 6: Marigold
+    '#8DA547', // 7: Olive
+    '#5B7FC3', // 8: Slate
+];
+
 // Extend MUI theme interface with custom game tokens
 declare module '@mui/material/styles' {
     interface Theme {
         game: {
             cellSize: number;
             cellGap: number;
-            pieceColor: string;
-            pieceBorderColor: string;
+            pieceColors: string[];
             pieceBorderWidth: number;
-            lockedPieceColor: string;
-            lockedPieceBorderColor: string;
+            hintedOpacity: number;
+            solutionRevealedOpacity: number;
             boardBorderColor: string;
             boardBorderLightColor: string;
             hoverColor: string;
@@ -27,11 +38,10 @@ declare module '@mui/material/styles' {
         game?: {
             cellSize?: number;
             cellGap?: number;
-            pieceColor?: string;
-            pieceBorderColor?: string;
+            pieceColors?: string[];
             pieceBorderWidth?: number;
-            lockedPieceColor?: string;
-            lockedPieceBorderColor?: string;
+            hintedOpacity?: number;
+            solutionRevealedOpacity?: number;
             boardBorderColor?: string;
             boardBorderLightColor?: string;
             hoverColor?: string;
@@ -50,11 +60,10 @@ declare module '@mui/material/styles' {
 const lightGameTokens = {
     cellSize: 50,
     cellGap: 0,
-    pieceColor: '#007bff',
-    pieceBorderColor: '#0056b3',
+    pieceColors,
     pieceBorderWidth: 2,
-    lockedPieceColor: '#28a745',
-    lockedPieceBorderColor: '#1e7e34',
+    hintedOpacity: 0.7,
+    solutionRevealedOpacity: 0.85,
     boardBorderColor: '#999',
     boardBorderLightColor: '#ccc',
     hoverColor: '#f0f0f0',
@@ -71,11 +80,10 @@ const lightGameTokens = {
 const darkGameTokens = {
     cellSize: 50,
     cellGap: 0,
-    pieceColor: '#3391ff',
-    pieceBorderColor: '#002244',
+    pieceColors,
     pieceBorderWidth: 2,
-    lockedPieceColor: '#2ea043',
-    lockedPieceBorderColor: '#0d3320',
+    hintedOpacity: 0.7,
+    solutionRevealedOpacity: 0.85,
     boardBorderColor: '#666',
     boardBorderLightColor: '#444',
     hoverColor: '#3d3d3d',

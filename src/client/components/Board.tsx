@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
-import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
+import { getTransformedShape } from '../../common/gameLogic';
 import { InvalidDropCell } from './Game';
 import {
     BoardContainer,
     BoardRow,
     BoardCell,
     StyledCellText,
-    EdgeDirections,
 } from './Board.styled';
 
 interface BoardProps {
@@ -17,9 +16,10 @@ interface BoardProps {
     onCellClick: (position: Position) => void;
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
     invalidDropCells?: InvalidDropCell[];
+    solutionRevealed?: boolean;
 }
 
-export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [] }) => {
+export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [], solutionRevealed = false }) => {
     const theme = useTheme();
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
 
@@ -77,10 +77,10 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         `;
         const shape = getTransformedShape(piece);
 
-        shape.forEach((row, y) => {
+        shape.forEach((row) => {
             const rowDiv = document.createElement('div');
             rowDiv.style.cssText = 'display: flex; gap: 0;';
-            row.forEach((cell, x) => {
+            row.forEach((cell) => {
                 const cellDiv = document.createElement('div');
                 cellDiv.style.cssText = `
                     width: ${theme.game.cellSize}px;
@@ -89,15 +89,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                 `;
 
                 if (cell) {
-                    cellDiv.style.backgroundColor = theme.game.pieceColor;
-                    const isEdge = isEdgeCell(shape, x, y);
-                    if (isEdge) {
-                        const edgeDirections = getEdgeDirections(shape, x, y);
-                        if (edgeDirections.top) cellDiv.style.borderTop = `2px solid ${theme.game.pieceBorderColor}`;
-                        if (edgeDirections.right) cellDiv.style.borderRight = `2px solid ${theme.game.pieceBorderColor}`;
-                        if (edgeDirections.bottom) cellDiv.style.borderBottom = `2px solid ${theme.game.pieceBorderColor}`;
-                        if (edgeDirections.left) cellDiv.style.borderLeft = `2px solid ${theme.game.pieceBorderColor}`;
-                    }
+                    cellDiv.style.backgroundColor = theme.game.pieceColors[piece.id - 1];
                 } else {
                     cellDiv.style.visibility = 'hidden';
                 }
@@ -118,17 +110,6 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                 <BoardRow key={y}>
                     {row.map((cell, x) => {
                         const piece = getPieceAtCell(x, y);
-
-                        // Determine edge directions for piece cells
-                        let edges: EdgeDirections | undefined;
-                        if (piece) {
-                            const shape = getTransformedShape(piece);
-                            const pieceX = x - piece.position!.x;
-                            const pieceY = y - piece.position!.y;
-                            if (isEdgeCell(shape, pieceX, pieceY)) {
-                                edges = getEdgeDirections(shape, pieceX, pieceY);
-                            }
-                        }
 
                         // Check for hidden cells (6 redundant cells)
                         const isHiddenCell =
@@ -161,7 +142,8 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 isLocked={isLocked}
                                 isInvalidDrop={isInvalid}
                                 isDragOver={isDragOver}
-                                edges={edges}
+                                pieceId={piece?.id}
+                                solutionRevealed={solutionRevealed}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={(e) => handleDragOver(e, x, y)}
                                 onDragLeave={handleDragLeave}
