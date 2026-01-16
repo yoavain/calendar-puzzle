@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Piece as PieceType } from '../../common/types';
-import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
-import { PieceWrapper, PieceGrid, PieceCell, EdgeDirections } from './Piece.styled';
+import { getTransformedShape } from '../../common/gameLogic';
+import { PieceWrapper, PieceGrid, PieceCell } from './Piece.styled';
 
 interface PieceProps {
     piece: PieceType;
@@ -81,7 +81,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         transformedShape.forEach((row, y) => {
             const rowDiv = document.createElement('div');
             rowDiv.style.cssText = 'display: flex; gap: 0;';
-            row.forEach((cell, x) => {
+            row.forEach((cell) => {
                 const cellDiv = document.createElement('div');
                 cellDiv.style.cssText = `
                     width: ${theme.game.cellSize}px;
@@ -90,15 +90,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
                 `;
 
                 if (cell) {
-                    cellDiv.style.backgroundColor = theme.game.pieceColor;
-                    const isEdge = isEdgeCell(transformedShape, x, y);
-                    if (isEdge) {
-                        const edgeDirections = getEdgeDirections(transformedShape, x, y);
-                        if (edgeDirections.top) cellDiv.style.borderTop = `2px solid ${theme.game.pieceBorderColor}`;
-                        if (edgeDirections.right) cellDiv.style.borderRight = `2px solid ${theme.game.pieceBorderColor}`;
-                        if (edgeDirections.bottom) cellDiv.style.borderBottom = `2px solid ${theme.game.pieceBorderColor}`;
-                        if (edgeDirections.left) cellDiv.style.borderLeft = `2px solid ${theme.game.pieceBorderColor}`;
-                    }
+                    cellDiv.style.backgroundColor = theme.game.pieceColors[piece.id - 1];
                 } else {
                     cellDiv.style.visibility = 'hidden';
                 }
@@ -127,21 +119,13 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
                 transformStyle={transformStyle}
             >
                 {baseShape.map((row, y) =>
-                    row.map((cell, x) => {
-                        // Calculate edges based on base shape
-                        let edges: EdgeDirections | undefined;
-                        if (cell && isEdgeCell(baseShape, x, y)) {
-                            edges = getEdgeDirections(baseShape, x, y);
-                        }
-
-                        return (
-                            <PieceCell
-                                key={`${x}-${y}`}
-                                isFilled={cell}
-                                edges={edges}
-                            />
-                        );
-                    })
+                    row.map((cell, x) => (
+                        <PieceCell
+                            key={`${x}-${y}`}
+                            isFilled={cell}
+                            pieceId={piece.id}
+                        />
+                    ))
                 )}
             </PieceGrid>
         </PieceWrapper>
