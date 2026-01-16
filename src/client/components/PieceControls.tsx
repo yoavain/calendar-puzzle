@@ -3,17 +3,19 @@ import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import RotateRightIcon from '@mui/icons-material/RotateRight';
+import RotateLeftIcon from '@mui/icons-material/RotateLeft';
 import FlipIcon from '@mui/icons-material/Flip';
 import { Piece } from '../../common/types';
 
 interface PieceControlsProps {
     piece: Piece;
     onRotate: () => void;
+    onRotateCCW: () => void;
     onFlipH: () => void;
     onFlipV: () => void;
 }
 
-export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH, onFlipV }) => {
+export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onRotateCCW, onFlipH, onFlipV }) => {
     return (
         <Stack 
             direction="row" 
@@ -31,12 +33,12 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
                 zIndex: 10,
             }}
         >
-            <Tooltip title="Rotate" arrow>
+            <Tooltip title="Rotate clockwise" arrow>
                 <IconButton 
                     size="small"
                     onClick={onRotate}
                     data-testid="rotate-button"
-                    aria-label="rotate piece"
+                    aria-label="rotate piece clockwise"
                     sx={{ 
                         border: 1, 
                         borderColor: 'divider',
@@ -44,6 +46,21 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
                     }}
                 >
                     <RotateRightIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Rotate counter-clockwise" arrow>
+                <IconButton 
+                    size="small"
+                    onClick={onRotateCCW}
+                    data-testid="rotate-ccw-button"
+                    aria-label="rotate piece counter-clockwise"
+                    sx={{ 
+                        border: 1, 
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <RotateLeftIcon fontSize="small" />
                 </IconButton>
             </Tooltip>
             <Tooltip title="Flip horizontal" arrow>

@@ -1,29 +1,40 @@
-import React from 'react';
-import { BoardCell, DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
+import React, { useState } from 'react';
+import { useTheme } from '@mui/material/styles';
+import { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
 import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
 import { InvalidDropCell } from './Game';
+import {
+    BoardContainer,
+    BoardRow,
+    BoardCell,
+    StyledCellText,
+    EdgeDirections,
+} from './Board.styled';
 
 interface BoardProps {
     board: BoardType;
-    pieces: GameState['pieces'];  // Add pieces to props
+    pieces: GameState['pieces'];
     onCellClick: (position: Position) => void;
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
-    invalidDropCells?: InvalidDropCell[];  // Cells to highlight as invalid
+    invalidDropCells?: InvalidDropCell[];
 }
 
 export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [] }) => {
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const theme = useTheme();
+    const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
         e.preventDefault();
-        e.currentTarget.classList.add('drag-over');
+        setDragOverCell({ x, y });
     };
 
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-        e.currentTarget.classList.remove('drag-over');
+    const handleDragLeave = () => {
+        setDragOverCell(null);
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: Position) => {
         e.preventDefault();
-        e.currentTarget.classList.remove('drag-over');
+        setDragOverCell(null);
         const data = e.dataTransfer.getData('application/json');
         const dragItem: DragItem = JSON.parse(data);
         onPieceDrop(position, dragItem);
@@ -55,29 +66,42 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
 
         // Create a drag preview that represents the entire piece
         const dragPreview = document.createElement('div');
-        dragPreview.className = 'piece-drag-preview';
+        dragPreview.style.cssText = `
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            display: grid;
+            gap: 0;
+            background-color: transparent;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+        `;
         const shape = getTransformedShape(piece);
 
         shape.forEach((row, y) => {
             const rowDiv = document.createElement('div');
-            rowDiv.className = 'preview-row';
+            rowDiv.style.cssText = 'display: flex; gap: 0;';
             row.forEach((cell, x) => {
                 const cellDiv = document.createElement('div');
-                let className = `preview-cell ${cell ? 'filled' : ''}`;
+                cellDiv.style.cssText = `
+                    width: ${theme.game.cellSize}px;
+                    height: ${theme.game.cellSize}px;
+                    border: none;
+                `;
 
                 if (cell) {
+                    cellDiv.style.backgroundColor = theme.game.pieceColor;
                     const isEdge = isEdgeCell(shape, x, y);
                     if (isEdge) {
-                        // Add direction-specific edge classes
                         const edgeDirections = getEdgeDirections(shape, x, y);
-                        if (edgeDirections.top) className += ' edge-top';
-                        if (edgeDirections.right) className += ' edge-right';
-                        if (edgeDirections.bottom) className += ' edge-bottom';
-                        if (edgeDirections.left) className += ' edge-left';
+                        if (edgeDirections.top) cellDiv.style.borderTop = `2px solid ${theme.game.pieceBorderColor}`;
+                        if (edgeDirections.right) cellDiv.style.borderRight = `2px solid ${theme.game.pieceBorderColor}`;
+                        if (edgeDirections.bottom) cellDiv.style.borderBottom = `2px solid ${theme.game.pieceBorderColor}`;
+                        if (edgeDirections.left) cellDiv.style.borderLeft = `2px solid ${theme.game.pieceBorderColor}`;
                     }
+                } else {
+                    cellDiv.style.visibility = 'hidden';
                 }
 
-                cellDiv.className = className;
                 rowDiv.appendChild(cellDiv);
             });
             dragPreview.appendChild(rowDiv);
@@ -89,42 +113,32 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     return (
-        <div className="board">
+        <BoardContainer>
             {board.map((row, y) => (
-                <div key={y} className="board-row">
+                <BoardRow key={y}>
                     {row.map((cell, x) => {
                         const piece = getPieceAtCell(x, y);
 
-                        // Determine if this cell is on the edge of a piece and which directions
-                        let isEdge = false;
-                        let edgeClasses = '';
-
+                        // Determine edge directions for piece cells
+                        let edges: EdgeDirections | undefined;
                         if (piece) {
                             const shape = getTransformedShape(piece);
                             const pieceX = x - piece.position!.x;
                             const pieceY = y - piece.position!.y;
-                            isEdge = isEdgeCell(shape, pieceX, pieceY);
-
-                            if (isEdge) {
-                                const edgeDirections = getEdgeDirections(shape, pieceX, pieceY);
-                                if (edgeDirections.top) edgeClasses += ' edge-top';
-                                if (edgeDirections.right) edgeClasses += ' edge-right';
-                                if (edgeDirections.bottom) edgeClasses += ' edge-bottom';
-                                if (edgeDirections.left) edgeClasses += ' edge-left';
+                            if (isEdgeCell(shape, pieceX, pieceY)) {
+                                edges = getEdgeDirections(shape, pieceX, pieceY);
                             }
                         }
 
-                        // Add hidden-cell class for the 6 redundant cells
+                        // Check for hidden cells (6 redundant cells)
                         const isHiddenCell =
                             (y === 0 && x === 6) ||
                             (y === 1 && x === 6) ||
                             (y === 6 && x >= 3 && x <= 6);
 
-                        // Identify month cells (Rows 0,1 and Cols 0-5)
+                        // Identify styled cells (month/day labels)
                         const isMonthCell = y < 2 && x < 6;
-                        // Identify day number cells (Rows 2-6, playable, with content)
-                        const isDayCell = y >= 2 && cell.isPlayable && cell.content;
-
+                        const isDayCell = y >= 2 && cell.isPlayable && !!cell.content;
                         const isStyledCell = isMonthCell || isDayCell;
 
                         // Check if the piece is locked (hint piece)
@@ -133,26 +147,37 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                         // Check if this cell is part of an invalid drop attempt
                         const isInvalid = isInvalidDropCell(x, y);
 
+                        // Check if this cell is being dragged over
+                        const isDragOver = dragOverCell?.x === x && dragOverCell?.y === y;
+
                         return (
-                            <div
+                            <BoardCell
                                 key={`${x}-${y}`}
-                                className={`board-cell${isStyledCell ? ' styled-cell' : ''} ${cell.isPlayable ? 'playable' : ''} ${piece ? 'piece-cell' : ''} ${cell.isHighlighted ? 'highlighted' : ''} ${edgeClasses}${isHiddenCell ? ' hidden-cell' : ''}${isLocked ? ' locked' : ''}${isInvalid ? ' invalid-drop' : ''}`}
+                                isPlayable={cell.isPlayable}
+                                isHighlighted={cell.isHighlighted}
+                                isPieceCell={!!piece}
+                                isHidden={isHiddenCell}
+                                isStyled={isStyledCell}
+                                isLocked={isLocked}
+                                isInvalidDrop={isInvalid}
+                                isDragOver={isDragOver}
+                                edges={edges}
                                 onClick={() => onCellClick({ x, y })}
-                                onDragOver={handleDragOver}
+                                onDragOver={(e) => handleDragOver(e, x, y)}
                                 onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, { x, y })}
                                 draggable={!!piece && !isLocked}
                                 onDragStart={(e) => piece && !isLocked && handleDragStart(e, piece)}
                             >
                                 {!piece && isStyledCell && cell.content && (
-                                    <span className="styled-cell-text">{cell.content.toUpperCase()}</span>
+                                    <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>
                                 )}
                                 {!piece && !isStyledCell && cell.content}
-                            </div>
+                            </BoardCell>
                         );
                     })}
-                </div>
+                </BoardRow>
             ))}
-        </div>
+        </BoardContainer>
     );
 };
