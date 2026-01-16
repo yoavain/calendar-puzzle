@@ -37,11 +37,11 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] Reset button next to undo/redo
 - [x] Calendar picker to play different dates
 - [x] Visual feedback for invalid moves (shake animation, red highlight)
+- [ ] Improve mobile responsiveness (touch controls, pinch-to-zoom, swipe gestures)
 
 ### Controls & Interaction
 - [x] Enhance piece rotation/flip controls (icons, keyboard shortcuts)
 - [x] Improve drag and drop (overlay valid drop zones, highlight legal cells)
-- [ ] Improve mobile responsiveness (touch controls, pinch-to-zoom, swipe gestures)
 
 ### Accessibility
 - [x] Add ARIA labels and roles (partial: controls have aria-labels)
