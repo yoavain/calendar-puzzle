@@ -13,8 +13,8 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ### Shared Game Logic
 - [x] Move game types to `common/` (available to both client and server)
 - [x] Move game validation to `common/` (available to both client and server)
-- [ ] Keep solver on server only
-- [ ] Implement hint mechanism on server (returns a random valid move)
+- [x] Keep solver on server only
+- [x] Implement hint mechanism on server (returns a random valid move)
 
 ### Authentication
 - [ ] Implement OAuth authentication (Google, GitHub — no username/password)
