@@ -384,10 +384,6 @@ h1 {
     margin: 0;
     padding: 0;
     border-collapse: collapse;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .piece-grid:active {
@@ -649,4 +645,63 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* --- VISUAL POLISH ENHANCEMENTS --- */
+
+/* Smooth transitions for piece and cell movement */
+.piece, .piece-cell, .board-cell {
+  transition: box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
+              background-color 0.25s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.2s, transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  will-change: transform, box-shadow, opacity, background-color;
+}
+
+/* Subtle shadow for pieces (in pile and on board) */
+.piece:not(.placed), .piece.placed {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 1.5px 4px rgba(0,0,0,0.10);
+}
+
+.piece.selected {
+  box-shadow: 0 0 0 3px var(--color-primary), 0 2px 8px rgba(0,0,0,0.16);
+}
+
+/* Grid highlight on board cell hover/focus */
+.board-cell.playable:hover, .board-cell.playable:focus {
+  background-color: rgba(var(--color-primary-rgb), 0.12);
+  box-shadow: 0 0 0 2px var(--color-primary);
+  z-index: 2;
+  position: relative;
+}
+
+/* Animate piece placement (fade/slide in) */
+@keyframes pieceDropIn {
+  from { opacity: 0; transform: scale(0.85) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.piece.placed {
+  animation: pieceDropIn 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Animate unplaced pieces on hover */
+.piece:not(.placed):hover {
+  box-shadow: 0 4px 16px rgba(0,123,255,0.18), 0 2px 8px rgba(0,0,0,0.14);
+  transform: translateY(-2px) scale(1.04);
+  z-index: 3;
+}
+
+/* Animate board cell highlight for current day/month */
+.board-cell.highlighted {
+  animation: fadeIn 0.5s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 0 3px var(--color-success);
+}
+
+/* Smoother transitions for piece controls */
+.piece-controls button {
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.piece-controls button:focus {
+  outline: 2px solid var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
 }
