@@ -1,35 +1,58 @@
-# TODO LIST 
+# TODO List
 
-## BACKEND (by priority)
+This document tracks planned features and improvements for the Calendar Puzzle project. Items are organized by category and listed in priority order. See [DESIGN.md](DESIGN.md) for detailed design elaborations on each item.
 
-- [ ] Add backend. Fastify. Move files to "client", "server", "common" folders
-- [ ] Implement user authentication (login, registration. Only official, no user/password)
-- [ ] Move some of the game logic
-  - [ ] Game types should be available both for client and server
-  - [ ] Game validation should be available both for client and server
-  - [ ] Solver should be available only on server
-  - [ ] Hint mechanism should be available only on server (subset of the solver, returns a random "correct" move)
+## Backend
 
-- [ ] Database schema design (users, users_results)
-- [ ] API endpoints (REST)
-    - [ ] On success - mark date as `completed` in the database (only logged-in users). Need to send result state for server-validation
-    - [ ] Solver API - Implement solver functionality on the server (only logged-in users)
-    - [ ] Hint API - Implement hint functionality on the server (only logged-in users)
+### Project Setup
+- [ ] Add Fastify backend server
+- [ ] Restructure project into `client/`, `server/`, and `common/` folders under the `src/` folder
+- [ ] Server serves client files and static assets from `src/resources/`
+ 
+
+### Shared Game Logic
+- [ ] Move game types to `common/` (available to both client and server)
+- [ ] Move game validation to `common/` (available to both client and server)
+- [ ] Keep solver on server only
+- [ ] Implement hint mechanism on server (returns a random valid move)
+
+### Authentication
+- [ ] Implement OAuth authentication (Google, GitHub — no username/password)
+
+### Database
+- [ ] Design database schema (`users`, `users_results` tables)
+
+### API Endpoints (REST)
+- [ ] `POST /api/results` — Mark date as completed (logged-in users, server-validated)
+- [ ] `POST /api/solver` — Return puzzle solution (logged-in users only)
+- [ ] `POST /api/hint` — Return a single valid move (logged-in users only)
+
+### Infrastructure
 - [ ] Error handling and logging
 
-## UX/UI Improvements (by priority)
+## UX/UI Improvements
 
-- [ ] Reset button next to the undo/redo button
-- [ ] Calendar implementation to play a different date (only for logged-in users)
-- [ ] Visual feedback for invalid moves (shake animation and red highlight)
-- [ ] Enhance piece rotation and flip controls (visual indicators and keyboard shortcuts)
+### High Priority
+- [ ] Reset button next to undo/redo
+- [ ] Calendar picker to play different dates (logged-in users only)
+- [ ] Visual feedback for invalid moves (shake animation, red highlight)
+
+### Controls & Interaction
+- [ ] Enhance piece rotation/flip controls (icons, keyboard shortcuts)
 - [ ] Improve drag and drop (overlay valid drop zones, highlight legal cells)
 - [ ] Improve mobile responsiveness (touch controls, pinch-to-zoom, swipe gestures)
-- [ ] Accessibility improvements (ARIA labels, keyboard navigation, high contrast mode)
-- [ ] Visual polish (smooth transitions, grid highlight, piece shadows)
-- [ ] Theme consistency (cohesive color scheme, smooth theme transitions)
+
+### Accessibility
+- [ ] Add ARIA labels and roles
+- [ ] Full keyboard navigation
+- [ ] High contrast mode
+
+### Visual Polish
+- [ ] Smooth transitions and animations
+- [ ] Grid highlight on hover
+- [ ] Piece shadows for depth
+- [ ] Theme consistency (cohesive colors, smooth theme transitions)
+
+### User Guidance
 - [ ] Help system (tutorial overlay, tooltips, help button)
 - [ ] Game state feedback (highlight selected piece, distinguish placed/unplaced pieces)
-
----
-
