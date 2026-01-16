@@ -1,4 +1,6 @@
 import React from 'react';
+import Button from '@mui/material/Button';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { useQueryParam } from '../hooks/useQueryParam';
 
 interface HintButtonProps {
@@ -15,12 +17,17 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = fals
     }
 
     return (
-        <button
+        <Button
+            variant="contained"
+            color="secondary"
             onClick={onHint}
-            className="control-button"
-            disabled={isLoading || disabled}
+            disabled={disabled}
+            loading={isLoading}
+            loadingPosition="start"
+            startIcon={<LightbulbIcon />}
+            size="small"
         >
             {isLoading ? 'Getting hint...' : 'Hint'}
-        </button>
+        </Button>
     );
 };

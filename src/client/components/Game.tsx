@@ -1,4 +1,7 @@
 import React, { useCallback, useState } from 'react';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
 import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
@@ -448,30 +451,32 @@ export const Game: React.FC = () => {
         <div className="app">
             <div className="top-bar">
                 <ThemeToggle />
-                <div className="game-controls">
+                <Stack direction="row" spacing={1} alignItems="center" className="game-controls">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
-                    <button 
+                    <Button 
+                        variant="contained"
                         onClick={undo} 
                         disabled={!canUndo}
-                        className="control-button"
+                        size="small"
                     >
                         Undo
-                    </button>
-                    <button 
+                    </Button>
+                    <Button 
+                        variant="contained"
                         onClick={redo} 
                         disabled={!canRedo}
-                        className="control-button"
+                        size="small"
                     >
                         Redo
-                    </button>
+                    </Button>
                     {solverError && (
-                        <div className="error-message" style={{ color: 'red', marginRight: '10px' }}>
+                        <Alert severity="error" sx={{ py: 0 }}>
                             {solverError}
-                        </div>
+                        </Alert>
                     )}
                     <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty} />
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
-                </div>
+                </Stack>
             </div>
             <h1 className="main-title">Calendar Puzzle</h1>
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />

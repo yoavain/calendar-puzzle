@@ -1,23 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useColorMode } from '../theme';
 
 interface ThemeToggleProps {
   className?: string;
 }
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
-  const [isDark, setIsDark] = useState(true);
-
-  useEffect(() => {
-    // Initialize theme from localStorage or default to dark
-    const savedTheme = localStorage.getItem('theme');
-    setIsDark(savedTheme ? savedTheme === 'dark' : true);
-  }, []);
-
-  useEffect(() => {
-    // Update data-theme attribute and localStorage when theme changes
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
+  const { mode, toggleColorMode } = useColorMode();
+  const isDark = mode === 'dark';
 
   return (
     <div className={`theme-toggle ${className || ''}`}>
@@ -25,7 +15,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
         <input
           type="checkbox"
           checked={isDark}
-          onChange={(e) => setIsDark(e.target.checked)}
+          onChange={toggleColorMode}
         />
         <span className="slider">
           <span className="icon">🌞</span>
