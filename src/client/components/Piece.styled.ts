@@ -26,14 +26,6 @@ export const selectionPulse = keyframes`
     }
 `;
 
-// Edge directions interface
-export interface EdgeDirections {
-    top?: boolean;
-    right?: boolean;
-    bottom?: boolean;
-    left?: boolean;
-}
-
 // Piece wrapper props
 export interface PieceWrapperProps {
     isSelected?: boolean;
@@ -117,6 +109,8 @@ export const PieceGrid = styled('div')<PieceGridProps>(({ theme, columns, rows, 
     transform: transformStyle,
     transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.25s ease',
     borderRadius: 2,
+    // Prevent sub-pixel gaps between cells during transforms
+    backfaceVisibility: 'hidden',
     // Default shadow for depth perception
     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15)) drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
 
@@ -132,11 +126,11 @@ export const PieceGrid = styled('div')<PieceGridProps>(({ theme, columns, rows, 
 // Piece cell props
 export interface PieceCellProps {
     isFilled?: boolean;
-    edges?: EdgeDirections;
+    pieceId?: number;
 }
 
 // Piece cell (individual cells within a piece)
-export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges }) => ({
+export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, pieceId }) => ({
     width: theme.game.cellSize,
     height: theme.game.cellSize,
     border: 'none',
@@ -145,7 +139,7 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges
     padding: 0,
     boxSizing: 'border-box',
     display: 'block',
-    transition: 'background-color 0.2s ease, border-color 0.2s ease',
+    transition: 'background-color 0.2s ease',
 
     // Empty cell styling
     ...(!isFilled && {
@@ -153,23 +147,11 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, edges
         visibility: 'hidden',
     }),
 
-    // Filled cell styling
+    // Filled cell styling - use box-shadow to fill gaps during transforms
     ...(isFilled && {
-        backgroundColor: theme.game.pieceColor,
+        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
         color: '#ffffff',
-
-        // Edge borders
-        ...(edges?.top && {
-            borderTop: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.right && {
-            borderRight: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.bottom && {
-            borderBottom: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.left && {
-            borderLeft: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
+        // Prevent sub-pixel gaps by extending color with box-shadow
+        boxShadow: `inset 0 0 0 1px ${pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0]}`,
     }),
 }));
