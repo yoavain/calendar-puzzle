@@ -105,7 +105,6 @@ export const BoardCell = styled('div')<BoardCellProps>(({
         backgroundColor: theme.game.highlightColor,
         color: '#000000',
         fontWeight: 'bold',
-        boxShadow: `0 0 0 3px ${theme.palette.success.main}`,
     }),
 
     // Drag over feedback
