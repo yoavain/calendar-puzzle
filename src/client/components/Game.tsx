@@ -485,6 +485,17 @@ export const Game: React.FC = () => {
         pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
     };
 
+    const handleRotateCCWPiece = (pieceId: number) => {
+        if (gameState.isSolved) return;
+        const newPieces = [...gameState.pieces];
+        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
+        const piece = newPieces[pieceIndex];
+        // Counter-clockwise: subtract 90 degrees (add 270 to avoid negative)
+        const newRotation = ((piece.rotation + 270) % 360) as 0 | 90 | 180 | 270;
+        newPieces[pieceIndex] = { ...piece, rotation: newRotation };
+        pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
+    };
+
     const handleFlipHPiece = (pieceId: number) => {
         if (gameState.isSolved) return;
         const newPieces = [...gameState.pieces];
@@ -593,6 +604,7 @@ export const Game: React.FC = () => {
                                 <PieceControls
                                     piece={piece}
                                     onRotate={() => handleRotatePiece(piece.id)}
+                                    onRotateCCW={() => handleRotateCCWPiece(piece.id)}
                                     onFlipH={() => handleFlipHPiece(piece.id)}
                                     onFlipV={() => handleFlipVPiece(piece.id)}
                                 />
