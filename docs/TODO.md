@@ -11,8 +11,8 @@ This document tracks planned features and improvements for the Calendar Puzzle p
  
 
 ### Shared Game Logic
-- [ ] Move game types to `common/` (available to both client and server)
-- [ ] Move game validation to `common/` (available to both client and server)
+- [x] Move game types to `common/` (available to both client and server)
+- [x] Move game validation to `common/` (available to both client and server)
 - [ ] Keep solver on server only
 - [ ] Implement hint mechanism on server (returns a random valid move)
 

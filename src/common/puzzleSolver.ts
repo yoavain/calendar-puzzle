@@ -1,6 +1,5 @@
-import type { GameState, Board, Piece, Position, BoardCell } from '../types/types';
-import { getTransformedShape } from './gameLogic';
-import { MONTHS } from './initialize';
+import type { GameState, Board, Piece, Position, BoardCell } from './types';
+import { getTransformedShape, MONTHS } from './gameLogic';
 import dlx from 'dlx';
 
 class DLXSolver {

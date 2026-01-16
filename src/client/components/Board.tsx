@@ -1,6 +1,6 @@
 import React from 'react';
-import { BoardCell, DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../types/types';
-import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../utils/gameLogic';
+import { BoardCell, DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
+import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
 
 interface BoardProps {
     board: BoardType;

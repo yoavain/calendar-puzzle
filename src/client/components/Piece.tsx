@@ -1,6 +1,6 @@
 import React from 'react';
-import { Piece as PieceType } from '../types/types';
-import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../utils/gameLogic';
+import { Piece as PieceType } from '../../common/types';
+import { getTransformedShape, isEdgeCell, getEdgeDirections } from '../../common/gameLogic';
 
 interface PieceProps {
     piece: PieceType;

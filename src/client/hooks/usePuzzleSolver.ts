@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BoardCell, Piece, Board } from '../types/types';
+import { BoardCell, Piece, Board } from '../../common/types';
 
 interface SolverResponse {
     solution: Piece[] | null;
