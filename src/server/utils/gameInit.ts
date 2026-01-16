@@ -1,9 +1,10 @@
-import { Board, Piece, MONTHS } from '../../common/types';
+import { Board, Piece, MONTHS, PuzzleDate } from '../../common/types';
 
 /**
  * Initialize the game board with month and day cells for a given date
  */
-export function initializeBoard(month: number, day: number): Board {
+export function initializeBoard(puzzleDate: PuzzleDate): Board {
+    const { month, day } = puzzleDate;
     const boardWidth = 7;
     const boardHeight = 7;
     const board: Board = Array.from({ length: boardHeight }, (_, y) =>

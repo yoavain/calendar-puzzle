@@ -23,6 +23,7 @@ export interface Piece {
     isFlippedH: boolean;  // Horizontal flip
     isFlippedV: boolean;  // Vertical flip
     rotation: 0 | 90 | 180 | 270;  // degrees
+    isLocked?: boolean;  // When true, piece cannot be moved or undone (used for hints)
 }
 
 export interface BoardCell {

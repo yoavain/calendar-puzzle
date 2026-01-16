@@ -1,9 +1,9 @@
-import {Board, GameState, MONTHS, Piece, toPuzzleDate} from '../../common/types';
+import {Board, GameState, MONTHS, Piece, PuzzleDate, toPuzzleDate} from '../../common/types';
 
 /**
  * Initialize the game board with month and day cells
  */
-export function initializeBoard(date: Date): Board {
+export function initializeBoard(puzzleDate: PuzzleDate): Board {
     const boardWidth = 7;
     const boardHeight = 7;
     const board: Board = Array.from({ length: boardHeight }, (_, y) =>
@@ -17,9 +17,9 @@ export function initializeBoard(date: Date): Board {
         }))
     );
 
-    // Get current month and day
-    const monthIndex = date.getMonth(); // 0-11
-    const day = date.getDate(); // 1-31
+    // Use PuzzleDate directly
+    const monthIndex = puzzleDate.month; // 0-11
+    const day = puzzleDate.day; // 1-31
 
     // Set up month cells (Rows 0, 1; Cols 0-5)
     for (let y = 0; y < 2; y++) {
@@ -176,13 +176,18 @@ export function initializePieces(): Piece[] {
 
 /**
  * Initialize the game state
+ * Converts JavaScript Date to PuzzleDate once at initialization.
+ * From this point forward, only PuzzleDate is used.
  */
 export function initializeGame(date: Date = new Date()): GameState {
+    // Convert to PuzzleDate once - this is the only place we use JavaScript Date
+    const puzzleDate = toPuzzleDate(date);
+    
     return {
-        board: initializeBoard(date),
+        board: initializeBoard(puzzleDate),
         pieces: initializePieces(),
         selectedPieceId: null,
-        currentDate: toPuzzleDate(date),
+        currentDate: puzzleDate,
         isSolved: false,
         isGameComplete: false
     };

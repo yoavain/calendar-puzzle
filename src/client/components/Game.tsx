@@ -7,9 +7,10 @@ import { PieceControls } from './PieceControls';
 import ThemeToggle from './ThemeToggle';
 import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
+import { HintButton } from './HintButton';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
-import { getSolution } from '../service/puzzleService';
+import { getSolution, getHint } from '../service/puzzleService';
 
 export const Game: React.FC = () => {
     const {
@@ -17,13 +18,18 @@ export const Game: React.FC = () => {
         pushState,
         undo,
         redo,
+        clearHistory,
         canUndo,
         canRedo
     } = useGameHistory(initializeGame());
 
     // State for the puzzle solver
     const [isLoading, setIsLoading] = useState(false);
+    const [isHintLoading, setIsHintLoading] = useState(false);
     const [solverError, setSolverError] = useState<string | null>(null);
+
+    // Check if board is empty (no pieces placed)
+    const isBoardEmpty = gameState.pieces.every(piece => piece.position === null);
 
     const handlePieceSelect = (pieceId: number) => {
         if (gameState.isSolved) return;
@@ -323,6 +329,76 @@ export const Game: React.FC = () => {
         }
     };
 
+    const handleHint = async () => {
+        if (gameState.isSolved || isHintLoading || !isBoardEmpty) return;
+
+        setSolverError(null);
+        setIsHintLoading(true);
+
+        try {
+            // Call the server to get a hint (one random piece placement)
+            const hintPiece = await getHint(gameState.currentDate);
+
+            // Find the original piece to get its shape
+            const originalPiece = gameState.pieces.find(p => p.id === hintPiece.id);
+            if (!originalPiece) {
+                throw new Error('Hint piece not found in game state');
+            }
+
+            // Create the updated piece with hint data - mark as locked
+            const updatedPiece = {
+                ...originalPiece,
+                position: hintPiece.position,
+                rotation: hintPiece.rotation,
+                isFlippedH: hintPiece.isFlippedH,
+                isFlippedV: hintPiece.isFlippedV,
+                isLocked: true  // Mark the hint piece as locked/unmovable
+            };
+
+            // Update the board with the hint piece
+            let newBoard = gameState.board.map(row => 
+                row.map(cell => ({ ...cell }))
+            );
+
+            if (updatedPiece.position) {
+                const transformedShape = getTransformedShape(updatedPiece);
+                for (let y = 0; y < transformedShape.length; y++) {
+                    for (let x = 0; x < transformedShape[y].length; x++) {
+                        if (transformedShape[y][x]) {
+                            const boardY = updatedPiece.position.y + y;
+                            const boardX = updatedPiece.position.x + x;
+                            if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
+                                newBoard[boardY][boardX].isOccupied = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update pieces array
+            const newPieces = gameState.pieces.map(p => 
+                p.id === hintPiece.id ? updatedPiece : p
+            );
+
+            const newState = {
+                ...gameState,
+                board: newBoard,
+                pieces: newPieces,
+                selectedPieceId: null
+            };
+
+            // Clear history to prevent undoing the hint
+            clearHistory(newState);
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            setSolverError(errorMessage);
+            console.error('Error getting hint:', error);
+        } finally {
+            setIsHintLoading(false);
+        }
+    };
+
     // Add new handlers for per-piece controls
     const handleRotatePiece = (pieceId: number) => {
         if (gameState.isSolved) return;
@@ -376,6 +452,7 @@ export const Game: React.FC = () => {
                             {solverError}
                         </div>
                     )}
+                    <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty} />
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
                 </div>
             </div>

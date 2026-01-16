@@ -9,7 +9,7 @@ function cloneGameState(state: GameState): GameState {
         ...state,
         board: state.board.map(row => [...row.map(cell => ({ ...cell }))]) as Board,
         pieces: state.pieces.map(piece => ({ ...piece })),
-        currentDate: new Date(state.currentDate)
+        currentDate: { ...state.currentDate }
     };
 }
 
@@ -62,11 +62,21 @@ export function useGameHistory(initialState: GameState) {
         });
     }, []);
 
+    // Clear all history (used when placing a hint - prevents undoing hints)
+    const clearHistory = useCallback((newState: GameState) => {
+        setHistory({
+            past: [],
+            present: cloneGameState(newState),
+            future: []
+        });
+    }, []);
+
     return {
         gameState: history.present,
         pushState,
         undo,
         redo,
+        clearHistory,
         canUndo: history.past.length > 0,
         canRedo: history.future.length > 0
     };
