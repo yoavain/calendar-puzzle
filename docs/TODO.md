@@ -35,7 +35,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ### High Priority
 - [x] Reset button next to undo/redo
 - [x] Calendar picker to play different dates
-- [ ] Visual feedback for invalid moves (shake animation, red highlight)
+- [x] Visual feedback for invalid moves (shake animation, red highlight)
 
 ### Controls & Interaction
 - [ ] Enhance piece rotation/flip controls (icons, keyboard shortcuts)
