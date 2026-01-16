@@ -1,7 +1,7 @@
-import type { Board, Piece } from '../../src/types/types';
-import { initializeBoard, initializePieces } from '../../src/utils/initialize';
-import { isPuzzleSolved } from '../../src/utils/gameLogic';
-import { findSolution } from '../../src/utils/puzzleSolver';
+import type { Board, Piece } from '../../src/client/types/types';
+import { initializeBoard, initializePieces } from '../../src/client/utils/initialize';
+import { isPuzzleSolved } from '../../src/client/utils/gameLogic';
+import { findSolution } from '../../src/client/utils/puzzleSolver';
 
 describe('puzzleSolverWorker', () => {
   describe('findSolution', () => {
