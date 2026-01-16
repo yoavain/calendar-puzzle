@@ -48,7 +48,7 @@
         "prebuild:image": "npm run build",
         "build:image": "docker build --tag calendar-puzzle --progress=plain --no-cache --file Dockerfile .",
         "prestart:docker": "npm run build:image && docker-compose down",
-        "start:docker": "docker-compose up"
+        "start:docker": "docker-compose up -d"
     },
     "keywords": [],
     "author": "",

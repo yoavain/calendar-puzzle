@@ -83,17 +83,21 @@ function solveWithWorker(month: number, day: number): Promise<Piece[]> {
  * @param day - 1-indexed day (1-31) from PuzzleDate
  * @returns Promise resolving to the solution pieces
  */
-export async function solvePuzzle(month: number, day: number): Promise<Piece[]> {
+export const solvePuzzle = async (month: number, day: number): Promise<Piece[]> => {
     const dateKey = toDateKey(month, day);
+    console.log(`[SolverService] Solving puzzle for ${dateKey}...`);
     
     // Check cache first
     const cached = await solutionRepository.getSolution(dateKey);
     if (cached) {
+        console.log(`[SolverService] Returning cached solution for ${dateKey}`);
         return cached;
     }
     
     // Solve with worker and cache the result
+    console.log(`[SolverService] Computing solution for ${dateKey}...`);
     const pieces = await solveWithWorker(month, day);
     await solutionRepository.saveSolution(dateKey, pieces);
+    console.log(`[SolverService] Solution computed and cached for ${dateKey}`);
     return pieces;
-}
+};
