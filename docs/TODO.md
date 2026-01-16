@@ -24,7 +24,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### API Endpoints (REST)
 - [ ] `POST /api/results` — Mark date as completed (logged-in users, server-validated)
-- [ ] `POST /api/solver` — Return puzzle solution (logged-in users only)
+- [ ] `POST /api/solution` — Return puzzle solution (logged-in users only)
 - [ ] `POST /api/hint` — Return a single valid move (logged-in users only)
 
 ### Infrastructure
@@ -38,7 +38,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] Visual feedback for invalid moves (shake animation, red highlight)
 
 ### Controls & Interaction
-- [ ] Enhance piece rotation/flip controls (icons, keyboard shortcuts)
+- [x] Enhance piece rotation/flip controls (icons, keyboard shortcuts)
 - [ ] Improve drag and drop (overlay valid drop zones, highlight legal cells)
 - [ ] Improve mobile responsiveness (touch controls, pinch-to-zoom, swipe gestures)
 

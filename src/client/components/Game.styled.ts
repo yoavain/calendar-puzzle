@@ -11,7 +11,7 @@ export const PiecesContainer = styled(Box)(({ theme }) => ({
     backgroundColor: theme.palette.background.paper,
     borderRadius: 8,
     justifyItems: 'center',
-    maxWidth: 900,
+    maxWidth: 1080,
     marginLeft: 'auto',
     marginRight: 'auto',
 }));
@@ -22,7 +22,7 @@ export const PiecePoolWrapper = styled(Box)(({ theme }) => ({
     padding: theme.spacing(1),
     backgroundColor: theme.palette.background.default,
     borderRadius: 8,
-    width: 210,
+    width: 250,
     height: 280,
     display: 'flex',
     flexDirection: 'column',
