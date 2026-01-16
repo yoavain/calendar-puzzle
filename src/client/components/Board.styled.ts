@@ -39,14 +39,6 @@ export const BoardRow = styled('div')({
     gap: 0,
 });
 
-// Edge directions interface
-export interface EdgeDirections {
-    top?: boolean;
-    right?: boolean;
-    bottom?: boolean;
-    left?: boolean;
-}
-
 // Board cell props
 export interface BoardCellProps {
     isPlayable?: boolean;
@@ -57,7 +49,8 @@ export interface BoardCellProps {
     isLocked?: boolean;
     isInvalidDrop?: boolean;
     isDragOver?: boolean;
-    edges?: EdgeDirections;
+    pieceId?: number;
+    solutionRevealed?: boolean;
 }
 
 // Board cell
@@ -71,7 +64,8 @@ export const BoardCell = styled('div')<BoardCellProps>(({
     isLocked,
     isInvalidDrop,
     isDragOver,
-    edges 
+    pieceId,
+    solutionRevealed
 }) => ({
     width: theme.game.cellSize,
     height: theme.game.cellSize,
@@ -106,7 +100,7 @@ export const BoardCell = styled('div')<BoardCellProps>(({
         backgroundColor: theme.game.highlightColor,
         color: theme.game.highlightTextColor,
         fontWeight: 'bold',
-        boxShadow: `0 0 0 2px ${theme.game.highlightColor}, 0 2px 8px rgba(255, 235, 59, 0.4)`,
+        boxShadow: `inset 0 0 8px rgba(255, 200, 0, 0.5)`,
     }),
 
     // Drag over feedback - enhanced visual cue for valid drop zones
@@ -132,7 +126,7 @@ export const BoardCell = styled('div')<BoardCellProps>(({
 
     // Piece cell styling
     ...(isPieceCell && {
-        backgroundColor: isLocked ? theme.game.lockedPieceColor : theme.game.pieceColor,
+        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
         color: '#ffffff',
         border: 0,
         outline: 'none',
@@ -143,25 +137,12 @@ export const BoardCell = styled('div')<BoardCellProps>(({
         display: 'block',
         // Subtle inset gradient for depth perception on placed pieces
         backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)`,
+        // Apply opacity for hinted pieces (30% faded) or solution revealed (15% faded)
+        opacity: isLocked ? theme.game.hintedOpacity : (solutionRevealed ? theme.game.solutionRevealedOpacity : 1),
         
         '&:hover': {
-            opacity: isLocked ? 1 : 0.85,
-            filter: 'brightness(1.08)',
+            filter: isLocked ? 'none' : 'brightness(1.08)',
         },
-
-        // Edge borders for pieces on board
-        ...(edges?.top && {
-            borderTop: `2px solid ${isLocked ? theme.game.lockedPieceBorderColor : theme.game.boardBorderColor}`,
-        }),
-        ...(edges?.right && {
-            borderRight: `2px solid ${isLocked ? theme.game.lockedPieceBorderColor : theme.game.boardBorderColor}`,
-        }),
-        ...(edges?.bottom && {
-            borderBottom: `2px solid ${isLocked ? theme.game.lockedPieceBorderColor : theme.game.boardBorderColor}`,
-        }),
-        ...(edges?.left && {
-            borderLeft: `2px solid ${isLocked ? theme.game.lockedPieceBorderColor : theme.game.boardBorderColor}`,
-        }),
     }),
 
     // Invalid drop feedback
@@ -207,32 +188,19 @@ export const PreviewRow = styled('div')({
 // Preview cell props
 export interface PreviewCellProps {
     isFilled?: boolean;
-    edges?: EdgeDirections;
+    pieceId?: number;
 }
 
 // Preview cell
-export const PreviewCell = styled('div')<PreviewCellProps>(({ theme, isFilled, edges }) => ({
+export const PreviewCell = styled('div')<PreviewCellProps>(({ theme, isFilled, pieceId }) => ({
     width: theme.game.cellSize,
     height: theme.game.cellSize,
     border: 'none',
     visibility: isFilled ? 'visible' : 'hidden',
 
     ...(isFilled && {
-        backgroundColor: theme.game.pieceColor,
+        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
         // Subtle gradient for depth perception in drag preview
         backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)`,
-
-        ...(edges?.top && {
-            borderTop: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.right && {
-            borderRight: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.bottom && {
-            borderBottom: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
-        ...(edges?.left && {
-            borderLeft: `2px solid ${theme.game.pieceBorderColor}`,
-        }),
     }),
 }));
