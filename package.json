@@ -37,7 +37,11 @@
         "preview": "vite preview",
         "prestart": "npm run build",
         "start": "node dist/server/index.js",
-        "test": "jest"
+        "test": "jest",
+        "prebuild:image": "npm run build",
+        "build:image": "docker build --tag calendar-puzzle --progress=plain --no-cache --file Dockerfile .",
+        "prestart:docker": "(docker stop calendar-puzzle || echo.) && (docker rm calendar-puzzle || echo.) && npm run build:image",
+        "start:docker": "docker run -p 23222:3001 --name calendar-puzzle --restart unless-stopped calendar-puzzle"
     },
     "keywords": [],
     "author": "",
