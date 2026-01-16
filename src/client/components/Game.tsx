@@ -246,7 +246,7 @@ export const Game: React.FC = () => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (!piece) return;
         
-        if (!isValidPlacement(gameState.board, piece, position)) {
+        if (!isValidPlacement(gameState.board, piece, position, true)) {
             // Trigger visual feedback for invalid drop
             triggerInvalidDropFeedback(piece, position);
             return;
