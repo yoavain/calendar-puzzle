@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    ports:
+      - "23222:3001"
+    environment:
+      - TZ=Asia/Jerusalem
+      - NODE_ENV=production
+    restart: unless-stopped
