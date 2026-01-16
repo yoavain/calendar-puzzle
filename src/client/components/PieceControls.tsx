@@ -1,4 +1,9 @@
 import React from 'react';
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import RotateRightIcon from '@mui/icons-material/RotateRight';
+import FlipIcon from '@mui/icons-material/Flip';
 import { Piece } from '../../common/types';
 
 interface PieceControlsProps {
@@ -10,22 +15,67 @@ interface PieceControlsProps {
 
 export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onFlipH, onFlipV }) => {
     return (
-        <div className="piece-controls">
-            <button 
-                onClick={onRotate}
-                data-testid="rotate-button"
-                aria-label="rotate piece"
-            >⟳</button>
-            <button 
-                onClick={onFlipH}
-                data-testid="flip-h-button"
-                aria-label="flip horizontally"
-            >↔️</button>
-            <button 
-                onClick={onFlipV}
-                data-testid="flip-v-button"
-                aria-label="flip vertically"
-            >↕️</button>
-        </div>
+        <Stack 
+            direction="row" 
+            spacing={0.5}
+            className="piece-controls"
+            sx={{
+                position: 'absolute',
+                bottom: 10,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                bgcolor: 'background.paper',
+                borderRadius: 1,
+                p: 0.5,
+                boxShadow: 1,
+                zIndex: 10,
+            }}
+        >
+            <Tooltip title="Rotate" arrow>
+                <IconButton 
+                    size="small"
+                    onClick={onRotate}
+                    data-testid="rotate-button"
+                    aria-label="rotate piece"
+                    sx={{ 
+                        border: 1, 
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <RotateRightIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Flip horizontal" arrow>
+                <IconButton 
+                    size="small"
+                    onClick={onFlipH}
+                    data-testid="flip-h-button"
+                    aria-label="flip horizontally"
+                    sx={{ 
+                        border: 1, 
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <FlipIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Flip vertical" arrow>
+                <IconButton 
+                    size="small"
+                    onClick={onFlipV}
+                    data-testid="flip-v-button"
+                    aria-label="flip vertically"
+                    sx={{ 
+                        border: 1, 
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <FlipIcon fontSize="small" sx={{ transform: 'rotate(90deg)' }} />
+                </IconButton>
+            </Tooltip>
+        </Stack>
     );
 };

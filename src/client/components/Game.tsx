@@ -1,7 +1,12 @@
 import React, { useCallback, useState } from 'react';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import Alert from '@mui/material/Alert';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
 import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
 import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
@@ -448,16 +453,23 @@ export const Game: React.FC = () => {
     };
 
     return (
-        <div className="app">
-            <div className="top-bar">
+        <Container maxWidth="lg" sx={{ py: 2, minHeight: '100vh' }}>
+            {/* Top Bar */}
+            <Stack 
+                direction="row" 
+                justifyContent="space-between" 
+                alignItems="center" 
+                sx={{ mb: 2 }}
+            >
                 <ThemeToggle />
-                <Stack direction="row" spacing={1} alignItems="center" className="game-controls">
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
                     <Button 
                         variant="contained"
                         onClick={undo} 
                         disabled={!canUndo}
                         size="small"
+                        startIcon={<UndoIcon />}
                     >
                         Undo
                     </Button>
@@ -466,6 +478,7 @@ export const Game: React.FC = () => {
                         onClick={redo} 
                         disabled={!canRedo}
                         size="small"
+                        startIcon={<RedoIcon />}
                     >
                         Redo
                     </Button>
@@ -477,10 +490,23 @@ export const Game: React.FC = () => {
                     <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty} />
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
                 </Stack>
-            </div>
-            <h1 className="main-title">Calendar Puzzle</h1>
+            </Stack>
+
+            {/* Title */}
+            <Typography 
+                variant="h4" 
+                component="h1" 
+                align="center" 
+                sx={{ mb: 2, fontWeight: 'bold' }}
+            >
+                Calendar Puzzle
+            </Typography>
+
+            {/* Success Message Dialog */}
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
-            <main className="game">
+
+            {/* Game Area */}
+            <Box component="main">
                 <BoardComponent 
                     board={gameState.board} 
                     pieces={gameState.pieces}
@@ -488,15 +514,38 @@ export const Game: React.FC = () => {
                     onPieceDrop={handlePieceDrop}
                     data-testid="board"
                 />
-                <div 
+                <Box 
                     className="pieces-container"
                     onDragOver={handlePileDropZoneDragOver}
                     onDrop={handlePileDropZoneDrop}
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: 1,
+                        mt: 2,
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2,
+                        justifyItems: 'center',
+                        maxWidth: 900,
+                        mx: 'auto',
+                    }}
                 >
                     {gameState.pieces
-                        .filter(piece => !piece.position) // Only show unplaced pieces
+                        .filter(piece => !piece.position)
                         .map(piece => (
-                            <div key={piece.id} className="piece-wrapper">
+                            <Box 
+                                key={piece.id} 
+                                className="piece-wrapper"
+                                sx={{
+                                    position: 'relative',
+                                    p: 0.5,
+                                    bgcolor: 'background.default',
+                                    borderRadius: 1,
+                                    width: 210,
+                                    height: 280,
+                                }}
+                            >
                                 <Piece
                                     piece={piece}
                                     isSelected={piece.id === gameState.selectedPieceId}
@@ -509,10 +558,10 @@ export const Game: React.FC = () => {
                                     onFlipH={() => handleFlipHPiece(piece.id)}
                                     onFlipV={() => handleFlipVPiece(piece.id)}
                                 />
-                            </div>
+                            </Box>
                         ))}
-                </div>
-            </main>
-        </div>
+                </Box>
+            </Box>
+        </Container>
     );
 };
