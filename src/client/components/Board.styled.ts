@@ -2,17 +2,6 @@ import { styled } from '@mui/material/styles';
 import { keyframes } from '@emotion/react';
 
 // Animations
-export const fadeIn = keyframes`
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-`;
-
 export const invalidDropShake = keyframes`
     0%, 100% {
         transform: translateX(0);
@@ -116,7 +105,6 @@ export const BoardCell = styled('div')<BoardCellProps>(({
         backgroundColor: theme.game.highlightColor,
         color: '#000000',
         fontWeight: 'bold',
-        animation: `${fadeIn} 0.5s cubic-bezier(0.4,0,0.2,1)`,
         boxShadow: `0 0 0 3px ${theme.palette.success.main}`,
     }),
 
