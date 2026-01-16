@@ -5,9 +5,9 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ## Backend
 
 ### Project Setup
-- [ ] Add Fastify backend server
-- [ ] Restructure project into `client/`, `server/`, and `common/` folders under the `src/` folder
-- [ ] Server serves client files and static assets from `src/resources/`
+- [x] Add Fastify backend server
+- [x] Restructure project into `client/`, `server/`, and `common/` folders under the `src/` folder
+- [x] Server serves client files and static assets from `src/resources/`
  
 
 ### Shared Game Logic
