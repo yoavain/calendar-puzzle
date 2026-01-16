@@ -2,6 +2,8 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { registerSolutionRoutes } from './rest/solutionRest';
+import { registerHintRoutes } from './rest/hintRest';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +26,10 @@ export function buildApp(): FastifyInstance {
     app.get('/api/health', async () => {
         return { status: 'ok' };
     });
+
+    // Register API routes
+    registerSolutionRoutes(app);
+    registerHintRoutes(app);
 
     // Serve index.html for client-side routing (SPA fallback)
     app.setNotFoundHandler(async (request, reply) => {
