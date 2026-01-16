@@ -3,3 +3,5 @@
 /.junie/
 /.qodo/
 /.cursor/
+/build/
+/dist/
