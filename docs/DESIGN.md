@@ -176,13 +176,46 @@ Ensure the UI is touch-friendly for mobile users. Add larger touch targets for c
 
 ### Accessibility Improvements
 
-Add ARIA labels and roles to interactive elements for better screen reader support. Implement full keyboard navigation for all game controls and consider adding a high contrast mode for users with visual impairments. These changes will make the game more inclusive.
+Add ARIA labels and roles to interactive elements for better screen reader support. Implement full keyboard navigation for all game controls. These changes will make the game more inclusive.
 
 **Low-level design:**
 - Audit all interactive elements for ARIA attributes and roles.
 - Ensure all controls are reachable and usable via keyboard (tab, enter, space, arrow keys).
-- Add a toggle for high contrast mode and corresponding CSS variables.
 - Test with screen readers and keyboard-only navigation.
+
+### High Contrast Mode
+
+Provide a high contrast mode for users with visual impairments, improving visibility and readability.
+
+**Low-level design:**
+
+**Toggle mechanism:**
+- Add a high contrast toggle button in the settings/header area
+- Store preference in localStorage (`calendar-puzzle-high-contrast`)
+- Respect `prefers-contrast: more` media query as default
+
+**Color scheme:**
+```css
+:root[data-high-contrast="true"] {
+  --bg-primary: #000000;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --border-color: #ffffff;
+  --accent-color: #ffff00;        /* High visibility yellow */
+  --success-color: #00ff00;       /* Bright green */
+  --error-color: #ff0000;         /* Bright red */
+  --piece-border: 2px solid #fff; /* Clear piece boundaries */
+}
+```
+
+**Visual adjustments:**
+- Increase border widths on pieces and board cells (2px minimum)
+- Use solid colors instead of gradients
+- Ensure minimum 7:1 contrast ratio for text (WCAG AAA)
+- Add visible focus indicators (3px outline)
+- Remove or simplify shadows that reduce clarity
+- Use patterns/textures in addition to colors for piece differentiation
 
 ### Visual Polish
 
@@ -240,37 +273,145 @@ Celebrate the user's success with a satisfying confetti animation when they comp
 
 ## Features
 
-### Statistics & Progress
+### Session (Local Storage)
 
-Track user puzzle completion history to provide insights into their progress and encourage daily engagement through streak tracking.
-
-#### Solving Streak Tracking
-
-Display the user's current streak of consecutive days with completed puzzles. Streaks motivate daily engagement and create a sense of accomplishment.
+Persist game state locally for all users (regardless of authentication) to prevent progress loss on page reload.
 
 **Low-level design:**
-- Extend `users_results` query to calculate streak from completion dates.
-- A streak is defined as consecutive calendar days with at least one completed puzzle.
-- Calculate current streak: count backwards from today (or yesterday if today not yet completed).
-- Calculate longest streak: find the maximum consecutive day sequence in history.
-- Store computed streak in session/cache to avoid recalculating on every request.
-- Display streak prominently in the UI with a flame or calendar icon.
-- Consider streak freeze/grace period for premium features (future).
 
-**API additions:**
+**Storage key:** `calendar-puzzle-session`
+
+**Data structure:**
 ```typescript
-// GET /api/stats
-Response: {
-  currentStreak: number,
-  longestStreak: number,
-  totalCompleted: number,
-  completionRate: number  // totalCompleted / 365
+interface SessionData {
+  // Current game state
+  currentDate: string;           // ISO date string (YYYY-MM-DD)
+  boardState: BoardState;        // Placed pieces and their positions
+  
+  // Statistics tracking
+  playedDates: string[];         // Dates where user started playing
+  completedDates: string[];      // Dates where user completed the puzzle
 }
 ```
 
-#### Personal Statistics Dashboard
+**Behavior:**
+- **On page load:**
+  - Read session from localStorage
+  - If `currentDate` matches today's date, restore `boardState`
+  - If `currentDate` doesn't match, clear `boardState` but preserve statistics
+- **On board change:**
+  - Update `boardState` in session
+  - Debounce writes (e.g., 500ms) to avoid excessive storage operations
+- **On game start (first piece placed for a date):**
+  - Add current date to `playedDates` if not already present
+- **On puzzle completion:**
+  - Add current date to `completedDates` if not already present
 
-Provide users with a dashboard showing their puzzle completion progress across the year. This gives a sense of accomplishment and highlights which dates remain unsolved.
+**Storage optimization (future):**
+- Consider binary encoding for date lists (e.g., bit flags per day of year)
+- Compress board state if storage becomes an issue
+
+---
+
+### Progress
+
+Display real-time progress during gameplay to give users a sense of how close they are to completion.
+
+**Low-level design:**
+
+**Progress calculation:**
+```typescript
+const TOTAL_CELLS = 12 + 31 - 2;  // 41 playable cells (months + days - 2 blocked)
+
+function calculateProgress(boardState: BoardState): number {
+  const coveredCells = countCoveredCells(boardState);
+  return coveredCells / TOTAL_CELLS;  // 0.0 to 1.0
+}
+
+function countCoveredCells(boardState: BoardState): number {
+  // Count unique cells covered by all placed pieces
+  // Note: Count cells, not pieces (pieces have different sizes: 5 or 6 cells)
+  const coveredSet = new Set<string>();
+  for (const piece of boardState.placedPieces) {
+    for (const cell of piece.occupiedCells) {
+      coveredSet.add(`${cell.row},${cell.col}`);
+    }
+  }
+  return coveredSet.size;
+}
+```
+
+**UI component:**
+- Display a progress bar below or beside the game board
+- Show percentage text (e.g., "73%" or "30/41 cells")
+- Use color gradient: empty (gray) → partial (blue) → complete (green)
+- Animate progress changes smoothly with CSS transitions
+- Consider adding milestone markers (25%, 50%, 75%)
+
+**Component location:** Create `ProgressBar.tsx` in `src/client/components/`
+
+---
+
+### Statistics
+
+Track and display game statistics for all users, stored in browser session (localStorage). This works independently of authentication.
+
+**Low-level design:**
+
+**Metrics calculation (from session data):**
+```typescript
+interface GameStats {
+  played: number;        // playedDates.length
+  won: number;           // completedDates.length  
+  winPercent: number;    // (won / played) * 100
+  currentStreak: number; // Consecutive completed days ending today/yesterday
+  maxStreak: number;     // Longest consecutive completed days ever
+}
+
+function calculateStats(session: SessionData): GameStats {
+  const played = session.playedDates.length;
+  const won = session.completedDates.length;
+  const winPercent = played > 0 ? (won / played) * 100 : 0;
+  
+  const sortedDates = session.completedDates
+    .map(d => new Date(d))
+    .sort((a, b) => b.getTime() - a.getTime());
+  
+  const currentStreak = calculateCurrentStreak(sortedDates);
+  const maxStreak = calculateMaxStreak(sortedDates);
+  
+  return { played, won, winPercent, currentStreak, maxStreak };
+}
+```
+
+**Streak calculation:**
+- Current streak: Count consecutive days backwards from today (or yesterday if today not completed)
+- Max streak: Iterate through sorted dates, track longest consecutive sequence
+- A "day" boundary is midnight local time
+
+**Success popup display:**
+- Trigger popup when puzzle is completed (all 41 cells covered)
+- Show statistics grid:
+  ```
+  ┌─────────────┬─────────────┐
+  │   Played    │   Win %     │
+  │     42      │    85%      │
+  ├─────────────┼─────────────┤
+  │ Current     │   Max       │
+  │ Streak      │   Streak    │
+  │     5       │     12      │
+  └─────────────┴─────────────┘
+  ```
+- Include share button (copy stats to clipboard)
+- Include "Play next date" button
+
+**Component location:** Create `SuccessPopup.tsx` or update existing completion modal
+
+---
+
+### Personal Statistics Dashboard (Future)
+
+Provide users with a comprehensive dashboard showing their puzzle completion progress across the year.
 
 **Low-level design:**
 - Create a new `StatsPage` or `StatsModal` component.
@@ -283,5 +424,6 @@ Provide users with a dashboard showing their puzzle completion progress across t
   - Average solve time (if tracking time)
 - Use color coding: green for completed, gray for incomplete, gold for today.
 - Allow clicking on a date to navigate to that puzzle.
-- Fetch stats from `/api/stats` endpoint (requires authentication).
+- For logged-in users: Fetch stats from `/api/stats` endpoint.
+- For anonymous users: Calculate from localStorage session data.
 - Cache stats client-side and invalidate on new completion.
