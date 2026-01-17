@@ -4,8 +4,6 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ## Backend
 
-[ ] Change data structure of "Piece". shape is not part of the Piece, can be "fetched" by ID
-
 ### Authentication
 - [ ] Implement OAuth authentication (Google, GitHub — no username/password)
 
@@ -27,15 +25,6 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [ ] Confetti animation on puzzle completion
 
 ## Features
-
-### Session (Local Storage)
-Persist game state locally for all users (regardless of authentication).
-
-- [ ] Save session data: current date + board state
-- [ ] On page reload: if saved date matches current date, restore board state
-- [ ] If state is completed, player cannot continue playing, and the page is loaded with the "success" popup (just like after completion)
-- [ ] On page reload: if saved date doesn't match, ignore saved state
-- [ ] On every board change, update the session
 
 ### Progress
 Display real-time progress during gameplay.
@@ -64,7 +53,17 @@ Track and display game statistics for all users (stored in session).
 
 ## Archived (Completed)
 
+### Session (Local Storage)
+Persist game state locally for all users (regardless of authentication). See [SESSION.md](SESSION.md) for details.
+
+- [x] Save session data: current date + board state
+- [x] On page reload: if saved date matches current date, restore board state
+- [x] If state is completed, player cannot continue playing, and the page is loaded with the "success" popup (just like after completion)
+- [x] On page reload: if saved date doesn't match, ignore saved state
+- [x] On every board change, update the session
+
 ### Backend
+- [x] Refactor Piece data structure: shape extracted to `PIECE_DATA` constant, fetched by ID
 - [x] Add Fastify backend server
 - [x] Restructure project into `client/`, `server/`, and `common/` folders under the `src/` folder
 - [x] Server serves client files and static assets from `build/`

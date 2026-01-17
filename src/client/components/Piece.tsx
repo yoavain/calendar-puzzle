@@ -38,7 +38,12 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
                 delta = -ccwDelta;
             }
             
-            setCumulativeRotation(r => r + delta);
+            // When exactly one flip is active (XOR), the CSS scale transform reverses
+            // the visual rotation direction, so we invert the delta to compensate
+            const isFlipInverted = piece.isFlippedH !== piece.isFlippedV;
+            const adjustedDelta = isFlipInverted ? -delta : delta;
+            
+            setCumulativeRotation(r => r + adjustedDelta);
             prevRotation.current = curr;
         }
     }, [piece.rotation]);
