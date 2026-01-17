@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import { useQueryParam } from '../hooks/useQueryParam';
+import { useUser } from '../context/UserContext';
 
 interface HintButtonProps {
     onHint: () => void;
@@ -10,9 +10,9 @@ interface HintButtonProps {
 }
 
 export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = false, disabled = false }) => {
-    const showButton = useQueryParam('code');
+    const { user } = useUser();
 
-    if (!showButton) {
+    if (!user) {
         return null;
     }
 

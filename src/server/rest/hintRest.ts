@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { DatePathParams, HintResponse, ErrorResponse } from '../../common/restTypes.js';
 import { parseDate } from '../utils/dateUtils.js';
 import { solvePuzzle } from '../service/solverService.js';
+import { requireAuth } from '../auth/requireAuth.js';
 
 /**
  * Simple hash function to convert a string to a number
@@ -20,6 +21,7 @@ export function registerHintRoutes(app: FastifyInstance): void {
     // GET /api/hint/:date - Get a hint (single piece placement) for a date
     app.get<{ Params: DatePathParams; Reply: HintResponse | ErrorResponse }>(
         '/api/hint/:date',
+        { preHandler: requireAuth },
         async (request, reply) => {
             const { date } = request.params;
             const parsed = parseDate(date);

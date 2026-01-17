@@ -1,7 +1,8 @@
-FROM node:24.13.0-alpine3.22@sha256:6f96670faefc1ec23520ce30e453e85bfdb94a43b49b7aac2b0d3ac3a902bf2f
+FROM node:24.13.0-slim@sha256:bf22df20270b654c4e9da59d8d4a3516cce6ba2852e159b27288d645b7a7eedc
 
 # Timezone
-RUN apk add --no-cache tzdata
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/*
 
 # ENV
 ENV TZ=Asia/Jerusalem
@@ -19,7 +20,7 @@ COPY src/server/db/migrations /usr/app/src/server/db/migrations/
 RUN mkdir -p /usr/app/ext/logs
 
 # Dependencies
-RUN npm i --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
 # Expose port
 EXPOSE 3001

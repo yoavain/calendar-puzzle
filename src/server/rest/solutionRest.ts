@@ -2,11 +2,13 @@ import { FastifyInstance } from 'fastify';
 import { DatePathParams, SolutionResponse, ErrorResponse } from '../../common/restTypes.js';
 import { parseDate } from '../utils/dateUtils.js';
 import { solvePuzzle } from '../service/solverService.js';
+import { requireAuth } from '../auth/requireAuth.js';
 
 export function registerSolutionRoutes(app: FastifyInstance): void {
     // GET /api/solution/:date - Get full puzzle solution for a date
     app.get<{ Params: DatePathParams; Reply: SolutionResponse | ErrorResponse }>(
         '/api/solution/:date',
+        { preHandler: requireAuth },
         async (request, reply) => {
             const { date } = request.params;
             const parsed = parseDate(date);
