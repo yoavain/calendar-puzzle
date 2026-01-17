@@ -18,7 +18,6 @@ export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', '
 
 export interface Piece {
     id: number;
-    shape: boolean[][];  // true represents filled cells
     position: Position | null;  // null when not placed on board
     isFlippedH: boolean;  // Horizontal flip
     isFlippedV: boolean;  // Vertical flip
@@ -49,7 +48,6 @@ export interface GameState {
 
 export interface DragItem {
     pieceId: number;
-    shape: boolean[][];
 }
 
 export interface GameHistory {

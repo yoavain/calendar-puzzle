@@ -1,4 +1,5 @@
 import { Board, Piece, MONTHS, PuzzleDate } from '../../common/types';
+import { PIECE_IDS } from '../../common/pieceData';
 
 /**
  * Initialize the game board with month and day cells for a given date
@@ -65,107 +66,15 @@ export function initializeBoard(puzzleDate: PuzzleDate): Board {
 }
 
 /**
- * Initialize the game pieces
+ * Initialize the game pieces with default state.
+ * Shape data is accessed via PIECE_DATA when needed.
  */
 export function initializePieces(): Piece[] {
-    return [
-        {
-            id: 1,
-            shape: [
-                [true, false],
-                [true, false],
-                [true, true],
-                [true, false]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 2,
-            shape: [
-                [true, true, true],
-                [true, false, true]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 3,
-            shape: [
-                [true, false, false],
-                [true, true, true],
-                [false, false, true]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 4,
-            shape: [
-                [false, true],
-                [false, true],
-                [true, true],
-                [true, false]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 5,
-            shape: [
-                [false, true],
-                [true, true],
-                [true, true]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 6,
-            shape: [
-                [false, false, true],
-                [false, false, true],
-                [true, true, true]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 7,
-            shape: [
-                [true, true],
-                [true, true],
-                [true, true]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        },
-        {
-            id: 8,
-            shape: [
-                [true, false],
-                [true, false],
-                [true, false],
-                [true, true]
-            ],
-            position: null,
-            isFlippedH: false,
-            isFlippedV: false,
-            rotation: 0
-        }
-    ];
+    return PIECE_IDS.map(id => ({
+        id,
+        position: null,
+        isFlippedH: false,
+        isFlippedV: false,
+        rotation: 0 as const
+    }));
 }
