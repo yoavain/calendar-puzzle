@@ -61,6 +61,33 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ## Features
 
-### Statistics & Progress
-- [ ] Solving streak tracking (consecutive days completed)
+### Session (Local Storage)
+Persist game state locally for all users (regardless of authentication).
+
+- [ ] Save session data: current date + board state
+- [ ] On page reload: if saved date matches current date, restore board state
+- [ ] On page reload: if saved date doesn't match, ignore saved state
+- [ ] On every board change, update the session
+
+### Progress
+Display real-time progress during gameplay.
+
+- [ ] Add progress bar showing board coverage
+- [ ] Progress = covered cells / total available cells
+  - Total cells = 12 (months) + 31 (days) - 2 (blocked for current date) = 41
+  - Count covered cells (not pieces, since piece sizes vary: most are 5 cells, one is 6)
+
+### Statistics
+Track and display game statistics for all users (stored in session).
+
+**Data Storage:**
+- [ ] Store list of completed dates in session (optimization TBD, e.g., binary encoding)
+
+**Success Popup Display:**
+- [ ] "Played" — Unique dates started playing
+- [ ] "Win %" — Percent of games started that were completed
+- [ ] "Current Streak" — Consecutive days completed
+- [ ] "Max Streak" — Longest consecutive days completed
+
+### Future Enhancements
 - [ ] Personal statistics dashboard (puzzles / 365 completed)
