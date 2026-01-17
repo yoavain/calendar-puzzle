@@ -1,5 +1,6 @@
 import { styled } from '@mui/material/styles';
 import { keyframes } from '@emotion/react';
+import { getPieceColor } from '../../common/pieceData';
 
 // Animations
 export const invalidDropShake = keyframes`
@@ -126,7 +127,7 @@ export const BoardCell = styled('div')<BoardCellProps>(({
 
     // Piece cell styling
     ...(isPieceCell && {
-        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
+        backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
         color: '#ffffff',
         border: 0,
         outline: 'none',
@@ -199,7 +200,7 @@ export const PreviewCell = styled('div')<PreviewCellProps>(({ theme, isFilled, p
     visibility: isFilled ? 'visible' : 'hidden',
 
     ...(isFilled && {
-        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
+        backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
         // Subtle gradient for depth perception in drag preview
         backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)`,
     }),

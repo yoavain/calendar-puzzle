@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Piece as PieceType } from '../../common/types';
 import { getTransformedShape } from '../../common/gameLogic';
+import { getPieceShape, getPieceColor } from '../../common/pieceData';
 import { PieceWrapper, PieceGrid, PieceCell } from './Piece.styled';
 
 interface PieceProps {
@@ -43,7 +44,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     }, [piece.rotation]);
 
     // Use base shape for visual rendering (CSS handles rotation/flip)
-    const baseShape = piece.shape;
+    const baseShape = getPieceShape(piece.id);
     const baseWidth = baseShape[0].length;
     const baseHeight = baseShape.length;
     
@@ -61,10 +62,9 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     ].join(' ');
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-        // Use transformed shape for drag preview (for accurate placement)
+        // Only need pieceId - shape can be derived from PIECE_DATA
         e.dataTransfer.setData('application/json', JSON.stringify({
-            pieceId: piece.id,
-            shape: transformedShape
+            pieceId: piece.id
         }));
 
         // Create a drag preview that represents the transformed piece
@@ -90,7 +90,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
                 `;
 
                 if (cell) {
-                    cellDiv.style.backgroundColor = theme.game.pieceColors[piece.id - 1];
+                    cellDiv.style.backgroundColor = getPieceColor(piece.id);
                 } else {
                     cellDiv.style.visibility = 'hidden';
                 }

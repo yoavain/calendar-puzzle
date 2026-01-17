@@ -1,24 +1,12 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 
-// Piece colors - same for both themes
-const pieceColors = [
-    '#E07A5F', // 1: Coral
-    '#3D9970', // 2: Teal
-    '#6B4423', // 3: Chocolate
-    '#8B5CF6', // 4: Violet
-    '#DB5B80', // 5: Rose
-    '#E8AA14', // 6: Marigold
-    '#8DA547', // 7: Olive
-    '#4169E1', // 8: Royal blue
-];
-
 // Extend MUI theme interface with custom game tokens
+// Note: Piece colors are now in src/common/pieceData.ts
 declare module '@mui/material/styles' {
     interface Theme {
         game: {
             cellSize: number;
             cellGap: number;
-            pieceColors: string[];
             pieceBorderWidth: number;
             hintedOpacity: number;
             solutionRevealedOpacity: number;
@@ -38,7 +26,6 @@ declare module '@mui/material/styles' {
         game?: {
             cellSize?: number;
             cellGap?: number;
-            pieceColors?: string[];
             pieceBorderWidth?: number;
             hintedOpacity?: number;
             solutionRevealedOpacity?: number;
@@ -60,7 +47,6 @@ declare module '@mui/material/styles' {
 const lightGameTokens = {
     cellSize: 50,
     cellGap: 0,
-    pieceColors,
     pieceBorderWidth: 2,
     hintedOpacity: 0.7,
     solutionRevealedOpacity: 0.85,
@@ -80,7 +66,6 @@ const lightGameTokens = {
 const darkGameTokens = {
     cellSize: 50,
     cellGap: 0,
-    pieceColors,
     pieceBorderWidth: 2,
     hintedOpacity: 0.7,
     solutionRevealedOpacity: 0.85,

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
@@ -9,7 +9,7 @@ import Tooltip from '@mui/material/Tooltip';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
+import { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
 import { calculateProgress, clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
 import { Piece } from './Piece';
@@ -20,10 +20,69 @@ import { SolutionButton } from './SolutionButton';
 import { HintButton } from './HintButton';
 import { DatePicker } from './DatePicker';
 import { ProgressBar } from './ProgressBar';
-import { initializeGame } from '../utils/initialize';
+import { initializeGame, initializeBoard } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
+import { saveSession, loadSession, clearSession } from '../hooks/useGameSession';
 import { PiecesContainer, PiecePoolWrapper } from './Game.styled';
+
+/**
+ * Rebuild game state from saved pieces.
+ * Reconstructs the board by placing each piece at its saved position.
+ */
+function rebuildGameState(pieces: PieceType[], date: PuzzleDate, isSolved: boolean): GameState {
+    const board = initializeBoard(date);
+
+    // Place each piece on the board
+    for (const piece of pieces) {
+        if (piece.position) {
+            const shape = getTransformedShape(piece);
+            for (let y = 0; y < shape.length; y++) {
+                for (let x = 0; x < shape[y].length; x++) {
+                    if (shape[y][x]) {
+                        const boardY = piece.position.y + y;
+                        const boardX = piece.position.x + x;
+                        if (boardY < board.length && boardX < board[boardY].length) {
+                            board[boardY][boardX].isOccupied = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return {
+        board,
+        pieces,
+        selectedPieceId: null,
+        currentDate: date,
+        isSolved,
+        isGameComplete: isSolved,
+        solutionRevealed: false
+    };
+}
+
+/**
+ * Get the initial game state, restoring from session if available and date matches today.
+ */
+function getInitialGameState(): { state: GameState; date: PuzzleDate } {
+    const today = toPuzzleDate(new Date());
+    const session = loadSession();
+
+    if (session && session.date.month === today.month && session.date.day === today.day) {
+        // Restore from session
+        return {
+            state: rebuildGameState(session.pieces, session.date, session.isSolved),
+            date: session.date
+        };
+    }
+
+    // Fresh game for today
+    return {
+        state: initializeGame(new Date()),
+        date: today
+    };
+}
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {
@@ -32,8 +91,11 @@ export interface InvalidDropCell {
 }
 
 export const Game: React.FC = () => {
-    // State for the playing date (initialized to today)
-    const [playingDate, setPlayingDate] = useState<PuzzleDate>(() => toPuzzleDate(new Date()));
+    // Get initial state (from session or fresh game)
+    const [initial] = useState(getInitialGameState);
+    
+    // State for the playing date
+    const [playingDate, setPlayingDate] = useState<PuzzleDate>(initial.date);
     
     const {
         gameState,
@@ -43,7 +105,7 @@ export const Game: React.FC = () => {
         clearHistory,
         canUndo,
         canRedo
-    } = useGameHistory(initializeGame(new Date()));
+    } = useGameHistory(initial.state);
 
     // State for the puzzle solver
     const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +118,7 @@ export const Game: React.FC = () => {
 
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
+        clearSession();  // Clear saved session when changing date
         setPlayingDate(newDate);
         // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
@@ -353,6 +416,21 @@ export const Game: React.FC = () => {
     React.useEffect(() => {
         document.title = `Calendar Puzzle - ${formattedDate}`;
     }, [formattedDate]);
+
+    // Save session on state changes (skip if solution was revealed)
+    useEffect(() => {
+        // Don't save if solution was revealed via button
+        if (gameState.solutionRevealed) {
+            clearSession();
+            return;
+        }
+
+        saveSession({
+            date: playingDate,
+            pieces: gameState.pieces,
+            isSolved: gameState.isSolved
+        });
+    }, [gameState, playingDate]);
 
     const handleSolve = async () => {
         if (gameState.isSolved || isLoading) return;
