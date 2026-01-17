@@ -38,8 +38,8 @@ Persist game state locally for all users (regardless of authentication).
 ### Progress
 Display real-time progress during gameplay.
 
-- [ ] Add progress bar showing board coverage
-- [ ] Progress = covered cells / total available cells
+- [x] Add progress bar showing board coverage
+- [x] Progress = covered cells / total available cells
   - Total cells = 12 (months) + 31 (days) - 2 (blocked for current date) = 41
   - Count covered cells (not pieces, since piece sizes vary: most are 5 cells, one is 6)
 
