@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
 import { getTransformedShape } from '../../common/gameLogic';
+import { getPieceColor } from '../../common/pieceData';
 import { InvalidDropCell } from './Game';
 import {
     BoardContainer,
@@ -59,9 +60,9 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
+        // Only need pieceId - shape can be derived from PIECE_DATA
         e.dataTransfer.setData('application/json', JSON.stringify({
-            pieceId: piece.id,
-            shape: getTransformedShape(piece)
+            pieceId: piece.id
         }));
 
         // Create a drag preview that represents the entire piece
@@ -89,7 +90,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                 `;
 
                 if (cell) {
-                    cellDiv.style.backgroundColor = theme.game.pieceColors[piece.id - 1];
+                    cellDiv.style.backgroundColor = getPieceColor(piece.id);
                 } else {
                     cellDiv.style.visibility = 'hidden';
                 }
