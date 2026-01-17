@@ -1,10 +1,12 @@
 import { Board, Piece, Position, MONTHS, PuzzleDate } from './types';
+import { getPieceShape } from './pieceData';
 
 /**
  * Get the transformed shape of a piece based on its rotation and flips
  */
 export function getTransformedShape(piece: Piece): boolean[][] {
-    const { shape, rotation, isFlippedH, isFlippedV } = piece;
+    const shape = getPieceShape(piece.id);
+    const { rotation, isFlippedH, isFlippedV } = piece;
     let transformedShape = [...shape.map(row => [...row])];
 
     // Apply rotation
@@ -254,7 +256,7 @@ const TOTAL_PLAYABLE_CELLS = 41;
 export function calculateProgress(pieces: Piece[]): { covered: number; total: number; percentage: number } {
     const covered = pieces
         .filter(p => p.position !== null)
-        .reduce((sum, p) => sum + p.shape.flat().filter(Boolean).length, 0);
+        .reduce((sum, p) => sum + getPieceShape(p.id).flat().filter(Boolean).length, 0);
     
     return {
         covered,

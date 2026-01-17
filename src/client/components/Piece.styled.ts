@@ -1,6 +1,7 @@
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import { keyframes } from '@emotion/react';
+import { getPieceColor } from '../../common/pieceData';
 
 // Animations
 export const pieceDropIn = keyframes`
@@ -149,9 +150,9 @@ export const PieceCell = styled('div')<PieceCellProps>(({ theme, isFilled, piece
 
     // Filled cell styling - use box-shadow to fill gaps during transforms
     ...(isFilled && {
-        backgroundColor: pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0],
+        backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
         color: '#ffffff',
         // Prevent sub-pixel gaps by extending color with box-shadow
-        boxShadow: `inset 0 0 0 1px ${pieceId ? theme.game.pieceColors[pieceId - 1] : theme.game.pieceColors[0]}`,
+        boxShadow: `inset 0 0 0 1px ${pieceId ? getPieceColor(pieceId) : getPieceColor(1)}`,
     }),
 }));

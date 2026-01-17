@@ -4,6 +4,8 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ## Backend
 
+[ ] Change data structure of "Piece". shape is not part of the Piece, can be "fetched" by ID
+
 ### Authentication
 - [ ] Implement OAuth authentication (Google, GitHub — no username/password)
 
