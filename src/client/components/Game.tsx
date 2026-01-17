@@ -10,7 +10,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DragItem, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
-import { clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
+import { calculateProgress, clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
 import { Board as BoardComponent } from './Board';
 import { Piece } from './Piece';
 import { PieceControls } from './PieceControls';
@@ -19,6 +19,7 @@ import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
 import { HintButton } from './HintButton';
 import { DatePicker } from './DatePicker';
+import { ProgressBar } from './ProgressBar';
 import { initializeGame } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
 import { getSolution, getHint } from '../service/puzzleService';
@@ -597,6 +598,9 @@ export const Game: React.FC = () => {
             >
                 Calendar Puzzle
             </Typography>
+
+            {/* Progress Bar */}
+            <ProgressBar {...calculateProgress(gameState.pieces)} />
 
             {/* Success Message Dialog */}
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
