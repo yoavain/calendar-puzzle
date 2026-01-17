@@ -5,3 +5,4 @@
 /.cursor/
 /build/
 /dist/
+**/.env

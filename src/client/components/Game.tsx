@@ -18,6 +18,9 @@ import ThemeToggle from './ThemeToggle';
 import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
 import { HintButton } from './HintButton';
+import { LoginButton } from './LoginButton';
+import { UserMenu } from './UserMenu';
+import { useUser } from '../context/UserContext';
 import { DatePicker } from './DatePicker';
 import { ProgressBar } from './ProgressBar';
 import { initializeGame, initializeBoard } from '../utils/initialize';
@@ -91,6 +94,9 @@ export interface InvalidDropCell {
 }
 
 export const Game: React.FC = () => {
+    // Get user authentication state
+    const { user, loading: userLoading } = useUser();
+
     // Get initial state (from session or fresh game)
     const [initial] = useState(getInitialGameState);
     
@@ -614,7 +620,10 @@ export const Game: React.FC = () => {
                 alignItems="center" 
                 sx={{ mb: 2 }}
             >
-                <ThemeToggle />
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <ThemeToggle />
+                    {!userLoading && (user ? <UserMenu /> : <LoginButton />)}
+                </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
                     <Tooltip title="Ctrl+Z" arrow>

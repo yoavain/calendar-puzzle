@@ -5,7 +5,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 const HOST = process.env.HOST || '0.0.0.0';
 
 const start = async () => {
-    const app = buildApp();
+    const app = await buildApp();
     const log = app.log.child({});
     
     log.info('[Server] Starting calendar-puzzle server');
