@@ -243,3 +243,22 @@ export function getEdgeDirections(shape: boolean[][], x: number, y: number): { t
 
     return result;
 }
+
+/** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
+const TOTAL_PLAYABLE_CELLS = 41;
+
+/**
+ * Calculate puzzle progress based on placed pieces
+ * Uses piece weights (cell count per piece) for efficient calculation
+ */
+export function calculateProgress(pieces: Piece[]): { covered: number; total: number; percentage: number } {
+    const covered = pieces
+        .filter(p => p.position !== null)
+        .reduce((sum, p) => sum + p.shape.flat().filter(Boolean).length, 0);
+    
+    return {
+        covered,
+        total: TOTAL_PLAYABLE_CELLS,
+        percentage: (covered / TOTAL_PLAYABLE_CELLS) * 100
+    };
+}
