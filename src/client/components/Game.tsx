@@ -18,13 +18,18 @@ import ThemeToggle from './ThemeToggle';
 import { SuccessMessage } from './SuccessMessage';
 import { SolutionButton } from './SolutionButton';
 import { HintButton } from './HintButton';
+import { LoginButton } from './LoginButton';
+import { UserMenu } from './UserMenu';
+import { useUser } from '../context/UserContext';
 import { DatePicker } from './DatePicker';
+import { StatsModal } from './StatsModal';
 import { ProgressBar } from './ProgressBar';
 import { initializeGame, initializeBoard } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
-import { getSolution, getHint } from '../service/puzzleService';
+import { getSolution, getHint, recordStart, recordCompletion } from '../service/puzzleService';
 import { saveSession, loadSession, clearSession } from '../hooks/useGameSession';
 import { PiecesContainer, PiecePoolWrapper } from './Game.styled';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 /**
  * Rebuild game state from saved pieces.
@@ -91,6 +96,13 @@ export interface InvalidDropCell {
 }
 
 export const Game: React.FC = () => {
+    // Get user authentication state
+    const { user, loading: userLoading, addCompletedDate, playedCount, incrementPlayedCount } = useUser();
+
+    // Track which dates have been reported as started in this session
+    const startedDatesRef = useRef<Set<string>>(new Set());
+    const getDateKey = useCallback((date: PuzzleDate) => `${date.month}-${date.day}`, []);
+
     // Get initial state (from session or fresh game)
     const [initial] = useState(getInitialGameState);
     
@@ -115,6 +127,9 @@ export const Game: React.FC = () => {
     // State for invalid drop visual feedback
     const [invalidDropCells, setInvalidDropCells] = useState<InvalidDropCell[]>([]);
     const invalidDropTimeoutRef = useRef<number | null>(null);
+
+    // State for statistics modal
+    const [isStatsOpen, setIsStatsOpen] = useState(false);
 
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
@@ -159,8 +174,11 @@ export const Game: React.FC = () => {
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
 
-            // Update rotation by 90 degrees clockwise
-            const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+            // When exactly one flip is active, we must invert the rotation step
+            // to maintain a consistent visual clockwise rotation.
+            const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+            const rotationStep = isFlipped ? -90 : 90;
+            const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
 
             newPieces[pieceIndex] = {
                 ...piece,
@@ -328,6 +346,31 @@ export const Game: React.FC = () => {
         const solved = isPuzzleSolved(newBoard, playingDate);
         if (solved) {
             console.log("Puzzle Solved!");
+            // Automatically show stats on completion after a short delay
+            if (user) {
+                setTimeout(() => setIsStatsOpen(true), 1500);
+            }
+        }
+
+        // Handle analytics/progress tracking for logged-in users
+        if (user) {
+            const dateKey = getDateKey(playingDate);
+            if (!startedDatesRef.current.has(dateKey)) {
+                recordStart(playingDate).then(success => {
+                    if (success) {
+                        incrementPlayedCount();
+                    }
+                });
+                startedDatesRef.current.add(dateKey);
+            }
+
+            if (solved) {
+                recordCompletion(playingDate, newPieces).then(success => {
+                    if (success) {
+                        addCompletedDate(playingDate);
+                    }
+                });
+            }
         }
 
         // Create a completely new state object
@@ -567,31 +610,44 @@ export const Game: React.FC = () => {
 
     // Add new handlers for per-piece controls
     const handleRotatePiece = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (gameState.isSolved || !piece) return;
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
-        const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+        
+        // When exactly one flip is active, we must invert the rotation step
+        // to maintain a consistent visual clockwise rotation.
+        const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+        const rotationStep = isFlipped ? -90 : 90;
+        const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
+        
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
     };
 
     const handleRotateCCWPiece = (pieceId: number) => {
         if (gameState.isSolved) return;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (!piece) return;
+        
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
-        // Counter-clockwise: subtract 90 degrees (add 270 to avoid negative)
-        const newRotation = ((piece.rotation + 270) % 360) as 0 | 90 | 180 | 270;
+        
+        // When exactly one flip is active, we must invert the rotation step
+        // to maintain a consistent visual counter-clockwise rotation.
+        const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+        const rotationStep = isFlipped ? 90 : -90;
+        const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
+        
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
     };
 
     const handleFlipHPiece = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (gameState.isSolved || !piece) return;
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
         newPieces[pieceIndex] = { ...piece, isFlippedH: !piece.isFlippedH };
         pushState({ ...gameState, pieces: newPieces }, { type: 'FLIP_PIECE_H', pieceId });
     };
@@ -614,9 +670,24 @@ export const Game: React.FC = () => {
                 alignItems="center" 
                 sx={{ mb: 2 }}
             >
-                <ThemeToggle />
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <ThemeToggle />
+                    {!userLoading && (user ? <UserMenu /> : <LoginButton />)}
+                </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
+                    {user && (
+                        <Tooltip title="Statistics" arrow>
+                            <Button
+                                variant="contained"
+                                onClick={() => setIsStatsOpen(true)}
+                                size="small"
+                                sx={{ minWidth: 40, px: 1 }}
+                            >
+                                <BarChartIcon />
+                            </Button>
+                        </Tooltip>
+                    )}
                     <Tooltip title="Ctrl+Z" arrow>
                         <span>
                             <Button 
@@ -682,6 +753,9 @@ export const Game: React.FC = () => {
 
             {/* Success Message Dialog */}
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
+
+            {/* Statistics Modal */}
+            <StatsModal open={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
 
             {/* Game Area */}
             <Box component="main">

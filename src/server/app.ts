@@ -1,10 +1,15 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
+import fastifySecureSession from '@fastify/secure-session';
+import fastifyPassport from '@fastify/passport';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { registerSolutionRoutes } from './rest/solutionRest';
-import { registerHintRoutes } from './rest/hintRest';
+import { registerSolutionRoutes } from './rest/solutionRest.js';
+import { registerHintRoutes } from './rest/hintRest.js';
+import { registerAuthRoutes } from './rest/authRest.js';
+import { registerStatsRoutes } from './rest/statsRest.js';
+import { setupPassport } from './auth/passport.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,10 +31,53 @@ function validatePath(basePath: string, requestedPath: string): string | null {
     return fullPath;
 }
 
-export function buildApp(): FastifyInstance {
+export async function buildApp(): Promise<FastifyInstance> {
     const app = Fastify({
-        logger: true
+        logger: true,
+        trustProxy: true  // Trust X-Forwarded-* headers from reverse proxies
     });
+
+    // Polyfill for Express compatibility (some passport strategies expect req.connection.encrypted)
+    // Note: The primary fix for passport-oauth2 is the `proxy: true` option in GoogleStrategy
+    app.addHook('onRequest', async (request) => {
+        const rawReq = request.raw as any;
+        const proto = request.headers['x-forwarded-proto'];
+        const socket = request.raw.socket as any;
+        const isEncrypted = proto === 'https' || (socket && socket.encrypted === true);
+        
+        const connection = {
+            encrypted: isEncrypted,
+            remoteAddress: request.ip
+        };
+
+        // Polyfill both the Node.js request and the Fastify request object
+        // Some strategies look at request.raw.connection, others at request.connection
+        rawReq.connection = connection;
+        (request as any).connection = connection;
+    });
+
+    // Read secret key for secure session
+    const secretKeyPath = path.join(__dirname, '..', '..', 'secret-key');
+    if (!fs.existsSync(secretKeyPath)) {
+        throw new Error('secret-key file not found. Generate it with: npx @fastify/secure-session > secret-key');
+    }
+
+    // Register secure session (must be before passport)
+    await app.register(fastifySecureSession, {
+        key: fs.readFileSync(secretKeyPath),
+        cookie: {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production'
+        }
+    });
+
+    // Register passport
+    await app.register(fastifyPassport.initialize());
+    await app.register(fastifyPassport.secureSession());
+
+    // Setup Google OAuth strategy
+    setupPassport();
 
     const clientBuildPath = path.join(__dirname, '..', '..', 'build');
     
@@ -76,9 +124,13 @@ export function buildApp(): FastifyInstance {
         return { status: 'ok' };
     });
 
+    // Register auth routes
+    registerAuthRoutes(app);
+
     // Register API routes
     registerSolutionRoutes(app);
     registerHintRoutes(app);
+    registerStatsRoutes(app);
 
     // Block all other routes
     app.setNotFoundHandler(async (request, reply) => {

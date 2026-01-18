@@ -39,9 +39,10 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
             }
             
             // When exactly one flip is active (XOR), the CSS scale transform reverses
-            // the visual rotation direction, so we invert the delta to compensate
-            const isFlipInverted = piece.isFlippedH !== piece.isFlippedV;
-            const adjustedDelta = isFlipInverted ? -delta : delta;
+            // the visual rotation direction. However, we now handle this by inverting
+            // the logical rotation in the Game state handlers, so the visual rotation
+            // here should always follow the logical rotation to stay in sync.
+            const adjustedDelta = delta;
             
             setCumulativeRotation(r => r + adjustedDelta);
             prevRotation.current = curr;

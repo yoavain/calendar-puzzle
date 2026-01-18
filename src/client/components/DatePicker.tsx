@@ -8,8 +8,10 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import StarIcon from '@mui/icons-material/Star';
 import { PuzzleDate, MONTHS } from '../../common/types';
 import { useQueryParam } from '../hooks/useQueryParam';
+import { useUser } from '../context/UserContext';
 
 interface DatePickerProps {
     currentDate: PuzzleDate;
@@ -19,11 +21,20 @@ interface DatePickerProps {
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Using 29 for Feb (leap year max)
 
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
-    const showButton = useQueryParam('code');
+    const { user, completedDates } = useUser();
+    const hasValidCode = useQueryParam('code');
+    const showButton = hasValidCode || !!user;
     
     const [isOpen, setIsOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
     const [selectedDay, setSelectedDay] = useState(currentDate.day);
+
+    // Check if a date is completed
+    const isDateCompleted = (month: number, day: number) => {
+        return completedDates.some(d => d.month === month && d.day === day);
+    };
+
+    const isCurrentDateCompleted = isDateCompleted(currentDate.month, currentDate.day);
 
     // Only render if 'code' query param is present
     if (!showButton) {
@@ -77,7 +88,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 variant="contained"
                 onClick={handleOpen}
                 startIcon={<CalendarMonthIcon />}
+                endIcon={isCurrentDateCompleted ? <StarIcon /> : null}
                 size="small"
+                color={isCurrentDateCompleted ? 'success' : 'primary'}
             >
                 {formatDate(currentDate)}
             </Button>
@@ -101,23 +114,38 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                         Month
                     </Typography>
                     <Grid container spacing={0.5} sx={{ mb: 2 }}>
-                        {MONTHS.map((monthName, index) => (
-                            <Grid size={{ xs: 4, sm: 2 }} key={monthName}>
-                                <Button
-                                    fullWidth
-                                    size="small"
-                                    variant={index === selectedMonth ? 'contained' : 'outlined'}
-                                    onClick={() => handleMonthChange(index)}
-                                    sx={{ 
-                                        minWidth: 0,
-                                        px: 1,
-                                        fontSize: '0.75rem',
-                                    }}
-                                >
-                                    {monthName}
-                                </Button>
-                            </Grid>
-                        ))}
+                        {MONTHS.map((monthName, index) => {
+                            // Check if any day in this month is completed
+                            const hasCompletedInMonth = completedDates.some(d => d.month === index);
+                            
+                            return (
+                                <Grid size={{ xs: 4, sm: 2 }} key={monthName}>
+                                    <Button
+                                        fullWidth
+                                        size="small"
+                                        variant={index === selectedMonth ? 'contained' : 'outlined'}
+                                        onClick={() => handleMonthChange(index)}
+                                        sx={{ 
+                                            minWidth: 0,
+                                            px: 1,
+                                            fontSize: '0.75rem',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        {monthName}
+                                        {hasCompletedInMonth && (
+                                            <StarIcon sx={{ 
+                                                position: 'absolute', 
+                                                top: -4, 
+                                                right: -4, 
+                                                fontSize: '0.6rem',
+                                                color: index === selectedMonth ? 'white' : 'warning.main'
+                                            }} />
+                                        )}
+                                    </Button>
+                                </Grid>
+                            );
+                        })}
                     </Grid>
 
                     {/* Day Selector */}
@@ -131,26 +159,39 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                             gap: 0.5,
                         }}
                     >
-                        {days.map(day => (
-                            <Button
-                                key={day}
-                                size="small"
-                                variant={day === selectedDay ? 'contained' : 'text'}
-                                onClick={() => handleDayClick(day)}
-                                sx={{
-                                    minWidth: 0,
-                                    aspectRatio: '1',
-                                    p: 0,
-                                    fontSize: '0.875rem',
-                                    bgcolor: day === selectedDay ? 'primary.main' : 'action.hover',
-                                    '&:hover': {
-                                        bgcolor: day === selectedDay ? 'primary.dark' : 'action.selected',
-                                    }
-                                }}
-                            >
-                                {day}
-                            </Button>
-                        ))}
+                        {days.map(day => {
+                            const completed = isDateCompleted(selectedMonth, day);
+                            return (
+                                <Button
+                                    key={day}
+                                    size="small"
+                                    variant={day === selectedDay ? 'contained' : 'text'}
+                                    onClick={() => handleDayClick(day)}
+                                    sx={{
+                                        minWidth: 0,
+                                        aspectRatio: '1',
+                                        p: 0,
+                                        fontSize: '0.875rem',
+                                        position: 'relative',
+                                        bgcolor: day === selectedDay ? 'primary.main' : 'action.hover',
+                                        '&:hover': {
+                                            bgcolor: day === selectedDay ? 'primary.dark' : 'action.selected',
+                                        }
+                                    }}
+                                >
+                                    {day}
+                                    {completed && (
+                                        <StarIcon sx={{ 
+                                            position: 'absolute', 
+                                            top: 2, 
+                                            right: 2, 
+                                            fontSize: '0.65rem',
+                                            color: day === selectedDay ? 'white' : 'warning.main'
+                                        }} />
+                                    )}
+                                </Button>
+                            );
+                        })}
                     </Box>
                 </DialogContent>
 
