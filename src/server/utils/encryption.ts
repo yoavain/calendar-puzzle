@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { EncryptedPayload } from '../../common/types.js';
@@ -11,12 +11,14 @@ const privateKeyPath = path.resolve(process.cwd(), 'private-key.pem');
 
 let privateKey: string | null = null;
 
-function getPrivateKey(): string {
+async function getPrivateKey(): Promise<string> {
     if (privateKey) return privateKey;
-    if (!fs.existsSync(privateKeyPath)) {
+    try {
+        await fs.access(privateKeyPath);
+    } catch {
         throw new Error(`Private key not found at ${privateKeyPath}`);
     }
-    privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+    privateKey = await fs.readFile(privateKeyPath, 'utf8');
     return privateKey;
 }
 
@@ -25,8 +27,8 @@ function getPrivateKey(): string {
  * 1. Decrypt AES key using RSA private key.
  * 2. Decrypt payload using AES-GCM.
  */
-export function decryptPayload(data: EncryptedPayload): unknown {
-    const key = getPrivateKey();
+export async function decryptPayload(data: EncryptedPayload): Promise<unknown> {
+    const key = await getPrivateKey();
 
     // 1. Decrypt the AES key using RSA
     const aesKey = crypto.privateDecrypt(
