@@ -1,11 +1,11 @@
-import React from 'react';
-import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import RotateRightIcon from '@mui/icons-material/RotateRight';
-import RotateLeftIcon from '@mui/icons-material/RotateLeft';
-import FlipIcon from '@mui/icons-material/Flip';
-import { Piece } from '../../common/types';
+import React from "react";
+import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import RotateRightIcon from "@mui/icons-material/RotateRight";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import FlipIcon from "@mui/icons-material/Flip";
+import type { Piece } from "../../common/types";
 
 interface PieceControlsProps {
     piece: Piece;
@@ -22,15 +22,15 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
             spacing={0.5}
             className="piece-controls"
             sx={{
-                position: 'absolute',
+                position: "absolute",
                 bottom: 10,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                bgcolor: 'background.paper',
+                left: "50%",
+                transform: "translateX(-50%)",
+                bgcolor: "background.paper",
                 borderRadius: 1,
                 p: 0.5,
                 boxShadow: 1,
-                zIndex: 10,
+                zIndex: 10
             }}
         >
             <Tooltip title="Rotate clockwise" arrow>
@@ -41,8 +41,8 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
                     aria-label="rotate piece clockwise"
                     sx={{ 
                         border: 1, 
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
+                        borderColor: "divider",
+                        "&:hover": { bgcolor: "action.hover" }
                     }}
                 >
                     <RotateRightIcon fontSize="small" />
@@ -56,8 +56,8 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
                     aria-label="rotate piece counter-clockwise"
                     sx={{ 
                         border: 1, 
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
+                        borderColor: "divider",
+                        "&:hover": { bgcolor: "action.hover" }
                     }}
                 >
                     <RotateLeftIcon fontSize="small" />
@@ -71,8 +71,8 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
                     aria-label="flip horizontally"
                     sx={{ 
                         border: 1, 
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
+                        borderColor: "divider",
+                        "&:hover": { bgcolor: "action.hover" }
                     }}
                 >
                     <FlipIcon fontSize="small" />
@@ -86,11 +86,11 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
                     aria-label="flip vertically"
                     sx={{ 
                         border: 1, 
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
+                        borderColor: "divider",
+                        "&:hover": { bgcolor: "action.hover" }
                     }}
                 >
-                    <FlipIcon fontSize="small" sx={{ transform: 'rotate(90deg)' }} />
+                    <FlipIcon fontSize="small" sx={{ transform: "rotate(90deg)" }} />
                 </IconButton>
             </Tooltip>
         </Stack>

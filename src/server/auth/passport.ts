@@ -1,9 +1,9 @@
-import fastifyPassport from '@fastify/passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { db } from '../db/connection.js';
-import { users } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
-import { config } from '../config.js';
+import fastifyPassport from "@fastify/passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { db } from "../db/connection.js";
+import { users } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+import { config } from "../config.js";
 
 export interface SessionUser {
     id: string;
@@ -14,18 +14,18 @@ export interface SessionUser {
 }
 
 export function setupPassport() {
-    fastifyPassport.use('google', new GoogleStrategy({
+    fastifyPassport.use("google", new GoogleStrategy({
         clientID: config.google.clientId as string,
         clientSecret: config.google.clientSecret as string,
-        callbackURL: '/auth/google/callback',  // Relative path - resolved from request host
-        proxy: true,  // Trust X-Forwarded-Proto header from reverse proxies
+        callbackURL: "/auth/google/callback", // Relative path - resolved from request host
+        proxy: true // Trust X-Forwarded-Proto header from reverse proxies
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {
             const user = {
                 id: profile.id,
-                email: profile.emails?.[0]?.value ?? '',
+                email: profile.emails?.[0]?.value ?? "",
                 name: profile.displayName,
-                avatarUrl: profile.photos?.[0]?.value ?? null,
+                avatarUrl: profile.photos?.[0]?.value ?? null
             };
 
             // Ensure user exists in DB - Upsert user information
@@ -34,15 +34,15 @@ export function setupPassport() {
                     id: user.id,
                     email: user.email,
                     name: user.name,
-                    avatarUrl: user.avatarUrl,
+                    avatarUrl: user.avatarUrl
                 })
                 .onConflictDoUpdate({
                     target: users.id,
                     set: {
                         email: user.email,
                         name: user.name,
-                        avatarUrl: user.avatarUrl,
-                    },
+                        avatarUrl: user.avatarUrl
+                    }
                 })
                 .returning();
 
@@ -50,7 +50,8 @@ export function setupPassport() {
                 ...user,
                 isAdmin: dbUser.isAdmin
             });
-        } catch (error) {
+        }
+        catch (error) {
             return done(error as Error);
         }
     }));

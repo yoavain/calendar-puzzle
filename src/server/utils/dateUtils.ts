@@ -1,4 +1,4 @@
-import { PuzzleDate } from '../../common/types.js';
+import type { PuzzleDate } from "../../common/types.js";
 
 /**
  * Validate and parse MM-DD date format to PuzzleDate
