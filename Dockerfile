@@ -11,17 +11,18 @@ ENV TOKENS_BASE_FOLDER=/usr/app/ext
 
 # Files
 WORKDIR /usr/app
-RUN mkdir -p /usr/app/ext/logs
-COPY package.json package-lock.json .npmrc /usr/app/
+RUN mkdir -p /usr/app/ext/logs && chown -R node:node /usr/app
+COPY --chown=node:node package.json package-lock.json .npmrc /usr/app/
 
 # Dependencies
+USER node
 RUN npm ci --omit=dev --ignore-scripts && rm -f .npmrc
 
 # App code and assets
-COPY dist /usr/app/dist/
-COPY build /usr/app/build/
-COPY secret-key private-key.pem public-key.pem /usr/app/
-COPY src/server/db/migrations /usr/app/src/server/db/migrations/
+COPY --chown=node:node dist /usr/app/dist/
+COPY --chown=node:node build /usr/app/build/
+COPY --chown=node:node secret-key private-key.pem public-key.pem /usr/app/
+COPY --chown=node:node src/server/db/migrations /usr/app/src/server/db/migrations/
 
 # Expose port
 EXPOSE 3001

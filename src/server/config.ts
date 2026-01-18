@@ -1,3 +1,10 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..', '..');
+
 export const config = {
     server: {
         port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3001,
@@ -11,6 +18,11 @@ export const config = {
     database: {
         url: process.env.DATABASE_URL,
     },
+    paths: {
+        root: projectRoot,
+        publicKey: path.resolve(projectRoot, 'public-key.pem'),
+        privateKey: path.resolve(projectRoot, 'private-key.pem'),
+    }
 };
 
 export function validateConfig() {

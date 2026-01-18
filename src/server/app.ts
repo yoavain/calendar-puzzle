@@ -5,7 +5,7 @@ import fastifyPassport from '@fastify/passport';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyRateLimit from '@fastify/rate-limit';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
@@ -15,28 +15,12 @@ import { registerAuthRoutes } from './rest/authRest.js';
 import { registerStatsRoutes } from './rest/statsRest.js';
 import { setupPassport } from './auth/passport.js';
 import { decryptPayload } from './utils/encryption.js';
+import { getCachedFile, validatePath } from './utils/resourceUtils.js';
 import { EncryptedPayload } from '../common/types.js';
 import { config } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-/**
- * Validates a path to prevent path traversal attacks.
- * Returns the resolved path if valid, or null if the path attempts traversal.
- */
-function validatePath(basePath: string, requestedPath: string): string | null {
-    // Normalize and resolve the full path
-    const normalizedPath = path.normalize(requestedPath).replace(/^(\.\.[\/\\])+/, '');
-    const fullPath = path.resolve(basePath, normalizedPath);
-    
-    // Ensure the resolved path is within the base directory
-    if (!fullPath.startsWith(basePath + path.sep) && fullPath !== basePath) {
-        return null;
-    }
-    
-    return fullPath;
-}
 
 export async function buildApp(): Promise<FastifyInstance> {
     const app = Fastify({
@@ -67,7 +51,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     app.addHook('preValidation', async (request, reply) => {
         if (request.headers['x-encrypted'] === 'true' && request.body) {
             try {
-                const decryptedBody = decryptPayload(request.body as EncryptedPayload);
+                const decryptedBody = await decryptPayload(request.body as EncryptedPayload);
                 request.body = decryptedBody;
             } catch (error) {
                 app.log.error(error, 'Decryption failed');
@@ -78,13 +62,15 @@ export async function buildApp(): Promise<FastifyInstance> {
 
     // Read secret key for secure session
     const secretKeyPath = path.join(__dirname, '..', '..', 'secret-key');
-    if (!fs.existsSync(secretKeyPath)) {
+    try {
+        await fs.access(secretKeyPath);
+    } catch {
         throw new Error('secret-key file not found. Generate it with: npx @fastify/secure-session > secret-key');
     }
 
     // Register secure session (must be before passport)
     await app.register(fastifySecureSession, {
-        key: fs.readFileSync(secretKeyPath),
+        key: await fs.readFile(secretKeyPath),
         cookie: {
             path: '/',
             httpOnly: true,
@@ -115,14 +101,20 @@ export async function buildApp(): Promise<FastifyInstance> {
     
     // Serve index.html at root path only
     app.get('/', async (request, reply) => {
-        return reply.type('text/html').send(
-            fs.readFileSync(path.join(clientBuildPath, 'index.html'), 'utf-8')
-        );
+        const file = await getCachedFile(clientBuildPath, 'index.html');
+        if (file) {
+            return reply.type(file.contentType).send(file.content);
+        }
+        return reply.code(404).send({ error: 'Not found' });
     });
 
     // Serve favicon
     app.get('/favicon.ico', async (request, reply) => {
-        return reply.sendFile('favicon.ico', clientBuildPath);
+        const file = await getCachedFile(clientBuildPath, 'favicon.ico');
+        if (file) {
+            return reply.type(file.contentType).send(file.content);
+        }
+        return reply.code(404).send({ error: 'Not found' });
     });
 
     // Serve static client files from /client/* with path traversal protection
@@ -133,21 +125,20 @@ export async function buildApp(): Promise<FastifyInstance> {
         if (!requestedPath) {
             return reply.code(404).send({ error: 'Not found' });
         }
-        
+
         // Validate path to prevent traversal attacks
         const validatedPath = validatePath(clientBuildPath, requestedPath);
-        
         if (!validatedPath) {
             app.log.warn(`Path traversal attempt blocked: ${requestedPath}`);
             return reply.code(403).send({ error: 'Forbidden' });
         }
-        
-        // Check if file exists
-        if (!fs.existsSync(validatedPath) || fs.statSync(validatedPath).isDirectory()) {
-            return reply.code(404).send({ error: 'Not found' });
+
+        const file = await getCachedFile(clientBuildPath, requestedPath);
+        if (file) {
+            return reply.type(file.contentType).send(file.content);
         }
         
-        return reply.sendFile(requestedPath, clientBuildPath);
+        return reply.code(404).send({ error: 'Not found' });
     });
 
     // Register fastify-static for sendFile support (but not serving automatically)
