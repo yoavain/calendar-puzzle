@@ -1,13 +1,13 @@
-import { FastifyInstance } from 'fastify';
-import { db } from '../db/connection.js';
-import { userPuzzleStats } from '../db/schema.js';
-import { eq, and, isNull } from 'drizzle-orm';
-import { SessionUser } from '../auth/passport.js';
-import { requireAuth } from '../auth/requireAuth.js';
-import { Piece, PuzzleDate } from '../../common/types.js';
-import { isPuzzleSolved, isValidPlacement, getTransformedShape } from '../../common/gameLogic.js';
-import { initializeBoard } from '../utils/gameInit.js';
-import { statsStartSchema, statsCompleteSchema } from './schemas.js';
+import type { FastifyInstance } from "fastify";
+import { db } from "../db/connection.js";
+import { userPuzzleStats } from "../db/schema.js";
+import { eq, and, isNull } from "drizzle-orm";
+import type { SessionUser } from "../auth/passport.js";
+import { requireAuth } from "../auth/requireAuth.js";
+import type { Piece, PuzzleDate } from "../../common/types.js";
+import { isPuzzleSolved, isValidPlacement, getTransformedShape } from "../../common/gameLogic.js";
+import { initializeBoard } from "../utils/gameInit.js";
+import { statsStartSchema, statsCompleteSchema } from "./schemas.js";
 
 interface StatsRequest {
     month: number;
@@ -21,7 +21,7 @@ interface CompleteRequest extends StatsRequest {
 export function registerStatsRoutes(app: FastifyInstance): void {
     // Record that a user started a puzzle
     app.post<{ Body: StatsRequest }>(
-        '/api/stats/start',
+        "/api/stats/start",
         { 
             preHandler: requireAuth,
             schema: {
@@ -30,7 +30,7 @@ export function registerStatsRoutes(app: FastifyInstance): void {
             config: {
                 rateLimit: {
                     max: 10,
-                    timeWindow: '1 minute'
+                    timeWindow: "1 minute"
                 }
             }
         },
@@ -45,21 +45,22 @@ export function registerStatsRoutes(app: FastifyInstance): void {
                         userId: user.id,
                         month,
                         day,
-                        firstStartedAt: new Date(),
+                        firstStartedAt: new Date()
                     })
                     .onConflictDoNothing(); // If already exists, do nothing (keep original firstStartedAt)
 
                 return { success: true };
-            } catch (error) {
-                request.log.error(error, '[StatsRoute] Failed to record start');
-                return reply.code(500).send({ error: 'Failed to record progress' });
+            }
+            catch (error) {
+                request.log.error(error, "[StatsRoute] Failed to record start");
+                return reply.code(500).send({ error: "Failed to record progress" });
             }
         }
     );
 
     // Record that a user completed a puzzle (with server-side validation)
     app.post<{ Body: CompleteRequest }>(
-        '/api/stats/complete',
+        "/api/stats/complete",
         { 
             preHandler: requireAuth,
             schema: {
@@ -68,7 +69,7 @@ export function registerStatsRoutes(app: FastifyInstance): void {
             config: {
                 rateLimit: {
                     max: 5,
-                    timeWindow: '1 minute'
+                    timeWindow: "1 minute"
                 }
             }
         },
@@ -103,7 +104,8 @@ export function registerStatsRoutes(app: FastifyInstance): void {
                                 }
                             }
                         }
-                    } else {
+                    }
+                    else {
                         // All pieces must be placed for a solution to be valid
                         allValid = false;
                         break;
@@ -118,23 +120,25 @@ export function registerStatsRoutes(app: FastifyInstance): void {
                             month,
                             day,
                             firstStartedAt: new Date(), // Fallback if /start wasn't called
-                            firstCompletedAt: new Date(),
+                            firstCompletedAt: new Date()
                         })
                         .onConflictDoUpdate({
                             target: [userPuzzleStats.userId, userPuzzleStats.month, userPuzzleStats.day],
                             set: {
-                                firstCompletedAt: new Date(),
+                                firstCompletedAt: new Date()
                             },
                             where: isNull(userPuzzleStats.firstCompletedAt)
                         });
 
                     return { success: true };
-                } else {
-                    return reply.code(400).send({ error: 'Invalid solution' });
                 }
-            } catch (error) {
-                request.log.error(error, '[StatsRoute] Failed to validate or record completion');
-                return reply.code(500).send({ error: 'Failed to record completion' });
+                else {
+                    return reply.code(400).send({ error: "Invalid solution" });
+                }
+            }
+            catch (error) {
+                request.log.error(error, "[StatsRoute] Failed to validate or record completion");
+                return reply.code(500).send({ error: "Failed to record completion" });
             }
         }
     );

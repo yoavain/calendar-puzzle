@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { PuzzleDate } from '../../common/types.js';
-import { clearCsrfToken, getCsrfToken } from '../service/puzzleService';
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import type { PuzzleDate } from "../../common/types.js";
+import { clearCsrfToken, getCsrfToken } from "../service/puzzleService";
 
 export interface User {
     id: string;
@@ -31,8 +31,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const fetchUser = useCallback(async () => {
         try {
-            const res = await fetch('/api/auth/me', {
-                credentials: 'include'
+            const res = await fetch("/api/auth/me", {
+                credentials: "include"
             });
             if (res.ok) {
                 const data = await res.json();
@@ -42,18 +42,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 
                 // Fetch CSRF token separately after authenticated session is established
                 await getCsrfToken();
-            } else {
+            }
+            else {
                 setUser(null);
                 setCompletedDates([]);
                 setPlayedCount(0);
                 clearCsrfToken();
             }
-        } catch (error) {
+        }
+        catch (error) {
             setUser(null);
             setCompletedDates([]);
             setPlayedCount(0);
             clearCsrfToken();
-        } finally {
+        }
+        finally {
             setLoading(false);
         }
     }, []);
@@ -66,13 +69,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const headers: Record<string, string> = {};
         const csrfToken = await getCsrfToken();
         if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken;
+            headers["X-CSRF-Token"] = csrfToken;
         }
 
-        await fetch('/auth/logout', {
-            method: 'POST',
+        await fetch("/auth/logout", {
+            method: "POST",
             headers,
-            credentials: 'include'
+            credentials: "include"
         });
         setUser(null);
         setCompletedDates([]);
@@ -113,7 +116,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 export function useUser(): UserContextValue {
     const context = useContext(UserContext);
     if (!context) {
-        throw new Error('useUser must be used within a UserProvider');
+        throw new Error("useUser must be used within a UserProvider");
     }
     return context;
 }

@@ -1,6 +1,6 @@
-import { Piece, PuzzleDate, EncryptedPayload } from '../../common/types';
-import { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest } from '../../common/restTypes';
-import { encryptPayload } from '../utils/encryption.js';
+import type { Piece, PuzzleDate, EncryptedPayload } from "../../common/types";
+import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest } from "../../common/restTypes";
+import { encryptPayload } from "../utils/encryption.js";
 
 let cachedPublicKey: string | null = null;
 let cachedCsrfToken: string | null = null;
@@ -10,17 +10,20 @@ let csrfTokenPromise: Promise<string | null> | null = null;
  * Fetches the server's public key once for encryption.
  */
 async function getPublicKey(): Promise<string | null> {
-    if (cachedPublicKey) return cachedPublicKey;
+    if (cachedPublicKey) {
+        return cachedPublicKey;
+    }
     try {
-        const response = await fetch('/api/auth/public-key', {
-            credentials: 'include'
+        const response = await fetch("/api/auth/public-key", {
+            credentials: "include"
         });
         if (response.ok) {
             const data = await response.json();
             cachedPublicKey = data.publicKey;
             return cachedPublicKey;
         }
-    } catch (error) {
+    }
+    catch (error) {
         // Silently fail or handle error as needed
     }
     return null;
@@ -30,22 +33,28 @@ async function getPublicKey(): Promise<string | null> {
  * Fetches a CSRF token from the server.
  */
 export async function getCsrfToken(): Promise<string | null> {
-    if (cachedCsrfToken) return cachedCsrfToken;
-    if (csrfTokenPromise) return csrfTokenPromise;
+    if (cachedCsrfToken) {
+        return cachedCsrfToken;
+    }
+    if (csrfTokenPromise) {
+        return csrfTokenPromise;
+    }
 
     csrfTokenPromise = (async () => {
         try {
-            const response = await fetch('/api/auth/csrf-token', {
-                credentials: 'include'
+            const response = await fetch("/api/auth/csrf-token", {
+                credentials: "include"
             });
             if (response.ok) {
                 const data = await response.json();
                 cachedCsrfToken = data.csrfToken;
                 return cachedCsrfToken;
             }
-        } catch (error) {
+        }
+        catch (error) {
             // Failed to fetch CSRF token
-        } finally {
+        }
+        finally {
             csrfTokenPromise = null;
         }
         return null;
@@ -65,8 +74,8 @@ export function clearCsrfToken(): void {
  * Format a PuzzleDate to the API date format (MM-DD)
  */
 function formatDateForApi(date: PuzzleDate): string {
-    const month = String(date.month + 1).padStart(2, '0'); // month is 0-indexed
-    const day = String(date.day).padStart(2, '0');
+    const month = String(date.month + 1).padStart(2, "0"); // month is 0-indexed
+    const day = String(date.day).padStart(2, "0");
     return `${month}-${day}`;
 }
 
@@ -76,7 +85,7 @@ function formatDateForApi(date: PuzzleDate): string {
 export async function getSolution(date: PuzzleDate): Promise<Piece[]> {
     const dateStr = formatDateForApi(date);
     const response = await fetch(`/api/solution/${dateStr}`, {
-        credentials: 'include'
+        credentials: "include"
     });
     
     if (!response.ok) {
@@ -94,7 +103,7 @@ export async function getSolution(date: PuzzleDate): Promise<Piece[]> {
 export async function getHint(date: PuzzleDate): Promise<Piece> {
     const dateStr = formatDateForApi(date);
     const response = await fetch(`/api/hint/${dateStr}`, {
-        credentials: 'include'
+        credentials: "include"
     });
     
     if (!response.ok) {
@@ -111,24 +120,24 @@ export async function getHint(date: PuzzleDate): Promise<Piece> {
  */
 export async function recordStart(date: PuzzleDate): Promise<boolean> {
     let body: StartPuzzleRequest | EncryptedPayload = { month: date.month, day: date.day };
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
 
     const publicKey = await getPublicKey();
     if (publicKey) {
         body = await encryptPayload(body, publicKey);
-        headers['X-Encrypted'] = 'true';
+        headers["X-Encrypted"] = "true";
     }
 
     const csrfToken = await getCsrfToken();
     if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
+        headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch('/api/stats/start', {
-        method: 'POST',
+    const response = await fetch("/api/stats/start", {
+        method: "POST",
         headers,
         body: JSON.stringify(body),
-        credentials: 'include'
+        credentials: "include"
     });
     
     if (!response.ok) {
@@ -146,24 +155,24 @@ export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promi
         day: date.day,
         pieces 
     };
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
 
     const publicKey = await getPublicKey();
     if (publicKey) {
         body = await encryptPayload(body, publicKey);
-        headers['X-Encrypted'] = 'true';
+        headers["X-Encrypted"] = "true";
     }
 
     const csrfToken = await getCsrfToken();
     if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
+        headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch('/api/stats/complete', {
-        method: 'POST',
+    const response = await fetch("/api/stats/complete", {
+        method: "POST",
         headers,
         body: JSON.stringify(body),
-        credentials: 'include'
+        credentials: "include"
     });
     
     return response.ok;

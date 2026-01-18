@@ -1,44 +1,44 @@
-import { FastifyInstance } from 'fastify';
-import fastifyPassport from '@fastify/passport';
-import { SessionUser } from '../auth/passport.js';
-import { db } from '../db/connection.js';
-import { userPuzzleStats } from '../db/schema.js';
-import { eq, and, isNotNull } from 'drizzle-orm';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { config } from '../config.js';
-import { requireAuth } from '../auth/requireAuth.js';
+import type { FastifyInstance } from "fastify";
+import fastifyPassport from "@fastify/passport";
+import type { SessionUser } from "../auth/passport.js";
+import { db } from "../db/connection.js";
+import { userPuzzleStats } from "../db/schema.js";
+import { eq, and, isNotNull } from "drizzle-orm";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { config } from "../config.js";
+import { requireAuth } from "../auth/requireAuth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function registerAuthRoutes(app: FastifyInstance): void {
     // Initiate Google OAuth flow
-    app.get('/auth/google', {
-        preValidation: fastifyPassport.authenticate('google', {
-            scope: ['profile', 'email']
+    app.get("/auth/google", {
+        preValidation: fastifyPassport.authenticate("google", {
+            scope: ["profile", "email"]
         })
     }, async () => {
         // This handler is never called - passport redirects to Google
     });
 
     // Handle Google OAuth callback
-    app.get('/auth/google/callback', {
-        preValidation: fastifyPassport.authenticate('google', {
-            failureRedirect: '/?error=auth_failed'
+    app.get("/auth/google/callback", {
+        preValidation: fastifyPassport.authenticate("google", {
+            failureRedirect: "/?error=auth_failed"
         })
     }, async (request, reply) => {
         // Authentication successful, redirect to home
-        return reply.redirect('/');
+        return reply.redirect("/");
     });
 
     // Get current authenticated user profile and completion history
-    app.get('/api/auth/me', {
+    app.get("/api/auth/me", {
         config: {
             rateLimit: {
                 max: 20,
-                timeWindow: '1 minute'
+                timeWindow: "1 minute"
             }
         }
     }, async (request, reply) => {
@@ -49,10 +49,10 @@ export function registerAuthRoutes(app: FastifyInstance): void {
             const stats = await db.select({
                 month: userPuzzleStats.month,
                 day: userPuzzleStats.day,
-                firstCompletedAt: userPuzzleStats.firstCompletedAt,
+                firstCompletedAt: userPuzzleStats.firstCompletedAt
             })
-            .from(userPuzzleStats)
-            .where(eq(userPuzzleStats.userId, user.id));
+                .from(userPuzzleStats)
+                .where(eq(userPuzzleStats.userId, user.id));
 
             const completedDates = stats
                 .filter(s => s.firstCompletedAt !== null)
@@ -64,47 +64,49 @@ export function registerAuthRoutes(app: FastifyInstance): void {
                 playedCount: stats.length
             };
         }
-        return reply.code(401).send({ error: 'Not authenticated' });
+        return reply.code(401).send({ error: "Not authenticated" });
     });
 
     // Get server's public key for encryption (Authenticated)
-    app.get('/api/auth/public-key', { preHandler: requireAuth }, async (request, reply) => {
+    app.get("/api/auth/public-key", { preHandler: requireAuth }, async (request, reply) => {
         const publicKeyPath = config.paths.publicKey;
         try {
             try {
                 await fs.access(publicKeyPath);
-            } catch {
-                request.log.error(`Public key not found at: ${publicKeyPath}`);
-                return reply.code(500).send({ error: 'Server encryption not configured' });
             }
-            const publicKey = await fs.readFile(publicKeyPath, 'utf8');
+            catch {
+                request.log.error(`Public key not found at: ${publicKeyPath}`);
+                return reply.code(500).send({ error: "Server encryption not configured" });
+            }
+            const publicKey = await fs.readFile(publicKeyPath, "utf8");
             return { publicKey };
-        } catch (error) {
-            request.log.error(error, 'Error reading public key');
-            return reply.code(500).send({ error: 'Failed to retrieve public key' });
+        }
+        catch (error) {
+            request.log.error(error, "Error reading public key");
+            return reply.code(500).send({ error: "Failed to retrieve public key" });
         }
     });
 
     // Legacy endpoint for backward compatibility (can be removed later)
-    app.get('/auth/user', async (request, reply) => {
+    app.get("/auth/user", async (request, reply) => {
         if (request.user) {
             return request.user as SessionUser;
         }
-        return reply.code(401).send({ error: 'Not authenticated' });
+        return reply.code(401).send({ error: "Not authenticated" });
     });
 
     // Logout
-    app.post('/auth/logout', async (request, reply) => {
+    app.post("/auth/logout", async (request, reply) => {
         await request.logout();
         return { success: true };
     });
 
     // Get CSRF Token
-    app.get('/api/auth/csrf-token', {
+    app.get("/api/auth/csrf-token", {
         config: {
             rateLimit: {
                 max: 10,
-                timeWindow: '1 minute'
+                timeWindow: "1 minute"
             }
         }
     }, async (request, reply) => {

@@ -1,4 +1,4 @@
-import { EncryptedPayload } from '../../common/types';
+import type { EncryptedPayload } from "../../common/types";
 
 /**
  * Utility for hybrid encryption (RSA + AES-GCM) using the Web Crypto API.
@@ -9,9 +9,9 @@ import { EncryptedPayload } from '../../common/types';
  */
 function pemToArrayBuffer(pem: string): ArrayBuffer {
     const b64 = pem
-        .replace(/-----BEGIN PUBLIC KEY-----/, '')
-        .replace(/-----END PUBLIC KEY-----/, '')
-        .replace(/\s/g, '');
+        .replace(/-----BEGIN PUBLIC KEY-----/, "")
+        .replace(/-----END PUBLIC KEY-----/, "")
+        .replace(/\s/g, "");
     const binaryStr = window.atob(b64);
     const len = binaryStr.length;
     const bytes = new Uint8Array(len);
@@ -34,33 +34,33 @@ export async function encryptPayload(payload: unknown, publicKeyPem: string): Pr
 
     // 1. Import the RSA public key
     const publicKey = await window.crypto.subtle.importKey(
-        'spki',
+        "spki",
         pemToArrayBuffer(publicKeyPem),
         {
-            name: 'RSA-OAEP',
-            hash: 'SHA-256',
+            name: "RSA-OAEP",
+            hash: "SHA-256"
         },
         false,
-        ['encrypt']
+        ["encrypt"]
     );
 
     // 2. Generate a random AES-256 key
     const aesKey = await window.crypto.subtle.generateKey(
         {
-            name: 'AES-GCM',
-            length: 256,
+            name: "AES-GCM",
+            length: 256
         },
         true,
-        ['encrypt']
+        ["encrypt"]
     );
 
     // 3. Export the AES key to encrypt it with RSA
-    const exportedAesKey = await window.crypto.subtle.exportKey('raw', aesKey);
+    const exportedAesKey = await window.crypto.subtle.exportKey("raw", aesKey);
 
     // 4. Encrypt the AES key with RSA
     const encryptedKey = await window.crypto.subtle.encrypt(
         {
-            name: 'RSA-OAEP',
+            name: "RSA-OAEP"
         },
         publicKey,
         exportedAesKey
@@ -72,8 +72,8 @@ export async function encryptPayload(payload: unknown, publicKeyPem: string): Pr
     // 6. Encrypt the payload with AES-GCM
     const encryptedBuffer = await window.crypto.subtle.encrypt(
         {
-            name: 'AES-GCM',
-            iv: iv,
+            name: "AES-GCM",
+            iv: iv
         },
         aesKey,
         encodedPayload
@@ -88,7 +88,7 @@ export async function encryptPayload(payload: unknown, publicKeyPem: string): Pr
     // Helper to convert ArrayBuffer to Base64
     const toBase64 = (buf: ArrayBuffer | Uint8Array) => {
         const bytes = new Uint8Array(buf);
-        let binary = '';
+        let binary = "";
         for (let i = 0; i < bytes.byteLength; i++) {
             binary += String.fromCharCode(bytes[i]);
         }
@@ -99,6 +99,6 @@ export async function encryptPayload(payload: unknown, publicKeyPem: string): Pr
         encryptedKey: toBase64(encryptedKey),
         iv: toBase64(iv),
         authTag: toBase64(tag),
-        payload: toBase64(ciphertext),
+        payload: toBase64(ciphertext)
     };
 }

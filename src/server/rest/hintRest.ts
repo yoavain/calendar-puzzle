@@ -1,9 +1,9 @@
-import { FastifyInstance } from 'fastify';
-import { DatePathParams, HintResponse, ErrorResponse } from '../../common/restTypes.js';
-import { parseDate } from '../utils/dateUtils.js';
-import { solvePuzzle } from '../service/solverService.js';
-import { requireAuth } from '../auth/requireAuth.js';
-import { dateParamSchema } from './schemas.js';
+import type { FastifyInstance } from "fastify";
+import type { DatePathParams, HintResponse, ErrorResponse } from "../../common/restTypes.js";
+import { parseDate } from "../utils/dateUtils.js";
+import { solvePuzzle } from "../service/solverService.js";
+import { requireAuth } from "../auth/requireAuth.js";
+import { dateParamSchema } from "./schemas.js";
 
 /**
  * Simple hash function to convert a string to a number
@@ -21,7 +21,7 @@ function hashString(str: string): number {
 export function registerHintRoutes(app: FastifyInstance): void {
     // GET /api/hint/:date - Get a hint (single piece placement) for a date
     app.get<{ Params: DatePathParams; Reply: HintResponse | ErrorResponse }>(
-        '/api/hint/:date',
+        "/api/hint/:date",
         { 
             preHandler: requireAuth,
             schema: {
@@ -30,7 +30,7 @@ export function registerHintRoutes(app: FastifyInstance): void {
             config: {
                 rateLimit: {
                     max: 5,
-                    timeWindow: '1 minute'
+                    timeWindow: "1 minute"
                 }
             }
         },
@@ -41,7 +41,7 @@ export function registerHintRoutes(app: FastifyInstance): void {
             if (!parsed) {
                 // This should theoretically not be reached if schema validation works correctly
                 return reply.code(400).send({
-                    error: 'Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)'
+                    error: "Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)"
                 });
             }
 
@@ -57,7 +57,7 @@ export function registerHintRoutes(app: FastifyInstance): void {
 
                 if (placedPieces.length === 0) {
                     return reply.code(500).send({
-                        error: 'No placed pieces found in solution'
+                        error: "No placed pieces found in solution"
                     });
                 }
 
@@ -67,11 +67,12 @@ export function registerHintRoutes(app: FastifyInstance): void {
                 const hintPiece = placedPieces[pieceIndex % placedPieces.length];
 
                 return reply.send({ piece: hintPiece });
-            } catch (error) {
+            }
+            catch (error) {
                 // Log detailed error on server, but return generic message to client
                 request.log.error(error, `[HintRoute] Failed to get hint for ${month}/${day}`);
                 return reply.code(500).send({
-                    error: 'Unable to generate hint for this date. Please try again.'
+                    error: "Unable to generate hint for this date. Please try again."
                 });
             }
         }

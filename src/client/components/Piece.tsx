@@ -1,9 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useTheme } from '@mui/material/styles';
-import { Piece as PieceType } from '../../common/types';
-import { getTransformedShape } from '../../common/gameLogic';
-import { getPieceShape, getPieceColor } from '../../common/pieceData';
-import { PieceWrapper, PieceGrid, PieceCell } from './Piece.styled';
+import React, { useRef, useState, useEffect } from "react";
+import { useTheme } from "@mui/material/styles";
+import type { Piece as PieceType } from "../../common/types";
+import { getTransformedShape } from "../../common/gameLogic";
+import { getPieceShape, getPieceColor } from "../../common/pieceData";
+import { PieceWrapper, PieceGrid, PieceCell } from "./Piece.styled";
 
 interface PieceProps {
     piece: PieceType;
@@ -25,7 +25,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
 
         if (prev !== curr) {
             // Calculate the delta, detecting shortest rotation path (CW or CCW)
-            const cwDelta = (curr - prev + 360) % 360;  // Clockwise distance
+            const cwDelta = (curr - prev + 360) % 360; // Clockwise distance
             const ccwDelta = (prev - curr + 360) % 360; // Counter-clockwise distance
             
             // Choose the shorter path
@@ -33,7 +33,8 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
             if (cwDelta <= ccwDelta) {
                 // Clockwise is shorter or equal
                 delta = cwDelta;
-            } else {
+            }
+            else {
                 // Counter-clockwise is shorter (use negative delta)
                 delta = -ccwDelta;
             }
@@ -65,7 +66,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         `scaleY(${piece.isFlippedV ? -1 : 1})`,
         `scaleX(${piece.isFlippedH ? -1 : 1})`,
         `rotate(${cumulativeRotation}deg)`
-    ].join(' ');
+    ].join(" ");
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         const data = JSON.stringify({
@@ -73,13 +74,14 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         });
         
         try {
-            e.dataTransfer.setData('text/plain', data);
-        } catch (err) {
+            e.dataTransfer.setData("text/plain", data);
+        }
+        catch (err) {
             // Silently handle error
         }
 
         // Create a drag preview that represents the transformed piece
-        const dragPreview = document.createElement('div');
+        const dragPreview = document.createElement("div");
         dragPreview.style.cssText = `
             position: fixed;
             pointer-events: none;
@@ -90,10 +92,10 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         `;
 
         transformedShape.forEach((row, y) => {
-            const rowDiv = document.createElement('div');
-            rowDiv.style.cssText = 'display: flex; gap: 0;';
+            const rowDiv = document.createElement("div");
+            rowDiv.style.cssText = "display: flex; gap: 0;";
             row.forEach((cell) => {
-                const cellDiv = document.createElement('div');
+                const cellDiv = document.createElement("div");
                 cellDiv.style.cssText = `
                     width: ${theme.game.cellSize}px;
                     height: ${theme.game.cellSize}px;
@@ -102,8 +104,9 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
 
                 if (cell) {
                     cellDiv.style.backgroundColor = getPieceColor(piece.id);
-                } else {
-                    cellDiv.style.visibility = 'hidden';
+                }
+                else {
+                    cellDiv.style.visibility = "hidden";
                 }
 
                 rowDiv.appendChild(cellDiv);

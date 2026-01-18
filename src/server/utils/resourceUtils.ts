@@ -1,5 +1,5 @@
-import path from 'path';
-import fs from 'fs/promises';
+import path from "node:path";
+import fs from "node:fs/promises";
 
 export interface CachedFile {
     content: Buffer;
@@ -10,10 +10,10 @@ const staticCache = new Map<string, CachedFile>();
 
 export function getMimeType(extension: string): string {
     switch (extension) {
-        case '.html': return 'text/html';
-        case '.ico': return 'image/x-icon';
-        case '.js': return 'application/javascript';
-        case '.map': return 'application/json';
+        case ".html": return "text/html";
+        case ".ico": return "image/x-icon";
+        case ".js": return "application/javascript";
+        case ".map": return "application/json";
         default:
             throw new Error(`Unsupported file type: ${extension}`);
     }
@@ -24,7 +24,7 @@ export function getMimeType(extension: string): string {
  * Returns the CachedFile or null if the file does not exist or is a directory.
  */
 export async function getCachedFile(basePath: string, relativePath: string): Promise<CachedFile | null> {
-    const normalizedPath = relativePath.replace(/\\/g, '/');
+    const normalizedPath = relativePath.replace(/\\/g, "/");
     const cached = staticCache.get(normalizedPath);
     if (cached) {
         return cached;
@@ -49,7 +49,8 @@ export async function getCachedFile(basePath: string, relativePath: string): Pro
         const cachedFile = { content, contentType };
         staticCache.set(normalizedPath, cachedFile);
         return cachedFile;
-    } catch (error) {
+    }
+    catch (error) {
         return null;
     }
 }
@@ -60,7 +61,7 @@ export async function getCachedFile(basePath: string, relativePath: string): Pro
  */
 export function validatePath(basePath: string, requestedPath: string): string | null {
     // Normalize and resolve the full path
-    const normalizedPath = path.normalize(requestedPath).replace(/^(\.\.[\/\\])+/, '');
+    const normalizedPath = path.normalize(requestedPath).replace(/^(\.\.[\/\\])+/, "");
     const fullPath = path.resolve(basePath, normalizedPath);
     
     // Ensure the resolved path is within the base directory

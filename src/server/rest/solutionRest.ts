@@ -1,14 +1,14 @@
-import { FastifyInstance } from 'fastify';
-import { DatePathParams, SolutionResponse, ErrorResponse } from '../../common/restTypes.js';
-import { parseDate } from '../utils/dateUtils.js';
-import { solvePuzzle } from '../service/solverService.js';
-import { requireAdmin } from '../auth/requireAuth.js';
-import { dateParamSchema } from './schemas.js';
+import type { FastifyInstance } from "fastify";
+import type { DatePathParams, SolutionResponse, ErrorResponse } from "../../common/restTypes.js";
+import { parseDate } from "../utils/dateUtils.js";
+import { solvePuzzle } from "../service/solverService.js";
+import { requireAdmin } from "../auth/requireAuth.js";
+import { dateParamSchema } from "./schemas.js";
 
 export function registerSolutionRoutes(app: FastifyInstance): void {
     // GET /api/solution/:date - Get full puzzle solution for a date
     app.get<{ Params: DatePathParams; Reply: SolutionResponse | ErrorResponse }>(
-        '/api/solution/:date',
+        "/api/solution/:date",
         { 
             preHandler: requireAdmin,
             schema: {
@@ -17,7 +17,7 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
             config: {
                 rateLimit: {
                     max: 10,
-                    timeWindow: '1 minute'
+                    timeWindow: "1 minute"
                 }
             }
         },
@@ -29,7 +29,7 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
                 // This should theoretically not be reached if schema validation works correctly
                 // but we keep it as a fallback or if parseDate has extra logic
                 return reply.code(400).send({
-                    error: 'Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)'
+                    error: "Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)"
                 });
             }
 
@@ -39,11 +39,12 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
                 // parseDate returns PuzzleDate with 0-indexed month
                 const pieces = await solvePuzzle(month, day, request.log);
                 return reply.send({ pieces });
-            } catch (error) {
+            }
+            catch (error) {
                 // Log detailed error on server, but return generic message to client
                 request.log.error(error, `[SolutionRoute] Failed to solve puzzle for ${month}/${day}`);
                 return reply.code(500).send({
-                    error: 'Unable to solve puzzle for this date. Please try again.'
+                    error: "Unable to solve puzzle for this date. Please try again."
                 });
             }
         }

@@ -1,5 +1,6 @@
-import {Board, GameState, MONTHS, Piece, PuzzleDate, toPuzzleDate} from '../../common/types';
-import { PIECE_IDS } from '../../common/pieceData';
+import type { Board, GameState, Piece, PuzzleDate } from "../../common/types";
+import { MONTHS, toPuzzleDate } from "../../common/types";
+import { PIECE_IDS } from "../../common/pieceData";
 
 /**
  * Initialize the game board with month and day cells
@@ -11,7 +12,7 @@ export function initializeBoard(puzzleDate: PuzzleDate): Board {
         Array.from({ length: boardWidth }, (_, x) => ({
             x,
             y,
-            content: '', // Default content
+            content: "", // Default content
             isOccupied: false,
             isPlayable: false, // Default to not playable
             isHighlighted: false
@@ -58,12 +59,16 @@ export function initializeBoard(puzzleDate: PuzzleDate): Board {
     const lastRowY = 2 + daysLayout.length - 1; // Should be 6
     for (let x = daysLayout[daysLayout.length - 1].length; x < boardWidth; x++) {
         if (board[lastRowY]?.[x]) { // Check if cell exists
-             board[lastRowY][x].isPlayable = false;
+            board[lastRowY][x].isPlayable = false;
         }
     }
     // Also mark x=6 in rows 0 and 1 as not playable
-     if (board[0]?.[6]) board[0][6].isPlayable = false;
-     if (board[1]?.[6]) board[1][6].isPlayable = false;
+    if (board[0]?.[6]) {
+        board[0][6].isPlayable = false;
+    }
+    if (board[1]?.[6]) {
+        board[1][6].isPlayable = false;
+    }
 
 
     return board;
