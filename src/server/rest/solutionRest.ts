@@ -8,7 +8,15 @@ export function registerSolutionRoutes(app: FastifyInstance): void {
     // GET /api/solution/:date - Get full puzzle solution for a date
     app.get<{ Params: DatePathParams; Reply: SolutionResponse | ErrorResponse }>(
         '/api/solution/:date',
-        { preHandler: requireAdmin },
+        { 
+            preHandler: requireAdmin,
+            config: {
+                rateLimit: {
+                    max: 10,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { date } = request.params;
             const parsed = parseDate(date);

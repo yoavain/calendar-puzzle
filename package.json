@@ -6,6 +6,7 @@
     "dependencies": {
         "@fastify/csrf-protection": "7.1.0",
         "@fastify/passport": "3.0.2",
+        "@fastify/rate-limit": "10.3.0",
         "@fastify/secure-session": "8.3.0",
         "@fastify/static": "9.0.0",
         "dlx": "0.2.1",

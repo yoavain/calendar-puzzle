@@ -21,7 +21,15 @@ export function registerHintRoutes(app: FastifyInstance): void {
     // GET /api/hint/:date - Get a hint (single piece placement) for a date
     app.get<{ Params: DatePathParams; Reply: HintResponse | ErrorResponse }>(
         '/api/hint/:date',
-        { preHandler: requireAuth },
+        { 
+            preHandler: requireAuth,
+            config: {
+                rateLimit: {
+                    max: 5,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { date } = request.params;
             const parsed = parseDate(date);

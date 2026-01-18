@@ -3,6 +3,7 @@ import fastifyStatic from '@fastify/static';
 import fastifySecureSession from '@fastify/secure-session';
 import fastifyPassport from '@fastify/passport';
 import fastifyCsrf from '@fastify/csrf-protection';
+import fastifyRateLimit from '@fastify/rate-limit';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -86,6 +87,12 @@ export async function buildApp(): Promise<FastifyInstance> {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax'
         }
+    });
+
+    // Register rate limiting
+    await app.register(fastifyRateLimit, {
+        max: 100,
+        timeWindow: '1 minute'
     });
 
     // Register CSRF protection after secure session
