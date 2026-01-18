@@ -36,9 +36,16 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: Position) => {
         e.preventDefault();
         setDragOverCell(null);
-        const data = e.dataTransfer.getData('application/json');
-        const dragItem: DragItem = JSON.parse(data);
-        onPieceDrop(position, dragItem);
+        
+        const data = e.dataTransfer.getData('text/plain');
+
+        try {
+            if (!data) throw new Error('No data found in dataTransfer');
+            const dragItem: DragItem = JSON.parse(data);
+            onPieceDrop(position, dragItem);
+        } catch (err) {
+            console.error('Error in handleDrop:', err);
+        }
     };
 
     // Function to check if a cell is part of a placed piece
@@ -60,10 +67,15 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
-        // Only need pieceId - shape can be derived from PIECE_DATA
-        e.dataTransfer.setData('application/json', JSON.stringify({
+        const data = JSON.stringify({
             pieceId: piece.id
-        }));
+        });
+
+        try {
+            e.dataTransfer.setData('text/plain', data);
+        } catch (err) {
+            console.error('Error setting drag data:', err);
+        }
 
         // Create a drag preview that represents the entire piece
         const dragPreview = document.createElement('div');
