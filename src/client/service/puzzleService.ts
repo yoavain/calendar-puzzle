@@ -1,5 +1,26 @@
 import { Piece, PuzzleDate } from '../../common/types';
 import { SolutionResponse, HintResponse, ErrorResponse } from '../../common/restTypes';
+import { encryptPayload } from '../utils/encryption.js';
+
+let cachedPublicKey: string | null = null;
+
+/**
+ * Fetches the server's public key once for encryption.
+ */
+async function getPublicKey(): Promise<string | null> {
+    if (cachedPublicKey) return cachedPublicKey;
+    try {
+        const response = await fetch('/api/auth/public-key');
+        if (response.ok) {
+            const data = await response.json();
+            cachedPublicKey = data.publicKey;
+            return cachedPublicKey;
+        }
+    } catch (error) {
+        console.error('Failed to fetch public key:', error);
+    }
+    return null;
+}
 
 /**
  * Format a PuzzleDate to the API date format (MM-DD)
@@ -46,10 +67,19 @@ export async function getHint(date: PuzzleDate): Promise<Piece> {
  * Record that a user started a puzzle
  */
 export async function recordStart(date: PuzzleDate): Promise<boolean> {
+    let body: any = { month: date.month, day: date.day };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    const publicKey = await getPublicKey();
+    if (publicKey) {
+        body = await encryptPayload(body, publicKey);
+        headers['X-Encrypted'] = 'true';
+    }
+
     const response = await fetch('/api/stats/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month: date.month, day: date.day }),
+        headers,
+        body: JSON.stringify(body),
     });
     
     if (!response.ok) {
@@ -63,14 +93,23 @@ export async function recordStart(date: PuzzleDate): Promise<boolean> {
  * Record that a user completed a puzzle
  */
 export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promise<boolean> {
+    let body: any = { 
+        month: date.month, 
+        day: date.day,
+        pieces 
+    };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    const publicKey = await getPublicKey();
+    if (publicKey) {
+        body = await encryptPayload(body, publicKey);
+        headers['X-Encrypted'] = 'true';
+    }
+
     const response = await fetch('/api/stats/complete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            month: date.month, 
-            day: date.day,
-            pieces 
-        }),
+        headers,
+        body: JSON.stringify(body),
     });
     
     return response.ok;

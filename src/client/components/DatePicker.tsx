@@ -115,8 +115,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                     </Typography>
                     <Grid container spacing={0.5} sx={{ mb: 2 }}>
                         {MONTHS.map((monthName, index) => {
-                            // Check if any day in this month is completed
-                            const hasCompletedInMonth = completedDates.some(d => d.month === index);
+                            // Check if the entire month is completed
+                            const daysInThisMonth = DAYS_IN_MONTH[index];
+                            const completedDaysInMonth = completedDates.filter(d => d.month === index).length;
+                            const isMonthFullyCompleted = completedDaysInMonth === daysInThisMonth;
                             
                             return (
                                 <Grid size={{ xs: 4, sm: 2 }} key={monthName}>
@@ -129,17 +131,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                             minWidth: 0,
                                             px: 1,
                                             fontSize: '0.75rem',
-                                            position: 'relative'
+                                            position: 'relative',
+                                            overflow: 'hidden' // Ensure star doesn't spill out
                                         }}
                                     >
                                         {monthName}
-                                        {hasCompletedInMonth && (
+                                        {isMonthFullyCompleted && (
                                             <StarIcon sx={{ 
                                                 position: 'absolute', 
-                                                top: -4, 
-                                                right: -4, 
-                                                fontSize: '0.6rem',
-                                                color: index === selectedMonth ? 'white' : 'warning.main'
+                                                top: 0, 
+                                                right: 0, 
+                                                fontSize: '0.8rem',
+                                                color: index === selectedMonth ? 'white' : 'warning.main',
+                                                filter: index === selectedMonth ? 'none' : 'drop-shadow(0px 0px 2px rgba(0,0,0,0.5))'
                                             }} />
                                         )}
                                     </Button>
@@ -185,8 +189,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                             position: 'absolute', 
                                             top: 2, 
                                             right: 2, 
-                                            fontSize: '0.65rem',
-                                            color: day === selectedDay ? 'white' : 'warning.main'
+                                            fontSize: '1.2rem',
+                                            color: day === selectedDay ? 'white' : 'warning.main',
+                                            filter: day === selectedDay ? 'none' : 'drop-shadow(0px 0px 2px rgba(0,0,0,0.3))'
                                         }} />
                                     )}
                                 </Button>
