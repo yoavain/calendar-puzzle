@@ -9,7 +9,7 @@
         "@fastify/static": "9.0.0",
         "dlx": "0.2.1",
         "drizzle-orm": "0.45.1",
-        "fastify": "5.7.0",
+        "fastify": "5.7.1",
         "passport-google-oauth20": "2.0.0",
         "pg": "8.17.1"
     },
