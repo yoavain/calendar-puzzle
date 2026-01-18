@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { useQueryParam } from '../hooks/useQueryParam';
+import { useUser } from '../context/UserContext';
 
 interface SolutionButtonProps {
     onSolve: () => void;
@@ -9,9 +9,9 @@ interface SolutionButtonProps {
 }
 
 export const SolutionButton: React.FC<SolutionButtonProps> = ({ onSolve, isLoading = false }) => {
-    const showButton = useQueryParam('code');
+    const { user } = useUser();
 
-    if (!showButton) {
+    if (!user) {
         return null;
     }
 

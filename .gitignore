@@ -5,3 +5,5 @@
 /.cursor/
 /build/
 /dist/
+**/.env
+/secret-key

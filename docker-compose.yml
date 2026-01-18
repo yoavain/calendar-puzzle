@@ -8,6 +8,10 @@ services:
       - TZ=Asia/Jerusalem
       - NODE_ENV=production
       - DATABASE_URL=postgresql://puzzle:puzzle@postgres:5432/puzzle
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    volumes:
+      - ./secret-key:/usr/app/secret-key:ro
     depends_on:
       - postgres
     restart: unless-stopped
