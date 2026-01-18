@@ -1,8 +1,8 @@
-import {parentPort} from 'worker_threads';
-import pino from 'pino';
-import {Piece, PuzzleDate} from '../../common/types.js';
-import {findSolution} from '../../common/puzzleSolver.js';
-import {initializeBoard, initializePieces} from '../utils/gameInit.js';
+import { parentPort } from "node:worker_threads";
+import pino from "pino";
+import type { Piece, PuzzleDate } from "../../common/types.js";
+import { findSolution } from "../../common/puzzleSolver.js";
+import { initializeBoard, initializePieces } from "../utils/gameInit.js";
 
 const logger = pino();
 
@@ -17,7 +17,7 @@ interface SolverResponse {
 
 // Handle messages from the main thread
 if (parentPort) {
-    parentPort.on('message', (puzzleDate: SolverRequest) => {
+    parentPort.on("message", (puzzleDate: SolverRequest) => {
         try {
             // Initialize board and pieces using PuzzleDate
             const board = initializeBoard(puzzleDate);
@@ -31,18 +31,20 @@ if (parentPort) {
                     success: true,
                     pieces: solution.pieces
                 } as SolverResponse);
-            } else {
+            }
+            else {
                 parentPort!.postMessage({
                     success: false,
-                    error: 'No solution found for the given date'
+                    error: "No solution found for the given date"
                 } as SolverResponse);
             }
-        } catch (error) {
+        }
+        catch (error) {
             // Log error details but return generic message
-            logger.error(error, 'Solver worker error');
+            logger.error(error, "Solver worker error");
             parentPort!.postMessage({
                 success: false,
-                error: 'Failed to solve puzzle'
+                error: "Failed to solve puzzle"
             } as SolverResponse);
         }
     });

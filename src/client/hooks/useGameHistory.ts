@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { GameState, GameStateAction, Board } from '../../common/types';
+import { useState, useCallback } from "react";
+import type { GameState, GameStateAction, Board } from "../../common/types";
 
 const MAX_HISTORY = 50; // Maximum number of undo steps
 
@@ -34,7 +34,9 @@ export function useGameHistory(initialState: GameState) {
 
     const undo = useCallback(() => {
         setHistory(prev => {
-            if (prev.past.length === 0) return prev;
+            if (prev.past.length === 0) {
+                return prev;
+            }
 
             const previous = prev.past[prev.past.length - 1];
             const newPast = prev.past.slice(0, -1);
@@ -49,7 +51,9 @@ export function useGameHistory(initialState: GameState) {
 
     const redo = useCallback(() => {
         setHistory(prev => {
-            if (prev.future.length === 0) return prev;
+            if (prev.future.length === 0) {
+                return prev;
+            }
 
             const next = prev.future[0];
             const newFuture = prev.future.slice(1);

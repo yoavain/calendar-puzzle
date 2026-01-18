@@ -1,3 +1,3 @@
-declare module 'dlx' {
+declare module "dlx" {
     export function solve(matrix: number[][]): number[] | null;
 }

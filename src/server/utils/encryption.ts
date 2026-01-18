@@ -1,20 +1,23 @@
-import crypto from 'crypto';
-import fs from 'fs/promises';
-import { EncryptedPayload } from '../../common/types.js';
-import { config } from '../config.js';
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import type { EncryptedPayload } from "../../common/types.js";
+import { config } from "../config.js";
 
 const privateKeyPath = config.paths.privateKey;
 
 let privateKey: string | null = null;
 
 async function getPrivateKey(): Promise<string> {
-    if (privateKey) return privateKey;
+    if (privateKey) {
+        return privateKey;
+    }
     try {
         await fs.access(privateKeyPath);
-    } catch {
+    }
+    catch {
         throw new Error(`Private key not found at ${privateKeyPath}`);
     }
-    privateKey = await fs.readFile(privateKeyPath, 'utf8');
+    privateKey = await fs.readFile(privateKeyPath, "utf8");
     return privateKey;
 }
 
@@ -31,22 +34,22 @@ export async function decryptPayload(data: EncryptedPayload): Promise<unknown> {
         {
             key,
             padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-            oaepHash: 'sha256',
+            oaepHash: "sha256"
         },
-        Buffer.from(data.encryptedKey, 'base64')
+        Buffer.from(data.encryptedKey, "base64")
     );
 
     // 2. Decrypt the payload using AES-GCM
     const decipher = crypto.createDecipheriv(
-        'aes-256-gcm',
+        "aes-256-gcm",
         aesKey,
-        Buffer.from(data.iv, 'base64')
+        Buffer.from(data.iv, "base64")
     );
 
-    decipher.setAuthTag(Buffer.from(data.authTag, 'base64'));
+    decipher.setAuthTag(Buffer.from(data.authTag, "base64"));
 
-    let decrypted = decipher.update(data.payload, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
+    let decrypted = decipher.update(data.payload, "base64", "utf8");
+    decrypted += decipher.final("utf8");
 
     return JSON.parse(decrypted);
 }

@@ -1,4 +1,4 @@
-import { Piece, PuzzleDate } from './types';
+import type { Piece, PuzzleDate } from "./types";
 
 // Common path params for date-based endpoints
 export interface DatePathParams {

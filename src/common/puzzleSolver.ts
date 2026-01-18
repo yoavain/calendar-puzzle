@@ -1,7 +1,7 @@
-import type { GameState, Board, Piece, Position, BoardCell, PuzzleDate } from './types';
-import { MONTHS } from './types';
-import { getTransformedShape } from './gameLogic';
-import dlx from 'dlx';
+import type { GameState, Board, Piece, Position, BoardCell, PuzzleDate } from "./types";
+import { MONTHS } from "./types";
+import { getTransformedShape } from "./gameLogic";
+import dlx from "dlx";
 
 export interface SolverLogger {
     info?: (msg: string) => void;
@@ -12,7 +12,7 @@ export interface SolverLogger {
 
 class DLXSolver {
     private matrix: number[][];
-    private rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, 'shape' | 'id' | 'color'>}>;
+    private rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, "shape" | "id" | "color">}>;
     private solution: number[] | null = null;
     private logger?: SolverLogger;
 
@@ -37,12 +37,12 @@ class DLXSolver {
     private isDateCell(cell: BoardCell, date: PuzzleDate): boolean {
         const monthName = MONTHS[date.month];
         const dayNum = date.day;
-        return (cell.y < 2 && cell.content === monthName) || (cell.y >= 2 && parseInt(cell.content || '-1') === dayNum);
+        return (cell.y < 2 && cell.content === monthName) || (cell.y >= 2 && parseInt(cell.content || "-1") === dayNum);
     }
 
     private buildMatrix(board: Board, pieces: Piece[], date: PuzzleDate): { 
         matrix: number[][], 
-        rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, 'shape' | 'id' | 'color'>}>
+        rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, "shape" | "id" | "color">}>
     } {
         const playableCells = this.getPlayableCells(board);
         const dateCells = new Set<string>(playableCells.filter(c => this.isDateCell(c, date)).map(c => `${c.x},${c.y}`));
@@ -143,9 +143,9 @@ class DLXSolver {
     }
 
     // Helper to get unique transformations (rotations/flips)
-    private getUniqueTransformations(piece: Piece): Omit<Piece, 'shape' | 'id' | 'color'>[] {
+    private getUniqueTransformations(piece: Piece): Omit<Piece, "shape" | "id" | "color">[] {
         const transformations = new Set<string>();
-        const results: Omit<Piece, 'shape' | 'id' | 'color'>[] = [];
+        const results: Omit<Piece, "shape" | "id" | "color">[] = [];
         const rotations: (0 | 90 | 180 | 270)[] = [0, 90, 180, 270];
 
         for (const rotation of rotations) {
@@ -153,7 +153,7 @@ class DLXSolver {
                 for (const isFlippedV of [false, true]) {
                     const tempPiece = { ...piece, rotation, isFlippedH, isFlippedV };
                     const shape = getTransformedShape(tempPiece);
-                    const shapeString = shape.map(r => r.map(c => c ? '1' : '0').join('')).join('|');
+                    const shapeString = shape.map(r => r.map(c => c ? "1" : "0").join("")).join("|");
 
                     if (!transformations.has(shapeString)) {
                         transformations.add(shapeString);
@@ -191,14 +191,17 @@ class DLXSolver {
                 return true;
             }
             return false;
-        } catch (error) {
+        }
+        catch (error) {
             this.logger?.error?.(error, "Error during DLX solving");
             return false;
         }
     }
 
-    public getSolution(): { piece: Piece, pos: Position, transformation: Omit<Piece, 'shape' | 'id' | 'color'>}[] | null {
-        if (!this.solution) return null;
+    public getSolution(): { piece: Piece, pos: Position, transformation: Omit<Piece, "shape" | "id" | "color">}[] | null {
+        if (!this.solution) {
+            return null;
+        }
         // Map each row index to its corresponding piece data
         const result = this.solution.map(rowIndex => {
             const data = this.rowData.get(rowIndex);
@@ -220,15 +223,23 @@ export function findSolution(initialBoard: Board, initialPieces: Piece[], date: 
         const found = solver.search();
 
         if (!found) {
-            if (logger?.log) logger.log("DLX: No solution found.");
-            else if (logger?.info) logger.info("DLX: No solution found.");
+            if (logger?.log) {
+                logger.log("DLX: No solution found.");
+            }
+            else if (logger?.info) {
+                logger.info("DLX: No solution found.");
+            }
             return null;
         }
 
         const solutionPlacements = solver.getSolution();
         if (!solutionPlacements) {
-            if (logger?.log) logger.log("DLX: Solution found but failed to retrieve placements.");
-            else if (logger?.info) logger.info("DLX: Solution found but failed to retrieve placements.");
+            if (logger?.log) {
+                logger.log("DLX: Solution found but failed to retrieve placements.");
+            }
+            else if (logger?.info) {
+                logger.info("DLX: Solution found but failed to retrieve placements.");
+            }
             return null;
         }
 
@@ -243,7 +254,7 @@ export function findSolution(initialBoard: Board, initialPieces: Piece[], date: 
                 position: pos,
                 rotation: transformation.rotation,
                 isFlippedH: transformation.isFlippedH,
-                isFlippedV: transformation.isFlippedV,
+                isFlippedV: transformation.isFlippedV
             };
             finalPieces.push(finalPiece);
 
@@ -278,7 +289,8 @@ export function findSolution(initialBoard: Board, initialPieces: Piece[], date: 
             isGameComplete: true
         };
 
-    } catch (error) {
+    }
+    catch (error) {
         logger?.error?.(error, "Error during DLX solving");
         return null;
     }

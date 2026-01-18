@@ -1,7 +1,7 @@
-import React from 'react';
-import Button from '@mui/material/Button';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { useUser } from '../context/UserContext';
+import React from "react";
+import Button from "@mui/material/Button";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import { useUser } from "../context/UserContext";
 
 interface SolutionButtonProps {
     onSolve: () => void;
@@ -25,7 +25,7 @@ export const SolutionButton: React.FC<SolutionButtonProps> = ({ onSolve, isLoadi
             startIcon={<AutoFixHighIcon />}
             size="small"
         >
-            {isLoading ? 'Solving...' : 'Solution'}
+            {isLoading ? "Solving..." : "Solution"}
         </Button>
     );
 };

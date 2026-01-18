@@ -1,5 +1,6 @@
-import { Board, Piece, Position, MONTHS, PuzzleDate } from './types';
-import { getPieceShape } from './pieceData';
+import type { Board, Piece, Position, PuzzleDate } from "./types";
+import { MONTHS } from "./types";
+import { getPieceShape } from "./pieceData";
 
 /**
  * Get the transformed shape of a piece based on its rotation and flips
@@ -23,7 +24,8 @@ export function getTransformedShape(piece: Piece): boolean[][] {
                 }
             }
             transformedShape = rotated;
-        } else if (rotation === 180) {
+        }
+        else if (rotation === 180) {
             // Rotate 180 degrees
             const rotated = Array(height).fill(null).map(() => Array(width).fill(false));
             for (let y = 0; y < height; y++) {
@@ -32,7 +34,8 @@ export function getTransformedShape(piece: Piece): boolean[][] {
                 }
             }
             transformedShape = rotated;
-        } else if (rotation === 270) {
+        }
+        else if (rotation === 270) {
             // Rotate 270 degrees clockwise (or 90 degrees counter-clockwise)
             const rotated = Array(width).fill(null).map(() => Array(height).fill(false));
             for (let y = 0; y < height; y++) {
@@ -61,7 +64,9 @@ export function getTransformedShape(piece: Piece): boolean[][] {
  * Check if a piece placement is valid (fits on the board and doesn't overlap existing pieces)
  */
 export function isValidPlacement(board: Board, piece: Piece, position: Position, checkHighlight: boolean = false): boolean {
-    if (!piece || !position) return false;
+    if (!piece || !position) {
+        return false;
+    }
 
     const { x, y } = position;
     const shape = getTransformedShape(piece);
@@ -109,7 +114,9 @@ export function isValidPlacement(board: Board, piece: Piece, position: Position,
                 }
             }
         }
-        if (!isValid) break;
+        if (!isValid) {
+            break;
+        }
     }
 
     // Restore the piece's original position on the board
@@ -135,10 +142,14 @@ export function isPuzzleSolved(board: Board, currentDate: PuzzleDate): boolean {
                 break;
             }
         }
-        if (monthVisible) break;
+        if (monthVisible) {
+            break;
+        }
     }
     
-    if (!monthVisible) return false;
+    if (!monthVisible) {
+        return false;
+    }
     
     // Check if the day cell is visible (not covered)
     let dayVisible = false;
@@ -150,10 +161,14 @@ export function isPuzzleSolved(board: Board, currentDate: PuzzleDate): boolean {
                 break;
             }
         }
-        if (dayVisible) break;
+        if (dayVisible) {
+            break;
+        }
     }
     
-    if (!dayVisible) return false;
+    if (!dayVisible) {
+        return false;
+    }
     
     // Check if all other cells that should be covered are covered
     for (let y = 0; y < board.length; y++) {
@@ -180,7 +195,9 @@ export function isPuzzleSolved(board: Board, currentDate: PuzzleDate): boolean {
  * Remove a piece from the board
  */
 export function clearPieceFromBoard(board: Board, piece: Piece): void {
-    if (!piece.position) return;
+    if (!piece.position) {
+        return;
+    }
     
     const { x, y } = piece.position;
     const shape = getTransformedShape(piece);
@@ -203,14 +220,16 @@ export function clearPieceFromBoard(board: Board, piece: Piece): void {
  * Check if a cell is on the edge of a shape
  */
 export function isEdgeCell(shape: boolean[][], x: number, y: number): boolean {
-    if (!shape[y][x]) return false;
+    if (!shape[y][x]) {
+        return false;
+    }
     
     // Check if any adjacent cell is empty or out of bounds
     return (
-        y === 0 || !shape[y-1][x] ||                  // Top
-        x === shape[0].length - 1 || !shape[y][x+1] || // Right
-        y === shape.length - 1 || !shape[y+1][x] ||    // Bottom
-        x === 0 || !shape[y][x-1]                      // Left
+        y === 0 || !shape[y - 1][x] || // Top
+        x === shape[0].length - 1 || !shape[y][x + 1] || // Right
+        y === shape.length - 1 || !shape[y + 1][x] || // Bottom
+        x === 0 || !shape[y][x - 1] // Left
     );
 }
 
@@ -218,7 +237,9 @@ export function isEdgeCell(shape: boolean[][], x: number, y: number): boolean {
  * Get the edge directions for a cell
  */
 export function getEdgeDirections(shape: boolean[][], x: number, y: number): { top: boolean, right: boolean, bottom: boolean, left: boolean } {
-    if (!shape[y][x]) return { top: false, right: false, bottom: false, left: false }; // Empty cell has no edges
+    if (!shape[y][x]) {
+        return { top: false, right: false, bottom: false, left: false };
+    } // Empty cell has no edges
 
     // Initialize result with all edges as false
     const result = { top: false, right: false, bottom: false, left: false };

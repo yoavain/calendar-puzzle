@@ -1,35 +1,36 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Tooltip from '@mui/material/Tooltip';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate, toPuzzleDate } from '../../common/types';
-import { calculateProgress, clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from '../../common/gameLogic';
-import { Board as BoardComponent } from './Board';
-import { Piece } from './Piece';
-import { PieceControls } from './PieceControls';
-import ThemeToggle from './ThemeToggle';
-import { SuccessMessage } from './SuccessMessage';
-import { SolutionButton } from './SolutionButton';
-import { HintButton } from './HintButton';
-import { LoginButton } from './LoginButton';
-import { UserMenu } from './UserMenu';
-import { useUser } from '../context/UserContext';
-import { DatePicker } from './DatePicker';
-import { StatsModal } from './StatsModal';
-import { ProgressBar } from './ProgressBar';
-import { initializeGame, initializeBoard } from '../utils/initialize';
-import { useGameHistory } from '../hooks/useGameHistory';
-import { getSolution, getHint, recordStart, recordCompletion } from '../service/puzzleService';
-import { saveSession, loadSession, clearSession } from '../hooks/useGameSession';
-import { PiecesContainer, PiecePoolWrapper } from './Game.styled';
-import BarChartIcon from '@mui/icons-material/BarChart';
+import React, { useCallback, useState, useRef, useEffect } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import Tooltip from "@mui/material/Tooltip";
+import UndoIcon from "@mui/icons-material/Undo";
+import RedoIcon from "@mui/icons-material/Redo";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import type { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate } from "../../common/types";
+import { toPuzzleDate } from "../../common/types";
+import { calculateProgress, clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from "../../common/gameLogic";
+import { Board as BoardComponent } from "./Board";
+import { Piece } from "./Piece";
+import { PieceControls } from "./PieceControls";
+import ThemeToggle from "./ThemeToggle";
+import { SuccessMessage } from "./SuccessMessage";
+import { SolutionButton } from "./SolutionButton";
+import { HintButton } from "./HintButton";
+import { LoginButton } from "./LoginButton";
+import { UserMenu } from "./UserMenu";
+import { useUser } from "../context/UserContext";
+import { DatePicker } from "./DatePicker";
+import { StatsModal } from "./StatsModal";
+import { ProgressBar } from "./ProgressBar";
+import { initializeGame, initializeBoard } from "../utils/initialize";
+import { useGameHistory } from "../hooks/useGameHistory";
+import { getSolution, getHint, recordStart, recordCompletion } from "../service/puzzleService";
+import { saveSession, loadSession, clearSession } from "../hooks/useGameSession";
+import { PiecesContainer, PiecePoolWrapper } from "./Game.styled";
+import BarChartIcon from "@mui/icons-material/BarChart";
 
 /**
  * Rebuild game state from saved pieces.
@@ -133,7 +134,7 @@ export const Game: React.FC = () => {
 
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
-        clearSession();  // Clear saved session when changing date
+        clearSession(); // Clear saved session when changing date
         setPlayingDate(newDate);
         // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
@@ -155,19 +156,23 @@ export const Game: React.FC = () => {
     const isBoardEmpty = gameState.pieces.every(piece => piece.position === null);
 
     const handlePieceSelect = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        if (gameState.isSolved) {
+            return;
+        }
 
         pushState(
             {
                 ...gameState,
                 selectedPieceId: pieceId
             },
-            { type: 'SELECT_PIECE', pieceId }
+            { type: "SELECT_PIECE", pieceId }
         );
     };
 
     const handleRotate = () => {
-        if (gameState.selectedPieceId === null || gameState.isSolved) return;
+        if (gameState.selectedPieceId === null || gameState.isSolved) {
+            return;
+        }
 
         const newState = (() => {
             const newPieces = [...gameState.pieces];
@@ -192,13 +197,15 @@ export const Game: React.FC = () => {
         })();
 
         pushState(newState, {
-            type: 'ROTATE_PIECE',
+            type: "ROTATE_PIECE",
             pieceId: gameState.selectedPieceId
         });
     };
 
     const handleFlipH = () => {
-        if (gameState.selectedPieceId === null || gameState.isSolved) return;
+        if (gameState.selectedPieceId === null || gameState.isSolved) {
+            return;
+        }
 
         const newState = (() => {
             const newPieces = [...gameState.pieces];
@@ -217,13 +224,15 @@ export const Game: React.FC = () => {
         })();
 
         pushState(newState, {
-            type: 'FLIP_PIECE_H',
+            type: "FLIP_PIECE_H",
             pieceId: gameState.selectedPieceId
         });
     };
 
     const handleFlipV = () => {
-        if (gameState.selectedPieceId === null || gameState.isSolved) return;
+        if (gameState.selectedPieceId === null || gameState.isSolved) {
+            return;
+        }
 
         const newState = (() => {
             const newPieces = [...gameState.pieces];
@@ -242,7 +251,7 @@ export const Game: React.FC = () => {
         })();
 
         pushState(newState, {
-            type: 'FLIP_PIECE_V',
+            type: "FLIP_PIECE_V",
             pieceId: gameState.selectedPieceId
         });
     };
@@ -323,12 +332,16 @@ export const Game: React.FC = () => {
     };
 
     const handlePieceDrop = (position: Position, dragItem: DragItem) => {
-        if (gameState.isSolved) return;
+        if (gameState.isSolved) {
+            return;
+        }
 
         const { pieceId } = dragItem;
 
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece) return;
+        if (!piece) {
+            return;
+        }
         
         const valid = isValidPlacement(gameState.board, piece, position, true);
         if (!valid) {
@@ -380,25 +393,29 @@ export const Game: React.FC = () => {
             pieces: newPieces,
             selectedPieceId: null,
             isSolved: solved,
-            solutionRevealed: false  // User solved it manually
+            solutionRevealed: false // User solved it manually
         };
 
         pushState(newState, {
-            type: 'PLACE_PIECE',
+            type: "PLACE_PIECE",
             pieceId,
             position
         });
     };
 
     const handlePieceReturnToPile = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        if (gameState.isSolved) {
+            return;
+        }
 
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece) return;
+        if (!piece) {
+            return;
+        }
 
         const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
             piece,
-            null,  // Setting position to null returns it to the pile
+            null, // Setting position to null returns it to the pile
             gameState.board
         );
 
@@ -410,7 +427,7 @@ export const Game: React.FC = () => {
         };
 
         pushState(newState, {
-            type: 'REMOVE_PIECE',
+            type: "REMOVE_PIECE",
             pieceId
         });
     };
@@ -421,44 +438,54 @@ export const Game: React.FC = () => {
 
     const handlePileDropZoneDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        const data = e.dataTransfer.getData('text/plain');
+        const data = e.dataTransfer.getData("text/plain");
         try {
-            if (!data) throw new Error('No data found in dataTransfer');
+            if (!data) {
+                throw new Error("No data found in dataTransfer");
+            }
             const { pieceId } = JSON.parse(data) as DragItem;
             handlePieceReturnToPile(pieceId);
-        } catch (err) {
+        }
+        catch (err) {
             // Silently handle JSON parse or data errors
         }
     };
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
             e.preventDefault();
             if (e.shiftKey) {
-                if (canRedo) redo();
-            } else {
-                if (canUndo) undo();
+                if (canRedo) {
+                    redo();
+                }
+            }
+            else {
+                if (canUndo) {
+                    undo();
+                }
             }
         }
         // Alternative: Ctrl+Y for redo (common on Windows)
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
             e.preventDefault();
-            if (canRedo) redo();
+            if (canRedo) {
+                redo();
+            }
         }
         // Escape to reset
-        if (e.key === 'Escape' && !isBoardEmpty) {
+        if (e.key === "Escape" && !isBoardEmpty) {
             e.preventDefault();
             handleReset();
         }
     }, [canUndo, canRedo, undo, redo, isBoardEmpty, handleReset]);
 
     React.useEffect(() => {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
 
     // Format playing date as DD/MM
-    const formattedDate = `${String(playingDate.day).padStart(2, '0')}/${String(playingDate.month + 1).padStart(2, '0')}`;
+    const formattedDate = `${String(playingDate.day).padStart(2, "0")}/${String(playingDate.month + 1).padStart(2, "0")}`;
 
     // Update document title when date changes
     React.useEffect(() => {
@@ -481,7 +508,9 @@ export const Game: React.FC = () => {
     }, [gameState, playingDate]);
 
     const handleSolve = async () => {
-        if (gameState.isSolved || isLoading) return;
+        if (gameState.isSolved || isLoading) {
+            return;
+        }
 
         // Reset any previous errors
         setSolverError(null);
@@ -525,24 +554,28 @@ export const Game: React.FC = () => {
                 board: newBoard,
                 pieces: lockedPieces,
                 isSolved: true,
-                solutionRevealed: true,  // Mark that solution was revealed, not solved by user
+                solutionRevealed: true, // Mark that solution was revealed, not solved by user
                 selectedPieceId: null
             };
 
             // Clear history to prevent undoing the solution (like hint)
             clearHistory(solvedState);
 
-        } catch (error) {
+        }
+        catch (error) {
             // Handle any errors
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
             setSolverError(errorMessage);
-        } finally {
+        }
+        finally {
             setIsLoading(false);
         }
     };
 
     const handleHint = async () => {
-        if (gameState.isSolved || isHintLoading || !isBoardEmpty) return;
+        if (gameState.isSolved || isHintLoading || !isBoardEmpty) {
+            return;
+        }
 
         setSolverError(null);
         setIsHintLoading(true);
@@ -554,7 +587,7 @@ export const Game: React.FC = () => {
             // Find the original piece to get its shape
             const originalPiece = gameState.pieces.find(p => p.id === hintPiece.id);
             if (!originalPiece) {
-                throw new Error('Hint piece not found in game state');
+                throw new Error("Hint piece not found in game state");
             }
 
             // Create the updated piece with hint data - mark as locked
@@ -564,7 +597,7 @@ export const Game: React.FC = () => {
                 rotation: hintPiece.rotation,
                 isFlippedH: hintPiece.isFlippedH,
                 isFlippedV: hintPiece.isFlippedV,
-                isLocked: true  // Mark the hint piece as locked/unmovable
+                isLocked: true // Mark the hint piece as locked/unmovable
             };
 
             // Update the board with the hint piece
@@ -602,10 +635,12 @@ export const Game: React.FC = () => {
             // Clear history to prevent undoing the hint
             clearHistory(newState);
 
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
             setSolverError(errorMessage);
-        } finally {
+        }
+        finally {
             setIsHintLoading(false);
         }
     };
@@ -613,7 +648,9 @@ export const Game: React.FC = () => {
     // Add new handlers for per-piece controls
     const handleRotatePiece = (pieceId: number) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece) return;
+        if (gameState.isSolved || !piece) {
+            return;
+        }
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
         
@@ -624,13 +661,17 @@ export const Game: React.FC = () => {
         const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
         
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
-        pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
+        pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     };
 
     const handleRotateCCWPiece = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        if (gameState.isSolved) {
+            return;
+        }
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece) return;
+        if (!piece) {
+            return;
+        }
         
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
@@ -642,29 +683,33 @@ export const Game: React.FC = () => {
         const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
         
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
-        pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
+        pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     };
 
     const handleFlipHPiece = (pieceId: number) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece) return;
+        if (gameState.isSolved || !piece) {
+            return;
+        }
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
         newPieces[pieceIndex] = { ...piece, isFlippedH: !piece.isFlippedH };
-        pushState({ ...gameState, pieces: newPieces }, { type: 'FLIP_PIECE_H', pieceId });
+        pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_H", pieceId });
     };
 
     const handleFlipVPiece = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        if (gameState.isSolved) {
+            return;
+        }
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
         const piece = newPieces[pieceIndex];
         newPieces[pieceIndex] = { ...piece, isFlippedV: !piece.isFlippedV };
-        pushState({ ...gameState, pieces: newPieces }, { type: 'FLIP_PIECE_V', pieceId });
+        pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_V", pieceId });
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 2, minHeight: '100vh' }}>
+        <Container maxWidth="lg" sx={{ py: 2, minHeight: "100vh" }}>
             {/* Top Bar */}
             <Stack 
                 direction="row" 
@@ -745,7 +790,7 @@ export const Game: React.FC = () => {
                 variant="h4" 
                 component="h1" 
                 align="center" 
-                sx={{ mb: 2, fontWeight: 'bold' }}
+                sx={{ mb: 2, fontWeight: "bold" }}
             >
                 Calendar Puzzle
             </Typography>

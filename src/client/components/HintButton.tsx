@@ -1,8 +1,8 @@
-import React from 'react';
-import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import { useUser } from '../context/UserContext';
+import React from "react";
+import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import { useUser } from "../context/UserContext";
 
 interface HintButtonProps {
     onHint: () => void;
@@ -27,7 +27,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = fals
             startIcon={<LightbulbIcon />}
             size="small"
         >
-            {isLoading ? 'Getting hint...' : 'Hint'}
+            {isLoading ? "Getting hint..." : "Hint"}
         </Button>
     );
 

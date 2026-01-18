@@ -27,14 +27,14 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [true, true],
             [true, false]
         ],
-        color: '#E07A5F', // Coral
+        color: "#E07A5F" // Coral
     },
     2: {
         shape: [
             [true, true, true],
             [true, false, true]
         ],
-        color: '#3D9970', // Teal
+        color: "#3D9970" // Teal
     },
     3: {
         shape: [
@@ -42,7 +42,7 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [true, true, true],
             [false, false, true]
         ],
-        color: '#6B4423', // Chocolate
+        color: "#6B4423" // Chocolate
     },
     4: {
         shape: [
@@ -51,7 +51,7 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [true, true],
             [true, false]
         ],
-        color: '#8B5CF6', // Violet
+        color: "#8B5CF6" // Violet
     },
     5: {
         shape: [
@@ -59,7 +59,7 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [true, true],
             [true, true]
         ],
-        color: '#DB5B80', // Rose
+        color: "#DB5B80" // Rose
     },
     6: {
         shape: [
@@ -67,7 +67,7 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [false, false, true],
             [true, true, true]
         ],
-        color: '#E8AA14', // Marigold
+        color: "#E8AA14" // Marigold
     },
     7: {
         shape: [
@@ -75,7 +75,7 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [true, true],
             [true, true]
         ],
-        color: '#8DA547', // Olive
+        color: "#8DA547" // Olive
     },
     8: {
         shape: [
@@ -84,8 +84,8 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
             [true, false],
             [true, true]
         ],
-        color: '#4169E1', // Royal blue
-    },
+        color: "#4169E1" // Royal blue
+    }
 };
 
 /**

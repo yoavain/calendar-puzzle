@@ -1,10 +1,10 @@
-import { Worker } from 'worker_threads';
-import path from 'path';
-import fs from 'fs/promises';
-import { FastifyBaseLogger } from 'fastify';
-import { Piece, PuzzleDate } from '../../common/types.js';
-import * as solutionRepository from '../db/solutionRepository.js';
-import { config } from '../config.js';
+import { Worker } from "node:worker_threads";
+import path from "node:path";
+import fs from "node:fs/promises";
+import type { FastifyBaseLogger } from "fastify";
+import type { Piece, PuzzleDate } from "../../common/types.js";
+import * as solutionRepository from "../db/solutionRepository.js";
+import { config } from "../config.js";
 
 // Worker message format matches PuzzleDate structure
 type SolverRequest = PuzzleDate;
@@ -23,13 +23,14 @@ async function getWorkerPath(): Promise<string> {
     const projectRoot = config.paths.root;
     
     // Try production path first (built .js file)
-    const prodPath = path.join(projectRoot, 'dist', 'server', 'workers', 'puzzleSolverWorker.js');
+    const prodPath = path.join(projectRoot, "dist", "server", "workers", "puzzleSolverWorker.js");
     try {
         await fs.access(prodPath);
         return prodPath;
-    } catch {
+    }
+    catch {
         // Fall back to development path (.ts file with tsx)
-        return path.join(projectRoot, 'src', 'server', 'workers', 'puzzleSolverWorker.ts');
+        return path.join(projectRoot, "src", "server", "workers", "puzzleSolverWorker.ts");
     }
 }
 
@@ -37,7 +38,7 @@ async function getWorkerPath(): Promise<string> {
  * Format month and day into a date key for caching (MM-DD format)
  */
 function toDateKey(month: number, day: number): string {
-    return `${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return `${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
 /**
@@ -47,27 +48,28 @@ async function solveWithWorker(month: number, day: number): Promise<Piece[]> {
     const workerPath = await getWorkerPath();
     return new Promise((resolve, reject) => {
         // For .ts files, we need to use tsx's ESM loader
-        const workerOptions = workerPath.endsWith('.ts') 
-            ? { execArgv: ['--import', 'tsx/esm'] }
+        const workerOptions = workerPath.endsWith(".ts") 
+            ? { execArgv: ["--import", "tsx/esm"] }
             : {};
         
         const worker = new Worker(workerPath, workerOptions);
 
-        worker.on('message', (response: SolverResponse) => {
+        worker.on("message", (response: SolverResponse) => {
             worker.terminate();
             if (response.success && response.pieces) {
                 resolve(response.pieces);
-            } else {
-                reject(new Error(response.error || 'Failed to solve puzzle'));
+            }
+            else {
+                reject(new Error(response.error || "Failed to solve puzzle"));
             }
         });
 
-        worker.on('error', (error) => {
+        worker.on("error", (error) => {
             worker.terminate();
             reject(error);
         });
 
-        worker.on('exit', (code) => {
+        worker.on("exit", (code) => {
             if (code !== 0) {
                 reject(new Error(`Worker stopped with exit code ${code}`));
             }
@@ -87,19 +89,19 @@ async function solveWithWorker(month: number, day: number): Promise<Piece[]> {
  */
 export const solvePuzzle = async (month: number, day: number, log: FastifyBaseLogger): Promise<Piece[]> => {
     const dateKey = toDateKey(month, day);
-    log.info({ dateKey }, '[SolverService] Solving puzzle');
+    log.info({ dateKey }, "[SolverService] Solving puzzle");
     
     // Check cache first
     const cached = await solutionRepository.getSolution(dateKey, log);
     if (cached) {
-        log.info({ dateKey }, '[SolverService] Returning cached solution');
+        log.info({ dateKey }, "[SolverService] Returning cached solution");
         return cached;
     }
     
     // Solve with worker and cache the result
-    log.info({ dateKey }, '[SolverService] Computing solution');
+    log.info({ dateKey }, "[SolverService] Computing solution");
     const pieces = await solveWithWorker(month, day);
     await solutionRepository.saveSolution(dateKey, pieces, log);
-    log.info({ dateKey }, '[SolverService] Solution computed and cached');
+    log.info({ dateKey }, "[SolverService] Solution computed and cached");
     return pieces;
 };
