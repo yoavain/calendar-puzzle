@@ -21,7 +21,15 @@ export function registerStatsRoutes(app: FastifyInstance): void {
     // Record that a user started a puzzle
     app.post<{ Body: StatsRequest }>(
         '/api/stats/start',
-        { preHandler: requireAuth },
+        { 
+            preHandler: requireAuth,
+            config: {
+                rateLimit: {
+                    max: 10,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { month, day } = request.body;
             const user = request.user as SessionUser;
@@ -48,7 +56,15 @@ export function registerStatsRoutes(app: FastifyInstance): void {
     // Record that a user completed a puzzle (with server-side validation)
     app.post<{ Body: CompleteRequest }>(
         '/api/stats/complete',
-        { preHandler: requireAuth },
+        { 
+            preHandler: requireAuth,
+            config: {
+                rateLimit: {
+                    max: 5,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { month, day, pieces } = request.body;
             const user = request.user as SessionUser;
