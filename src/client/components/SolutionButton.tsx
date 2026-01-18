@@ -11,7 +11,7 @@ interface SolutionButtonProps {
 export const SolutionButton: React.FC<SolutionButtonProps> = ({ onSolve, isLoading = false }) => {
     const { user } = useUser();
 
-    if (!user) {
+    if (!user || !user.isAdmin) {
         return null;
     }
 

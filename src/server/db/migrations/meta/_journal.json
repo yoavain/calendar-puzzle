@@ -15,6 +15,13 @@
       "when": 1768719721315,
       "tag": "0001_mute_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768754809445,
+      "tag": "0002_late_colossus",
+      "breakpoints": true
     }
   ]
 }
