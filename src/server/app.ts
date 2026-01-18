@@ -1,18 +1,21 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fastifyStatic from '@fastify/static';
-import fastifySecureSession from '@fastify/secure-session';
+import fastifySecureSession, { Session } from '@fastify/secure-session';
 import fastifyPassport from '@fastify/passport';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyRateLimit from '@fastify/rate-limit';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { IncomingMessage } from 'http';
+import { Duplex } from 'stream';
 import { registerSolutionRoutes } from './rest/solutionRest.js';
 import { registerHintRoutes } from './rest/hintRest.js';
 import { registerAuthRoutes } from './rest/authRest.js';
 import { registerStatsRoutes } from './rest/statsRest.js';
 import { setupPassport } from './auth/passport.js';
-import { decryptPayload, EncryptedPayload } from './utils/encryption.js';
+import { decryptPayload } from './utils/encryption.js';
+import { EncryptedPayload } from '../common/types.js';
 import { config } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,9 +47,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     // Polyfill for Express compatibility (some passport strategies expect req.connection.encrypted)
     // Note: The primary fix for passport-oauth2 is the `proxy: true` option in GoogleStrategy
     app.addHook('onRequest', async (request) => {
-        const rawReq = request.raw as any;
+        const rawReq = request.raw as IncomingMessage & { connection?: unknown };
         const proto = request.headers['x-forwarded-proto'];
-        const socket = request.raw.socket as any;
+        const socket = request.raw.socket as Duplex & { encrypted?: boolean };
         const isEncrypted = proto === 'https' || (socket && socket.encrypted === true);
         
         const connection = {
@@ -56,8 +59,8 @@ export async function buildApp(): Promise<FastifyInstance> {
 
         // Polyfill both the Node.js request and the Fastify request object
         // Some strategies look at request.raw.connection, others at request.connection
-        rawReq.connection = connection;
-        (request as any).connection = connection;
+        (rawReq as any).connection = connection;
+        (request as unknown as { connection: unknown }).connection = connection;
     });
 
     // Global decryption hook
@@ -169,7 +172,10 @@ export async function buildApp(): Promise<FastifyInstance> {
             // Use the decorated csrfProtection method on the app instance
             // Wrap it in a Promise because it's a callback-based function
             await new Promise<void>((resolve, reject) => {
-                (app as any).csrfProtection(request, reply, (err: any) => {
+                const appWithCsrf = app as FastifyInstance & { 
+                    csrfProtection: (req: FastifyRequest, reply: FastifyReply, next: (err?: Error) => void) => void 
+                };
+                appWithCsrf.csrfProtection(request, reply, (err?: Error) => {
                     if (err) {
                         reject(err);
                     } else {
@@ -179,7 +185,7 @@ export async function buildApp(): Promise<FastifyInstance> {
             });
         } catch (err) {
             const hasSession = !!request.session;
-            const sessionData = hasSession ? (request.session as any).get('_csrf') : null;
+            const sessionData = hasSession ? (request.session as Session).get('_csrf') : null;
             const tokenInHeader = request.headers['x-csrf-token'];
             app.log.warn(
                 { 

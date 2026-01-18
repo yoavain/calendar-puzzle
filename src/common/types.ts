@@ -25,6 +25,13 @@ export interface Piece {
     isLocked?: boolean;  // When true, piece cannot be moved or undone (used for hints)
 }
 
+export interface EncryptedPayload {
+    encryptedKey: string; // Base64
+    iv: string;           // Base64
+    authTag: string;      // Base64
+    payload: string;      // Base64
+}
+
 export interface BoardCell {
     x: number;
     y: number;

@@ -1,3 +1,5 @@
+import { EncryptedPayload } from '../../common/types';
+
 /**
  * Utility for hybrid encryption (RSA + AES-GCM) using the Web Crypto API.
  */
@@ -26,7 +28,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
  * 2. Encrypts the payload with AES-GCM.
  * 3. Encrypts the AES key with the server's RSA public key.
  */
-export async function encryptPayload(payload: any, publicKeyPem: string): Promise<any> {
+export async function encryptPayload(payload: unknown, publicKeyPem: string): Promise<EncryptedPayload> {
     const encoder = new TextEncoder();
     const encodedPayload = encoder.encode(JSON.stringify(payload));
 
