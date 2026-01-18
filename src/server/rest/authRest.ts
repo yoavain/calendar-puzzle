@@ -33,7 +33,14 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     });
 
     // Get current authenticated user profile and completion history
-    app.get('/api/auth/me', async (request, reply) => {
+    app.get('/api/auth/me', {
+        config: {
+            rateLimit: {
+                max: 20,
+                timeWindow: '1 minute'
+            }
+        }
+    }, async (request, reply) => {
         if (request.user) {
             const user = request.user as SessionUser;
 
@@ -87,5 +94,18 @@ export function registerAuthRoutes(app: FastifyInstance): void {
     app.post('/auth/logout', async (request, reply) => {
         await request.logout();
         return { success: true };
+    });
+
+    // Get CSRF Token
+    app.get('/api/auth/csrf-token', {
+        config: {
+            rateLimit: {
+                max: 10,
+                timeWindow: '1 minute'
+            }
+        }
+    }, async (request, reply) => {
+        const token = await reply.generateCsrf();
+        return { csrfToken: token };
     });
 }

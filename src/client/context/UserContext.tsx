@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { PuzzleDate } from '../../common/types.js';
+import { clearCsrfToken, getCsrfToken } from '../service/puzzleService';
 
 export interface User {
     id: string;
@@ -38,16 +39,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 setUser(data.user);
                 setCompletedDates(data.completedDates || []);
                 setPlayedCount(data.playedCount || 0);
+                
+                // Fetch CSRF token separately after authenticated session is established
+                await getCsrfToken();
             } else {
                 setUser(null);
                 setCompletedDates([]);
                 setPlayedCount(0);
+                clearCsrfToken();
             }
         } catch (error) {
-            console.error('Failed to fetch user:', error);
             setUser(null);
             setCompletedDates([]);
             setPlayedCount(0);
+            clearCsrfToken();
         } finally {
             setLoading(false);
         }
@@ -58,13 +63,21 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }, [fetchUser]);
 
     const logout = useCallback(async () => {
+        const headers: Record<string, string> = {};
+        const csrfToken = await getCsrfToken();
+        if (csrfToken) {
+            headers['X-CSRF-Token'] = csrfToken;
+        }
+
         await fetch('/auth/logout', {
             method: 'POST',
+            headers,
             credentials: 'include'
         });
         setUser(null);
         setCompletedDates([]);
         setPlayedCount(0);
+        clearCsrfToken();
     }, []);
 
     const addCompletedDate = useCallback((date: PuzzleDate) => {

@@ -3,17 +3,31 @@ import { DatePathParams, SolutionResponse, ErrorResponse } from '../../common/re
 import { parseDate } from '../utils/dateUtils.js';
 import { solvePuzzle } from '../service/solverService.js';
 import { requireAdmin } from '../auth/requireAuth.js';
+import { dateParamSchema } from './schemas.js';
 
 export function registerSolutionRoutes(app: FastifyInstance): void {
     // GET /api/solution/:date - Get full puzzle solution for a date
     app.get<{ Params: DatePathParams; Reply: SolutionResponse | ErrorResponse }>(
         '/api/solution/:date',
-        { preHandler: requireAdmin },
+        { 
+            preHandler: requireAdmin,
+            schema: {
+                params: dateParamSchema
+            },
+            config: {
+                rateLimit: {
+                    max: 10,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { date } = request.params;
             const parsed = parseDate(date);
 
             if (!parsed) {
+                // This should theoretically not be reached if schema validation works correctly
+                // but we keep it as a fallback or if parseDate has extra logic
                 return reply.code(400).send({
                     error: 'Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)'
                 });

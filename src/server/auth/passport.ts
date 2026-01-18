@@ -3,6 +3,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { db } from '../db/connection.js';
 import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { config } from '../config.js';
 
 export interface SessionUser {
     id: string;
@@ -14,8 +15,8 @@ export interface SessionUser {
 
 export function setupPassport() {
     fastifyPassport.use('google', new GoogleStrategy({
-        clientID: process.env.GOOGLE_CLIENT_ID!,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        clientID: config.google.clientId as string,
+        clientSecret: config.google.clientSecret as string,
         callbackURL: '/auth/google/callback',  // Relative path - resolved from request host
         proxy: true,  // Trust X-Forwarded-Proto header from reverse proxies
     }, async (_accessToken, _refreshToken, profile, done) => {

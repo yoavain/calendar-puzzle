@@ -1,8 +1,10 @@
-import { Piece, PuzzleDate } from '../../common/types';
-import { SolutionResponse, HintResponse, ErrorResponse } from '../../common/restTypes';
+import { Piece, PuzzleDate, EncryptedPayload } from '../../common/types';
+import { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest } from '../../common/restTypes';
 import { encryptPayload } from '../utils/encryption.js';
 
 let cachedPublicKey: string | null = null;
+let cachedCsrfToken: string | null = null;
+let csrfTokenPromise: Promise<string | null> | null = null;
 
 /**
  * Fetches the server's public key once for encryption.
@@ -10,16 +12,53 @@ let cachedPublicKey: string | null = null;
 async function getPublicKey(): Promise<string | null> {
     if (cachedPublicKey) return cachedPublicKey;
     try {
-        const response = await fetch('/api/auth/public-key');
+        const response = await fetch('/api/auth/public-key', {
+            credentials: 'include'
+        });
         if (response.ok) {
             const data = await response.json();
             cachedPublicKey = data.publicKey;
             return cachedPublicKey;
         }
     } catch (error) {
-        console.error('Failed to fetch public key:', error);
+        // Silently fail or handle error as needed
     }
     return null;
+}
+
+/**
+ * Fetches a CSRF token from the server.
+ */
+export async function getCsrfToken(): Promise<string | null> {
+    if (cachedCsrfToken) return cachedCsrfToken;
+    if (csrfTokenPromise) return csrfTokenPromise;
+
+    csrfTokenPromise = (async () => {
+        try {
+            const response = await fetch('/api/auth/csrf-token', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                cachedCsrfToken = data.csrfToken;
+                return cachedCsrfToken;
+            }
+        } catch (error) {
+            // Failed to fetch CSRF token
+        } finally {
+            csrfTokenPromise = null;
+        }
+        return null;
+    })();
+
+    return csrfTokenPromise;
+}
+
+/**
+ * Clears the cached CSRF token (useful after logout)
+ */
+export function clearCsrfToken(): void {
+    cachedCsrfToken = null;
 }
 
 /**
@@ -36,7 +75,9 @@ function formatDateForApi(date: PuzzleDate): string {
  */
 export async function getSolution(date: PuzzleDate): Promise<Piece[]> {
     const dateStr = formatDateForApi(date);
-    const response = await fetch(`/api/solution/${dateStr}`);
+    const response = await fetch(`/api/solution/${dateStr}`, {
+        credentials: 'include'
+    });
     
     if (!response.ok) {
         const errorData = await response.json() as ErrorResponse;
@@ -52,7 +93,9 @@ export async function getSolution(date: PuzzleDate): Promise<Piece[]> {
  */
 export async function getHint(date: PuzzleDate): Promise<Piece> {
     const dateStr = formatDateForApi(date);
-    const response = await fetch(`/api/hint/${dateStr}`);
+    const response = await fetch(`/api/hint/${dateStr}`, {
+        credentials: 'include'
+    });
     
     if (!response.ok) {
         const errorData = await response.json() as ErrorResponse;
@@ -67,7 +110,7 @@ export async function getHint(date: PuzzleDate): Promise<Piece> {
  * Record that a user started a puzzle
  */
 export async function recordStart(date: PuzzleDate): Promise<boolean> {
-    let body: any = { month: date.month, day: date.day };
+    let body: StartPuzzleRequest | EncryptedPayload = { month: date.month, day: date.day };
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     const publicKey = await getPublicKey();
@@ -76,14 +119,19 @@ export async function recordStart(date: PuzzleDate): Promise<boolean> {
         headers['X-Encrypted'] = 'true';
     }
 
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+    }
+
     const response = await fetch('/api/stats/start', {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
+        credentials: 'include'
     });
     
     if (!response.ok) {
-        console.error('Failed to record start:', response.statusText);
         return false;
     }
     return true;
@@ -93,7 +141,7 @@ export async function recordStart(date: PuzzleDate): Promise<boolean> {
  * Record that a user completed a puzzle
  */
 export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promise<boolean> {
-    let body: any = { 
+    let body: CompletePuzzleRequest | EncryptedPayload = { 
         month: date.month, 
         day: date.day,
         pieces 
@@ -106,10 +154,16 @@ export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promi
         headers['X-Encrypted'] = 'true';
     }
 
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+    }
+
     const response = await fetch('/api/stats/complete', {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
+        credentials: 'include'
     });
     
     return response.ok;

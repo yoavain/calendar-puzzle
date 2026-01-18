@@ -1,10 +1,11 @@
 import { buildApp } from './app.js';
 import { runMigrations } from './db/migrate.js';
-
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
-const HOST = process.env.HOST || '0.0.0.0';
+import { config, validateConfig } from './config.js';
 
 const start = async () => {
+    // Validate environment variables before doing anything else
+    validateConfig();
+
     const app = await buildApp();
     const log = app.log.child({});
     
@@ -14,8 +15,8 @@ const start = async () => {
     await runMigrations(log);
 
     try {
-        await app.listen({ port: PORT, host: HOST });
-        log.info({ host: HOST, port: PORT }, '[Server] Listening');
+        await app.listen({ port: config.server.port, host: config.server.host });
+        log.info({ host: config.server.host, port: config.server.port }, '[Server] Listening');
     } catch (err) {
         log.error(err, '[Server] Failed to start');
         process.exit(1);

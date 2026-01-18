@@ -19,18 +19,13 @@ export const useQueryParam = (param: string): boolean => {
         const checkParam = async () => {
             const params = new URLSearchParams(window.location.search);
             const code = params.get(param);
-            console.log('Checking code parameter:', code);
             
             if (!code) {
-                console.log('No code parameter found');
                 setHasValidParam(false);
                 return;
             }
 
             const hashedCode = await sha256(code);
-            console.log('Hashed code:', hashedCode);
-            console.log('Expected hash:', VALID_CODE_HASH);
-            console.log('Hash match:', hashedCode === VALID_CODE_HASH);
             setHasValidParam(hashedCode === VALID_CODE_HASH);
         };
 
@@ -39,9 +34,3 @@ export const useQueryParam = (param: string): boolean => {
 
     return hasValidParam;
 };
-
-const main = async () => {
-    const result = await sha256('iddqd');
-    console.log('SHA-256 result:', result);
-}
-main().catch(console.error);
