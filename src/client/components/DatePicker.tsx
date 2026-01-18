@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { PuzzleDate, MONTHS } from '../../common/types';
 import { useQueryParam } from '../hooks/useQueryParam';
+import { useUser } from '../context/UserContext';
 
 interface DatePickerProps {
     currentDate: PuzzleDate;
@@ -19,7 +20,9 @@ interface DatePickerProps {
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Using 29 for Feb (leap year max)
 
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
-    const showButton = useQueryParam('code');
+    const { user } = useUser();
+    const hasValidCode = useQueryParam('code');
+    const showButton = hasValidCode || !!user;
     
     const [isOpen, setIsOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(currentDate.month);

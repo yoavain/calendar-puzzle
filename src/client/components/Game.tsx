@@ -165,8 +165,11 @@ export const Game: React.FC = () => {
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
             const piece = newPieces[pieceIndex];
 
-            // Update rotation by 90 degrees clockwise
-            const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+            // When exactly one flip is active, we must invert the rotation step
+            // to maintain a consistent visual clockwise rotation.
+            const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+            const rotationStep = isFlipped ? -90 : 90;
+            const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
 
             newPieces[pieceIndex] = {
                 ...piece,
@@ -573,31 +576,44 @@ export const Game: React.FC = () => {
 
     // Add new handlers for per-piece controls
     const handleRotatePiece = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (gameState.isSolved || !piece) return;
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
-        const newRotation = ((piece.rotation + 90) % 360) as 0 | 90 | 180 | 270;
+        
+        // When exactly one flip is active, we must invert the rotation step
+        // to maintain a consistent visual clockwise rotation.
+        const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+        const rotationStep = isFlipped ? -90 : 90;
+        const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
+        
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
     };
 
     const handleRotateCCWPiece = (pieceId: number) => {
         if (gameState.isSolved) return;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (!piece) return;
+        
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
-        // Counter-clockwise: subtract 90 degrees (add 270 to avoid negative)
-        const newRotation = ((piece.rotation + 270) % 360) as 0 | 90 | 180 | 270;
+        
+        // When exactly one flip is active, we must invert the rotation step
+        // to maintain a consistent visual counter-clockwise rotation.
+        const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+        const rotationStep = isFlipped ? 90 : -90;
+        const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
+        
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: 'ROTATE_PIECE', pieceId });
     };
 
     const handleFlipHPiece = (pieceId: number) => {
-        if (gameState.isSolved) return;
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (gameState.isSolved || !piece) return;
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
         newPieces[pieceIndex] = { ...piece, isFlippedH: !piece.isFlippedH };
         pushState({ ...gameState, pieces: newPieces }, { type: 'FLIP_PIECE_H', pieceId });
     };
