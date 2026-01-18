@@ -21,7 +21,7 @@ async function getPublicKey(): Promise<string | null> {
             return cachedPublicKey;
         }
     } catch (error) {
-        console.error('Failed to fetch public key:', error);
+        // Silently fail or handle error as needed
     }
     return null;
 }
@@ -44,7 +44,7 @@ export async function getCsrfToken(): Promise<string | null> {
                 return cachedCsrfToken;
             }
         } catch (error) {
-            console.error('Failed to fetch CSRF token:', error);
+            // Failed to fetch CSRF token
         } finally {
             csrfTokenPromise = null;
         }
@@ -132,7 +132,6 @@ export async function recordStart(date: PuzzleDate): Promise<boolean> {
     });
     
     if (!response.ok) {
-        console.error('Failed to record start:', response.statusText);
         return false;
     }
     return true;

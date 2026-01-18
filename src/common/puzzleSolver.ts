@@ -3,13 +3,22 @@ import { MONTHS } from './types';
 import { getTransformedShape } from './gameLogic';
 import dlx from 'dlx';
 
+export interface SolverLogger {
+    info?: (msg: string) => void;
+    log?: (msg: string) => void;
+    warn?: (msg: string) => void;
+    error?: (err: any, msg?: string) => void;
+}
+
 class DLXSolver {
     private matrix: number[][];
     private rowData: Map<number, { piece: Piece, pos: Position, transformation: Omit<Piece, 'shape' | 'id' | 'color'>}>;
     private solution: number[] | null = null;
+    private logger?: SolverLogger;
 
-    constructor(board: Board, pieces: Piece[], date: PuzzleDate) {
+    constructor(board: Board, pieces: Piece[], date: PuzzleDate, logger?: SolverLogger) {
         this.rowData = new Map();
+        this.logger = logger;
         const { matrix, rowData } = this.buildMatrix(board, pieces, date);
         this.matrix = matrix;
         this.rowData = rowData;
@@ -163,19 +172,19 @@ class DLXSolver {
                 // Take the first solution (we only need one valid solution)
                 const solution = solutions[0];
                 if (!Array.isArray(solution)) {
-                    console.error("DLX: Solution is not an array");
+                    this.logger?.error?.(new Error("DLX: Solution is not an array"));
                     return false;
                 }
                 // Verify that we have all the necessary rows in our rowData
                 const allRowsExist = solution.every((rowIndex: number) => {
                     const exists = this.rowData.has(rowIndex);
                     if (!exists) {
-                        console.error(`Missing row data for index ${rowIndex}`);
+                        this.logger?.error?.(new Error(`Missing row data for index ${rowIndex}`));
                     }
                     return exists;
                 });
                 if (!allRowsExist) {
-                    console.error("DLX: Invalid row indices in solution");
+                    this.logger?.error?.(new Error("DLX: Invalid row indices in solution"));
                     return false;
                 }
                 this.solution = solution;
@@ -183,7 +192,7 @@ class DLXSolver {
             }
             return false;
         } catch (error) {
-            console.error("Error during DLX solving:", error);
+            this.logger?.error?.(error, "Error during DLX solving");
             return false;
         }
     }
@@ -205,19 +214,21 @@ class DLXSolver {
 /**
  * Main solution finder using DLX
  */
-export function findSolution(initialBoard: Board, initialPieces: Piece[], date: PuzzleDate): GameState | null {
+export function findSolution(initialBoard: Board, initialPieces: Piece[], date: PuzzleDate, logger?: SolverLogger): GameState | null {
     try {
-        const solver = new DLXSolver(initialBoard, initialPieces, date);
+        const solver = new DLXSolver(initialBoard, initialPieces, date, logger);
         const found = solver.search();
 
         if (!found) {
-            console.log("DLX: No solution found.");
+            if (logger?.log) logger.log("DLX: No solution found.");
+            else if (logger?.info) logger.info("DLX: No solution found.");
             return null;
         }
 
         const solutionPlacements = solver.getSolution();
         if (!solutionPlacements) {
-            console.log("DLX: Solution found but failed to retrieve placements.");
+            if (logger?.log) logger.log("DLX: Solution found but failed to retrieve placements.");
+            else if (logger?.info) logger.info("DLX: Solution found but failed to retrieve placements.");
             return null;
         }
 
@@ -253,7 +264,7 @@ export function findSolution(initialBoard: Board, initialPieces: Piece[], date: 
         // Ensure all original pieces are accounted for
         initialPieces.forEach(p => {
             if (!finalPieces.some(fp => fp.id === p.id)) {
-                console.warn(`Piece ${p.id} missing from DLX solution, adding.`);
+                logger?.warn?.(`Piece ${p.id} missing from DLX solution, adding.`);
                 finalPieces.push({ ...p, position: null });
             }
         });
@@ -268,7 +279,7 @@ export function findSolution(initialBoard: Board, initialPieces: Piece[], date: 
         };
 
     } catch (error) {
-        console.error("Error during DLX solving:", error);
+        logger?.error?.(error, "Error during DLX solving");
         return null;
     }
 }

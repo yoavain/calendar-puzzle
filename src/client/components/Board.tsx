@@ -44,7 +44,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             const dragItem: DragItem = JSON.parse(data);
             onPieceDrop(position, dragItem);
         } catch (err) {
-            console.error('Error in handleDrop:', err);
+            // Silently handle error
         }
     };
 
@@ -74,7 +74,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         try {
             e.dataTransfer.setData('text/plain', data);
         } catch (err) {
-            console.error('Error setting drag data:', err);
+            // Silently handle error
         }
 
         // Create a drag preview that represents the entire piece

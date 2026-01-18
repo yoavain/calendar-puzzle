@@ -49,7 +49,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 clearCsrfToken();
             }
         } catch (error) {
-            console.error('Failed to fetch user:', error);
             setUser(null);
             setCompletedDates([]);
             setPlayedCount(0);
