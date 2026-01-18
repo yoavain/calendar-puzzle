@@ -13,6 +13,7 @@ import { registerAuthRoutes } from './rest/authRest.js';
 import { registerStatsRoutes } from './rest/statsRest.js';
 import { setupPassport } from './auth/passport.js';
 import { decryptPayload, EncryptedPayload } from './utils/encryption.js';
+import { config } from './config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,7 +85,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         cookie: {
             path: '/',
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: config.server.nodeEnv === 'production',
             sameSite: 'lax'
         }
     });
