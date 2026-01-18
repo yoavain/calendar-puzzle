@@ -7,7 +7,7 @@ export interface SolverLogger {
     info?: (msg: string) => void;
     log?: (msg: string) => void;
     warn?: (msg: string) => void;
-    error?: (err: any, msg?: string) => void;
+    error?: (err: unknown, msg?: string) => void;
 }
 
 class DLXSolver {

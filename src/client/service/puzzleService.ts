@@ -1,5 +1,5 @@
-import { Piece, PuzzleDate } from '../../common/types';
-import { SolutionResponse, HintResponse, ErrorResponse } from '../../common/restTypes';
+import { Piece, PuzzleDate, EncryptedPayload } from '../../common/types';
+import { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest } from '../../common/restTypes';
 import { encryptPayload } from '../utils/encryption.js';
 
 let cachedPublicKey: string | null = null;
@@ -110,7 +110,7 @@ export async function getHint(date: PuzzleDate): Promise<Piece> {
  * Record that a user started a puzzle
  */
 export async function recordStart(date: PuzzleDate): Promise<boolean> {
-    let body: any = { month: date.month, day: date.day };
+    let body: StartPuzzleRequest | EncryptedPayload = { month: date.month, day: date.day };
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     const publicKey = await getPublicKey();
@@ -141,7 +141,7 @@ export async function recordStart(date: PuzzleDate): Promise<boolean> {
  * Record that a user completed a puzzle
  */
 export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promise<boolean> {
-    let body: any = { 
+    let body: CompletePuzzleRequest | EncryptedPayload = { 
         month: date.month, 
         day: date.day,
         pieces 
