@@ -16,6 +16,7 @@ COPY package-lock.json /usr/app/
 COPY .npmrc /usr/app/
 COPY dist /usr/app/dist/
 COPY build /usr/app/build/
+COPY scripts /usr/app/scripts/
 COPY secret-key /usr/app/
 COPY private-key.pem /usr/app/
 COPY public-key.pem /usr/app/
