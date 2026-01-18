@@ -102,6 +102,11 @@ export async function buildApp(): Promise<FastifyInstance> {
         );
     });
 
+    // Serve favicon
+    app.get('/favicon.ico', async (request, reply) => {
+        return reply.sendFile('favicon.ico', clientBuildPath);
+    });
+
     // Serve static client files from /client/* with path traversal protection
     app.get('/client/*', async (request, reply) => {
         // Extract the path after /client/
