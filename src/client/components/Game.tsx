@@ -330,7 +330,8 @@ export const Game: React.FC = () => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (!piece) return;
         
-        if (!isValidPlacement(gameState.board, piece, position, true)) {
+        const valid = isValidPlacement(gameState.board, piece, position, true);
+        if (!valid) {
             // Trigger visual feedback for invalid drop
             triggerInvalidDropFeedback(piece, position);
             return;
@@ -421,9 +422,14 @@ export const Game: React.FC = () => {
 
     const handlePileDropZoneDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
-        const data = e.dataTransfer.getData('application/json');
-        const { pieceId } = JSON.parse(data) as DragItem;
-        handlePieceReturnToPile(pieceId);
+        const data = e.dataTransfer.getData('text/plain');
+        try {
+            if (!data) throw new Error('No data found in dataTransfer');
+            const { pieceId } = JSON.parse(data) as DragItem;
+            handlePieceReturnToPile(pieceId);
+        } catch (err) {
+            console.error('Error in handlePileDropZoneDrop:', err);
+        }
     };
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
