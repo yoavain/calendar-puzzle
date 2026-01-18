@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import Button from '@mui/material/Button';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import Avatar from '@mui/material/Avatar';
-import { useUser } from '../context/UserContext';
+import React, { useState } from "react";
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Avatar from "@mui/material/Avatar";
+import { useUser } from "../context/UserContext";
 
 export const UserMenu: React.FC = () => {
     const { user, logout } = useUser();
@@ -29,9 +29,9 @@ export const UserMenu: React.FC = () => {
 
     // Get initials from name
     const initials = user.name
-        .split(' ')
+        .split(" ")
         .map(n => n[0])
-        .join('')
+        .join("")
         .toUpperCase()
         .slice(0, 2);
 
@@ -40,11 +40,11 @@ export const UserMenu: React.FC = () => {
             <Button
                 onClick={handleClick}
                 size="small"
-                sx={{ minWidth: 'auto', padding: '4px' }}
+                sx={{ minWidth: "auto", padding: "4px" }}
             >
                 <Avatar 
                     src={user.avatarUrl || undefined} 
-                    sx={{ width: 32, height: 32, fontSize: '0.875rem' }}
+                    sx={{ width: 32, height: 32, fontSize: "0.875rem" }}
                 >
                     {initials}
                 </Avatar>

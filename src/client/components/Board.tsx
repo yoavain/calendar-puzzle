@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
-import { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from '../../common/types';
-import { getTransformedShape } from '../../common/gameLogic';
-import { getPieceColor } from '../../common/pieceData';
-import { InvalidDropCell } from './Game';
+import React, { useState } from "react";
+import { useTheme } from "@mui/material/styles";
+import type { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from "../../common/types";
+import { getTransformedShape } from "../../common/gameLogic";
+import { getPieceColor } from "../../common/pieceData";
+import type { InvalidDropCell } from "./Game";
 import {
     BoardContainer,
     BoardRow,
     BoardCell,
-    StyledCellText,
-} from './Board.styled';
+    StyledCellText
+} from "./Board.styled";
 
 interface BoardProps {
     board: BoardType;
-    pieces: GameState['pieces'];
+    pieces: GameState["pieces"];
     onCellClick: (position: Position) => void;
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
     invalidDropCells?: InvalidDropCell[];
@@ -37,13 +37,16 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         e.preventDefault();
         setDragOverCell(null);
         
-        const data = e.dataTransfer.getData('text/plain');
+        const data = e.dataTransfer.getData("text/plain");
 
         try {
-            if (!data) throw new Error('No data found in dataTransfer');
+            if (!data) {
+                throw new Error("No data found in dataTransfer");
+            }
             const dragItem: DragItem = JSON.parse(data);
             onPieceDrop(position, dragItem);
-        } catch (err) {
+        }
+        catch (err) {
             // Silently handle error
         }
     };
@@ -51,7 +54,9 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     // Function to check if a cell is part of a placed piece
     const getPieceAtCell = (x: number, y: number) => {
         return pieces.find(piece => {
-            if (!piece.position) return false;
+            if (!piece.position) {
+                return false;
+            }
             const shape = getTransformedShape(piece);
             const pieceX = x - piece.position.x;
             const pieceY = y - piece.position.y;
@@ -72,13 +77,14 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         });
 
         try {
-            e.dataTransfer.setData('text/plain', data);
-        } catch (err) {
+            e.dataTransfer.setData("text/plain", data);
+        }
+        catch (err) {
             // Silently handle error
         }
 
         // Create a drag preview that represents the entire piece
-        const dragPreview = document.createElement('div');
+        const dragPreview = document.createElement("div");
         dragPreview.style.cssText = `
             position: fixed;
             pointer-events: none;
@@ -91,10 +97,10 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         const shape = getTransformedShape(piece);
 
         shape.forEach((row) => {
-            const rowDiv = document.createElement('div');
-            rowDiv.style.cssText = 'display: flex; gap: 0;';
+            const rowDiv = document.createElement("div");
+            rowDiv.style.cssText = "display: flex; gap: 0;";
             row.forEach((cell) => {
-                const cellDiv = document.createElement('div');
+                const cellDiv = document.createElement("div");
                 cellDiv.style.cssText = `
                     width: ${theme.game.cellSize}px;
                     height: ${theme.game.cellSize}px;
@@ -103,8 +109,9 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
 
                 if (cell) {
                     cellDiv.style.backgroundColor = getPieceColor(piece.id);
-                } else {
-                    cellDiv.style.visibility = 'hidden';
+                }
+                else {
+                    cellDiv.style.visibility = "hidden";
                 }
 
                 rowDiv.appendChild(cellDiv);

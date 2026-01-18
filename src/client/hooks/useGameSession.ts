@@ -1,6 +1,6 @@
-import { Piece, PuzzleDate } from '../../common/types';
+import type { Piece, PuzzleDate } from "../../common/types";
 
-const STORAGE_KEY = 'calendar-puzzle-session';
+const STORAGE_KEY = "calendar-puzzle-session";
 
 /**
  * Session data stored in localStorage.
@@ -19,7 +19,8 @@ export interface SessionData {
 export function saveSession(data: SessionData): void {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
+    }
+    catch {
         // Silently fail if localStorage is unavailable
     }
 }
@@ -31,9 +32,12 @@ export function saveSession(data: SessionData): void {
 export function loadSession(): SessionData | null {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        if (!stored) return null;
+        if (!stored) {
+            return null;
+        }
         return JSON.parse(stored) as SessionData;
-    } catch {
+    }
+    catch {
         return null;
     }
 }
@@ -45,7 +49,8 @@ export function loadSession(): SessionData | null {
 export function clearSession(): void {
     try {
         localStorage.removeItem(STORAGE_KEY);
-    } catch {
+    }
+    catch {
         // Silently fail
     }
 }

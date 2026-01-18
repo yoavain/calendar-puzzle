@@ -1,10 +1,10 @@
-import React from 'react';
-import Dialog from '@mui/material/Dialog';
-import DialogContent from '@mui/material/DialogContent';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Zoom from '@mui/material/Zoom';
-import CelebrationIcon from '@mui/icons-material/Celebration';
+import React from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Zoom from "@mui/material/Zoom";
+import CelebrationIcon from "@mui/icons-material/Celebration";
 
 interface SuccessMessageProps {
     isVisible: boolean;
@@ -21,8 +21,8 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible }) => 
                     borderRadius: 3,
                     px: 4,
                     py: 3,
-                    textAlign: 'center',
-                    minWidth: 300,
+                    textAlign: "center",
+                    minWidth: 300
                 }
             }}
         >
@@ -31,11 +31,11 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible }) => 
                     <CelebrationIcon 
                         sx={{ 
                             fontSize: 64, 
-                            color: 'success.main',
-                            animation: 'bounce 0.6s ease-in-out infinite alternate',
-                            '@keyframes bounce': {
-                                '0%': { transform: 'translateY(0)' },
-                                '100%': { transform: 'translateY(-8px)' },
+                            color: "success.main",
+                            animation: "bounce 0.6s ease-in-out infinite alternate",
+                            "@keyframes bounce": {
+                                "0%": { transform: "translateY(0)" },
+                                "100%": { transform: "translateY(-8px)" }
                             }
                         }} 
                     />
@@ -44,8 +44,8 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible }) => 
                     variant="h5" 
                     component="h2" 
                     sx={{ 
-                        fontWeight: 'bold',
-                        color: 'success.main',
+                        fontWeight: "bold",
+                        color: "success.main",
                         mb: 1
                     }}
                 >
