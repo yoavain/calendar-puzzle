@@ -9,13 +9,16 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import { useUser } from '../context/UserContext';
-import { PuzzleDate } from '../../common/types';
+import LinearProgress from '@mui/material/LinearProgress';
+import { useUser } from '../context/UserContext.js';
+import { PuzzleDate } from '../../common/types.js';
 
 interface StatsModalProps {
     open: boolean;
     onClose: () => void;
 }
+
+const TOTAL_DATES = 366;
 
 interface StatItemProps {
     value: string | number;
@@ -35,11 +38,6 @@ const StatItem: React.FC<StatItemProps> = ({ value, label }) => (
 
 export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
     const { completedDates, playedCount } = useUser();
-
-    // Helper to check if a date is present in completedDates
-    const isCompleted = (date: { month: number, day: number }, history: PuzzleDate[]) => {
-        return history.some(d => d.month === date.month && d.day === date.day);
-    };
 
     // Calculate streaks
     const calculateStreaks = (history: PuzzleDate[]) => {
@@ -127,19 +125,54 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
             </DialogTitle>
             <DialogContent>
                 <Grid container spacing={1} sx={{ mb: 2 }}>
-                    <Grid item xs={3}>
+                    <Grid size={3}>
                         <StatItem value={playedCount} label="Played" />
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid size={3}>
                         <StatItem value={winPercent} label="Win %" />
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid size={3}>
                         <StatItem value={stats.current} label="Current Streak" />
                     </Grid>
-                    <Grid item xs={3}>
+                    <Grid size={3}>
                         <StatItem value={stats.max} label="Max Streak" />
                     </Grid>
                 </Grid>
+
+                <Box sx={{ mt: 3, mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
+                        OVERALL PROGRESS
+                    </Typography>
+                    <Box sx={{ position: 'relative' }}>
+                        <LinearProgress 
+                            variant="determinate" 
+                            value={(completedDates.length / TOTAL_DATES) * 100} 
+                            sx={{ 
+                                height: 25, 
+                                borderRadius: 12,
+                                backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#333' : '#e0e0e0'),
+                                '& .MuiLinearProgress-bar': {
+                                    borderRadius: 12,
+                                }
+                            }}
+                        />
+                        <Box sx={{ 
+                            position: 'absolute', 
+                            top: 0, 
+                            left: 0, 
+                            right: 0, 
+                            bottom: 0, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            pointerEvents: 'none'
+                        }}>
+                            <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#fff', textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' }}>
+                                {completedDates.length} / {TOTAL_DATES}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Box>
             </DialogContent>
             <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
                 <Button onClick={onClose} variant="contained" fullWidth sx={{ mx: 2 }}>

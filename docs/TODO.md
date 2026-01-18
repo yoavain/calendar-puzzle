@@ -2,17 +2,6 @@
 
 This document tracks planned features and improvements for the Calendar Puzzle project. Items are organized by category and listed in priority order. See [DESIGN.md](DESIGN.md) for detailed design elaborations on each item.
 
-## Backend
-
-### Authentication
-- [ ] Implement OAuth authentication (Google, GitHub — no username/password)
-
-### Database
-- [ ] Design database schema (`users`, `users_results` tables)
-
-### API Endpoints (REST)
-- [ ] `POST /api/results` — Mark date as completed (logged-in users, server-validated)
-
 ## UX/UI Improvements
 
 ### High Priority
@@ -26,32 +15,30 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ## Features
 
-### Progress
-Display real-time progress during gameplay.
-
-- [x] Add progress bar showing board coverage
-- [x] Progress = covered cells / total available cells
-  - Total cells = 12 (months) + 31 (days) - 2 (blocked for current date) = 41
-  - Count covered cells (not pieces, since piece sizes vary: most are 5 cells, one is 6)
-
-### Statistics
-Track and display game statistics for all users (stored in session).
-
-**Data Storage:**
-- [ ] Store list of completed dates in session (optimization TBD, e.g., binary encoding)
-
-**Success Popup Display:**
-- [ ] "Played" — Unique dates started playing
-- [ ] "Win %" — Percent of games started that were completed
-- [ ] "Current Streak" — Consecutive days completed
-- [ ] "Max Streak" — Longest consecutive days completed
-
 ### Future Enhancements
-- [ ] Personal statistics dashboard (puzzles / 365 completed)
+- [x] Personal statistics dashboard (puzzles / 366 completed) — Added to Statistics modal
 
 ---
 
 ## Archived (Completed)
+
+### Authentication & Database
+- [x] Implement OAuth authentication (Google strategy)
+- [x] Design database schema (`users`, `solutions`, `user_puzzle_stats` tables)
+- [x] Implement persistent session storage with PostgreSQL
+
+### API Endpoints (REST)
+- [x] `POST /api/stats/start` — Record when a user starts a puzzle
+- [x] `POST /api/stats/complete` — Record when a user completes a puzzle (server-validated)
+- [x] `GET /api/auth/me` — Get current user and their statistics
+- [x] `GET /api/solution/:date` — Return puzzle solution (admin only)
+- [x] `GET /api/hint/:date` — Return a single valid move
+
+### Features (Progress & Statistics)
+- [x] Add progress bar showing board coverage (covered cells / total available cells)
+- [x] Statistics Modal: Display "Played", "Win %", "Current Streak", and "Max Streak"
+- [x] Streak calculation logic (consecutive days)
+- [x] Real-time progress tracking during gameplay
 
 ### Session (Local Storage)
 Persist game state locally for all users (regardless of authentication). See [SESSION.md](SESSION.md) for details.
@@ -72,8 +59,6 @@ Persist game state locally for all users (regardless of authentication). See [SE
 - [x] Keep solver on server only
 - [x] Implement hint mechanism on server (returns a random valid move)
 - [x] Database schema for solutions caching (`solutions` table with date_key and pieces)
-- [x] `GET /api/solution/:date` — Return puzzle solution (currently public, auth pending)
-- [x] `GET /api/hint/:date` — Return a single valid move (currently public, auth pending)
 - [x] Error handling and logging (Fastify logger enabled, structured error responses)
 
 ### UX/UI Improvements
