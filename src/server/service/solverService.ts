@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { FastifyBaseLogger } from 'fastify';
 import { Piece, PuzzleDate } from '../../common/types.js';
 import * as solutionRepository from '../db/solutionRepository.js';
+import { config } from '../config.js';
 
 // Worker message format matches PuzzleDate structure
 type SolverRequest = PuzzleDate;
@@ -18,8 +19,8 @@ interface SolverResponse {
  * Get the worker path - handles both development and production environments
  */
 async function getWorkerPath(): Promise<string> {
-    // Use process.cwd() as the base - this is the project root
-    const projectRoot = process.cwd();
+    // Use config.paths.root as the base - this is the project root
+    const projectRoot = config.paths.root;
     
     // Try production path first (built .js file)
     const prodPath = path.join(projectRoot, 'dist', 'server', 'workers', 'puzzleSolverWorker.js');

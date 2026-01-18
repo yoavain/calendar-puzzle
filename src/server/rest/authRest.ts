@@ -7,6 +7,7 @@ import { eq, and, isNotNull } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { config } from '../config.js';
 import { requireAuth } from '../auth/requireAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -68,7 +69,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
 
     // Get server's public key for encryption (Authenticated)
     app.get('/api/auth/public-key', { preHandler: requireAuth }, async (request, reply) => {
-        const publicKeyPath = path.resolve(process.cwd(), 'public-key.pem');
+        const publicKeyPath = config.paths.publicKey;
         try {
             try {
                 await fs.access(publicKeyPath);
