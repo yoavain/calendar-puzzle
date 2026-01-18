@@ -7,6 +7,7 @@ import { requireAuth } from '../auth/requireAuth.js';
 import { Piece, PuzzleDate } from '../../common/types.js';
 import { isPuzzleSolved, isValidPlacement, getTransformedShape } from '../../common/gameLogic.js';
 import { initializeBoard } from '../utils/gameInit.js';
+import { statsStartSchema, statsCompleteSchema } from './schemas.js';
 
 interface StatsRequest {
     month: number;
@@ -23,6 +24,9 @@ export function registerStatsRoutes(app: FastifyInstance): void {
         '/api/stats/start',
         { 
             preHandler: requireAuth,
+            schema: {
+                body: statsStartSchema
+            },
             config: {
                 rateLimit: {
                     max: 10,
@@ -58,6 +62,9 @@ export function registerStatsRoutes(app: FastifyInstance): void {
         '/api/stats/complete',
         { 
             preHandler: requireAuth,
+            schema: {
+                body: statsCompleteSchema
+            },
             config: {
                 rateLimit: {
                     max: 5,
