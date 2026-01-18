@@ -5,7 +5,7 @@ import fastifyPassport from '@fastify/passport';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyRateLimit from '@fastify/rate-limit';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
@@ -67,7 +67,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     app.addHook('preValidation', async (request, reply) => {
         if (request.headers['x-encrypted'] === 'true' && request.body) {
             try {
-                const decryptedBody = decryptPayload(request.body as EncryptedPayload);
+                const decryptedBody = await decryptPayload(request.body as EncryptedPayload);
                 request.body = decryptedBody;
             } catch (error) {
                 app.log.error(error, 'Decryption failed');
@@ -78,13 +78,15 @@ export async function buildApp(): Promise<FastifyInstance> {
 
     // Read secret key for secure session
     const secretKeyPath = path.join(__dirname, '..', '..', 'secret-key');
-    if (!fs.existsSync(secretKeyPath)) {
+    try {
+        await fs.access(secretKeyPath);
+    } catch {
         throw new Error('secret-key file not found. Generate it with: npx @fastify/secure-session > secret-key');
     }
 
     // Register secure session (must be before passport)
     await app.register(fastifySecureSession, {
-        key: fs.readFileSync(secretKeyPath),
+        key: await fs.readFile(secretKeyPath),
         cookie: {
             path: '/',
             httpOnly: true,
@@ -115,9 +117,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     
     // Serve index.html at root path only
     app.get('/', async (request, reply) => {
-        return reply.type('text/html').send(
-            fs.readFileSync(path.join(clientBuildPath, 'index.html'), 'utf-8')
-        );
+        return reply.sendFile('index.html', clientBuildPath);
     });
 
     // Serve favicon
@@ -143,7 +143,12 @@ export async function buildApp(): Promise<FastifyInstance> {
         }
         
         // Check if file exists
-        if (!fs.existsSync(validatedPath) || fs.statSync(validatedPath).isDirectory()) {
+        try {
+            const stats = await fs.stat(validatedPath);
+            if (stats.isDirectory()) {
+                return reply.code(404).send({ error: 'Not found' });
+            }
+        } catch {
             return reply.code(404).send({ error: 'Not found' });
         }
         

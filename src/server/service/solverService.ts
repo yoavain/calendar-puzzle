@@ -1,6 +1,6 @@
 import { Worker } from 'worker_threads';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { FastifyBaseLogger } from 'fastify';
 import { Piece, PuzzleDate } from '../../common/types.js';
 import * as solutionRepository from '../db/solutionRepository.js';
@@ -17,18 +17,19 @@ interface SolverResponse {
 /**
  * Get the worker path - handles both development and production environments
  */
-function getWorkerPath(): string {
+async function getWorkerPath(): Promise<string> {
     // Use process.cwd() as the base - this is the project root
     const projectRoot = process.cwd();
     
     // Try production path first (built .js file)
     const prodPath = path.join(projectRoot, 'dist', 'server', 'workers', 'puzzleSolverWorker.js');
-    if (fs.existsSync(prodPath)) {
+    try {
+        await fs.access(prodPath);
         return prodPath;
+    } catch {
+        // Fall back to development path (.ts file with tsx)
+        return path.join(projectRoot, 'src', 'server', 'workers', 'puzzleSolverWorker.ts');
     }
-    
-    // Fall back to development path (.ts file with tsx)
-    return path.join(projectRoot, 'src', 'server', 'workers', 'puzzleSolverWorker.ts');
 }
 
 /**
@@ -41,10 +42,9 @@ function toDateKey(month: number, day: number): string {
 /**
  * Solve the puzzle using a worker thread (internal implementation)
  */
-function solveWithWorker(month: number, day: number): Promise<Piece[]> {
+async function solveWithWorker(month: number, day: number): Promise<Piece[]> {
+    const workerPath = await getWorkerPath();
     return new Promise((resolve, reject) => {
-        const workerPath = getWorkerPath();
-        
         // For .ts files, we need to use tsx's ESM loader
         const workerOptions = workerPath.endsWith('.ts') 
             ? { execArgv: ['--import', 'tsx/esm'] }
