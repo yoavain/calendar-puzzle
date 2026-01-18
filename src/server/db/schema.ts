@@ -10,6 +10,7 @@ export const users = pgTable('users', {
     id: varchar('id').primaryKey(), // Google ID string
     email: varchar('email').notNull(),
     name: varchar('name').notNull(),
+    avatarUrl: varchar('avatar_url'),
     isAdmin: boolean('is_admin').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });

@@ -8,6 +8,7 @@ export interface SessionUser {
     id: string;
     email: string;
     name: string;
+    avatarUrl?: string | null;
     isAdmin: boolean;
 }
 
@@ -19,10 +20,11 @@ export function setupPassport() {
         proxy: true,  // Trust X-Forwarded-Proto header from reverse proxies
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {
-            const user: SessionUser = {
+            const user = {
                 id: profile.id,
                 email: profile.emails?.[0]?.value ?? '',
                 name: profile.displayName,
+                avatarUrl: profile.photos?.[0]?.value ?? null,
             };
 
             // Ensure user exists in DB - Upsert user information
@@ -31,12 +33,14 @@ export function setupPassport() {
                     id: user.id,
                     email: user.email,
                     name: user.name,
+                    avatarUrl: user.avatarUrl,
                 })
                 .onConflictDoUpdate({
                     target: users.id,
                     set: {
                         email: user.email,
                         name: user.name,
+                        avatarUrl: user.avatarUrl,
                     },
                 })
                 .returning();
