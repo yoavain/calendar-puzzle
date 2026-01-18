@@ -14,6 +14,8 @@ export const PiecesContainer = styled(Box)(({ theme }) => ({
     maxWidth: 1080,
     marginLeft: 'auto',
     marginRight: 'auto',
+    height: 600,
+    overflowY: 'auto',
 }));
 
 // Individual piece wrapper in the pool

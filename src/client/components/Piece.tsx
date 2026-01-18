@@ -68,10 +68,15 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     ].join(' ');
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-        // Only need pieceId - shape can be derived from PIECE_DATA
-        e.dataTransfer.setData('application/json', JSON.stringify({
+        const data = JSON.stringify({
             pieceId: piece.id
-        }));
+        });
+        
+        try {
+            e.dataTransfer.setData('text/plain', data);
+        } catch (err) {
+            console.error('Error setting drag data:', err);
+        }
 
         // Create a drag preview that represents the transformed piece
         const dragPreview = document.createElement('div');

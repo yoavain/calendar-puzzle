@@ -42,7 +42,10 @@ export const UserMenu: React.FC = () => {
                 size="small"
                 sx={{ minWidth: 'auto', padding: '4px' }}
             >
-                <Avatar sx={{ width: 32, height: 32, fontSize: '0.875rem' }}>
+                <Avatar 
+                    src={user.avatarUrl || undefined} 
+                    sx={{ width: 32, height: 32, fontSize: '0.875rem' }}
+                >
                     {initials}
                 </Avatar>
             </Button>
