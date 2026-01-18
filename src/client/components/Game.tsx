@@ -346,7 +346,6 @@ export const Game: React.FC = () => {
         // Check if the puzzle is solved BEFORE creating the state
         const solved = isPuzzleSolved(newBoard, playingDate);
         if (solved) {
-            console.log("Puzzle Solved!");
             // Automatically show stats on completion after a short delay
             if (user) {
                 setTimeout(() => setIsStatsOpen(true), 1500);
@@ -428,7 +427,7 @@ export const Game: React.FC = () => {
             const { pieceId } = JSON.parse(data) as DragItem;
             handlePieceReturnToPile(pieceId);
         } catch (err) {
-            console.error('Error in handlePileDropZoneDrop:', err);
+            // Silently handle JSON parse or data errors
         }
     };
 
@@ -533,12 +532,10 @@ export const Game: React.FC = () => {
             // Clear history to prevent undoing the solution (like hint)
             clearHistory(solvedState);
 
-            console.log("Solution revealed!");
         } catch (error) {
             // Handle any errors
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             setSolverError(errorMessage);
-            console.error('Error finding solution:', error);
         } finally {
             setIsLoading(false);
         }
@@ -608,7 +605,6 @@ export const Game: React.FC = () => {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             setSolverError(errorMessage);
-            console.error('Error getting hint:', error);
         } finally {
             setIsHintLoading(false);
         }

@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { EncryptedPayload } from '../../common/types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,19 +20,12 @@ function getPrivateKey(): string {
     return privateKey;
 }
 
-export interface EncryptedPayload {
-    encryptedKey: string; // Base64
-    iv: string;           // Base64
-    authTag: string;      // Base64
-    payload: string;      // Base64
-}
-
 /**
  * Decrypts a hybrid-encrypted payload.
  * 1. Decrypt AES key using RSA private key.
  * 2. Decrypt payload using AES-GCM.
  */
-export function decryptPayload(data: EncryptedPayload): any {
+export function decryptPayload(data: EncryptedPayload): unknown {
     const key = getPrivateKey();
 
     // 1. Decrypt the AES key using RSA

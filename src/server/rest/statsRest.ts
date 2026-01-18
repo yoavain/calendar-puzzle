@@ -7,6 +7,7 @@ import { requireAuth } from '../auth/requireAuth.js';
 import { Piece, PuzzleDate } from '../../common/types.js';
 import { isPuzzleSolved, isValidPlacement, getTransformedShape } from '../../common/gameLogic.js';
 import { initializeBoard } from '../utils/gameInit.js';
+import { statsStartSchema, statsCompleteSchema } from './schemas.js';
 
 interface StatsRequest {
     month: number;
@@ -21,7 +22,18 @@ export function registerStatsRoutes(app: FastifyInstance): void {
     // Record that a user started a puzzle
     app.post<{ Body: StatsRequest }>(
         '/api/stats/start',
-        { preHandler: requireAuth },
+        { 
+            preHandler: requireAuth,
+            schema: {
+                body: statsStartSchema
+            },
+            config: {
+                rateLimit: {
+                    max: 10,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { month, day } = request.body;
             const user = request.user as SessionUser;
@@ -48,7 +60,18 @@ export function registerStatsRoutes(app: FastifyInstance): void {
     // Record that a user completed a puzzle (with server-side validation)
     app.post<{ Body: CompleteRequest }>(
         '/api/stats/complete',
-        { preHandler: requireAuth },
+        { 
+            preHandler: requireAuth,
+            schema: {
+                body: statsCompleteSchema
+            },
+            config: {
+                rateLimit: {
+                    max: 5,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { month, day, pieces } = request.body;
             const user = request.user as SessionUser;

@@ -1,4 +1,4 @@
-import { Piece } from './types';
+import { Piece, PuzzleDate } from './types';
 
 // Common path params for date-based endpoints
 export interface DatePathParams {
@@ -19,6 +19,20 @@ export interface SolutionResponse {
 // ============================================
 export interface HintResponse {
     piece: Piece; // Single piece with position set
+}
+
+// ============================================
+// POST /api/stats/start
+// Record that a user started a puzzle
+// ============================================
+export interface StartPuzzleRequest extends PuzzleDate {}
+
+// ============================================
+// POST /api/stats/complete
+// Record that a user completed a puzzle
+// ============================================
+export interface CompletePuzzleRequest extends PuzzleDate {
+    pieces: Piece[];
 }
 
 // Error response for invalid requests

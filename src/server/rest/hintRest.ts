@@ -3,6 +3,7 @@ import { DatePathParams, HintResponse, ErrorResponse } from '../../common/restTy
 import { parseDate } from '../utils/dateUtils.js';
 import { solvePuzzle } from '../service/solverService.js';
 import { requireAuth } from '../auth/requireAuth.js';
+import { dateParamSchema } from './schemas.js';
 
 /**
  * Simple hash function to convert a string to a number
@@ -21,12 +22,24 @@ export function registerHintRoutes(app: FastifyInstance): void {
     // GET /api/hint/:date - Get a hint (single piece placement) for a date
     app.get<{ Params: DatePathParams; Reply: HintResponse | ErrorResponse }>(
         '/api/hint/:date',
-        { preHandler: requireAuth },
+        { 
+            preHandler: requireAuth,
+            schema: {
+                params: dateParamSchema
+            },
+            config: {
+                rateLimit: {
+                    max: 5,
+                    timeWindow: '1 minute'
+                }
+            }
+        },
         async (request, reply) => {
             const { date } = request.params;
             const parsed = parseDate(date);
 
             if (!parsed) {
+                // This should theoretically not be reached if schema validation works correctly
                 return reply.code(400).send({
                     error: 'Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)'
                 });
