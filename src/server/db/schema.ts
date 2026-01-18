@@ -1,4 +1,4 @@
-import { pgTable, varchar, jsonb, integer, timestamp, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, jsonb, integer, timestamp, primaryKey, boolean } from 'drizzle-orm/pg-core';
 import { Piece } from '../../common/types.js';
 
 export const solutions = pgTable('solutions', {
@@ -10,6 +10,7 @@ export const users = pgTable('users', {
     id: varchar('id').primaryKey(), // Google ID string
     email: varchar('email').notNull(),
     name: varchar('name').notNull(),
+    isAdmin: boolean('is_admin').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
