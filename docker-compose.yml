@@ -20,7 +20,7 @@ services:
     image: postgres:18.1-alpine3.23
     environment:
       - POSTGRES_USER=puzzle
-      - POSTGRES_PASSWORD=puzzle
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=puzzle
     volumes:
       - calendar_puzzle_postgres_data:/var/lib/postgresql/data

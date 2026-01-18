@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifySecureSession from '@fastify/secure-session';
 import fastifyPassport from '@fastify/passport';
+import fastifyCsrf from '@fastify/csrf-protection';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -82,8 +83,14 @@ export async function buildApp(): Promise<FastifyInstance> {
         cookie: {
             path: '/',
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production'
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
         }
+    });
+
+    // Register CSRF protection after secure session
+    await app.register(fastifyCsrf, {
+        sessionPlugin: '@fastify/secure-session'
     });
 
     // Register passport
@@ -136,6 +143,51 @@ export async function buildApp(): Promise<FastifyInstance> {
     app.register(fastifyStatic, {
         root: clientBuildPath,
         serve: false // Don't auto-serve, we handle it manually
+    });
+
+    // CSRF Protection Hook - Apply to all non-GET/HEAD/OPTIONS requests
+    app.addHook('preValidation', async (request, reply) => {
+        // Skip CSRF check for GET, HEAD, OPTIONS
+        if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+            return;
+        }
+
+        // Skip for health check
+        if (request.url === '/api/health') {
+            return;
+        }
+
+        try {
+            // Use the decorated csrfProtection method on the app instance
+            // Wrap it in a Promise because it's a callback-based function
+            await new Promise<void>((resolve, reject) => {
+                (app as any).csrfProtection(request, reply, (err: any) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        } catch (err) {
+            const hasSession = !!request.session;
+            const sessionData = hasSession ? (request.session as any).get('_csrf') : null;
+            const tokenInHeader = request.headers['x-csrf-token'];
+            app.log.warn(
+                { 
+                    url: request.url, 
+                    method: request.method, 
+                    hasSession, 
+                    hasCsrfSecret: !!sessionData,
+                    hasTokenInHeader: !!tokenInHeader,
+                    tokenLength: typeof tokenInHeader === 'string' ? tokenInHeader.length : 0,
+                    bodyKeys: request.body ? Object.keys(request.body as object) : [],
+                    err 
+                }, 
+                'CSRF validation failed'
+            );
+            return reply.code(403).send({ error: 'Invalid CSRF token' });
+        }
     });
 
     // Health check endpoint

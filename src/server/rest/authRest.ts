@@ -88,4 +88,10 @@ export function registerAuthRoutes(app: FastifyInstance): void {
         await request.logout();
         return { success: true };
     });
+
+    // Get CSRF Token
+    app.get('/api/auth/csrf-token', async (request, reply) => {
+        const token = await reply.generateCsrf();
+        return { csrfToken: token };
+    });
 }
