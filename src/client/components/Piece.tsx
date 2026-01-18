@@ -75,7 +75,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         try {
             e.dataTransfer.setData('text/plain', data);
         } catch (err) {
-            console.error('Error setting drag data:', err);
+            // Silently handle error
         }
 
         // Create a drag preview that represents the transformed piece

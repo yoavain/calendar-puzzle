@@ -24,7 +24,7 @@ if (parentPort) {
             const pieces = initializePieces();
             
             // Find the solution
-            const solution = findSolution(board, pieces, puzzleDate);
+            const solution = findSolution(board, pieces, puzzleDate, logger);
             
             if (solution) {
                 parentPort!.postMessage({
