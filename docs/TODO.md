@@ -12,6 +12,10 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### Visual Polish
 - [ ] Confetti animation on puzzle completion
+- [ ] Implement history pruning in `useGameHistory` (limit `MAX_HISTORY` steps)
+
+## Security
+- [x] Implement CSRF protection layer (e.g., `@fastify/csrf-protection`)
 
 ## Features
 
