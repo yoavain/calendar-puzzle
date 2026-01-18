@@ -1,13 +1,9 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { EncryptedPayload } from '../../common/types.js';
+import { config } from '../config.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const privateKeyPath = path.resolve(process.cwd(), 'private-key.pem');
+const privateKeyPath = config.paths.privateKey;
 
 let privateKey: string | null = null;
 
