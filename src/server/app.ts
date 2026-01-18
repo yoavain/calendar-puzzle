@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { registerSolutionRoutes } from './rest/solutionRest.js';
 import { registerHintRoutes } from './rest/hintRest.js';
 import { registerAuthRoutes } from './rest/authRest.js';
+import { registerStatsRoutes } from './rest/statsRest.js';
 import { setupPassport } from './auth/passport.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -129,6 +130,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     // Register API routes
     registerSolutionRoutes(app);
     registerHintRoutes(app);
+    registerStatsRoutes(app);
 
     // Block all other routes
     app.setNotFoundHandler(async (request, reply) => {

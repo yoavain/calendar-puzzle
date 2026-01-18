@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { PuzzleDate } from '../../common/types.js';
 
 export interface User {
     id: string;
@@ -8,27 +9,51 @@ export interface User {
 
 interface UserContextValue {
     user: User | null;
+    completedDates: PuzzleDate[];
+    playedCount: number;
     loading: boolean;
     logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
+    addCompletedDate: (date: PuzzleDate) => void;
+    incrementPlayedCount: () => void;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [completedDates, setCompletedDates] = useState<PuzzleDate[]>([]);
+    const [playedCount, setPlayedCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetch('/auth/user', {
-            credentials: 'include'
-        })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                setUser(data);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
+    const fetchUser = useCallback(async () => {
+        try {
+            const res = await fetch('/api/auth/me', {
+                credentials: 'include'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setUser(data.user);
+                setCompletedDates(data.completedDates || []);
+                setPlayedCount(data.playedCount || 0);
+            } else {
+                setUser(null);
+                setCompletedDates([]);
+                setPlayedCount(0);
+            }
+        } catch (error) {
+            console.error('Failed to fetch user:', error);
+            setUser(null);
+            setCompletedDates([]);
+            setPlayedCount(0);
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchUser();
+    }, [fetchUser]);
 
     const logout = useCallback(async () => {
         await fetch('/auth/logout', {
@@ -36,10 +61,35 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             credentials: 'include'
         });
         setUser(null);
+        setCompletedDates([]);
+        setPlayedCount(0);
+    }, []);
+
+    const addCompletedDate = useCallback((date: PuzzleDate) => {
+        setCompletedDates(prev => {
+            // Avoid duplicates
+            if (prev.some(d => d.month === date.month && d.day === date.day)) {
+                return prev;
+            }
+            return [...prev, date];
+        });
+    }, []);
+
+    const incrementPlayedCount = useCallback(() => {
+        setPlayedCount(prev => prev + 1);
     }, []);
 
     return (
-        <UserContext.Provider value={{ user, loading, logout }}>
+        <UserContext.Provider value={{ 
+            user, 
+            completedDates, 
+            playedCount,
+            loading, 
+            logout, 
+            refreshUser: fetchUser,
+            addCompletedDate,
+            incrementPlayedCount
+        }}>
             {children}
         </UserContext.Provider>
     );

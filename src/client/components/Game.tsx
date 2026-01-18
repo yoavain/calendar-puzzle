@@ -22,12 +22,14 @@ import { LoginButton } from './LoginButton';
 import { UserMenu } from './UserMenu';
 import { useUser } from '../context/UserContext';
 import { DatePicker } from './DatePicker';
+import { StatsModal } from './StatsModal';
 import { ProgressBar } from './ProgressBar';
 import { initializeGame, initializeBoard } from '../utils/initialize';
 import { useGameHistory } from '../hooks/useGameHistory';
-import { getSolution, getHint } from '../service/puzzleService';
+import { getSolution, getHint, recordStart, recordCompletion } from '../service/puzzleService';
 import { saveSession, loadSession, clearSession } from '../hooks/useGameSession';
 import { PiecesContainer, PiecePoolWrapper } from './Game.styled';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 /**
  * Rebuild game state from saved pieces.
@@ -95,7 +97,11 @@ export interface InvalidDropCell {
 
 export const Game: React.FC = () => {
     // Get user authentication state
-    const { user, loading: userLoading } = useUser();
+    const { user, loading: userLoading, addCompletedDate, playedCount, incrementPlayedCount } = useUser();
+
+    // Track which dates have been reported as started in this session
+    const startedDatesRef = useRef<Set<string>>(new Set());
+    const getDateKey = useCallback((date: PuzzleDate) => `${date.month}-${date.day}`, []);
 
     // Get initial state (from session or fresh game)
     const [initial] = useState(getInitialGameState);
@@ -121,6 +127,9 @@ export const Game: React.FC = () => {
     // State for invalid drop visual feedback
     const [invalidDropCells, setInvalidDropCells] = useState<InvalidDropCell[]>([]);
     const invalidDropTimeoutRef = useRef<number | null>(null);
+
+    // State for statistics modal
+    const [isStatsOpen, setIsStatsOpen] = useState(false);
 
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
@@ -337,6 +346,31 @@ export const Game: React.FC = () => {
         const solved = isPuzzleSolved(newBoard, playingDate);
         if (solved) {
             console.log("Puzzle Solved!");
+            // Automatically show stats on completion after a short delay
+            if (user) {
+                setTimeout(() => setIsStatsOpen(true), 1500);
+            }
+        }
+
+        // Handle analytics/progress tracking for logged-in users
+        if (user) {
+            const dateKey = getDateKey(playingDate);
+            if (!startedDatesRef.current.has(dateKey)) {
+                recordStart(playingDate).then(success => {
+                    if (success) {
+                        incrementPlayedCount();
+                    }
+                });
+                startedDatesRef.current.add(dateKey);
+            }
+
+            if (solved) {
+                recordCompletion(playingDate, newPieces).then(success => {
+                    if (success) {
+                        addCompletedDate(playingDate);
+                    }
+                });
+            }
         }
 
         // Create a completely new state object
@@ -642,6 +676,18 @@ export const Game: React.FC = () => {
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                     <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
+                    {user && (
+                        <Tooltip title="Statistics" arrow>
+                            <Button
+                                variant="contained"
+                                onClick={() => setIsStatsOpen(true)}
+                                size="small"
+                                sx={{ minWidth: 40, px: 1 }}
+                            >
+                                <BarChartIcon />
+                            </Button>
+                        </Tooltip>
+                    )}
                     <Tooltip title="Ctrl+Z" arrow>
                         <span>
                             <Button 
@@ -707,6 +753,9 @@ export const Game: React.FC = () => {
 
             {/* Success Message Dialog */}
             <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
+
+            {/* Statistics Modal */}
+            <StatsModal open={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
 
             {/* Game Area */}
             <Box component="main">
