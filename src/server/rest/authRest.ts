@@ -4,9 +4,10 @@ import { SessionUser } from '../auth/passport.js';
 import { db } from '../db/connection.js';
 import { userPuzzleStats } from '../db/schema.js';
 import { eq, and, isNotNull } from 'drizzle-orm';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { config } from '../config.js';
 import { requireAuth } from '../auth/requireAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -68,13 +69,15 @@ export function registerAuthRoutes(app: FastifyInstance): void {
 
     // Get server's public key for encryption (Authenticated)
     app.get('/api/auth/public-key', { preHandler: requireAuth }, async (request, reply) => {
-        const publicKeyPath = path.resolve(process.cwd(), 'public-key.pem');
+        const publicKeyPath = config.paths.publicKey;
         try {
-            if (!fs.existsSync(publicKeyPath)) {
+            try {
+                await fs.access(publicKeyPath);
+            } catch {
                 request.log.error(`Public key not found at: ${publicKeyPath}`);
                 return reply.code(500).send({ error: 'Server encryption not configured' });
             }
-            const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+            const publicKey = await fs.readFile(publicKeyPath, 'utf8');
             return { publicKey };
         } catch (error) {
             request.log.error(error, 'Error reading public key');

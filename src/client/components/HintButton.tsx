@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { useUser } from '../context/UserContext';
 
@@ -12,16 +13,15 @@ interface HintButtonProps {
 export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = false, disabled = false }) => {
     const { user } = useUser();
 
-    if (!user) {
-        return null;
-    }
+    const isLoginRequired = !user;
+    const isActuallyDisabled = disabled || isLoading || isLoginRequired;
 
-    return (
+    const button = (
         <Button
             variant="contained"
             color="secondary"
             onClick={onHint}
-            disabled={disabled}
+            disabled={isActuallyDisabled}
             loading={isLoading}
             loadingPosition="start"
             startIcon={<LightbulbIcon />}
@@ -30,4 +30,14 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = fals
             {isLoading ? 'Getting hint...' : 'Hint'}
         </Button>
     );
+
+    if (isLoginRequired) {
+        return (
+            <Tooltip title="Sign in to see hint" arrow>
+                <span>{button}</span>
+            </Tooltip>
+        );
+    }
+
+    return button;
 };
