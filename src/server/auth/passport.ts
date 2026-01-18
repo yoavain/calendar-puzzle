@@ -2,11 +2,13 @@ import fastifyPassport from '@fastify/passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { db } from '../db/connection.js';
 import { users } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 export interface SessionUser {
     id: string;
     email: string;
     name: string;
+    isAdmin: boolean;
 }
 
 export function setupPassport() {
@@ -24,7 +26,7 @@ export function setupPassport() {
             };
 
             // Ensure user exists in DB - Upsert user information
-            await db.insert(users)
+            const [dbUser] = await db.insert(users)
                 .values({
                     id: user.id,
                     email: user.email,
@@ -36,18 +38,25 @@ export function setupPassport() {
                         email: user.email,
                         name: user.name,
                     },
-                });
+                })
+                .returning();
 
-            return done(null, user);
+            return done(null, {
+                ...user,
+                isAdmin: dbUser.isAdmin
+            });
         } catch (error) {
             return done(error as Error);
         }
     }));
 
-    fastifyPassport.registerUserSerializer<SessionUser, SessionUser>(
-        async (user) => user
+    fastifyPassport.registerUserSerializer<SessionUser, string>(
+        async (user) => user.id
     );
-    fastifyPassport.registerUserDeserializer<SessionUser, SessionUser>(
-        async (user) => user
+    fastifyPassport.registerUserDeserializer<string, SessionUser>(
+        async (id) => {
+            const [user] = await db.select().from(users).where(eq(users.id, id));
+            return user as SessionUser;
+        }
     );
 }

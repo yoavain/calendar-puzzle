@@ -4,6 +4,13 @@ import { SessionUser } from '../auth/passport.js';
 import { db } from '../db/connection.js';
 import { userPuzzleStats } from '../db/schema.js';
 import { eq, and, isNotNull } from 'drizzle-orm';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { requireAuth } from '../auth/requireAuth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function registerAuthRoutes(app: FastifyInstance): void {
     // Initiate Google OAuth flow
@@ -50,6 +57,22 @@ export function registerAuthRoutes(app: FastifyInstance): void {
             };
         }
         return reply.code(401).send({ error: 'Not authenticated' });
+    });
+
+    // Get server's public key for encryption (Authenticated)
+    app.get('/api/auth/public-key', { preHandler: requireAuth }, async (request, reply) => {
+        const publicKeyPath = path.resolve(process.cwd(), 'public-key.pem');
+        try {
+            if (!fs.existsSync(publicKeyPath)) {
+                request.log.error(`Public key not found at: ${publicKeyPath}`);
+                return reply.code(500).send({ error: 'Server encryption not configured' });
+            }
+            const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+            return { publicKey };
+        } catch (error) {
+            request.log.error(error, 'Error reading public key');
+            return reply.code(500).send({ error: 'Failed to retrieve public key' });
+        }
     });
 
     // Legacy endpoint for backward compatibility (can be removed later)

@@ -10,6 +10,7 @@ import { registerHintRoutes } from './rest/hintRest.js';
 import { registerAuthRoutes } from './rest/authRest.js';
 import { registerStatsRoutes } from './rest/statsRest.js';
 import { setupPassport } from './auth/passport.js';
+import { decryptPayload, EncryptedPayload } from './utils/encryption.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,6 +55,19 @@ export async function buildApp(): Promise<FastifyInstance> {
         // Some strategies look at request.raw.connection, others at request.connection
         rawReq.connection = connection;
         (request as any).connection = connection;
+    });
+
+    // Global decryption hook
+    app.addHook('preValidation', async (request, reply) => {
+        if (request.headers['x-encrypted'] === 'true' && request.body) {
+            try {
+                const decryptedBody = decryptPayload(request.body as EncryptedPayload);
+                request.body = decryptedBody;
+            } catch (error) {
+                app.log.error(error, 'Decryption failed');
+                return reply.code(400).send({ error: 'Decryption failed' });
+            }
+        }
     });
 
     // Read secret key for secure session
