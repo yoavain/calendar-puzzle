@@ -27,7 +27,7 @@ import { StatsModal } from "./StatsModal";
 import { ProgressBar } from "./ProgressBar";
 import { initializeGame, initializeBoard } from "../utils/initialize";
 import { useGameHistory } from "../hooks/useGameHistory";
-import { getSolution, getHint, recordStart, recordCompletion } from "../service/puzzleService";
+import { getSolution, getHint, getHintState, recordStart, recordCompletion } from "../service/puzzleService";
 import { saveSession, loadSession, clearSession } from "../hooks/useGameSession";
 import { PiecesContainer, PiecePoolWrapper } from "./Game.styled";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -137,7 +137,7 @@ export const Game: React.FC = () => {
     const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
 
     // Handle date change from date picker
-    const handleDateChange = (newDate: PuzzleDate) => {
+    const handleDateChange = async (newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
         setPlayingDate(newDate);
         setIsSuccessMessageOpen(false);
@@ -145,21 +145,52 @@ export const Game: React.FC = () => {
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, newDate.month, newDate.day);
         const newGameState = initializeGame(jsDate);
-        clearHistory(newGameState);
+        
+        // Load persistent hint if available
+        const hintState = await loadPersistentHint(newDate, newGameState.pieces);
+        if (hintState) {
+            const stateWithHint = {
+                ...newGameState,
+                board: hintState.board,
+                pieces: hintState.pieces
+            };
+            clearHistory(stateWithHint);
+        }
+        else {
+            clearHistory(newGameState);
+        }
+        
         setSolverError(null);
     };
 
     // Handle reset button - reinitialize game for current date
-    const handleReset = () => {
+    const handleReset = async () => {
         const jsDate = new Date(2024, playingDate.month, playingDate.day);
         const newGameState = initializeGame(jsDate);
         setIsSuccessMessageOpen(false);
-        clearHistory(newGameState);
+
+        // Load persistent hint if available
+        const hintState = await loadPersistentHint(playingDate, newGameState.pieces);
+        if (hintState) {
+            const stateWithHint = {
+                ...newGameState,
+                board: hintState.board,
+                pieces: hintState.pieces
+            };
+            clearHistory(stateWithHint);
+        }
+        else {
+            clearHistory(newGameState);
+        }
+        
         setSolverError(null);
     };
 
     // Check if board is empty (no pieces placed)
     const isBoardEmpty = gameState.pieces.every(piece => piece.position === null);
+
+    // Reset is disabled if no pieces are placed OR if only locked pieces (hints) are placed
+    const isResetDisabled = gameState.pieces.every(piece => piece.position === null || piece.isLocked);
 
     const handlePieceSelect = (pieceId: number) => {
         if (gameState.isSolved) {
@@ -267,7 +298,8 @@ export const Game: React.FC = () => {
     const updateBoardAndPieces = (
         piece: PieceType,
         newPosition: Position | null,
-        currentBoard: Board
+        currentBoard: Board,
+        currentPieces: PieceType[]
     ): { board: Board, pieces: PieceType[] } => {
         // Create new board - deep clone cells to avoid mutating the original state
         let newBoard = currentBoard.map(row => row.map(cell => ({ ...cell })));
@@ -294,14 +326,56 @@ export const Game: React.FC = () => {
         }
 
         // Update pieces array
-        const newPieces = gameState.pieces.map(p => 
+        const newPieces = currentPieces.map(p => 
             p.id === piece.id 
-                ? { ...p, position: newPosition }
+                ? { ...p, position: newPosition, rotation: piece.rotation, isFlippedH: piece.isFlippedH, isFlippedV: piece.isFlippedV, isLocked: piece.isLocked }
                 : p
         );
 
         return { board: newBoard, pieces: newPieces };
     };
+
+    // Helper to load persistent hint from server
+    const loadPersistentHint = useCallback(async (date: PuzzleDate, currentPieces: PieceType[]) => {
+        if (!user) {
+            return null;
+        }
+        
+        try {
+            const hintPiece = await getHintState(date);
+            if (hintPiece) {
+                // Find the original piece to get its metadata
+                const originalPiece = currentPieces.find(p => p.id === hintPiece.id);
+                if (!originalPiece) {
+                    return null;
+                }
+
+                // Create the updated piece with hint data - mark as locked
+                const updatedPiece = {
+                    ...originalPiece,
+                    position: hintPiece.position,
+                    rotation: hintPiece.rotation,
+                    isFlippedH: hintPiece.isFlippedH,
+                    isFlippedV: hintPiece.isFlippedV,
+                    isLocked: true
+                };
+
+                // Update the board
+                const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
+                    updatedPiece,
+                    hintPiece.position,
+                    initializeBoard(date),
+                    currentPieces
+                );
+
+                return { board: newBoard, pieces: newPieces };
+            }
+        }
+        catch (error) {
+            // Error intentionally ignored
+        }
+        return null;
+    }, [user, updateBoardAndPieces]);
 
     // Helper function to trigger invalid drop feedback
     const triggerInvalidDropFeedback = (piece: PieceType, position: Position) => {
@@ -364,7 +438,8 @@ export const Game: React.FC = () => {
         const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
             piece,
             position,
-            gameState.board
+            gameState.board,
+            gameState.pieces
         );
 
         // Check if the puzzle is solved BEFORE creating the state
@@ -424,7 +499,8 @@ export const Game: React.FC = () => {
         const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
             piece,
             null, // Setting position to null returns it to the pile
-            gameState.board
+            gameState.board,
+            gameState.pieces
         );
 
         const newState = {
@@ -481,13 +557,30 @@ export const Game: React.FC = () => {
             }
         }
         // Escape to reset
-        if (e.key === "Escape" && !isBoardEmpty) {
+        if (e.key === "Escape" && !isResetDisabled) {
             e.preventDefault();
             handleReset();
         }
-    }, [canUndo, canRedo, undo, redo, isBoardEmpty, handleReset]);
+    }, [canUndo, canRedo, undo, redo, isResetDisabled, handleReset]);
 
-    React.useEffect(() => {
+    useEffect(() => {
+        const checkInitialHint = async () => {
+            if (user && isBoardEmpty) {
+                const hintState = await loadPersistentHint(playingDate, gameState.pieces);
+                if (hintState) {
+                    const stateWithHint = {
+                        ...gameState,
+                        board: hintState.board,
+                        pieces: hintState.pieces
+                    };
+                    clearHistory(stateWithHint);
+                }
+            }
+        };
+        checkInitialHint();
+    }, [user, playingDate]); // Run when user logs in or date is set
+
+    useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
@@ -608,29 +701,12 @@ export const Game: React.FC = () => {
                 isLocked: true // Mark the hint piece as locked/unmovable
             };
 
-            // Update the board with the hint piece
-            let newBoard = gameState.board.map(row => 
-                row.map(cell => ({ ...cell }))
-            );
-
-            if (updatedPiece.position) {
-                const transformedShape = getTransformedShape(updatedPiece);
-                for (let y = 0; y < transformedShape.length; y++) {
-                    for (let x = 0; x < transformedShape[y].length; x++) {
-                        if (transformedShape[y][x]) {
-                            const boardY = updatedPiece.position.y + y;
-                            const boardX = updatedPiece.position.x + x;
-                            if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
-                                newBoard[boardY][boardX].isOccupied = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Update pieces array
-            const newPieces = gameState.pieces.map(p => 
-                p.id === hintPiece.id ? updatedPiece : p
+            // Update the board and pieces
+            const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
+                updatedPiece,
+                hintPiece.position,
+                gameState.board,
+                gameState.pieces
             );
 
             const newState = {
@@ -782,7 +858,7 @@ export const Game: React.FC = () => {
                             <Button 
                                 variant="outlined"
                                 onClick={handleReset}
-                                disabled={isBoardEmpty}
+                                disabled={isResetDisabled}
                                 size="small"
                                 startIcon={<RestartAltIcon />}
                                 color="warning"

@@ -22,6 +22,20 @@ export interface HintResponse {
 }
 
 // ============================================
+// GET /api/hint/:date/state
+// Returns the hint if it was used, or null
+// ============================================
+export interface HintStateResponse {
+    piece: Piece | null;
+}
+
+// ============================================
+// PUT /api/hint
+// Record hint usage and return the hint piece
+// ============================================
+export interface HintRequest extends PuzzleDate {}
+
+// ============================================
 // POST /api/stats/start
 // Record that a user started a puzzle
 // ============================================
