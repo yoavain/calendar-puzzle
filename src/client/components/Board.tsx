@@ -26,7 +26,9 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
-        if (isSolved) return;
+        if (isSolved) {
+            return;
+        }
         e.preventDefault();
         setDragOverCell({ x, y });
     };
@@ -36,7 +38,9 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: Position) => {
-        if (isSolved) return;
+        if (isSolved) {
+            return;
+        }
         e.preventDefault();
         setDragOverCell(null);
         

@@ -76,7 +76,9 @@ export const isValidPlacement = (board: Board, piece: Piece, position: Position,
     // Helper to check if a cell is part of the piece's current placement.
     // We ignore these cells to allow checking validity while moving the piece.
     const isPartOfCurrentPiece = (bx: number, by: number): boolean => {
-        if (!piece.position) return false;
+        if (!piece.position) {
+            return false;
+        }
         const { x: currentX, y: currentY } = piece.position;
         const pieceX = bx - currentX;
         const pieceY = by - currentY;
