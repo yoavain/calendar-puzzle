@@ -98,7 +98,7 @@ export interface InvalidDropCell {
 
 export const Game: React.FC = () => {
     // Get user authentication state
-    const { user, loading: userLoading, addCompletedDate, playedCount, incrementPlayedCount } = useUser();
+    const { user, loading: userLoading, addCompletedDate, addPlayedDate } = useUser();
 
     // Track which dates have been reported as started in this session
     const startedDatesRef = useRef<Set<string>>(new Set());
@@ -383,7 +383,7 @@ export const Game: React.FC = () => {
             if (!startedDatesRef.current.has(dateKey)) {
                 recordStart(playingDate).then(success => {
                     if (success) {
-                        incrementPlayedCount();
+                        addPlayedDate(playingDate);
                     }
                 });
                 startedDatesRef.current.add(dateKey);

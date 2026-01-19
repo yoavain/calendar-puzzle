@@ -58,10 +58,12 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
                 .filter(s => s.firstCompletedAt !== null)
                 .map(s => ({ month: s.month, day: s.day }));
 
+            const playedDates = stats.map(s => ({ month: s.month, day: s.day }));
+
             return {
                 user,
                 completedDates,
-                playedCount: stats.length
+                playedDates
             };
         }
         return reply.code(401).send({ error: "Not authenticated" });

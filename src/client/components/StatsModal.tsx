@@ -37,7 +37,8 @@ const StatItem: React.FC<StatItemProps> = ({ value, label }) => (
 );
 
 export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
-    const { completedDates, playedCount } = useUser();
+    const { completedDates, playedDates } = useUser();
+    const playedCount = playedDates.length;
 
     // Calculate streaks
     const calculateStreaks = (history: PuzzleDate[]) => {
