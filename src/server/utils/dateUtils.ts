@@ -27,3 +27,16 @@ export const parseDate = (dateStr: string): PuzzleDate | null => {
     // Convert to 0-indexed month for PuzzleDate
     return { month: monthInput - 1, day };
 };
+
+/**
+ * Simple hash function to convert a string to a number
+ */
+export const hashString = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+};
