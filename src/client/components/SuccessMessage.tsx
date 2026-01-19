@@ -8,12 +8,15 @@ import CelebrationIcon from "@mui/icons-material/Celebration";
 
 interface SuccessMessageProps {
     isVisible: boolean;
+    onClose: () => void;
 }
 
-export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible }) => {
+export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible, onClose }) => {
     return (
         <Dialog
             open={isVisible}
+            onClose={onClose}
+            onClick={onClose}
             TransitionComponent={Zoom}
             transitionDuration={300}
             PaperProps={{
