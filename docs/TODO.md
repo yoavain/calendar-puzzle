@@ -14,17 +14,19 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [ ] Confetti animation on puzzle completion
 - [ ] Implement history pruning in `useGameHistory` (limit `MAX_HISTORY` steps)
 
-## Security
-- [x] Implement CSRF protection layer (e.g., `@fastify/csrf-protection`)
-
-## Features
-
-### Future Enhancements
-- [x] Personal statistics dashboard (puzzles / 366 completed) — Added to Statistics modal
-
 ---
 
 ## Archived (Completed)
+
+### Security
+- [x] Implement CSRF protection layer (e.g., `@fastify/csrf-protection`)
+
+### Features (Progress & Statistics)
+- [x] Personal statistics dashboard (puzzles / 366 completed) — Added to Statistics modal
+- [x] Add progress bar showing board coverage (covered cells / total available cells)
+- [x] Statistics Modal: Display "Played", "Win %", "Current Streak", and "Max Streak"
+- [x] Streak calculation logic (consecutive days)
+- [x] Real-time progress tracking during gameplay
 
 ### Authentication & Database
 - [x] Implement OAuth authentication (Google strategy)
@@ -37,12 +39,6 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] `GET /api/auth/me` — Get current user and their statistics
 - [x] `GET /api/solution/:date` — Return puzzle solution (admin only)
 - [x] `GET /api/hint/:date` — Return a single valid move
-
-### Features (Progress & Statistics)
-- [x] Add progress bar showing board coverage (covered cells / total available cells)
-- [x] Statistics Modal: Display "Played", "Win %", "Current Streak", and "Max Streak"
-- [x] Streak calculation logic (consecutive days)
-- [x] Real-time progress tracking during gameplay
 
 ### Session (Local Storage)
 Persist game state locally for all users (regardless of authentication). See [SESSION.md](SESSION.md) for details.
