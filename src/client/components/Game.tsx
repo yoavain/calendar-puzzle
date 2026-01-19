@@ -728,19 +728,27 @@ export const Game: React.FC = () => {
                     {!userLoading && (user ? <UserMenu /> : <LoginButton />)}
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
-                    {user && (
-                        <Tooltip title="Statistics" arrow>
+                    {solverError && (
+                        <Alert severity="error" sx={{ py: 0 }}>
+                            {solverError}
+                        </Alert>
+                    )}
+                    <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
+                    <Tooltip title={!user ? "Sign-in to see statistics" : "Statistics"} arrow>
+                        <span>
                             <Button
                                 variant="contained"
                                 onClick={() => setIsStatsOpen(true)}
                                 size="small"
                                 sx={{ minWidth: 40, px: 1 }}
+                                disabled={!user}
                             >
                                 <BarChartIcon />
                             </Button>
-                        </Tooltip>
-                    )}
+                        </span>
+                    </Tooltip>
+                    <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
+                    <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty || gameState.isSolved} />
                     <Tooltip title="Ctrl+Z" arrow>
                         <span>
                             <Button 
@@ -781,13 +789,6 @@ export const Game: React.FC = () => {
                             </Button>
                         </span>
                     </Tooltip>
-                    {solverError && (
-                        <Alert severity="error" sx={{ py: 0 }}>
-                            {solverError}
-                        </Alert>
-                    )}
-                    <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty || gameState.isSolved} />
-                    <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
                 </Stack>
             </Stack>
 
