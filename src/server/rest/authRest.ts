@@ -113,4 +113,4 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
         const token = await reply.generateCsrf();
         return { csrfToken: token };
     });
-}
+};

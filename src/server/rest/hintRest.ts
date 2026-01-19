@@ -77,4 +77,4 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
             }
         }
     );
-}
+};

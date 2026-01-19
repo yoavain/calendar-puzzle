@@ -65,4 +65,4 @@ export const setupPassport = () => {
             return user as SessionUser;
         }
     );
-}
+};

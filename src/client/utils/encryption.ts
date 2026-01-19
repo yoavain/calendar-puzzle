@@ -101,4 +101,4 @@ export const encryptPayload = async (payload: unknown, publicKeyPem: string): Pr
         authTag: toBase64(tag),
         payload: toBase64(ciphertext)
     };
-}
+};
