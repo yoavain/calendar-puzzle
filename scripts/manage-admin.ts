@@ -1,23 +1,24 @@
-import { db } from '../src/server/db/connection.js';
-import { users } from '../src/server/db/schema.js';
-import { eq } from 'drizzle-orm';
+/* eslint-disable no-console */
+import { db } from "../src/server/db/connection.js";
+import { users } from "../src/server/db/schema.js";
+import { eq } from "drizzle-orm";
 
 const manageAdmin = async () => {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.log('Usage: node dist/scripts/manage-admin.js <add|remove> <email>');
+        console.log("Usage: node dist/scripts/manage-admin.js <add|remove> <email>");
         process.exit(1);
     }
 
     const [action, email] = args;
-    const isAdmin = action === 'add';
+    const isAdmin = action === "add";
 
-    if (action !== 'add' && action !== 'remove') {
-        console.error('Invalid action. Use "add" or "remove".');
+    if (action !== "add" && action !== "remove") {
+        console.error("Invalid action. Use \"add\" or \"remove\".");
         process.exit(1);
     }
 
-    console.log(`${isAdmin ? 'Adding' : 'Removing'} admin status for ${email}...`);
+    console.log(`${isAdmin ? "Adding" : "Removing"} admin status for ${email}...`);
 
     try {
         const result = await db.update(users)
@@ -31,10 +32,12 @@ const manageAdmin = async () => {
         }
 
         console.log(`Successfully updated ${email}. isAdmin: ${result[0].isAdmin}`);
-    } catch (error) {
-        console.error('Error updating admin status:', error);
+    }
+    catch (error) {
+        console.error("Error updating admin status:", error);
         process.exit(1);
-    } finally {
+    }
+    finally {
         process.exit(0);
     }
 };
