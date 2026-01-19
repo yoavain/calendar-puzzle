@@ -1,5 +1,5 @@
 import type { Piece, PuzzleDate, EncryptedPayload } from "../../common/types";
-import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest } from "../../common/restTypes";
+import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest, HintRequest, HintStateResponse } from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
 
 let cachedPublicKey: string | null = null;
@@ -99,10 +99,27 @@ export const getSolution = async (date: PuzzleDate): Promise<Piece[]> => {
 
 /**
  * Get a hint (single piece placement) for a specific date
+ * This records hint usage in the database.
  */
 export const getHint = async (date: PuzzleDate): Promise<Piece> => {
-    const dateStr = formatDateForApi(date);
-    const response = await fetch(`/api/hint/${dateStr}`, {
+    let body: HintRequest | EncryptedPayload = { month: date.month, day: date.day };
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+    const publicKey = await getPublicKey();
+    if (publicKey) {
+        body = await encryptPayload(body, publicKey);
+        headers["X-Encrypted"] = "true";
+    }
+
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+        headers["X-CSRF-Token"] = csrfToken;
+    }
+
+    const response = await fetch("/api/hint", {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(body),
         credentials: "include"
     });
     
@@ -112,6 +129,23 @@ export const getHint = async (date: PuzzleDate): Promise<Piece> => {
     }
     
     const data = await response.json() as HintResponse;
+    return data.piece;
+};
+
+/**
+ * Check if a hint was already used for a specific date
+ */
+export const getHintState = async (date: PuzzleDate): Promise<Piece | null> => {
+    const dateStr = formatDateForApi(date);
+    const response = await fetch(`/api/hint/${dateStr}/state`, {
+        credentials: "include"
+    });
+    
+    if (!response.ok) {
+        return null;
+    }
+    
+    const data = await response.json() as HintStateResponse;
     return data.piece;
 };
 

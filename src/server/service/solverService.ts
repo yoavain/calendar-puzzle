@@ -5,6 +5,7 @@ import type { FastifyBaseLogger } from "fastify";
 import type { Piece, PuzzleDate } from "../../common/types.js";
 import * as solutionRepository from "../db/solutionRepository.js";
 import { config } from "../config.js";
+import { hashString } from "../utils/dateUtils.js";
 
 // Worker message format matches PuzzleDate structure
 type SolverRequest = PuzzleDate;
@@ -104,4 +105,20 @@ export const solvePuzzle = async (month: number, day: number, log: FastifyBaseLo
     await solutionRepository.saveSolution(dateKey, pieces, log);
     log.info({ dateKey }, "[SolverService] Solution computed and cached");
     return pieces;
+};
+
+/**
+ * Get a deterministic hint piece for a given date
+ */
+export const getHintPiece = async (month: number, day: number, log: FastifyBaseLogger): Promise<Piece> => {
+    const pieces = await solvePuzzle(month, day, log);
+    const placedPieces = pieces.filter(p => p.position !== null);
+
+    if (placedPieces.length === 0) {
+        throw new Error("No placed pieces found in solution");
+    }
+
+    const dateKey = toDateKey(month, day);
+    const pieceIndex = hashString(dateKey) % 8;
+    return placedPieces[pieceIndex % placedPieces.length];
 };

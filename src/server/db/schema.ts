@@ -20,7 +20,8 @@ export const userPuzzleStats = pgTable("user_puzzle_stats", {
     month: integer("month").notNull(), // 0-11
     day: integer("day").notNull(), // 1-31
     firstStartedAt: timestamp("first_started_at").defaultNow().notNull(),
-    firstCompletedAt: timestamp("first_completed_at")
+    firstCompletedAt: timestamp("first_completed_at"),
+    hintUsed: boolean("hint_used").default(false).notNull()
 }, (table) => {
     return {
         pk: primaryKey({ columns: [table.userId, table.month, table.day] })
