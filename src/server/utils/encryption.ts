@@ -7,7 +7,7 @@ const privateKeyPath = config.paths.privateKey;
 
 let privateKey: string | null = null;
 
-async function getPrivateKey(): Promise<string> {
+const getPrivateKey = async (): Promise<string> => {
     if (privateKey) {
         return privateKey;
     }
@@ -19,14 +19,14 @@ async function getPrivateKey(): Promise<string> {
     }
     privateKey = await fs.readFile(privateKeyPath, "utf8");
     return privateKey;
-}
+};
 
 /**
  * Decrypts a hybrid-encrypted payload.
  * 1. Decrypt AES key using RSA private key.
  * 2. Decrypt payload using AES-GCM.
  */
-export async function decryptPayload(data: EncryptedPayload): Promise<unknown> {
+export const decryptPayload = async (data: EncryptedPayload): Promise<unknown> => {
     const key = await getPrivateKey();
 
     // 1. Decrypt the AES key using RSA
@@ -52,4 +52,4 @@ export async function decryptPayload(data: EncryptedPayload): Promise<unknown> {
     decrypted += decipher.final("utf8");
 
     return JSON.parse(decrypted);
-}
+};

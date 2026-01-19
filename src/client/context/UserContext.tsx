@@ -23,7 +23,7 @@ interface UserContextValue {
 
 const UserContext = createContext<UserContextValue | null>(null);
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
+export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [completedDates, setCompletedDates] = useState<PuzzleDate[]>([]);
     const [playedCount, setPlayedCount] = useState(0);
@@ -111,12 +111,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             {children}
         </UserContext.Provider>
     );
-}
+};
 
-export function useUser(): UserContextValue {
+export const useUser = (): UserContextValue => {
     const context = useContext(UserContext);
     if (!context) {
         throw new Error("useUser must be used within a UserProvider");
     }
     return context;
-}
+};

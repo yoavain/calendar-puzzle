@@ -4,16 +4,16 @@ import type { GameState, GameStateAction, Board } from "../../common/types";
 const MAX_HISTORY = 50; // Maximum number of undo steps
 
 // Helper function to deep clone the game state
-function cloneGameState(state: GameState): GameState {
+const cloneGameState = (state: GameState): GameState => {
     return {
         ...state,
         board: state.board.map(row => [...row.map(cell => ({ ...cell }))]) as Board,
         pieces: state.pieces.map(piece => ({ ...piece })),
         currentDate: { ...state.currentDate }
     };
-}
+};
 
-export function useGameHistory(initialState: GameState) {
+export const useGameHistory = (initialState: GameState) => {
     const [history, setHistory] = useState<{
         past: GameState[];
         present: GameState;
@@ -84,4 +84,4 @@ export function useGameHistory(initialState: GameState) {
         canUndo: history.past.length > 0,
         canRedo: history.future.length > 0
     };
-} 
+}; 

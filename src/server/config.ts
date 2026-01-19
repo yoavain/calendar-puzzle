@@ -25,7 +25,7 @@ export const config = {
     }
 };
 
-export function validateConfig() {
+export const validateConfig = () => {
     const required = [
         { key: "GOOGLE_CLIENT_ID", value: config.google.clientId },
         { key: "GOOGLE_CLIENT_SECRET", value: config.google.clientSecret },
@@ -38,7 +38,7 @@ export function validateConfig() {
         const missingKeys = missing.map(item => item.key).join(", ");
         throw new Error(`Missing required environment variables: ${missingKeys}`);
     }
-}
+};
 
 // Add a type for the config to use in other parts of the app
 export type Config = typeof config;

@@ -13,7 +13,7 @@ export interface SessionUser {
     isAdmin: boolean;
 }
 
-export function setupPassport() {
+export const setupPassport = () => {
     fastifyPassport.use("google", new GoogleStrategy({
         clientID: config.google.clientId as string,
         clientSecret: config.google.clientSecret as string,
@@ -65,4 +65,4 @@ export function setupPassport() {
             return user as SessionUser;
         }
     );
-}
+};
