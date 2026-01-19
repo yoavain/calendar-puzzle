@@ -52,6 +52,7 @@ export interface BoardCellProps {
     isDragOver?: boolean;
     pieceId?: number;
     solutionRevealed?: boolean;
+    isSolved?: boolean;
 }
 
 // Board cell
@@ -66,7 +67,8 @@ export const BoardCell = styled("div")<BoardCellProps>(({
     isInvalidDrop,
     isDragOver,
     pieceId,
-    solutionRevealed
+    solutionRevealed,
+    isSolved
 }) => ({
     width: theme.game.cellSize,
     height: theme.game.cellSize,
@@ -77,7 +79,7 @@ export const BoardCell = styled("div")<BoardCellProps>(({
     textAlign: isStyled ? "center" : undefined,
     backgroundColor: theme.palette.background.default,
     color: theme.palette.text.primary,
-    cursor: "pointer",
+    cursor: isSolved ? "default" : "pointer",
     margin: 0,
     padding: 0,
     boxSizing: "border-box",
@@ -92,7 +94,7 @@ export const BoardCell = styled("div")<BoardCellProps>(({
     // Non-playable cell
     ...(!isPlayable && !isPieceCell && {
         backgroundColor: theme.game.hoverColor,
-        cursor: "not-allowed",
+        cursor: isSolved ? "default" : "not-allowed",
         color: theme.game.disabledColor
     }),
 
@@ -116,7 +118,7 @@ export const BoardCell = styled("div")<BoardCellProps>(({
     }),
 
     // Playable cell hover (only when not a piece cell)
-    ...(!isPieceCell && isPlayable && {
+    ...(!isPieceCell && isPlayable && !isSolved && {
         "&:hover, &:focus": {
             backgroundColor: `${theme.palette.primary.main}1F`, // ~12% opacity
             boxShadow: `0 0 0 2px ${theme.palette.primary.main}`,
@@ -131,7 +133,7 @@ export const BoardCell = styled("div")<BoardCellProps>(({
         color: "#ffffff",
         border: 0,
         outline: "none",
-        cursor: isLocked ? "not-allowed" : "move",
+        cursor: isSolved ? "default" : (isLocked ? "not-allowed" : "move"),
         margin: 0,
         padding: 0,
         boxSizing: "border-box",
@@ -141,9 +143,11 @@ export const BoardCell = styled("div")<BoardCellProps>(({
         // Apply opacity for hinted pieces (30% faded) or solution revealed (15% faded)
         opacity: isLocked ? theme.game.hintedOpacity : (solutionRevealed ? theme.game.solutionRevealedOpacity : 1),
         
-        "&:hover": {
-            filter: isLocked ? "none" : "brightness(1.08)"
-        }
+        ...(!isSolved && {
+            "&:hover": {
+                filter: isLocked ? "none" : "brightness(1.08)"
+            }
+        })
     }),
 
     // Invalid drop feedback

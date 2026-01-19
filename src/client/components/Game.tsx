@@ -132,10 +132,14 @@ export const Game: React.FC = () => {
     // State for statistics modal
     const [isStatsOpen, setIsStatsOpen] = useState(false);
 
+    // State for success message popup
+    const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
+
     // Handle date change from date picker
     const handleDateChange = (newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
         setPlayingDate(newDate);
+        setIsSuccessMessageOpen(false);
         // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, newDate.month, newDate.day);
@@ -148,6 +152,7 @@ export const Game: React.FC = () => {
     const handleReset = () => {
         const jsDate = new Date(2024, playingDate.month, playingDate.day);
         const newGameState = initializeGame(jsDate);
+        setIsSuccessMessageOpen(false);
         clearHistory(newGameState);
         setSolverError(null);
     };
@@ -359,6 +364,7 @@ export const Game: React.FC = () => {
         // Check if the puzzle is solved BEFORE creating the state
         const solved = isPuzzleSolved(newBoard, playingDate);
         if (solved) {
+            setIsSuccessMessageOpen(true);
             // Automatically show stats on completion after a short delay
             if (user) {
                 setTimeout(() => setIsStatsOpen(true), 1500);
@@ -740,7 +746,7 @@ export const Game: React.FC = () => {
                             <Button 
                                 variant="contained"
                                 onClick={undo} 
-                                disabled={!canUndo}
+                                disabled={!canUndo || gameState.isSolved}
                                 size="small"
                                 startIcon={<UndoIcon />}
                             >
@@ -753,7 +759,7 @@ export const Game: React.FC = () => {
                             <Button 
                                 variant="contained"
                                 onClick={redo} 
-                                disabled={!canRedo}
+                                disabled={!canRedo || gameState.isSolved}
                                 size="small"
                                 startIcon={<RedoIcon />}
                             >
@@ -780,8 +786,8 @@ export const Game: React.FC = () => {
                             {solverError}
                         </Alert>
                     )}
-                    <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty} />
-                    <SolutionButton onSolve={handleSolve} isLoading={isLoading} />
+                    <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty || gameState.isSolved} />
+                    <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
                 </Stack>
             </Stack>
 
@@ -799,7 +805,10 @@ export const Game: React.FC = () => {
             <ProgressBar {...calculateProgress(gameState.pieces)} />
 
             {/* Success Message Dialog */}
-            <SuccessMessage isVisible={gameState.isSolved && !gameState.solutionRevealed} />
+            <SuccessMessage 
+                isVisible={isSuccessMessageOpen} 
+                onClose={() => setIsSuccessMessageOpen(false)} 
+            />
 
             {/* Statistics Modal */}
             <StatsModal open={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
@@ -813,6 +822,7 @@ export const Game: React.FC = () => {
                     onPieceDrop={handlePieceDrop}
                     invalidDropCells={invalidDropCells}
                     solutionRevealed={gameState.solutionRevealed}
+                    isSolved={gameState.isSolved}
                     data-testid="board"
                 />
                 <PiecesContainer
