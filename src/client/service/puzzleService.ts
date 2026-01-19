@@ -9,7 +9,7 @@ let csrfTokenPromise: Promise<string | null> | null = null;
 /**
  * Fetches the server's public key once for encryption.
  */
-async function getPublicKey(): Promise<string | null> {
+const getPublicKey = async (): Promise<string | null> => {
     if (cachedPublicKey) {
         return cachedPublicKey;
     }
@@ -27,12 +27,12 @@ async function getPublicKey(): Promise<string | null> {
         // Silently fail or handle error as needed
     }
     return null;
-}
+};
 
 /**
  * Fetches a CSRF token from the server.
  */
-export async function getCsrfToken(): Promise<string | null> {
+export const getCsrfToken = async (): Promise<string | null> => {
     if (cachedCsrfToken) {
         return cachedCsrfToken;
     }
@@ -61,28 +61,28 @@ export async function getCsrfToken(): Promise<string | null> {
     })();
 
     return csrfTokenPromise;
-}
+};
 
 /**
  * Clears the cached CSRF token (useful after logout)
  */
-export function clearCsrfToken(): void {
+export const clearCsrfToken = (): void => {
     cachedCsrfToken = null;
-}
+};
 
 /**
  * Format a PuzzleDate to the API date format (MM-DD)
  */
-function formatDateForApi(date: PuzzleDate): string {
+const formatDateForApi = (date: PuzzleDate): string => {
     const month = String(date.month + 1).padStart(2, "0"); // month is 0-indexed
     const day = String(date.day).padStart(2, "0");
     return `${month}-${day}`;
-}
+};
 
 /**
  * Get the full puzzle solution for a specific date
  */
-export async function getSolution(date: PuzzleDate): Promise<Piece[]> {
+export const getSolution = async (date: PuzzleDate): Promise<Piece[]> => {
     const dateStr = formatDateForApi(date);
     const response = await fetch(`/api/solution/${dateStr}`, {
         credentials: "include"
@@ -95,12 +95,12 @@ export async function getSolution(date: PuzzleDate): Promise<Piece[]> {
     
     const data = await response.json() as SolutionResponse;
     return data.pieces;
-}
+};
 
 /**
  * Get a hint (single piece placement) for a specific date
  */
-export async function getHint(date: PuzzleDate): Promise<Piece> {
+export const getHint = async (date: PuzzleDate): Promise<Piece> => {
     const dateStr = formatDateForApi(date);
     const response = await fetch(`/api/hint/${dateStr}`, {
         credentials: "include"
@@ -113,12 +113,12 @@ export async function getHint(date: PuzzleDate): Promise<Piece> {
     
     const data = await response.json() as HintResponse;
     return data.piece;
-}
+};
 
 /**
  * Record that a user started a puzzle
  */
-export async function recordStart(date: PuzzleDate): Promise<boolean> {
+export const recordStart = async (date: PuzzleDate): Promise<boolean> => {
     let body: StartPuzzleRequest | EncryptedPayload = { month: date.month, day: date.day };
     const headers: Record<string, string> = { "Content-Type": "application/json" };
 
@@ -144,12 +144,12 @@ export async function recordStart(date: PuzzleDate): Promise<boolean> {
         return false;
     }
     return true;
-}
+};
 
 /**
  * Record that a user completed a puzzle
  */
-export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promise<boolean> {
+export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promise<boolean> => {
     let body: CompletePuzzleRequest | EncryptedPayload = { 
         month: date.month, 
         day: date.day,
@@ -176,4 +176,4 @@ export async function recordCompletion(date: PuzzleDate, pieces: Piece[]): Promi
     });
     
     return response.ok;
-}
+};

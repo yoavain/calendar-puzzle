@@ -5,7 +5,7 @@ import { solvePuzzle } from "../service/solverService.js";
 import { requireAdmin } from "../auth/requireAuth.js";
 import { dateParamSchema } from "./schemas.js";
 
-export function registerSolutionRoutes(app: FastifyInstance): void {
+export const registerSolutionRoutes = (app: FastifyInstance): void => {
     // GET /api/solution/:date - Get full puzzle solution for a date
     app.get<{ Params: DatePathParams; Reply: SolutionResponse | ErrorResponse }>(
         "/api/solution/:date",

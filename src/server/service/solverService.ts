@@ -18,7 +18,7 @@ interface SolverResponse {
 /**
  * Get the worker path - handles both development and production environments
  */
-async function getWorkerPath(): Promise<string> {
+const getWorkerPath = async (): Promise<string> => {
     // Use config.paths.root as the base - this is the project root
     const projectRoot = config.paths.root;
     
@@ -32,19 +32,19 @@ async function getWorkerPath(): Promise<string> {
         // Fall back to development path (.ts file with tsx)
         return path.join(projectRoot, "src", "server", "workers", "puzzleSolverWorker.ts");
     }
-}
+};
 
 /**
  * Format month and day into a date key for caching (MM-DD format)
  */
-function toDateKey(month: number, day: number): string {
+const toDateKey = (month: number, day: number): string => {
     return `${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
+};
 
 /**
  * Solve the puzzle using a worker thread (internal implementation)
  */
-async function solveWithWorker(month: number, day: number): Promise<Piece[]> {
+const solveWithWorker = async (month: number, day: number): Promise<Piece[]> => {
     const workerPath = await getWorkerPath();
     return new Promise((resolve, reject) => {
         // For .ts files, we need to use tsx's ESM loader
@@ -79,7 +79,7 @@ async function solveWithWorker(month: number, day: number): Promise<Piece[]> {
         const request: SolverRequest = { month, day };
         worker.postMessage(request);
     });
-}
+};
 
 /**
  * Solve the puzzle for a given date, using cache when available

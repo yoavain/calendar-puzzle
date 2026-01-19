@@ -4,7 +4,7 @@ import type { PuzzleDate } from "../../common/types.js";
  * Validate and parse MM-DD date format to PuzzleDate
  * Returns PuzzleDate with 0-indexed month (0-11) to match JavaScript Date.getMonth()
  */
-export function parseDate(dateStr: string): PuzzleDate | null {
+export const parseDate = (dateStr: string): PuzzleDate | null => {
     const match = dateStr.match(/^(\d{2})-(\d{2})$/);
     if (!match) {
         return null;

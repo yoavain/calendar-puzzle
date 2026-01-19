@@ -217,7 +217,7 @@ class DLXSolver {
 /**
  * Main solution finder using DLX
  */
-export function findSolution(initialBoard: Board, initialPieces: Piece[], date: PuzzleDate, logger?: SolverLogger): GameState | null {
+export const findSolution = (initialBoard: Board, initialPieces: Piece[], date: PuzzleDate, logger?: SolverLogger): GameState | null => {
     try {
         const solver = new DLXSolver(initialBoard, initialPieces, date, logger);
         const found = solver.search();
@@ -294,4 +294,4 @@ export function findSolution(initialBoard: Board, initialPieces: Piece[], date: 
         logger?.error?.(error, "Error during DLX solving");
         return null;
     }
-}
+};

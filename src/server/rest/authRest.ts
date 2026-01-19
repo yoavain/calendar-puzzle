@@ -13,7 +13,7 @@ import { requireAuth } from "../auth/requireAuth.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export function registerAuthRoutes(app: FastifyInstance): void {
+export const registerAuthRoutes = (app: FastifyInstance): void => {
     // Initiate Google OAuth flow
     app.get("/auth/google", {
         preValidation: fastifyPassport.authenticate("google", {

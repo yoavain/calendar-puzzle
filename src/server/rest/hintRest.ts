@@ -8,7 +8,7 @@ import { dateParamSchema } from "./schemas.js";
 /**
  * Simple hash function to convert a string to a number
  */
-function hashString(str: string): number {
+const hashString = (str: string): number => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
@@ -16,9 +16,9 @@ function hashString(str: string): number {
         hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
-}
+};
 
-export function registerHintRoutes(app: FastifyInstance): void {
+export const registerHintRoutes = (app: FastifyInstance): void => {
     // GET /api/hint/:date - Get a hint (single piece placement) for a date
     app.get<{ Params: DatePathParams; Reply: HintResponse | ErrorResponse }>(
         "/api/hint/:date",
