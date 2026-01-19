@@ -2,7 +2,7 @@ import { db } from '../src/server/db/connection.js';
 import { users } from '../src/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 
-async function manageAdmin() {
+const manageAdmin = async () => {
     const args = process.argv.slice(2);
     if (args.length < 2) {
         console.log('Usage: node dist/scripts/manage-admin.js <add|remove> <email>');
@@ -37,6 +37,6 @@ async function manageAdmin() {
     } finally {
         process.exit(0);
     }
-}
+};
 
 manageAdmin();

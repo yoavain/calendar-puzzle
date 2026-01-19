@@ -8,7 +8,7 @@ export interface CachedFile {
 
 const staticCache = new Map<string, CachedFile>();
 
-export function getMimeType(extension: string): string {
+export const getMimeType = (extension: string): string => {
     switch (extension) {
         case ".html": return "text/html";
         case ".ico": return "image/x-icon";
@@ -17,13 +17,13 @@ export function getMimeType(extension: string): string {
         default:
             throw new Error(`Unsupported file type: ${extension}`);
     }
-}
+};
 
 /**
  * Gets a file from cache or loads it from disk and caches it.
  * Returns the CachedFile or null if the file does not exist or is a directory.
  */
-export async function getCachedFile(basePath: string, relativePath: string): Promise<CachedFile | null> {
+export const getCachedFile = async (basePath: string, relativePath: string): Promise<CachedFile | null> => {
     const normalizedPath = relativePath.replace(/\\/g, "/");
     const cached = staticCache.get(normalizedPath);
     if (cached) {
@@ -53,13 +53,13 @@ export async function getCachedFile(basePath: string, relativePath: string): Pro
     catch (error) {
         return null;
     }
-}
+};
 
 /**
  * Validates a path to prevent path traversal attacks.
  * Returns the resolved path if valid, or null if the path attempts traversal.
  */
-export function validatePath(basePath: string, requestedPath: string): string | null {
+export const validatePath = (basePath: string, requestedPath: string): string | null => {
     // Normalize and resolve the full path
     const normalizedPath = path.normalize(requestedPath).replace(/^(\.\.[\/\\])+/, "");
     const fullPath = path.resolve(basePath, normalizedPath);
@@ -70,4 +70,4 @@ export function validatePath(basePath: string, requestedPath: string): string | 
     }
     
     return fullPath;
-}
+};

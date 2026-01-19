@@ -36,7 +36,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
  * Rebuild game state from saved pieces.
  * Reconstructs the board by placing each piece at its saved position.
  */
-function rebuildGameState(pieces: PieceType[], date: PuzzleDate, isSolved: boolean): GameState {
+const rebuildGameState = (pieces: PieceType[], date: PuzzleDate, isSolved: boolean): GameState => {
     const board = initializeBoard(date);
 
     // Place each piece on the board
@@ -66,12 +66,12 @@ function rebuildGameState(pieces: PieceType[], date: PuzzleDate, isSolved: boole
         isGameComplete: isSolved,
         solutionRevealed: false
     };
-}
+};
 
 /**
  * Get the initial game state, restoring from session if available and date matches today.
  */
-function getInitialGameState(): { state: GameState; date: PuzzleDate } {
+const getInitialGameState = (): { state: GameState; date: PuzzleDate } => {
     const today = toPuzzleDate(new Date());
     const session = loadSession();
 
@@ -88,7 +88,7 @@ function getInitialGameState(): { state: GameState; date: PuzzleDate } {
         state: initializeGame(new Date()),
         date: today
     };
-}
+};
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {

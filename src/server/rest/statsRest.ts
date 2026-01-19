@@ -18,7 +18,7 @@ interface CompleteRequest extends StatsRequest {
     pieces: Piece[];
 }
 
-export function registerStatsRoutes(app: FastifyInstance): void {
+export const registerStatsRoutes = (app: FastifyInstance): void => {
     // Record that a user started a puzzle
     app.post<{ Body: StatsRequest }>(
         "/api/stats/start",
@@ -142,4 +142,4 @@ export function registerStatsRoutes(app: FastifyInstance): void {
             }
         }
     );
-}
+};

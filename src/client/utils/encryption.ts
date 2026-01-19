@@ -7,7 +7,7 @@ import type { EncryptedPayload } from "../../common/types";
 /**
  * Converts a PEM-formatted public key string to an ArrayBuffer.
  */
-function pemToArrayBuffer(pem: string): ArrayBuffer {
+const pemToArrayBuffer = (pem: string): ArrayBuffer => {
     const b64 = pem
         .replace(/-----BEGIN PUBLIC KEY-----/, "")
         .replace(/-----END PUBLIC KEY-----/, "")
@@ -19,7 +19,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
         bytes[i] = binaryStr.charCodeAt(i);
     }
     return bytes.buffer;
-}
+};
 
 /**
  * Encrypts a payload using a hybrid RSA + AES-GCM scheme.
@@ -28,7 +28,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
  * 2. Encrypts the payload with AES-GCM.
  * 3. Encrypts the AES key with the server's RSA public key.
  */
-export async function encryptPayload(payload: unknown, publicKeyPem: string): Promise<EncryptedPayload> {
+export const encryptPayload = async (payload: unknown, publicKeyPem: string): Promise<EncryptedPayload> => {
     const encoder = new TextEncoder();
     const encodedPayload = encoder.encode(JSON.stringify(payload));
 
@@ -101,4 +101,4 @@ export async function encryptPayload(payload: unknown, publicKeyPem: string): Pr
         authTag: toBase64(tag),
         payload: toBase64(ciphertext)
     };
-}
+};
