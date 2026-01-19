@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -24,7 +25,7 @@ const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Using
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
     const { user, completedDates } = useUser();
     const hasValidCode = useQueryParam("code");
-    const showButton = hasValidCode || !!user;
+    const isLoginRequired = !user && !hasValidCode;
     
     const [isOpen, setIsOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
@@ -36,11 +37,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
     };
 
     const isCurrentDateCompleted = isDateCompleted(currentDate.month, currentDate.day);
-
-    // Only render if 'code' query param is present
-    if (!showButton) {
-        return null;
-    }
 
     // Format date as DD/MM
     const formatDate = (date: PuzzleDate): string => {
@@ -83,18 +79,29 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
         days.push(i);
     }
 
+    const button = (
+        <Button
+            variant="contained"
+            onClick={handleOpen}
+            startIcon={<CalendarMonthIcon />}
+            endIcon={isCurrentDateCompleted ? <StarIcon /> : null}
+            size="small"
+            color={isCurrentDateCompleted ? "success" : "primary"}
+            disabled={isLoginRequired}
+        >
+            {formatDate(currentDate)}
+        </Button>
+    );
+
     return (
         <>
-            <Button
-                variant="contained"
-                onClick={handleOpen}
-                startIcon={<CalendarMonthIcon />}
-                endIcon={isCurrentDateCompleted ? <StarIcon /> : null}
-                size="small"
-                color={isCurrentDateCompleted ? "success" : "primary"}
-            >
-                {formatDate(currentDate)}
-            </Button>
+            {isLoginRequired ? (
+                <Tooltip title="Sign-in to select a different date" arrow>
+                    <span>{button}</span>
+                </Tooltip>
+            ) : (
+                button
+            )}
 
             <Dialog 
                 open={isOpen} 
