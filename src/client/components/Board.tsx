@@ -18,13 +18,15 @@ interface BoardProps {
     onPieceDrop: (position: Position, dragItem: DragItem) => void;
     invalidDropCells?: InvalidDropCell[];
     solutionRevealed?: boolean;
+    isSolved?: boolean;
 }
 
-export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [], solutionRevealed = false }) => {
+export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [], solutionRevealed = false, isSolved = false }) => {
     const theme = useTheme();
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
+        if (isSolved) return;
         e.preventDefault();
         setDragOverCell({ x, y });
     };
@@ -34,6 +36,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: Position) => {
+        if (isSolved) return;
         e.preventDefault();
         setDragOverCell(null);
         
@@ -164,12 +167,13 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 isDragOver={isDragOver}
                                 pieceId={piece?.id}
                                 solutionRevealed={solutionRevealed}
+                                isSolved={isSolved}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={(e) => handleDragOver(e, x, y)}
                                 onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, { x, y })}
-                                draggable={!!piece && !isLocked}
-                                onDragStart={(e) => piece && !isLocked && handleDragStart(e, piece)}
+                                draggable={!!piece && !isLocked && !isSolved}
+                                onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>
