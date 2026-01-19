@@ -15,12 +15,14 @@ const themeTransitionStyles = {
 
 interface ColorModeContextType {
     mode: ThemeMode;
+    effectiveMode: "light" | "dark";
     toggleColorMode: () => void;
     setMode: (mode: ThemeMode) => void;
 }
 
 const ColorModeContext = createContext<ColorModeContextType>({
-    mode: "dark",
+    mode: "system",
+    effectiveMode: "dark",
     toggleColorMode: () => {},
     setMode: () => {}
 });
@@ -32,31 +34,67 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-    // Initialize from localStorage or default to dark
+    // Initialize from localStorage or default to system
     const [mode, setModeState] = useState<ThemeMode>(() => {
         const savedTheme = localStorage.getItem("theme");
-        return (savedTheme === "light" || savedTheme === "dark") ? savedTheme : "dark";
+        if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "system") {
+            return savedTheme as ThemeMode;
+        }
+        return "system";
     });
 
-    // Persist theme preference to localStorage
+    const [systemMode, setSystemMode] = useState<"light" | "dark">(() => 
+        window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    );
+
+    // Handle system theme changes
     useEffect(() => {
-        localStorage.setItem("theme", mode);
-    }, [mode]);
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        
+        const handleChange = (e: MediaQueryListEvent) => {
+            setSystemMode(e.matches ? "dark" : "light");
+        };
+
+        // Use addEventListener if available, fallback to addListener for older browsers
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener("change", handleChange);
+        }
+        else {
+            mediaQuery.addListener(handleChange);
+        }
+
+        return () => {
+            if (mediaQuery.removeEventListener) {
+                mediaQuery.removeEventListener("change", handleChange);
+            }
+            else {
+                mediaQuery.removeListener(handleChange);
+            }
+        };
+    }, []);
+
+    const effectiveMode = mode === "system" ? systemMode : mode;
 
     const colorMode = useMemo<ColorModeContextType>(
         () => ({
             mode,
+            effectiveMode,
             toggleColorMode: () => {
-                setModeState((prevMode) => (prevMode === "light" ? "dark" : "light"));
+                setModeState(() => {
+                    const newMode = effectiveMode === "light" ? "dark" : "light";
+                    localStorage.setItem("theme", newMode);
+                    return newMode;
+                });
             },
             setMode: (newMode: ThemeMode) => {
+                localStorage.setItem("theme", newMode);
                 setModeState(newMode);
             }
         }),
-        [mode]
+        [mode, effectiveMode, systemMode]
     );
 
-    const theme = mode === "light" ? lightTheme : darkTheme;
+    const theme = effectiveMode === "light" ? lightTheme : darkTheme;
 
     return (
         <ColorModeContext.Provider value={colorMode}>
