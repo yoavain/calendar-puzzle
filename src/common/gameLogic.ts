@@ -73,23 +73,17 @@ export const isValidPlacement = (board: Board, piece: Piece, position: Position,
     const shapeHeight = shape.length;
     const shapeWidth = shape[0].length;
 
-    // Temporarily clear the piece's current position from the board
-    const originalPositions: { x: number, y: number }[] = [];
-    if (piece.position) {
+    // Helper to check if a cell is part of the piece's current placement.
+    // We ignore these cells to allow checking validity while moving the piece.
+    const isPartOfCurrentPiece = (bx: number, by: number): boolean => {
+        if (!piece.position) return false;
         const { x: currentX, y: currentY } = piece.position;
-        for (let dy = 0; dy < shapeHeight; dy++) {
-            for (let dx = 0; dx < shapeWidth; dx++) {
-                if (shape[dy][dx]) {
-                    const boardY = currentY + dy;
-                    const boardX = currentX + dx;
-                    if (boardY < board.length && boardX < board[boardY].length && board[boardY][boardX].isOccupied) {
-                        originalPositions.push({ x: boardX, y: boardY });
-                        board[boardY][boardX].isOccupied = false;
-                    }
-                }
-            }
-        }
-    }
+        const pieceX = bx - currentX;
+        const pieceY = by - currentY;
+        return pieceY >= 0 && pieceY < shapeHeight &&
+               pieceX >= 0 && pieceX < shapeWidth &&
+               shape[pieceY][pieceX];
+    };
 
     // Check if the new position is valid
     let isValid = true;
@@ -107,8 +101,11 @@ export const isValidPlacement = (board: Board, piece: Piece, position: Position,
 
                 const cell = board[boardY][boardX];
 
-                // If the cell is not playable, occupied, or highlighted, the placement is invalid
-                if (!cell.isPlayable || cell.isOccupied || (checkHighlight && cell.isHighlighted)) {
+                // If the cell is not playable, occupied, or highlighted, the placement is invalid.
+                // We ignore occupancy if the cell is part of the piece's current position.
+                const isOccupiedByOthers = cell.isOccupied && !isPartOfCurrentPiece(boardX, boardY);
+
+                if (!cell.isPlayable || isOccupiedByOthers || (checkHighlight && cell.isHighlighted)) {
                     isValid = false;
                     break;
                 }
@@ -118,11 +115,6 @@ export const isValidPlacement = (board: Board, piece: Piece, position: Position,
             break;
         }
     }
-
-    // Restore the piece's original position on the board
-    originalPositions.forEach(pos => {
-        board[pos.y][pos.x].isOccupied = true;
-    });
 
     return isValid;
 };
