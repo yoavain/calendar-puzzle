@@ -21,6 +21,8 @@ declare module "@mui/material/styles" {
             invalidDropColor: string;
             invalidDropBorderColor: string;
             backgroundTertiary: string;
+            starColor: string;
+            extensionColor: string;
         };
     }
     interface ThemeOptions {
@@ -40,6 +42,8 @@ declare module "@mui/material/styles" {
             invalidDropColor?: string;
             invalidDropBorderColor?: string;
             backgroundTertiary?: string;
+            starColor?: string;
+            extensionColor?: string;
         };
     }
 }
@@ -60,7 +64,9 @@ const lightGameTokens = {
     highlightTextColor: "rgba(0, 0, 0, 0.87)",
     invalidDropColor: "rgba(220, 53, 69, 0.5)",
     invalidDropBorderColor: "#dc3545",
-    backgroundTertiary: "#eee"
+    backgroundTertiary: "#eee",
+    starColor: "#ffb74d",
+    extensionColor: "#8B5CF6"
 };
 
 // Dark theme game tokens
@@ -79,7 +85,9 @@ const darkGameTokens = {
     highlightTextColor: "rgba(0, 0, 0, 0.87)",
     invalidDropColor: "rgba(255, 82, 82, 0.4)",
     invalidDropBorderColor: "#ff5252",
-    backgroundTertiary: "#333333"
+    backgroundTertiary: "#333333",
+    starColor: "#ffb74d",
+    extensionColor: "#8B5CF6"
 };
 
 // Light theme palette (matching existing CSS variables)

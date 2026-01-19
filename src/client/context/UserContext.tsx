@@ -13,12 +13,12 @@ export interface User {
 interface UserContextValue {
     user: User | null;
     completedDates: PuzzleDate[];
-    playedCount: number;
+    playedDates: PuzzleDate[];
     loading: boolean;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
     addCompletedDate: (date: PuzzleDate) => void;
-    incrementPlayedCount: () => void;
+    addPlayedDate: (date: PuzzleDate) => void;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -26,7 +26,7 @@ const UserContext = createContext<UserContextValue | null>(null);
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [completedDates, setCompletedDates] = useState<PuzzleDate[]>([]);
-    const [playedCount, setPlayedCount] = useState(0);
+    const [playedDates, setPlayedDates] = useState<PuzzleDate[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchUser = useCallback(async () => {
@@ -38,7 +38,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 const data = await res.json();
                 setUser(data.user);
                 setCompletedDates(data.completedDates || []);
-                setPlayedCount(data.playedCount || 0);
+                setPlayedDates(data.playedDates || []);
                 
                 // Fetch CSRF token separately after authenticated session is established
                 await getCsrfToken();
@@ -46,14 +46,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             else {
                 setUser(null);
                 setCompletedDates([]);
-                setPlayedCount(0);
+                setPlayedDates([]);
                 clearCsrfToken();
             }
         }
         catch (error) {
             setUser(null);
             setCompletedDates([]);
-            setPlayedCount(0);
+            setPlayedDates([]);
             clearCsrfToken();
         }
         finally {
@@ -79,7 +79,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         });
         setUser(null);
         setCompletedDates([]);
-        setPlayedCount(0);
+        setPlayedDates([]);
         clearCsrfToken();
     }, []);
 
@@ -93,20 +93,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }, []);
 
-    const incrementPlayedCount = useCallback(() => {
-        setPlayedCount(prev => prev + 1);
+    const addPlayedDate = useCallback((date: PuzzleDate) => {
+        setPlayedDates(prev => {
+            // Avoid duplicates
+            if (prev.some(d => d.month === date.month && d.day === date.day)) {
+                return prev;
+            }
+            return [...prev, date];
+        });
     }, []);
 
     return (
         <UserContext.Provider value={{ 
             user, 
             completedDates, 
-            playedCount,
+            playedDates,
             loading, 
             logout, 
             refreshUser: fetchUser,
             addCompletedDate,
-            incrementPlayedCount
+            addPlayedDate
         }}>
             {children}
         </UserContext.Provider>
