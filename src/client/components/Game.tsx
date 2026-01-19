@@ -113,6 +113,7 @@ export const Game: React.FC = () => {
     const {
         gameState,
         pushState,
+        updatePresent,
         undo,
         redo,
         clearHistory,
@@ -165,13 +166,10 @@ export const Game: React.FC = () => {
             return;
         }
 
-        pushState(
-            {
-                ...gameState,
-                selectedPieceId: pieceId
-            },
-            { type: "SELECT_PIECE", pieceId }
-        );
+        updatePresent({
+            ...gameState,
+            selectedPieceId: pieceId
+        });
     };
 
     const handleRotate = () => {
@@ -337,14 +335,22 @@ export const Game: React.FC = () => {
     };
 
     const handlePieceDrop = (position: Position, dragItem: DragItem) => {
+        const { pieceId } = dragItem;
         if (gameState.isSolved) {
             return;
         }
 
-        const { pieceId } = dragItem;
-
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (!piece) {
+            return;
+        }
+
+        // If piece is dropped back to the same position, do nothing
+        if (piece.position && piece.position.x === position.x && piece.position.y === position.y) {
+            updatePresent({
+                ...gameState,
+                selectedPieceId: null
+            });
             return;
         }
         
@@ -410,12 +416,8 @@ export const Game: React.FC = () => {
     };
 
     const handlePieceReturnToPile = (pieceId: number) => {
-        if (gameState.isSolved) {
-            return;
-        }
-
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece) {
+        if (gameState.isSolved || !piece?.position) {
             return;
         }
 

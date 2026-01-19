@@ -32,6 +32,13 @@ export const useGameHistory = (initialState: GameState) => {
         }));
     }, []);
 
+    const updatePresent = useCallback((newState: GameState) => {
+        setHistory(prev => ({
+            ...prev,
+            present: cloneGameState(newState)
+        }));
+    }, []);
+
     const undo = useCallback(() => {
         setHistory(prev => {
             if (prev.past.length === 0) {
@@ -78,6 +85,7 @@ export const useGameHistory = (initialState: GameState) => {
     return {
         gameState: history.present,
         pushState,
+        updatePresent,
         undo,
         redo,
         clearHistory,
