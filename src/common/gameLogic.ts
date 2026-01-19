@@ -5,7 +5,7 @@ import { getPieceShape } from "./pieceData";
 /**
  * Get the transformed shape of a piece based on its rotation and flips
  */
-export function getTransformedShape(piece: Piece): boolean[][] {
+export const getTransformedShape = (piece: Piece): boolean[][] => {
     const shape = getPieceShape(piece.id);
     const { rotation, isFlippedH, isFlippedV } = piece;
     let transformedShape = [...shape.map(row => [...row])];
@@ -58,12 +58,12 @@ export function getTransformedShape(piece: Piece): boolean[][] {
     }
 
     return transformedShape;
-}
+};
 
 /**
  * Check if a piece placement is valid (fits on the board and doesn't overlap existing pieces)
  */
-export function isValidPlacement(board: Board, piece: Piece, position: Position, checkHighlight: boolean = false): boolean {
+export const isValidPlacement = (board: Board, piece: Piece, position: Position, checkHighlight: boolean = false): boolean => {
     if (!piece || !position) {
         return false;
     }
@@ -125,12 +125,12 @@ export function isValidPlacement(board: Board, piece: Piece, position: Position,
     });
 
     return isValid;
-}
+};
 
 /**
  * Check if the puzzle is solved for the current date
  */
-export function isPuzzleSolved(board: Board, currentDate: PuzzleDate): boolean {
+export const isPuzzleSolved = (board: Board, currentDate: PuzzleDate): boolean => {
     const { month, day } = currentDate;
     
     // Check if the month cell is visible (not covered)
@@ -189,12 +189,12 @@ export function isPuzzleSolved(board: Board, currentDate: PuzzleDate): boolean {
     }
     
     return true;
-}
+};
 
 /**
  * Remove a piece from the board
  */
-export function clearPieceFromBoard(board: Board, piece: Piece): void {
+export const clearPieceFromBoard = (board: Board, piece: Piece): void => {
     if (!piece.position) {
         return;
     }
@@ -214,12 +214,12 @@ export function clearPieceFromBoard(board: Board, piece: Piece): void {
             }
         }
     }
-}
+};
 
 /**
  * Check if a cell is on the edge of a shape
  */
-export function isEdgeCell(shape: boolean[][], x: number, y: number): boolean {
+export const isEdgeCell = (shape: boolean[][], x: number, y: number): boolean => {
     if (!shape[y][x]) {
         return false;
     }
@@ -231,12 +231,12 @@ export function isEdgeCell(shape: boolean[][], x: number, y: number): boolean {
         y === shape.length - 1 || !shape[y + 1][x] || // Bottom
         x === 0 || !shape[y][x - 1] // Left
     );
-}
+};
 
 /**
  * Get the edge directions for a cell
  */
-export function getEdgeDirections(shape: boolean[][], x: number, y: number): { top: boolean, right: boolean, bottom: boolean, left: boolean } {
+export const getEdgeDirections = (shape: boolean[][], x: number, y: number): { top: boolean, right: boolean, bottom: boolean, left: boolean } => {
     if (!shape[y][x]) {
         return { top: false, right: false, bottom: false, left: false };
     } // Empty cell has no edges
@@ -265,7 +265,7 @@ export function getEdgeDirections(shape: boolean[][], x: number, y: number): { t
     }
 
     return result;
-}
+};
 
 /** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
 const TOTAL_PLAYABLE_CELLS = 41;
@@ -274,7 +274,7 @@ const TOTAL_PLAYABLE_CELLS = 41;
  * Calculate puzzle progress based on placed pieces
  * Uses piece weights (cell count per piece) for efficient calculation
  */
-export function calculateProgress(pieces: Piece[]): { covered: number; total: number; percentage: number } {
+export const calculateProgress = (pieces: Piece[]): { covered: number; total: number; percentage: number } => {
     const covered = pieces
         .filter(p => p.position !== null)
         .reduce((sum, p) => sum + getPieceShape(p.id).flat().filter(Boolean).length, 0);
@@ -284,4 +284,4 @@ export function calculateProgress(pieces: Piece[]): { covered: number; total: nu
         total: TOTAL_PLAYABLE_CELLS,
         percentage: (covered / TOTAL_PLAYABLE_CELLS) * 100
     };
-}
+};

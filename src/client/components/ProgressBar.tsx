@@ -10,7 +10,7 @@ interface ProgressBarProps {
 /**
  * Get progress bar color based on percentage
  */
-function getProgressColor(percentage: number): string {
+const getProgressColor = (percentage: number): string => {
     if (percentage >= 100) {
         return "#22c55e";
     } // Green - Completed
@@ -21,7 +21,7 @@ function getProgressColor(percentage: number): string {
         return "#f59e0b";
     } // Orange/Amber - Medium
     return "#dc3545"; // Red - Low
-}
+};
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage }) => {
     const progressColor = getProgressColor(percentage);

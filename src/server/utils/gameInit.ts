@@ -5,7 +5,7 @@ import { PIECE_IDS } from "../../common/pieceData";
 /**
  * Initialize the game board with month and day cells for a given date
  */
-export function initializeBoard(puzzleDate: PuzzleDate): Board {
+export const initializeBoard = (puzzleDate: PuzzleDate): Board => {
     const { month, day } = puzzleDate;
     const boardWidth = 7;
     const boardHeight = 7;
@@ -68,13 +68,13 @@ export function initializeBoard(puzzleDate: PuzzleDate): Board {
     }
 
     return board;
-}
+};
 
 /**
  * Initialize the game pieces with default state.
  * Shape data is accessed via PIECE_DATA when needed.
  */
-export function initializePieces(): Piece[] {
+export const initializePieces = (): Piece[] => {
     return PIECE_IDS.map(id => ({
         id,
         position: null,
@@ -82,4 +82,4 @@ export function initializePieces(): Piece[] {
         isFlippedV: false,
         rotation: 0 as const
     }));
-}
+};

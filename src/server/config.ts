@@ -25,7 +25,7 @@ export const config = {
     }
 };
 
-export function validateConfig() {
+export const validateConfig = () => {
     const required = [
         { key: "GOOGLE_CLIENT_ID", value: config.google.clientId },
         { key: "GOOGLE_CLIENT_SECRET", value: config.google.clientSecret },

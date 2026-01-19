@@ -24,7 +24,7 @@ import { config } from "./config.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function buildApp(): Promise<FastifyInstance> {
+export const buildApp = async (): Promise<FastifyInstance> => {
     const app = Fastify({
         logger: true,
         trustProxy: true // Trust X-Forwarded-* headers from reverse proxies
