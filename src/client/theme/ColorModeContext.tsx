@@ -58,14 +58,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         // Use addEventListener if available, fallback to addListener for older browsers
         if (mediaQuery.addEventListener) {
             mediaQuery.addEventListener("change", handleChange);
-        } else {
+        }
+        else {
             mediaQuery.addListener(handleChange);
         }
 
         return () => {
             if (mediaQuery.removeEventListener) {
                 mediaQuery.removeEventListener("change", handleChange);
-            } else {
+            }
+            else {
                 mediaQuery.removeListener(handleChange);
             }
         };
