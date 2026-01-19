@@ -84,4 +84,4 @@ export const useGameHistory = (initialState: GameState) => {
         canUndo: history.past.length > 0,
         canRedo: history.future.length > 0
     };
-} 
+}; 

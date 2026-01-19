@@ -38,7 +38,7 @@ export const validateConfig = () => {
         const missingKeys = missing.map(item => item.key).join(", ");
         throw new Error(`Missing required environment variables: ${missingKeys}`);
     }
-}
+};
 
 // Add a type for the config to use in other parts of the app
 export type Config = typeof config;

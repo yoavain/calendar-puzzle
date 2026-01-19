@@ -49,4 +49,4 @@ export const registerSolutionRoutes = (app: FastifyInstance): void => {
             }
         }
     );
-}
+};

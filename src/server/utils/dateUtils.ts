@@ -26,4 +26,4 @@ export const parseDate = (dateStr: string): PuzzleDate | null => {
 
     // Convert to 0-indexed month for PuzzleDate
     return { month: monthInput - 1, day };
-}
+};
