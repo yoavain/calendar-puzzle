@@ -1,31 +1,27 @@
 import type { FastifyInstance } from "fastify";
 import type { DatePathParams, HintResponse, ErrorResponse } from "../../common/restTypes.js";
 import { parseDate } from "../utils/dateUtils.js";
-import { solvePuzzle } from "../service/solverService.js";
+import { getHintPiece } from "../service/solverService.js";
 import { requireAuth } from "../auth/requireAuth.js";
-import { dateParamSchema } from "./schemas.js";
+import { dateParamSchema, statsStartSchema } from "./schemas.js";
+import { db } from "../db/connection.js";
+import { userPuzzleStats } from "../db/schema.js";
+import { and, eq } from "drizzle-orm";
+import type { SessionUser } from "../auth/passport.js";
 
-/**
- * Simple hash function to convert a string to a number
- */
-const hashString = (str: string): number => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash);
-};
+interface HintRequestBody {
+    month: number;
+    day: number;
+}
 
 export const registerHintRoutes = (app: FastifyInstance): void => {
-    // GET /api/hint/:date - Get a hint (single piece placement) for a date
-    app.get<{ Params: DatePathParams; Reply: HintResponse | ErrorResponse }>(
-        "/api/hint/:date",
+    // PUT /api/hint - Get a hint and record usage
+    app.put<{ Body: HintRequestBody; Reply: HintResponse | ErrorResponse }>(
+        "/api/hint",
         { 
             preHandler: requireAuth,
             schema: {
-                params: dateParamSchema
+                body: statsStartSchema
             },
             config: {
                 rateLimit: {
@@ -35,45 +31,78 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
             }
         },
         async (request, reply) => {
-            const { date } = request.params;
-            const parsed = parseDate(date);
-
-            if (!parsed) {
-                // This should theoretically not be reached if schema validation works correctly
-                return reply.code(400).send({
-                    error: "Invalid date format. Expected MM-DD (e.g., 01-15 for January 15th)"
-                });
-            }
-
-            const { month, day } = parsed;
+            const { month, day } = request.body;
+            const user = request.user as SessionUser;
 
             try {
-                // Solve the puzzle to get all piece placements
-                // parseDate returns PuzzleDate with 0-indexed month
-                const pieces = await solvePuzzle(month, day, request.log);
-
-                // Filter to only pieces that have a position (are placed)
-                const placedPieces = pieces.filter(p => p.position !== null);
-
-                if (placedPieces.length === 0) {
-                    return reply.code(500).send({
-                        error: "No placed pieces found in solution"
+                // 1. Record hint usage
+                await db.insert(userPuzzleStats)
+                    .values({
+                        userId: user.id,
+                        month,
+                        day,
+                        hintUsed: true
+                    })
+                    .onConflictDoUpdate({
+                        target: [userPuzzleStats.userId, userPuzzleStats.month, userPuzzleStats.day],
+                        set: { hintUsed: true }
                     });
-                }
 
-                // Pick a deterministic piece based on the date hash
-                // Hash the date string and use modulo 8 to get piece index
-                const pieceIndex = hashString(date) % 8;
-                const hintPiece = placedPieces[pieceIndex % placedPieces.length];
-
+                // 2. Get the hint piece
+                const hintPiece = await getHintPiece(month, day, request.log);
                 return reply.send({ piece: hintPiece });
             }
             catch (error) {
-                // Log detailed error on server, but return generic message to client
                 request.log.error(error, `[HintRoute] Failed to get hint for ${month}/${day}`);
                 return reply.code(500).send({
                     error: "Unable to generate hint for this date. Please try again."
                 });
+            }
+        }
+    );
+
+    // GET /api/hint/:date/state - Check if a hint was used and return it
+    app.get<{ Params: DatePathParams; Reply: { piece: any } | ErrorResponse }>(
+        "/api/hint/:date/state",
+        {
+            preHandler: requireAuth,
+            schema: {
+                params: dateParamSchema
+            }
+        },
+        async (request, reply) => {
+            const { date } = request.params;
+            const parsed = parseDate(date);
+
+            if (!parsed) {
+                return reply.code(400).send({ error: "Invalid date format" });
+            }
+
+            const { month, day } = parsed;
+            const user = request.user as SessionUser;
+
+            try {
+                const stats = await db.select()
+                    .from(userPuzzleStats)
+                    .where(
+                        and(
+                            eq(userPuzzleStats.userId, user.id),
+                            eq(userPuzzleStats.month, month),
+                            eq(userPuzzleStats.day, day)
+                        )
+                    )
+                    .limit(1);
+
+                if (stats.length > 0 && stats[0].hintUsed) {
+                    const hintPiece = await getHintPiece(month, day, request.log);
+                    return reply.send({ piece: hintPiece });
+                }
+
+                return reply.send({ piece: null });
+            }
+            catch (error) {
+                request.log.error(error, `[HintRoute] Failed to check hint state for ${month}/${day}`);
+                return reply.code(500).send({ error: "Failed to check hint state" });
             }
         }
     );
