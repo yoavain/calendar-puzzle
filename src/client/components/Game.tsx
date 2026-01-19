@@ -266,8 +266,8 @@ export const Game: React.FC = () => {
         newPosition: Position | null,
         currentBoard: Board
     ): { board: Board, pieces: PieceType[] } => {
-        // Create new board
-        let newBoard = currentBoard.map(row => [...row]);
+        // Create new board - deep clone cells to avoid mutating the original state
+        let newBoard = currentBoard.map(row => row.map(cell => ({ ...cell })));
 
         // Clear old position if exists
         if (piece.position) {
