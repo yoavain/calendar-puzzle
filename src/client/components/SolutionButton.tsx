@@ -6,9 +6,14 @@ import { useUser } from "../context/UserContext";
 interface SolutionButtonProps {
     onSolve: () => void;
     isLoading?: boolean;
+    disabled?: boolean;
 }
 
-export const SolutionButton: React.FC<SolutionButtonProps> = ({ onSolve, isLoading = false }) => {
+export const SolutionButton: React.FC<SolutionButtonProps> = ({ 
+    onSolve, 
+    isLoading = false,
+    disabled = false
+}) => {
     const { user } = useUser();
 
     if (!user || !user.isAdmin) {
@@ -20,6 +25,7 @@ export const SolutionButton: React.FC<SolutionButtonProps> = ({ onSolve, isLoadi
             variant="contained"
             color="success"
             onClick={onSolve}
+            disabled={disabled || isLoading}
             loading={isLoading}
             loadingPosition="start"
             startIcon={<AutoFixHighIcon />}
