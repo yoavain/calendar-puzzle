@@ -77,7 +77,7 @@
         "prestart": "npm run build",
         "start": "node dist/server/index.js",
         "test": "jest",
-        "eslint": "eslint src/",
+        "eslint": "eslint src/ test/ scripts/",
         "eslint:fix": "npm run eslint -- --fix",
         "prebuild:image": "npm run build",
         "build:image": "docker build --tag calendar-puzzle --progress=plain --file Dockerfile .",
