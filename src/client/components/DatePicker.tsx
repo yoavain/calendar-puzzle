@@ -8,8 +8,10 @@ import DialogActions from "@mui/material/DialogActions";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
+import ExtensionIcon from "@mui/icons-material/Extension";
 import type { PuzzleDate } from "../../common/types";
 import { MONTHS } from "../../common/types";
 import { useQueryParam } from "../hooks/useQueryParam";
@@ -23,7 +25,8 @@ interface DatePickerProps {
 const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Using 29 for Feb (leap year max)
 
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
-    const { user, completedDates } = useUser();
+    const theme = useTheme();
+    const { user, completedDates, playedDates } = useUser();
     const hasValidCode = useQueryParam("code");
     const isLoginRequired = !user && !hasValidCode;
     
@@ -36,7 +39,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
         return completedDates.some(d => d.month === month && d.day === day);
     };
 
+    // Check if a date was played
+    const isDatePlayed = (month: number, day: number) => {
+        return playedDates.some(d => d.month === month && d.day === day);
+    };
+
     const isCurrentDateCompleted = isDateCompleted(currentDate.month, currentDate.day);
+    const isCurrentDatePlayed = isDatePlayed(currentDate.month, currentDate.day);
 
     // Format date as DD/MM
     const formatDate = (date: PuzzleDate): string => {
@@ -84,9 +93,17 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
             variant="contained"
             onClick={handleOpen}
             startIcon={<CalendarMonthIcon />}
-            endIcon={isCurrentDateCompleted ? <StarIcon /> : null}
             size="small"
             color={isCurrentDateCompleted ? "success" : "primary"}
+            sx={{
+                ...(isCurrentDatePlayed && !isCurrentDateCompleted && {
+                    bgcolor: theme.game.extensionColor,
+                    "&:hover": {
+                        bgcolor: theme.game.extensionColor,
+                        opacity: 0.9
+                    }
+                })
+            }}
             disabled={isLoginRequired}
         >
             {formatDate(currentDate)}
@@ -150,7 +167,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                                 top: 0, 
                                                 right: 0, 
                                                 fontSize: "0.8rem",
-                                                color: index === selectedMonth ? "white" : "warning.main",
+                                                color: index === selectedMonth ? "white" : theme.game.starColor,
                                                 filter: index === selectedMonth ? "none" : "drop-shadow(0px 0px 2px rgba(0,0,0,0.5))"
                                             }} />
                                         )}
@@ -173,11 +190,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                     >
                         {days.map(day => {
                             const completed = isDateCompleted(selectedMonth, day);
+                            const played = isDatePlayed(selectedMonth, day);
+                            const isSelected = day === selectedDay;
+
                             return (
                                 <Button
                                     key={day}
                                     size="small"
-                                    variant={day === selectedDay ? "contained" : "text"}
+                                    variant={isSelected ? "contained" : "text"}
                                     onClick={() => handleDayClick(day)}
                                     sx={{
                                         minWidth: 0,
@@ -185,23 +205,45 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                         p: 0,
                                         fontSize: "0.875rem",
                                         position: "relative",
-                                        bgcolor: day === selectedDay ? "primary.main" : "action.hover",
+                                        bgcolor: isSelected ? "primary.main" : "action.hover",
                                         "&:hover": {
-                                            bgcolor: day === selectedDay ? "primary.dark" : "action.selected"
-                                        }
+                                            bgcolor: isSelected ? "primary.dark" : "action.selected"
+                                        },
+                                        overflow: "hidden"
                                     }}
                                 >
-                                    {day}
-                                    {completed && (
+                                    <Box sx={{ 
+                                        zIndex: 1, 
+                                        position: "relative", 
+                                        fontWeight: "bold",
+                                        color: (completed || played) && !isSelected ? "white" : "inherit",
+                                        textShadow: (completed || played) && !isSelected ? "0px 0px 2px rgba(0,0,0,0.5)" : "none"
+                                    }}>
+                                        {day}
+                                    </Box>
+                                    {completed ? (
                                         <StarIcon sx={{ 
                                             position: "absolute", 
-                                            top: 2, 
-                                            right: 2, 
-                                            fontSize: "1.2rem",
-                                            color: day === selectedDay ? "white" : "warning.main",
-                                            filter: day === selectedDay ? "none" : "drop-shadow(0px 0px 2px rgba(0,0,0,0.3))"
+                                            fontSize: "3.5rem",
+                                            color: theme.game.starColor,
+                                            opacity: 1,
+                                            zIndex: 0,
+                                            top: "50%",
+                                            left: "50%",
+                                            transform: "translate(-50%, -50%)"
                                         }} />
-                                    )}
+                                    ) : played ? (
+                                        <ExtensionIcon sx={{ 
+                                            position: "absolute", 
+                                            fontSize: "3rem",
+                                            color: theme.game.extensionColor,
+                                            opacity: 1,
+                                            zIndex: 0,
+                                            top: "50%",
+                                            left: "50%",
+                                            transform: "translate(-50%, -50%)"
+                                        }} />
+                                    ) : null}
                                 </Button>
                             );
                         })}
