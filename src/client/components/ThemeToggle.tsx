@@ -58,8 +58,8 @@ interface ThemeToggleProps {
 }
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
-    const { mode, toggleColorMode } = useColorMode();
-    const isDark = mode === "dark";
+    const { effectiveMode, toggleColorMode } = useColorMode();
+    const isDark = effectiveMode === "dark";
 
     return (
         <Box 

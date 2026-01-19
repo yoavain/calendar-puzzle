@@ -197,4 +197,4 @@ export const darkTheme = createTheme({
     ...darkPalette
 });
 
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = "light" | "dark" | "system";
