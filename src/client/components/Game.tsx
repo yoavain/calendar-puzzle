@@ -117,9 +117,6 @@ export const Game: React.FC = () => {
     // Get initial state (from session or fresh game)
     const [initial] = useState(getInitialGameState);
     
-    // State for the playing date
-    const [playingDate, setPlayingDate] = useState<PuzzleDate>(initial.date);
-    
     const {
         gameState,
         pushState,
@@ -152,12 +149,14 @@ export const Game: React.FC = () => {
     // Handle date change from date picker
     const handleDateChange = async (newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
-        setPlayingDate(newDate);
         setIsSuccessMessageOpen(false);
         // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, newDate.month, newDate.day);
         const newGameState = initializeGame(jsDate);
+        
+        // Immediately clear history with the new game state for instant feedback
+        clearHistory(newGameState);
         
         // Load persistent hint if available
         const hintState = await loadPersistentHint(newDate, newGameState.pieces);
@@ -167,10 +166,8 @@ export const Game: React.FC = () => {
                 board: hintState.board,
                 pieces: hintState.pieces
             };
-            clearHistory(stateWithHint);
-        }
-        else {
-            clearHistory(newGameState);
+            // Use updatePresent since we already cleared history for the date change
+            updatePresent(stateWithHint);
         }
         
         setSolverError(null);
@@ -178,22 +175,23 @@ export const Game: React.FC = () => {
 
     // Handle reset button - reinitialize game for current date
     const handleReset = async () => {
-        const jsDate = new Date(2024, playingDate.month, playingDate.day);
+        const currentDate = gameState.currentDate;
+        const jsDate = new Date(2024, currentDate.month, currentDate.day);
         const newGameState = initializeGame(jsDate);
         setIsSuccessMessageOpen(false);
 
+        // Immediately clear history
+        clearHistory(newGameState);
+
         // Load persistent hint if available
-        const hintState = await loadPersistentHint(playingDate, newGameState.pieces);
+        const hintState = await loadPersistentHint(currentDate, newGameState.pieces);
         if (hintState) {
             const stateWithHint = {
                 ...newGameState,
                 board: hintState.board,
                 pieces: hintState.pieces
             };
-            clearHistory(stateWithHint);
-        }
-        else {
-            clearHistory(newGameState);
+            updatePresent(stateWithHint);
         }
         
         setSolverError(null);
@@ -456,7 +454,7 @@ export const Game: React.FC = () => {
         );
 
         // Check if the puzzle is solved BEFORE creating the state
-        const solved = isPuzzleSolved(newBoard, playingDate);
+        const solved = isPuzzleSolved(newBoard, gameState.currentDate);
         if (solved) {
             setIsSuccessMessageOpen(true);
             // Automatically show stats on completion after a short delay
@@ -533,18 +531,19 @@ export const Game: React.FC = () => {
             return;
         }
 
-        const dateKey = getDateKey(playingDate);
+        const dateKey = getDateKey(gameState.currentDate);
         const isStarted = gameState.pieces.some(p => p.position !== null);
         const isSolved = gameState.isSolved;
         const solutionRevealed = gameState.solutionRevealed;
+        const currentDate = gameState.currentDate;
 
         // Sync start progress
         if (isStarted && !startedDatesRef.current.has(dateKey)) {
-            const alreadyPlayed = playedDates.some(d => d.month === playingDate.month && d.day === playingDate.day);
+            const alreadyPlayed = playedDates.some(d => d.month === currentDate.month && d.day === currentDate.day);
             if (!alreadyPlayed) {
-                recordStart(playingDate).then(success => {
+                recordStart(currentDate).then(success => {
                     if (success) {
-                        addPlayedDate(playingDate);
+                        addPlayedDate(currentDate);
                     }
                 });
             }
@@ -554,17 +553,17 @@ export const Game: React.FC = () => {
         // Sync completion progress
         // Only sync if solved by user (not revealed)
         if (isSolved && !solutionRevealed && !completedDatesRef.current.has(dateKey)) {
-            const alreadyCompleted = completedDates.some(d => d.month === playingDate.month && d.day === playingDate.day);
+            const alreadyCompleted = completedDates.some(d => d.month === currentDate.month && d.day === currentDate.day);
             if (!alreadyCompleted) {
-                recordCompletion(playingDate, gameState.pieces).then(success => {
+                recordCompletion(currentDate, gameState.pieces).then(success => {
                     if (success) {
-                        addCompletedDate(playingDate);
+                        addCompletedDate(currentDate);
                     }
                 });
             }
             completedDatesRef.current.add(dateKey);
         }
-    }, [user, userLoading, playingDate, gameState.pieces, gameState.isSolved, gameState.solutionRevealed, playedDates, completedDates, addPlayedDate, addCompletedDate, getDateKey]);
+    }, [user, userLoading, gameState.currentDate, gameState.pieces, gameState.isSolved, gameState.solutionRevealed, playedDates, completedDates, addPlayedDate, addCompletedDate, getDateKey]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
@@ -596,8 +595,9 @@ export const Game: React.FC = () => {
 
     useEffect(() => {
         const checkInitialHint = async () => {
+            const currentDate = gameState.currentDate;
             if (user && isBoardEmpty) {
-                const hintState = await loadPersistentHint(playingDate, gameState.pieces);
+                const hintState = await loadPersistentHint(currentDate, gameState.pieces);
                 if (hintState) {
                     const stateWithHint = {
                         ...gameState,
@@ -609,15 +609,15 @@ export const Game: React.FC = () => {
             }
         };
         checkInitialHint();
-    }, [user, playingDate]); // Run when user logs in or date is set
+    }, [user, gameState.currentDate]); // Run when user logs in or date is set
 
     useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
 
-    // Format playing date as DD/MM
-    const formattedDate = `${String(playingDate.day).padStart(2, "0")}/${String(playingDate.month + 1).padStart(2, "0")}`;
+    // Format current date as DD/MM
+    const formattedDate = `${String(gameState.currentDate.day).padStart(2, "0")}/${String(gameState.currentDate.month + 1).padStart(2, "0")}`;
 
     // Update document title when date changes
     React.useEffect(() => {
@@ -633,11 +633,11 @@ export const Game: React.FC = () => {
         }
 
         saveSession({
-            date: playingDate,
+            date: gameState.currentDate,
             pieces: gameState.pieces,
             isSolved: gameState.isSolved
         });
-    }, [gameState, playingDate]);
+    }, [gameState]);
 
     const handleSolve = async () => {
         if (gameState.isSolved || isLoading) {
@@ -650,7 +650,7 @@ export const Game: React.FC = () => {
 
         try {
             // Call the server to get the solution using the playing date
-            const solutionPieces = await getSolution(playingDate);
+            const solutionPieces = await getSolution(gameState.currentDate);
 
             // Build the new board state with the solution pieces placed
             let newBoard = gameState.board.map(row => 
@@ -714,7 +714,7 @@ export const Game: React.FC = () => {
 
         try {
             // Call the server to get a hint (one random piece placement) using the playing date
-            const hintPiece = await getHint(playingDate);
+            const hintPiece = await getHint(gameState.currentDate);
 
             // Find the original piece to get its shape
             const originalPiece = gameState.pieces.find(p => p.id === hintPiece.id);
@@ -870,7 +870,7 @@ export const Game: React.FC = () => {
                             </Button>
                         </span>
                     </Tooltip>
-                    <DatePicker currentDate={playingDate} onDateChange={handleDateChange} />
+                    <DatePicker currentDate={gameState.currentDate} onDateChange={handleDateChange} />
                     <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty || gameState.isSolved} />
                     <Tooltip title="Ctrl+Z" arrow>
                         <span>
