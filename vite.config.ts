@@ -10,7 +10,16 @@ export default defineConfig({
     build: {
         outDir: "../build",
         emptyOutDir: true,
-        sourcemap: true
+        sourcemap: true,
+        chunkSizeWarningLimit: 500,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    react: ["react", "react-dom"],
+                    mui: ["@mui/material", "@mui/icons-material", "@emotion/react", "@emotion/styled"]
+                }
+            }
+        }
     },
     server: {
         port: 3000,

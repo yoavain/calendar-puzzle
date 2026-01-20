@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import type { Session } from "@fastify/secure-session";
@@ -15,6 +15,7 @@ import { registerSolutionRoutes } from "./rest/solutionRest.js";
 import { registerHintRoutes } from "./rest/hintRest.js";
 import { registerAuthRoutes } from "./rest/authRest.js";
 import { registerStatsRoutes } from "./rest/statsRest.js";
+import { registerIssueRoutes } from "./rest/issueRest.js";
 import { setupPassport } from "./auth/passport.js";
 import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
@@ -130,6 +131,15 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             return reply.code(404).send({ error: "Not found" });
         }
 
+        // Block source maps for non-local hostnames
+        if (requestedPath.endsWith(".map")) {
+            const allowedHosts = ["localhost", "127.0.0.1", "[::1]"];
+            if (!allowedHosts.includes(request.hostname)) {
+                app.log.warn(`Source map access blocked for host: ${request.hostname}`);
+                return reply.code(403).send({ error: "Forbidden: Source maps are not allowed" });
+            }
+        }
+
         // Validate path to prevent traversal attacks
         const validatedPath = validatePath(clientBuildPath, requestedPath);
         if (!validatedPath) {
@@ -213,6 +223,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     registerSolutionRoutes(app);
     registerHintRoutes(app);
     registerStatsRoutes(app);
+    registerIssueRoutes(app);
 
     // Block all other routes
     app.setNotFoundHandler(async (request, reply) => {
