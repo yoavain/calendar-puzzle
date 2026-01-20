@@ -29,8 +29,8 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
             const cwDelta = (curr - prev + 360) % 360; // Clockwise distance
             const ccwDelta = (prev - curr + 360) % 360; // Counter-clockwise distance
             
-        // Choose the shorter path
-        let delta: number;
+            // Choose the shorter path
+            let delta: number;
             if (cwDelta <= ccwDelta) {
                 // Clockwise is shorter or equal
                 delta = cwDelta;
