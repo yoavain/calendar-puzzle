@@ -98,10 +98,18 @@ export interface InvalidDropCell {
 
 export const Game: React.FC = () => {
     // Get user authentication state
-    const { user, loading: userLoading, addCompletedDate, addPlayedDate } = useUser();
+    const { 
+        user, 
+        loading: userLoading, 
+        addCompletedDate, 
+        addPlayedDate,
+        completedDates,
+        playedDates
+    } = useUser();
 
-    // Track which dates have been reported as started in this session
+    // Track which dates have been reported as started/completed in this session
     const startedDatesRef = useRef<Set<string>>(new Set());
+    const completedDatesRef = useRef<Set<string>>(new Set());
     const getDateKey = useCallback((date: PuzzleDate) => `${date.month}-${date.day}`, []);
 
     // Get initial state (from session or fresh game)
@@ -452,27 +460,6 @@ export const Game: React.FC = () => {
             }
         }
 
-        // Handle analytics/progress tracking for logged-in users
-        if (user) {
-            const dateKey = getDateKey(playingDate);
-            if (!startedDatesRef.current.has(dateKey)) {
-                recordStart(playingDate).then(success => {
-                    if (success) {
-                        addPlayedDate(playingDate);
-                    }
-                });
-                startedDatesRef.current.add(dateKey);
-            }
-
-            if (solved) {
-                recordCompletion(playingDate, newPieces).then(success => {
-                    if (success) {
-                        addCompletedDate(playingDate);
-                    }
-                });
-            }
-        }
-
         // Create a completely new state object
         const newState = {
             ...gameState,
@@ -534,6 +521,45 @@ export const Game: React.FC = () => {
             // Silently handle JSON parse or data errors
         }
     };
+
+    // Sync progress with server when user logs in or state changes
+    useEffect(() => {
+        if (!user || userLoading) {
+            return;
+        }
+
+        const dateKey = getDateKey(playingDate);
+        const isStarted = gameState.pieces.some(p => p.position !== null);
+        const isSolved = gameState.isSolved;
+        const solutionRevealed = gameState.solutionRevealed;
+
+        // Sync start progress
+        if (isStarted && !startedDatesRef.current.has(dateKey)) {
+            const alreadyPlayed = playedDates.some(d => d.month === playingDate.month && d.day === playingDate.day);
+            if (!alreadyPlayed) {
+                recordStart(playingDate).then(success => {
+                    if (success) {
+                        addPlayedDate(playingDate);
+                    }
+                });
+            }
+            startedDatesRef.current.add(dateKey);
+        }
+
+        // Sync completion progress
+        // Only sync if solved by user (not revealed)
+        if (isSolved && !solutionRevealed && !completedDatesRef.current.has(dateKey)) {
+            const alreadyCompleted = completedDates.some(d => d.month === playingDate.month && d.day === playingDate.day);
+            if (!alreadyCompleted) {
+                recordCompletion(playingDate, gameState.pieces).then(success => {
+                    if (success) {
+                        addCompletedDate(playingDate);
+                    }
+                });
+            }
+            completedDatesRef.current.add(dateKey);
+        }
+    }, [user, userLoading, playingDate, gameState.pieces, gameState.isSolved, gameState.solutionRevealed, playedDates, completedDates, addPlayedDate, addCompletedDate, getDateKey]);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
