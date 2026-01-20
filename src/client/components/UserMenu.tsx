@@ -3,11 +3,16 @@ import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Avatar from "@mui/material/Avatar";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
+import SsidChartIcon from "@mui/icons-material/SsidChart";
 import { useUser } from "../context/UserContext";
+import { AdminDashboardModal } from "./AdminDashboardModal";
 
 export const UserMenu: React.FC = () => {
     const { user, logout } = useUser();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [dashboardOpen, setDashboardOpen] = useState(false);
     const open = Boolean(anchorEl);
 
     if (!user) {
@@ -49,6 +54,24 @@ export const UserMenu: React.FC = () => {
                     {initials}
                 </Avatar>
             </Button>
+            {user.isAdmin && (
+                <Tooltip title="Users statistics">
+                    <IconButton 
+                        onClick={() => setDashboardOpen(true)}
+                        size="small"
+                        sx={{ 
+                            ml: 1,
+                            backgroundColor: "primary.main",
+                            color: "primary.contrastText",
+                            "&:hover": {
+                                backgroundColor: "primary.dark"
+                            }
+                        }}
+                    >
+                        <SsidChartIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            )}
             <Menu
                 anchorEl={anchorEl}
                 open={open}
@@ -61,6 +84,10 @@ export const UserMenu: React.FC = () => {
                     Logout
                 </MenuItem>
             </Menu>
+            <AdminDashboardModal 
+                open={dashboardOpen} 
+                onClose={() => setDashboardOpen(false)} 
+            />
         </>
     );
 };

@@ -11,7 +11,7 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
-import { registerSolutionRoutes } from "./rest/solutionRest.js";
+import { registerAdminRoutes } from "./rest/adminRest.js";
 import { registerHintRoutes } from "./rest/hintRest.js";
 import { registerAuthRoutes } from "./rest/authRest.js";
 import { registerStatsRoutes } from "./rest/statsRest.js";
@@ -220,7 +220,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     registerAuthRoutes(app);
 
     // Register API routes
-    registerSolutionRoutes(app);
+    registerAdminRoutes(app);
     registerHintRoutes(app);
     registerStatsRoutes(app);
     registerIssueRoutes(app);

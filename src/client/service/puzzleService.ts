@@ -1,5 +1,16 @@
-import type { Piece, PuzzleDate, EncryptedPayload } from "../../common/types";
-import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest, HintRequest, HintStateResponse, IssueRequest, IssueResponse } from "../../common/restTypes";
+import type { EncryptedPayload, Piece, PuzzleDate } from "../../common/types";
+import type {
+    CompletePuzzleRequest,
+    ErrorResponse,
+    HintRequest,
+    HintResponse,
+    HintStateResponse,
+    IssueRequest,
+    SolutionResponse,
+    StartPuzzleRequest,
+    UserActivity,
+    UserDataResponse
+} from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
 
 let cachedPublicKey: string | null = null;
@@ -80,11 +91,11 @@ const formatDateForApi = (date: PuzzleDate): string => {
 };
 
 /**
- * Get the full puzzle solution for a specific date
+ * Get the full puzzle solution for a specific date (Admin only)
  */
 export const getSolution = async (date: PuzzleDate): Promise<Piece[]> => {
     const dateStr = formatDateForApi(date);
-    const response = await fetch(`/api/solution/${dateStr}`, {
+    const response = await fetch(`/api/admin/solution/${dateStr}`, {
         credentials: "include"
     });
     
@@ -238,4 +249,21 @@ export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
     });
     
     return response.ok;
+};
+
+/**
+ * Fetch all user activity statistics (Admin only)
+ */
+export const getUserActivity = async (): Promise<UserActivity[]> => {
+    const response = await fetch("/api/admin/userdata", {
+        credentials: "include"
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json() as ErrorResponse;
+        throw new Error(errorData.error || `Failed to fetch user activity: ${response.statusText}`);
+    }
+
+    const data = await response.json() as UserDataResponse;
+    return data.users;
 };
