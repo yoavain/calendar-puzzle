@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -37,7 +37,7 @@ const headCells: HeadCell[] = [
     { id: "daysPlayed", label: "Days Played" },
     { id: "daysSolved", label: "Days Solved" },
     { id: "daysPlayedWithHint", label: "Played w/ Hint" },
-    { id: "daysSolvedWithHint", label: "Solved w/ Hint" },
+    { id: "daysSolvedWithHint", label: "Solved w/ Hint" }
 ];
 
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, onClose }) => {
@@ -46,23 +46,25 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
     const [orderBy, setOrderBy] = useState<keyof UserActivity>("daysPlayed");
     const [order, setOrder] = useState<Order>("desc");
 
-    useEffect(() => {
-        if (open) {
-            fetchData();
-        }
-    }, [open]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const users = await getUserActivity();
             setData(users);
-        } catch (error) {
-            console.error("Failed to fetch user activity:", error);
-        } finally {
+        }
+        catch (error) {
+            // Silently fail or you could add a state for error message
+        }
+        finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (open) {
+            fetchData();
+        }
+    }, [open, fetchData]);
 
     const handleRequestSort = (property: keyof UserActivity) => {
         const isAsc = orderBy === property && order === "asc";
@@ -74,6 +76,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
         return [...data].sort((a, b) => {
             const valA = a[orderBy];
             const valB = b[orderBy];
+
+            if (valA === undefined || valB === undefined || valA === null || valB === null) {
+                return 0;
+            }
 
             if (valA < valB) {
                 return order === "asc" ? -1 : 1;
