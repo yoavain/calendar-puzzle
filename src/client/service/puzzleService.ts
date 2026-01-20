@@ -1,5 +1,16 @@
-import type { Piece, PuzzleDate, EncryptedPayload } from "../../common/types";
-import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest, HintRequest, HintStateResponse, IssueRequest, IssueResponse, UserDataResponse, UserActivity } from "../../common/restTypes";
+import type { EncryptedPayload, Piece, PuzzleDate } from "../../common/types";
+import type {
+    CompletePuzzleRequest,
+    ErrorResponse,
+    HintRequest,
+    HintResponse,
+    HintStateResponse,
+    IssueRequest,
+    SolutionResponse,
+    StartPuzzleRequest,
+    UserActivity,
+    UserDataResponse
+} from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
 
 let cachedPublicKey: string | null = null;

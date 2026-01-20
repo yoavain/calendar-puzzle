@@ -64,7 +64,7 @@ export const UserMenu: React.FC = () => {
                             backgroundColor: "primary.main",
                             color: "primary.contrastText",
                             "&:hover": {
-                                backgroundColor: "primary.dark",
+                                backgroundColor: "primary.dark"
                             }
                         }}
                     >

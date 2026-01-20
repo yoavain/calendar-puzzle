@@ -75,7 +75,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
                         daysPlayed: sql<number>`count(${userPuzzleStats.userId})`.mapWith(Number),
                         daysSolved: sql<number>`count(${userPuzzleStats.firstCompletedAt})`.mapWith(Number),
                         daysPlayedWithHint: sql<number>`count(CASE WHEN ${userPuzzleStats.hintUsed} THEN 1 END)`.mapWith(Number),
-                        daysSolvedWithHint: sql<number>`count(CASE WHEN ${userPuzzleStats.hintUsed} AND ${userPuzzleStats.firstCompletedAt} IS NOT NULL THEN 1 END)`.mapWith(Number),
+                        daysSolvedWithHint: sql<number>`count(CASE WHEN ${userPuzzleStats.hintUsed} AND ${userPuzzleStats.firstCompletedAt} IS NOT NULL THEN 1 END)`.mapWith(Number)
                     })
                     .from(users)
                     .leftJoin(userPuzzleStats, eq(users.id, userPuzzleStats.userId))
