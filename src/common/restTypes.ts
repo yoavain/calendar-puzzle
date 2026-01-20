@@ -82,6 +82,17 @@ export interface UserDataResponse {
     users: UserActivity[];
 }
 
+// ============================================
+// POST /api/log
+// Log client-side errors or info messages
+// ============================================
+export interface LogRequest {
+    user: string; // can be "anonymous"
+    logLevel: "error" | "info";
+    message: string;
+    stack?: string;
+}
+
 // Error response for invalid requests
 export interface ErrorResponse {
     error: string;

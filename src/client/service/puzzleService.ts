@@ -12,6 +12,7 @@ import type {
     UserDataResponse
 } from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
+import { logToServer } from "./logService.js";
 
 let cachedPublicKey: string | null = null;
 let cachedCsrfToken: string | null = null;
@@ -35,7 +36,7 @@ const getPublicKey = async (): Promise<string | null> => {
         }
     }
     catch (error) {
-        // Silently fail or handle error as needed
+        logToServer("error", "Failed to fetch public key", error);
     }
     return null;
 };
@@ -63,7 +64,7 @@ export const getCsrfToken = async (): Promise<string | null> => {
             }
         }
         catch (error) {
-            // Failed to fetch CSRF token
+            logToServer("error", "Failed to fetch CSRF token", error);
         }
         finally {
             csrfTokenPromise = null;

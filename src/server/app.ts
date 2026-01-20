@@ -16,6 +16,7 @@ import { registerHintRoutes } from "./rest/hintRest.js";
 import { registerAuthRoutes } from "./rest/authRest.js";
 import { registerStatsRoutes } from "./rest/statsRest.js";
 import { registerIssueRoutes } from "./rest/issueRest.js";
+import { registerLogRoutes } from "./rest/logRest.js";
 import { setupPassport } from "./auth/passport.js";
 import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
@@ -168,8 +169,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             return;
         }
 
-        // Skip for health check
-        if (request.url === "/api/health") {
+        // Skip for health check and logging
+        if (request.url === "/api/health" || request.url === "/api/log") {
             return;
         }
 
@@ -224,6 +225,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     registerHintRoutes(app);
     registerStatsRoutes(app);
     registerIssueRoutes(app);
+    registerLogRoutes(app);
 
     // Block all other routes
     app.setNotFoundHandler(async (request, reply) => {

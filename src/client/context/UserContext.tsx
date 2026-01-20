@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { PuzzleDate } from "../../common/types.js";
 import { clearCsrfToken, getCsrfToken } from "../service/puzzleService";
+import { logToServer } from "../service/logService.js";
 
 export interface User {
     id: string;
@@ -41,7 +42,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 setPlayedDates(data.playedDates || []);
                 
                 // Fetch CSRF token separately after authenticated session is established
-                await getCsrfToken();
+                getCsrfToken().catch(err => {
+                    logToServer("error", "UserContext: Failed to fetch CSRF token", err, data.user?.name);
+                });
             }
             else {
                 setUser(null);
@@ -51,6 +54,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
         catch (error) {
+            logToServer("error", "UserContext: Failed to fetch user", error);
             setUser(null);
             setCompletedDates([]);
             setPlayedDates([]);
@@ -67,21 +71,31 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const logout = useCallback(async () => {
         const headers: Record<string, string> = {};
-        const csrfToken = await getCsrfToken();
-        if (csrfToken) {
-            headers["X-CSRF-Token"] = csrfToken;
+        try {
+            const csrfToken = await getCsrfToken();
+            if (csrfToken) {
+                headers["X-CSRF-Token"] = csrfToken;
+            }
+        }
+        catch (err) {
+            logToServer("error", "UserContext: Failed to get CSRF token for logout", err, user?.name);
         }
 
-        await fetch("/auth/logout", {
-            method: "POST",
-            headers,
-            credentials: "include"
-        });
+        try {
+            await fetch("/auth/logout", {
+                method: "POST",
+                headers,
+                credentials: "include"
+            });
+        }
+        catch (err) {
+            logToServer("error", "UserContext: Logout request failed", err, user?.name);
+        }
         setUser(null);
         setCompletedDates([]);
         setPlayedDates([]);
         clearCsrfToken();
-    }, []);
+    }, [user]);
 
     const addCompletedDate = useCallback((date: PuzzleDate) => {
         setCompletedDates(prev => {

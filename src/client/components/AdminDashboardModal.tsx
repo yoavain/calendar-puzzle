@@ -18,6 +18,7 @@ import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { getUserActivity } from "../service/puzzleService.js";
+import { logToServer } from "../service/logService.js";
 import type { UserActivity } from "../../common/restTypes.js";
 
 interface AdminDashboardModalProps {
@@ -53,7 +54,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
             setData(users);
         }
         catch (error) {
-            // Silently fail or you could add a state for error message
+            logToServer("error", "AdminDashboard: Failed to fetch user activity", error);
         }
         finally {
             setLoading(false);
