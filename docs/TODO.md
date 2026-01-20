@@ -37,7 +37,8 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] `POST /api/stats/start` — Record when a user starts a puzzle
 - [x] `POST /api/stats/complete` — Record when a user completes a puzzle (server-validated)
 - [x] `GET /api/auth/me` — Get current user and their statistics
-- [x] `GET /api/solution/:date` — Return puzzle solution (admin only)
+- [x] `GET /api/admin/solution/:date` — Return puzzle solution (admin only)
+- [x] `GET /api/admin/userdata` — Return user activity data (admin only)
 - [x] `GET /api/hint/:date` — Return a single valid move
 
 ### Session (Local Storage)
