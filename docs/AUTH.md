@@ -108,7 +108,8 @@ Browser                     Fastify Server                 Google
 | GET | `/auth/user` | No | Returns current user or 401 |
 | POST | `/auth/logout` | No | Clears session |
 | GET | `/api/hint/:date` | Yes | Returns a hint (protected) |
-| GET | `/api/solution/:date` | Yes | Returns full solution (protected) |
+| GET | `/api/admin/solution/:date` | Yes (Admin) | Returns full solution (protected) |
+| GET | `/api/admin/userdata` | Yes (Admin) | Returns user activity statistics |
 
 ---
 
