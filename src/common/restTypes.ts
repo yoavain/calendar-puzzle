@@ -65,6 +65,23 @@ export interface IssueResponse {
     success: boolean;
 }
 
+// ============================================
+// GET /api/admin/userdata
+// Returns user activity statistics for admin dashboard
+// ============================================
+export interface UserActivity {
+    username: string;
+    avatarUrl?: string | null;
+    daysPlayed: number;
+    daysSolved: number;
+    daysPlayedWithHint: number;
+    daysSolvedWithHint: number;
+}
+
+export interface UserDataResponse {
+    users: UserActivity[];
+}
+
 // Error response for invalid requests
 export interface ErrorResponse {
     error: string;
