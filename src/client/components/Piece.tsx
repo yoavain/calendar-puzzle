@@ -3,6 +3,7 @@ import { useTheme } from "@mui/material/styles";
 import type { Piece as PieceType } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
 import { getPieceShape, getPieceColor } from "../../common/pieceData";
+import { logToServer } from "../service/logService.js";
 import { PieceWrapper, PieceGrid, PieceCell } from "./Piece.styled";
 
 interface PieceProps {
@@ -28,8 +29,8 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
             const cwDelta = (curr - prev + 360) % 360; // Clockwise distance
             const ccwDelta = (prev - curr + 360) % 360; // Counter-clockwise distance
             
-            // Choose the shorter path
-            let delta: number;
+        // Choose the shorter path
+        let delta: number;
             if (cwDelta <= ccwDelta) {
                 // Clockwise is shorter or equal
                 delta = cwDelta;
@@ -77,7 +78,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
             e.dataTransfer.setData("text/plain", data);
         }
         catch (err) {
-            // Silently handle error
+            logToServer("error", "Piece: Failed to set drag data", err);
         }
 
         // Create a drag preview that represents the transformed piece

@@ -77,3 +77,14 @@ export const issueSchema = {
         type: { type: "string", enum: ["bug", "enhancement"] }
     }
 };
+
+export const logSchema = {
+    type: "object",
+    required: ["user", "logLevel", "message"],
+    properties: {
+        user: { type: "string" },
+        logLevel: { type: "string", enum: ["error", "info"] },
+        message: { type: "string", maxLength: 2000 },
+        stack: { type: "string", maxLength: 5000 }
+    }
+};

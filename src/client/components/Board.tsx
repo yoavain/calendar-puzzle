@@ -3,6 +3,7 @@ import { useTheme } from "@mui/material/styles";
 import type { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
 import { getPieceColor } from "../../common/pieceData";
+import { logToServer } from "../service/logService.js";
 import type { InvalidDropCell } from "./Game";
 import {
     BoardContainer,
@@ -54,7 +55,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             onPieceDrop(position, dragItem);
         }
         catch (err) {
-            // Silently handle error
+            logToServer("error", "Board: Failed to handle drop", err);
         }
     };
 
@@ -87,7 +88,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             e.dataTransfer.setData("text/plain", data);
         }
         catch (err) {
-            // Silently handle error
+            logToServer("error", "Board: Failed to set drag data", err);
         }
 
         // Create a drag preview that represents the entire piece

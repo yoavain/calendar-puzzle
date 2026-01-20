@@ -31,6 +31,7 @@ import { initializeGame, initializeBoard } from "../utils/initialize";
 import { useGameHistory } from "../hooks/useGameHistory";
 import { getSolution, getHint, getHintState, recordStart, recordCompletion } from "../service/puzzleService";
 import { saveSession, loadSession, clearSession } from "../hooks/useGameSession";
+import { logToServer } from "../service/logService";
 import { PiecesContainer, PiecePoolWrapper } from "./Game.styled";
 import BarChartIcon from "@mui/icons-material/BarChart";
 
@@ -159,16 +160,19 @@ export const Game: React.FC = () => {
         clearHistory(newGameState);
         
         // Load persistent hint if available
-        const hintState = await loadPersistentHint(newDate, newGameState.pieces);
-        if (hintState) {
-            const stateWithHint = {
-                ...newGameState,
-                board: hintState.board,
-                pieces: hintState.pieces
-            };
-            // Use updatePresent since we already cleared history for the date change
-            updatePresent(stateWithHint);
-        }
+        loadPersistentHint(newDate, newGameState.pieces).then(hintState => {
+            if (hintState) {
+                const stateWithHint = {
+                    ...newGameState,
+                    board: hintState.board,
+                    pieces: hintState.pieces
+                };
+                // Use updatePresent since we already cleared history for the date change
+                updatePresent(stateWithHint);
+            }
+        }).catch(err => {
+            logToServer("error", "Game: Failed to handle persistent hint on date change", err, user?.name);
+        });
         
         setSolverError(null);
     };
@@ -184,15 +188,18 @@ export const Game: React.FC = () => {
         clearHistory(newGameState);
 
         // Load persistent hint if available
-        const hintState = await loadPersistentHint(currentDate, newGameState.pieces);
-        if (hintState) {
-            const stateWithHint = {
-                ...newGameState,
-                board: hintState.board,
-                pieces: hintState.pieces
-            };
-            updatePresent(stateWithHint);
-        }
+        loadPersistentHint(currentDate, newGameState.pieces).then(hintState => {
+            if (hintState) {
+                const stateWithHint = {
+                    ...newGameState,
+                    board: hintState.board,
+                    pieces: hintState.pieces
+                };
+                updatePresent(stateWithHint);
+            }
+        }).catch(err => {
+            logToServer("error", "Game: Failed to handle persistent hint on reset", err, user?.name);
+        });
         
         setSolverError(null);
     };
@@ -204,7 +211,8 @@ export const Game: React.FC = () => {
     const isResetDisabled = gameState.pieces.every(piece => piece.position === null || piece.isLocked);
 
     const handlePieceSelect = (pieceId: number) => {
-        if (gameState.isSolved) {
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (gameState.isSolved || piece?.isLocked) {
             return;
         }
 
@@ -219,19 +227,24 @@ export const Game: React.FC = () => {
             return;
         }
 
+        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
+        if (piece?.isLocked) {
+            return;
+        }
+
         const newState = (() => {
             const newPieces = [...gameState.pieces];
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
-            const piece = newPieces[pieceIndex];
+            const pieceToRotate = newPieces[pieceIndex];
 
             // When exactly one flip is active, we must invert the rotation step
             // to maintain a consistent visual clockwise rotation.
-            const isFlipped = piece.isFlippedH !== piece.isFlippedV;
+            const isFlipped = pieceToRotate.isFlippedH !== pieceToRotate.isFlippedV;
             const rotationStep = isFlipped ? -90 : 90;
-            const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
+            const newRotation = ((pieceToRotate.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
 
             newPieces[pieceIndex] = {
-                ...piece,
+                ...pieceToRotate,
                 rotation: newRotation
             };
 
@@ -252,14 +265,19 @@ export const Game: React.FC = () => {
             return;
         }
 
+        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
+        if (piece?.isLocked) {
+            return;
+        }
+
         const newState = (() => {
             const newPieces = [...gameState.pieces];
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
-            const piece = newPieces[pieceIndex];
+            const pieceToFlip = newPieces[pieceIndex];
 
             newPieces[pieceIndex] = {
-                ...piece,
-                isFlippedH: !piece.isFlippedH
+                ...pieceToFlip,
+                isFlippedH: !pieceToFlip.isFlippedH
             };
 
             return {
@@ -279,14 +297,19 @@ export const Game: React.FC = () => {
             return;
         }
 
+        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
+        if (piece?.isLocked) {
+            return;
+        }
+
         const newState = (() => {
             const newPieces = [...gameState.pieces];
             const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
-            const piece = newPieces[pieceIndex];
+            const pieceToFlip = newPieces[pieceIndex];
 
             newPieces[pieceIndex] = {
-                ...piece,
-                isFlippedV: !piece.isFlippedV
+                ...pieceToFlip,
+                isFlippedV: !pieceToFlip.isFlippedV
             };
 
             return {
@@ -383,7 +406,7 @@ export const Game: React.FC = () => {
             }
         }
         catch (error) {
-            // Error intentionally ignored
+            logToServer("error", "Game: Failed to load persistent hint", error, user?.name);
         }
         return null;
     }, [user, updateBoardAndPieces]);
@@ -482,7 +505,7 @@ export const Game: React.FC = () => {
 
     const handlePieceReturnToPile = (pieceId: number) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece?.position) {
+        if (gameState.isSolved || !piece?.position || piece.isLocked) {
             return;
         }
 
@@ -521,7 +544,7 @@ export const Game: React.FC = () => {
             handlePieceReturnToPile(pieceId);
         }
         catch (err) {
-            // Silently handle JSON parse or data errors
+            logToServer("error", "Game: Failed to handle pile drop", err, user?.name);
         }
     };
 
@@ -597,14 +620,19 @@ export const Game: React.FC = () => {
         const checkInitialHint = async () => {
             const currentDate = gameState.currentDate;
             if (user && isBoardEmpty) {
-                const hintState = await loadPersistentHint(currentDate, gameState.pieces);
-                if (hintState) {
-                    const stateWithHint = {
-                        ...gameState,
-                        board: hintState.board,
-                        pieces: hintState.pieces
-                    };
-                    clearHistory(stateWithHint);
+                try {
+                    const hintState = await loadPersistentHint(currentDate, gameState.pieces);
+                    if (hintState) {
+                        const stateWithHint = {
+                            ...gameState,
+                            board: hintState.board,
+                            pieces: hintState.pieces
+                        };
+                        clearHistory(stateWithHint);
+                    }
+                }
+                catch (err) {
+                    logToServer("error", "Game: Failed to load initial hint", err, user.name);
                 }
             }
         };
@@ -697,6 +725,7 @@ export const Game: React.FC = () => {
         catch (error) {
             // Handle any errors
             const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+            logToServer("error", `Game: Solution failed: ${errorMessage}`, error, user?.name);
             setSolverError(errorMessage);
         }
         finally {
@@ -753,6 +782,7 @@ export const Game: React.FC = () => {
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+            logToServer("error", `Game: Hint failed: ${errorMessage}`, error, user?.name);
             setSolverError(errorMessage);
         }
         finally {
@@ -763,7 +793,7 @@ export const Game: React.FC = () => {
     // Add new handlers for per-piece controls
     const handleRotatePiece = (pieceId: number) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece) {
+        if (gameState.isSolved || !piece || piece.isLocked) {
             return;
         }
         const newPieces = [...gameState.pieces];
@@ -780,11 +810,8 @@ export const Game: React.FC = () => {
     };
 
     const handleRotateCCWPiece = (pieceId: number) => {
-        if (gameState.isSolved) {
-            return;
-        }
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece) {
+        if (gameState.isSolved || !piece || piece.isLocked) {
             return;
         }
         
@@ -803,7 +830,7 @@ export const Game: React.FC = () => {
 
     const handleFlipHPiece = (pieceId: number) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece) {
+        if (gameState.isSolved || !piece || piece.isLocked) {
             return;
         }
         const newPieces = [...gameState.pieces];
@@ -813,12 +840,12 @@ export const Game: React.FC = () => {
     };
 
     const handleFlipVPiece = (pieceId: number) => {
-        if (gameState.isSolved) {
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (gameState.isSolved || !piece || piece.isLocked) {
             return;
         }
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        const piece = newPieces[pieceIndex];
         newPieces[pieceIndex] = { ...piece, isFlippedV: !piece.isFlippedV };
         pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_V", pieceId });
     };

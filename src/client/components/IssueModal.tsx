@@ -10,6 +10,7 @@ import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import { submitIssue } from "../service/puzzleService.js";
+import { logToServer } from "../service/logService.js";
 import type { IssueType } from "../../common/restTypes.js";
 
 interface IssueModalProps {
@@ -50,6 +51,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
             }
         }
         catch (err) {
+            logToServer("error", "IssueModal: Failed to submit issue", err);
             setError("An error occurred. Please try again later.");
         }
         finally {
