@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import type { Session } from "@fastify/secure-session";
@@ -129,6 +129,15 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         
         if (!requestedPath) {
             return reply.code(404).send({ error: "Not found" });
+        }
+
+        // Block source maps for non-local hostnames
+        if (requestedPath.endsWith(".map")) {
+            const allowedHosts = ["localhost", "127.0.0.1", "[::1]"];
+            if (!allowedHosts.includes(request.hostname)) {
+                app.log.warn(`Source map access blocked for host: ${request.hostname}`);
+                return reply.code(403).send({ error: "Forbidden: Source maps are not allowed" });
+            }
         }
 
         // Validate path to prevent traversal attacks
