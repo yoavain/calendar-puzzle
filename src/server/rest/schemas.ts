@@ -67,3 +67,13 @@ export const statsCompleteSchema = {
         }
     }
 };
+
+export const issueSchema = {
+    type: "object",
+    required: ["title", "description", "type"],
+    properties: {
+        title: { type: "string", minLength: 1, maxLength: 200 },
+        description: { type: "string", minLength: 1, maxLength: 2000 },
+        type: { type: "string", enum: ["bug", "enhancement"] }
+    }
+};

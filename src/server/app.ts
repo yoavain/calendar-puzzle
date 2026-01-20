@@ -15,6 +15,7 @@ import { registerSolutionRoutes } from "./rest/solutionRest.js";
 import { registerHintRoutes } from "./rest/hintRest.js";
 import { registerAuthRoutes } from "./rest/authRest.js";
 import { registerStatsRoutes } from "./rest/statsRest.js";
+import { registerIssueRoutes } from "./rest/issueRest.js";
 import { setupPassport } from "./auth/passport.js";
 import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
@@ -213,6 +214,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     registerSolutionRoutes(app);
     registerHintRoutes(app);
     registerStatsRoutes(app);
+    registerIssueRoutes(app);
 
     // Block all other routes
     app.setNotFoundHandler(async (request, reply) => {

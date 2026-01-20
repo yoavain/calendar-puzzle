@@ -1,0 +1,1 @@
+ALTER TABLE "user_puzzle_stats" ADD COLUMN "hint_used" boolean DEFAULT false NOT NULL;

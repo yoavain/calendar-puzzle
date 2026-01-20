@@ -49,6 +49,22 @@ export interface CompletePuzzleRequest extends PuzzleDate {
     pieces: Piece[];
 }
 
+// ============================================
+// POST /api/issue
+// Submit a bug report or feature request
+// ============================================
+export type IssueType = "bug" | "enhancement";
+
+export interface IssueRequest {
+    title: string;
+    description: string;
+    type: IssueType;
+}
+
+export interface IssueResponse {
+    success: boolean;
+}
+
 // Error response for invalid requests
 export interface ErrorResponse {
     error: string;
