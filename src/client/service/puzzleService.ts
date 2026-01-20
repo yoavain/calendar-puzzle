@@ -1,5 +1,5 @@
 import type { Piece, PuzzleDate, EncryptedPayload } from "../../common/types";
-import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest, HintRequest, HintStateResponse } from "../../common/restTypes";
+import type { SolutionResponse, HintResponse, ErrorResponse, StartPuzzleRequest, CompletePuzzleRequest, HintRequest, HintStateResponse, IssueRequest, IssueResponse } from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
 
 let cachedPublicKey: string | null = null;
@@ -203,6 +203,34 @@ export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promi
     }
 
     const response = await fetch("/api/stats/complete", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        credentials: "include"
+    });
+    
+    return response.ok;
+};
+
+/**
+ * Submit a bug report or feature request
+ */
+export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
+    let body: IssueRequest | EncryptedPayload = issue;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+    const publicKey = await getPublicKey();
+    if (publicKey) {
+        body = await encryptPayload(body, publicKey);
+        headers["X-Encrypted"] = "true";
+    }
+
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+        headers["X-CSRF-Token"] = csrfToken;
+    }
+
+    const response = await fetch("/api/issue", {
         method: "POST",
         headers,
         body: JSON.stringify(body),

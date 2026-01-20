@@ -111,6 +111,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
             onClose={onClose}
             maxWidth="xs"
             fullWidth
+            disableScrollLock
             PaperProps={{
                 sx: { borderRadius: 2 }
             }}

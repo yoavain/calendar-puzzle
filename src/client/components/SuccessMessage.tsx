@@ -19,6 +19,7 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible, onClo
             onClick={onClose}
             TransitionComponent={Zoom}
             transitionDuration={300}
+            disableScrollLock
             PaperProps={{
                 sx: {
                     borderRadius: 3,
