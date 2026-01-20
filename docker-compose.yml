@@ -10,6 +10,9 @@ services:
       - DATABASE_URL=postgresql://puzzle:${POSTGRES_PASSWORD}@postgres:5432/puzzle
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_OWNER=${GITHUB_OWNER}
+      - GITHUB_REPO=${GITHUB_REPO}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - ./secret-key:/usr/app/secret-key:ro
     depends_on:

@@ -18,6 +18,11 @@ export const config = {
     database: {
         url: process.env.DATABASE_URL
     },
+    github: {
+        token: process.env.GITHUB_TOKEN,
+        owner: process.env.GITHUB_OWNER,
+        repo: process.env.GITHUB_REPO
+    },
     paths: {
         root: projectRoot,
         publicKey: path.resolve(projectRoot, "public-key.pem"),
@@ -29,7 +34,10 @@ export const validateConfig = () => {
     const required = [
         { key: "GOOGLE_CLIENT_ID", value: config.google.clientId },
         { key: "GOOGLE_CLIENT_SECRET", value: config.google.clientSecret },
-        { key: "DATABASE_URL", value: config.database.url }
+        { key: "DATABASE_URL", value: config.database.url },
+        { key: "GITHUB_TOKEN", value: config.github.token },
+        { key: "GITHUB_OWNER", value: config.github.owner },
+        { key: "GITHUB_REPO", value: config.github.repo }
     ];
 
     const missing = required.filter(item => !item.value);

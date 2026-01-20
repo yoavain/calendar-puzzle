@@ -1,5 +1,6 @@
 import React from "react";
 import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { useUser } from "../context/UserContext";
 
@@ -21,17 +22,21 @@ export const SolutionButton: React.FC<SolutionButtonProps> = ({
     }
 
     return (
-        <Button
-            variant="contained"
-            color="success"
-            onClick={onSolve}
-            disabled={disabled || isLoading}
-            loading={isLoading}
-            loadingPosition="start"
-            startIcon={<AutoFixHighIcon />}
-            size="small"
-        >
-            {isLoading ? "Solving..." : "Solution"}
-        </Button>
+        <Tooltip title="Show solution" arrow>
+            <span>
+                <Button
+                    variant="contained"
+                    color="success"
+                    onClick={onSolve}
+                    disabled={disabled || isLoading}
+                    loading={isLoading}
+                    loadingPosition="start"
+                    startIcon={<AutoFixHighIcon />}
+                    size="small"
+                >
+                    {isLoading ? "Solving..." : "Solution"}
+                </Button>
+            </span>
+        </Tooltip>
     );
 };

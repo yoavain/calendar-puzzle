@@ -112,13 +112,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
 
     return (
         <>
-            {isLoginRequired ? (
-                <Tooltip title="Sign-in to select a different date" arrow>
-                    <span>{button}</span>
-                </Tooltip>
-            ) : (
-                button
-            )}
+            <Tooltip title={isLoginRequired ? "Sign-in to select a different date" : "Change date"} arrow>
+                <span>{button}</span>
+            </Tooltip>
 
             <Dialog 
                 open={isOpen} 

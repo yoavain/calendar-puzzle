@@ -31,13 +31,9 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = fals
         </Button>
     );
 
-    if (isLoginRequired) {
-        return (
-            <Tooltip title="Sign-in to see hint" arrow>
-                <span>{button}</span>
-            </Tooltip>
-        );
-    }
-
-    return button;
+    return (
+        <Tooltip title={isLoginRequired ? "Sign-in to see hint" : "Get a hint"} arrow>
+            <span>{button}</span>
+        </Tooltip>
+    );
 };

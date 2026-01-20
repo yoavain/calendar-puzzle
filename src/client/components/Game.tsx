@@ -9,6 +9,7 @@ import Tooltip from "@mui/material/Tooltip";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import BugReportIcon from "@mui/icons-material/BugReport";
 import type { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate } from "../../common/types";
 import { toPuzzleDate } from "../../common/types";
 import { calculateProgress, clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from "../../common/gameLogic";
@@ -24,6 +25,7 @@ import { UserMenu } from "./UserMenu";
 import { useUser } from "../context/UserContext";
 import { DatePicker } from "./DatePicker";
 import { StatsModal } from "./StatsModal";
+import { IssueModal } from "./IssueModal";
 import { ProgressBar } from "./ProgressBar";
 import { initializeGame, initializeBoard } from "../utils/initialize";
 import { useGameHistory } from "../hooks/useGameHistory";
@@ -140,6 +142,9 @@ export const Game: React.FC = () => {
 
     // State for statistics modal
     const [isStatsOpen, setIsStatsOpen] = useState(false);
+
+    // State for issue modal
+    const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
 
     // State for success message popup
     const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
@@ -838,6 +843,20 @@ export const Game: React.FC = () => {
                         </Alert>
                     )}
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
+                    <Tooltip title={!user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
+                        <span>
+                            <Button
+                                variant="contained"
+                                onClick={() => setIsIssueModalOpen(true)}
+                                size="small"
+                                sx={{ minWidth: 40, px: 1 }}
+                                disabled={!user}
+                                color="info"
+                            >
+                                <BugReportIcon />
+                            </Button>
+                        </span>
+                    </Tooltip>
                     <Tooltip title={!user ? "Sign-in to see statistics" : "Statistics"} arrow>
                         <span>
                             <Button
@@ -917,6 +936,9 @@ export const Game: React.FC = () => {
 
             {/* Statistics Modal */}
             <StatsModal open={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
+
+            {/* Issue Modal */}
+            <IssueModal open={isIssueModalOpen} onClose={() => setIsIssueModalOpen(false)} />
 
             {/* Game Area */}
             <Box component="main">
