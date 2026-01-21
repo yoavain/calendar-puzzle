@@ -15,3 +15,6 @@ export const DAYS_LAYOUT = [
     [22, 23, 24, 25, 26, 27, 28],
     [29, 30, 31]
 ];
+
+/** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
+export const TOTAL_PLAYABLE_CELLS = 41;

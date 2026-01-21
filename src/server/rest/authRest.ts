@@ -89,14 +89,6 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
         }
     });
 
-    // Legacy endpoint for backward compatibility (can be removed later)
-    app.get("/auth/user", async (request, reply) => {
-        if (request.user) {
-            return request.user as SessionUser;
-        }
-        return reply.code(401).send({ error: "Not authenticated" });
-    });
-
     // Logout
     app.post("/auth/logout", async (request, reply) => {
         await request.logout();

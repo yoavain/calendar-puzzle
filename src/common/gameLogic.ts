@@ -1,5 +1,5 @@
 import type { Board, Piece, Position, PuzzleDate } from "./types";
-import { DAYS_IN_MONTH, DAYS_LAYOUT } from "./consts";
+import { DAYS_IN_MONTH, DAYS_LAYOUT, TOTAL_PLAYABLE_CELLS } from "./consts";
 import { getPieceShape } from "./pieceData";
 
 /**
@@ -235,60 +235,6 @@ export const clearPieceFromBoard = (board: Board, piece: Piece): void => {
         }
     }
 };
-
-/**
- * Check if a cell is on the edge of a shape
- */
-export const isEdgeCell = (shape: boolean[][], x: number, y: number): boolean => {
-    if (!shape[y][x]) {
-        return false;
-    }
-    
-    // Check if any adjacent cell is empty or out of bounds
-    return (
-        y === 0 || !shape[y - 1][x] || // Top
-        x === shape[0].length - 1 || !shape[y][x + 1] || // Right
-        y === shape.length - 1 || !shape[y + 1][x] || // Bottom
-        x === 0 || !shape[y][x - 1] // Left
-    );
-};
-
-/**
- * Get the edge directions for a cell
- */
-export const getEdgeDirections = (shape: boolean[][], x: number, y: number): { top: boolean, right: boolean, bottom: boolean, left: boolean } => {
-    if (!shape[y][x]) {
-        return { top: false, right: false, bottom: false, left: false };
-    } // Empty cell has no edges
-
-    // Initialize result with all edges as false
-    const result = { top: false, right: false, bottom: false, left: false };
-
-    // Check top edge
-    if (y === 0 || !shape[y - 1][x]) {
-        result.top = true;
-    }
-
-    // Check right edge
-    if (x === shape[0].length - 1 || !shape[y][x + 1]) {
-        result.right = true;
-    }
-
-    // Check bottom edge
-    if (y === shape.length - 1 || !shape[y + 1][x]) {
-        result.bottom = true;
-    }
-
-    // Check left edge
-    if (x === 0 || !shape[y][x - 1]) {
-        result.left = true;
-    }
-
-    return result;
-};
-
-/** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
-const TOTAL_PLAYABLE_CELLS = 41;
 
 /**
  * Calculate puzzle progress based on placed pieces
