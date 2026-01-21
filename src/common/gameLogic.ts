@@ -136,7 +136,9 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
     const occupied = Array(7).fill(null).map(() => Array(7).fill(false));
     
     for (const piece of pieces) {
-        if (!piece.position) return null;
+        if (!piece.position) {
+            return null;
+        }
         const shape = getTransformedShape(piece);
         for (let dy = 0; dy < shape.length; dy++) {
             for (let dx = 0; dx < shape[0].length; dx++) {
@@ -174,7 +176,10 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
     for (let y = 0; y < 2; y++) {
         for (let x = 0; x < 6; x++) {
             if (!occupied[y][x]) {
-                if (foundMonth !== null) return null; // More than one month visible
+                // More than one month visible
+                if (foundMonth !== null) {
+                    return null;
+                }
                 foundMonth = y * 6 + x;
             }
         }
@@ -194,7 +199,10 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
         const row = daysLayout[dy];
         for (let x = 0; x < row.length; x++) {
             if (!occupied[y][x]) {
-                if (foundDay !== null) return null; // More than one day visible
+                // More than one day visible
+                if (foundDay !== null) {
+                    return null;
+                }
                 foundDay = row[x];
             }
         }
