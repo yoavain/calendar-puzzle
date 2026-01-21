@@ -13,6 +13,17 @@ import type {
 } from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
 import { logToServer } from "./logService.js";
+import {
+    API_ADMIN_USERDATA,
+    API_AUTH_CSRF_TOKEN,
+    API_AUTH_PUBLIC_KEY,
+    API_HINT,
+    API_ISSUE,
+    API_STATS_COMPLETE,
+    API_STATS_START,
+    getAdminSolutionPath,
+    getHintStatePath
+} from "../../common/restPaths.js";
 
 let cachedPublicKey: string | null = null;
 let cachedCsrfToken: string | null = null;
@@ -26,7 +37,7 @@ const getPublicKey = async (): Promise<string | null> => {
         return cachedPublicKey;
     }
     try {
-        const response = await fetch("/api/auth/public-key", {
+        const response = await fetch(API_AUTH_PUBLIC_KEY, {
             credentials: "include"
         });
         if (response.ok) {
@@ -54,7 +65,7 @@ export const getCsrfToken = async (): Promise<string | null> => {
 
     csrfTokenPromise = (async () => {
         try {
-            const response = await fetch("/api/auth/csrf-token", {
+            const response = await fetch(API_AUTH_CSRF_TOKEN, {
                 credentials: "include"
             });
             if (response.ok) {
@@ -83,20 +94,10 @@ export const clearCsrfToken = (): void => {
 };
 
 /**
- * Format a PuzzleDate to the API date format (MM-DD)
- */
-const formatDateForApi = (date: PuzzleDate): string => {
-    const month = String(date.month + 1).padStart(2, "0"); // month is 0-indexed
-    const day = String(date.day).padStart(2, "0");
-    return `${month}-${day}`;
-};
-
-/**
  * Get the full puzzle solution for a specific date (Admin only)
  */
 export const getSolution = async (date: PuzzleDate): Promise<Piece[]> => {
-    const dateStr = formatDateForApi(date);
-    const response = await fetch(`/api/admin/solution/${dateStr}`, {
+    const response = await fetch(getAdminSolutionPath(date), {
         credentials: "include"
     });
     
@@ -128,7 +129,7 @@ export const getHint = async (date: PuzzleDate): Promise<Piece> => {
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch("/api/hint", {
+    const response = await fetch(API_HINT, {
         method: "PUT",
         headers,
         body: JSON.stringify(body),
@@ -148,8 +149,7 @@ export const getHint = async (date: PuzzleDate): Promise<Piece> => {
  * Check if a hint was already used for a specific date
  */
 export const getHintState = async (date: PuzzleDate): Promise<Piece | null> => {
-    const dateStr = formatDateForApi(date);
-    const response = await fetch(`/api/hint/${dateStr}/state`, {
+    const response = await fetch(getHintStatePath(date), {
         credentials: "include"
     });
     
@@ -179,7 +179,7 @@ export const recordStart = async (date: PuzzleDate): Promise<boolean> => {
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch("/api/stats/start", {
+    const response = await fetch(API_STATS_START, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -214,7 +214,7 @@ export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promi
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch("/api/stats/complete", {
+    const response = await fetch(API_STATS_COMPLETE, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -242,7 +242,7 @@ export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch("/api/issue", {
+    const response = await fetch(API_ISSUE, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -256,7 +256,7 @@ export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
  * Fetch all user activity statistics (Admin only)
  */
 export const getUserActivity = async (): Promise<UserActivity[]> => {
-    const response = await fetch("/api/admin/userdata", {
+    const response = await fetch(API_ADMIN_USERDATA, {
         credentials: "include"
     });
 

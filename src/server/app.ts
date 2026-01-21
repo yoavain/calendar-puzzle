@@ -22,6 +22,7 @@ import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
 import type { EncryptedPayload } from "../common/types.js";
 import { config } from "./config.js";
+import { API_HEALTH, API_LOG } from "../common/restPaths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -170,7 +171,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         }
 
         // Skip for health check and logging
-        if (request.url === "/api/health" || request.url === "/api/log") {
+        if (request.url === API_HEALTH || request.url === API_LOG) {
             return;
         }
 
@@ -213,7 +214,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     });
 
     // Health check endpoint
-    app.get("/api/health", async () => {
+    app.get(API_HEALTH, async () => {
         return { status: "ok" };
     });
 

@@ -3,19 +3,20 @@ import fastifyPassport from "@fastify/passport";
 import type { SessionUser } from "../auth/passport.js";
 import { db } from "../db/connection.js";
 import { userPuzzleStats } from "../db/schema.js";
-import { eq, and, isNotNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { config } from "../config.js";
 import { requireAuth } from "../auth/requireAuth.js";
+import { API_AUTH_CSRF_TOKEN, API_AUTH_ME, API_AUTH_PUBLIC_KEY, AUTH_GOOGLE, AUTH_GOOGLE_CALLBACK, AUTH_LOGOUT } from "../../common/restPaths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const registerAuthRoutes = (app: FastifyInstance): void => {
     // Initiate Google OAuth flow
-    app.get("/auth/google", {
+    app.get(AUTH_GOOGLE, {
         preValidation: fastifyPassport.authenticate("google", {
             scope: ["profile", "email"]
         })
@@ -24,7 +25,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     });
 
     // Handle Google OAuth callback
-    app.get("/auth/google/callback", {
+    app.get(AUTH_GOOGLE_CALLBACK, {
         preValidation: fastifyPassport.authenticate("google", {
             failureRedirect: "/?error=auth_failed"
         })
@@ -34,7 +35,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     });
 
     // Get current authenticated user profile and completion history
-    app.get("/api/auth/me", {
+    app.get(API_AUTH_ME, {
         config: {
             rateLimit: {
                 max: 20,
@@ -70,7 +71,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     });
 
     // Get server's public key for encryption (Authenticated)
-    app.get("/api/auth/public-key", { preHandler: requireAuth }, async (request, reply) => {
+    app.get(API_AUTH_PUBLIC_KEY, { preHandler: requireAuth }, async (request, reply) => {
         const publicKeyPath = config.paths.publicKey;
         try {
             try {
@@ -89,22 +90,14 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
         }
     });
 
-    // Legacy endpoint for backward compatibility (can be removed later)
-    app.get("/auth/user", async (request, reply) => {
-        if (request.user) {
-            return request.user as SessionUser;
-        }
-        return reply.code(401).send({ error: "Not authenticated" });
-    });
-
     // Logout
-    app.post("/auth/logout", async (request, reply) => {
+    app.post(AUTH_LOGOUT, async (request, reply) => {
         await request.logout();
         return { success: true };
     });
 
     // Get CSRF Token
-    app.get("/api/auth/csrf-token", {
+    app.get(API_AUTH_CSRF_TOKEN, {
         config: {
             rateLimit: {
                 max: 10,

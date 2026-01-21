@@ -9,3 +9,4 @@
 /secret-key
 /private-key.pem
 /public-key.pem
+/coverage/
