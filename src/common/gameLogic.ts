@@ -1,5 +1,5 @@
 import type { Board, Piece, Position, PuzzleDate } from "./types";
-import { MONTHS } from "./types";
+import { DAYS_IN_MONTH, DAYS_LAYOUT, TOTAL_PLAYABLE_CELLS } from "./consts";
 import { getPieceShape } from "./pieceData";
 
 /**
@@ -122,67 +122,93 @@ export const isValidPlacement = (board: Board, piece: Piece, position: Position,
 };
 
 /**
- * Check if the puzzle is solved for the current date
+ * For debugging and validation: Check if the pieces represent a valid solved date.
+ * Returns the date if exactly one valid month and one day are visible, or null otherwise.
+ * Performs strict validation: all 8 pieces must be placed, no overlaps, no out-of-bounds.
  */
-export const isPuzzleSolved = (board: Board, currentDate: PuzzleDate): boolean => {
-    const { month, day } = currentDate;
+export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
+    // 1. All 8 pieces must be placed
+    if (pieces.filter(p => p.position !== null).length !== 8) {
+        return null;
+    }
+
+    // 2. Create occupancy grid (7x7) and check for overlaps/out-of-bounds
+    const occupied = Array(7).fill(null).map(() => Array(7).fill(false));
     
-    // Check if the month cell is visible (not covered)
-    let monthVisible = false;
+    for (const piece of pieces) {
+        if (!piece.position) {
+            return null;
+        }
+        const shape = getTransformedShape(piece);
+        for (let dy = 0; dy < shape.length; dy++) {
+            for (let dx = 0; dx < shape[0].length; dx++) {
+                if (shape[dy][dx]) {
+                    const by = piece.position.y + dy;
+                    const bx = piece.position.x + dx;
+
+                    // Out of bounds or non-playable cells
+                    if (by < 0 || by >= 7 || bx < 0 || bx >= 7) {
+                        return null;
+                    }
+
+                    // Check if cell is playable
+                    const isPlayable = (
+                        (by < 2 && bx < 6) || // Months
+                        (by >= 2 && by <= 5 && bx < 7) || // Days 1-28
+                        (by === 6 && bx < 3) // Days 29-31
+                    );
+
+                    if (!isPlayable || occupied[by][bx]) {
+                        return null;
+                    }
+
+                    occupied[by][bx] = true;
+                }
+            }
+        }
+    }
+
+    // 3. Define board layout and check for uncovered cells
+    let foundMonth: number | null = null;
+    let foundDay: number | null = null;
+
+    // Check Month cells (Rows 0-1, Cols 0-5)
     for (let y = 0; y < 2; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            if (board[y][x].content === MONTHS[month] && !board[y][x].isOccupied) {
-                monthVisible = true;
-                break;
-            }
-        }
-        if (monthVisible) {
-            break;
-        }
-    }
-    
-    if (!monthVisible) {
-        return false;
-    }
-    
-    // Check if the day cell is visible (not covered)
-    let dayVisible = false;
-    for (let y = 2; y < board.length; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            const content = board[y][x].content;
-            if (content && parseInt(content) === day && !board[y][x].isOccupied) {
-                dayVisible = true;
-                break;
-            }
-        }
-        if (dayVisible) {
-            break;
-        }
-    }
-    
-    if (!dayVisible) {
-        return false;
-    }
-    
-    // Check if all other cells that should be covered are covered
-    for (let y = 0; y < board.length; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            const cell = board[y][x];
-            
-            // Skip month and day cells
-            if ((y < 2 && cell.content === MONTHS[month]) || 
-                (y >= 2 && parseInt(cell.content) === day)) {
-                continue;
-            }
-            
-            // All other playable cells should be covered
-            if (cell.isPlayable && !cell.isOccupied) {
-                return false;
+        for (let x = 0; x < 6; x++) {
+            if (!occupied[y][x]) {
+                // More than one month visible
+                if (foundMonth !== null) {
+                    return null;
+                }
+                foundMonth = y * 6 + x;
             }
         }
     }
-    
-    return true;
+
+    // Check Day cells (Rows 2-6)
+    for (let dy = 0; dy < DAYS_LAYOUT.length; dy++) {
+        const y = dy + 2;
+        const row = DAYS_LAYOUT[dy];
+        for (let x = 0; x < row.length; x++) {
+            if (!occupied[y][x]) {
+                // More than one day visible
+                if (foundDay !== null) {
+                    return null;
+                }
+                foundDay = row[x];
+            }
+        }
+    }
+
+    // 4. Ensure exactly one of each was found and it's a valid calendar date
+    if (foundMonth !== null && foundDay !== null) {
+        // Basic date validation
+        if (foundDay <= DAYS_IN_MONTH[foundMonth]) {
+            return { month: foundMonth, day: foundDay };
+        }
+    }
+
+    return null;
 };
 
 /**
@@ -209,60 +235,6 @@ export const clearPieceFromBoard = (board: Board, piece: Piece): void => {
         }
     }
 };
-
-/**
- * Check if a cell is on the edge of a shape
- */
-export const isEdgeCell = (shape: boolean[][], x: number, y: number): boolean => {
-    if (!shape[y][x]) {
-        return false;
-    }
-    
-    // Check if any adjacent cell is empty or out of bounds
-    return (
-        y === 0 || !shape[y - 1][x] || // Top
-        x === shape[0].length - 1 || !shape[y][x + 1] || // Right
-        y === shape.length - 1 || !shape[y + 1][x] || // Bottom
-        x === 0 || !shape[y][x - 1] // Left
-    );
-};
-
-/**
- * Get the edge directions for a cell
- */
-export const getEdgeDirections = (shape: boolean[][], x: number, y: number): { top: boolean, right: boolean, bottom: boolean, left: boolean } => {
-    if (!shape[y][x]) {
-        return { top: false, right: false, bottom: false, left: false };
-    } // Empty cell has no edges
-
-    // Initialize result with all edges as false
-    const result = { top: false, right: false, bottom: false, left: false };
-
-    // Check top edge
-    if (y === 0 || !shape[y - 1][x]) {
-        result.top = true;
-    }
-
-    // Check right edge
-    if (x === shape[0].length - 1 || !shape[y][x + 1]) {
-        result.right = true;
-    }
-
-    // Check bottom edge
-    if (y === shape.length - 1 || !shape[y + 1][x]) {
-        result.bottom = true;
-    }
-
-    // Check left edge
-    if (x === 0 || !shape[y][x - 1]) {
-        result.left = true;
-    }
-
-    return result;
-};
-
-/** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
-const TOTAL_PLAYABLE_CELLS = 41;
 
 /**
  * Calculate puzzle progress based on placed pieces

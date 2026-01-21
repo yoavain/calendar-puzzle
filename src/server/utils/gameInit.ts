@@ -1,5 +1,5 @@
 import type { Board, Piece, PuzzleDate } from "../../common/types";
-import { MONTHS } from "../../common/types";
+import { MONTHS, DAYS_LAYOUT } from "../../common/consts";
 import { PIECE_IDS } from "../../common/pieceData";
 
 /**
@@ -32,15 +32,7 @@ export const initializeBoard = (puzzleDate: PuzzleDate): Board => {
     }
 
     // Set up day cells (Rows 2-6)
-    const daysLayout = [
-        [1, 2, 3, 4, 5, 6, 7],
-        [8, 9, 10, 11, 12, 13, 14],
-        [15, 16, 17, 18, 19, 20, 21],
-        [22, 23, 24, 25, 26, 27, 28],
-        [29, 30, 31]
-    ];
-
-    daysLayout.forEach((dayRow, rowIndex) => {
+    DAYS_LAYOUT.forEach((dayRow, rowIndex) => {
         const y = rowIndex + 2;
         dayRow.forEach((dayContent, x) => {
             if (x < boardWidth) {
@@ -53,8 +45,8 @@ export const initializeBoard = (puzzleDate: PuzzleDate): Board => {
     });
 
     // Mark remaining cells in the last row as not playable
-    const lastRowY = 2 + daysLayout.length - 1;
-    for (let x = daysLayout[daysLayout.length - 1].length; x < boardWidth; x++) {
+    const lastRowY = 2 + DAYS_LAYOUT.length - 1;
+    for (let x = DAYS_LAYOUT[DAYS_LAYOUT.length - 1].length; x < boardWidth; x++) {
         if (board[lastRowY]?.[x]) {
             board[lastRowY][x].isPlayable = false;
         }

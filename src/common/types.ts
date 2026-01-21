@@ -13,9 +13,6 @@ export const toPuzzleDate = (date: Date): PuzzleDate => {
     return { month: date.getMonth(), day: date.getDate() };
 };
 
-// Array of month names (January = 0, December = 11)
-export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 export interface Piece {
     id: number;
     position: Position | null; // null when not placed on board

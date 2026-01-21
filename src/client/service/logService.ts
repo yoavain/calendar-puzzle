@@ -1,4 +1,5 @@
 import type { LogRequest } from "../../common/restTypes";
+import { API_LOG } from "../../common/restPaths.js";
 
 /**
  * Sends a log message to the server for centralized logging.
@@ -23,7 +24,7 @@ export const logToServer = (
         };
 
         // Fire and forget to avoid blocking UI or creating hanging promises if not awaited
-        fetch("/api/log", {
+        fetch(API_LOG, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

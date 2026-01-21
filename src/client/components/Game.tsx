@@ -12,7 +12,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import type { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate } from "../../common/types";
 import { toPuzzleDate } from "../../common/types";
-import { calculateProgress, clearPieceFromBoard, getTransformedShape, isPuzzleSolved, isValidPlacement } from "../../common/gameLogic";
+import { calculateProgress, clearPieceFromBoard, getTransformedShape, puzzleSolvedForDate, isValidPlacement } from "../../common/gameLogic";
 import { Board as BoardComponent } from "./Board";
 import { Piece } from "./Piece";
 import { PieceControls } from "./PieceControls";
@@ -477,7 +477,10 @@ export const Game: React.FC = () => {
         );
 
         // Check if the puzzle is solved BEFORE creating the state
-        const solved = isPuzzleSolved(newBoard, gameState.currentDate);
+        const solvedDate = puzzleSolvedForDate(newPieces);
+        const solved = !!solvedDate && 
+                       solvedDate.month === gameState.currentDate.month && 
+                       solvedDate.day === gameState.currentDate.day;
         if (solved) {
             setIsSuccessMessageOpen(true);
             // Automatically show stats on completion after a short delay

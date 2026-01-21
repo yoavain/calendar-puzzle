@@ -1,12 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import type { LogRequest, ErrorResponse } from "../../common/restTypes.js";
+import type { ErrorResponse, LogRequest } from "../../common/restTypes.js";
 import { logSchema } from "./schemas.js";
+import { API_LOG } from "../../common/restPaths.js";
 
 export const registerLogRoutes = (app: FastifyInstance): void => {
     // POST /api/log - Log client-side errors or info messages
     // Unauthenticated API, protected by rate limiting
     app.post<{ Body: LogRequest; Reply: { success: true } | ErrorResponse }>(
-        "/api/log",
+        API_LOG,
         {
             schema: {
                 body: logSchema
