@@ -1,5 +1,5 @@
 import type { Board, Piece, Position, PuzzleDate } from "./types";
-import { MONTHS } from "./types";
+import { DAYS_IN_MONTH, DAYS_LAYOUT } from "./consts";
 import { getPieceShape } from "./pieceData";
 
 /**
@@ -186,17 +186,9 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
     }
 
     // Check Day cells (Rows 2-6)
-    const daysLayout = [
-        [1, 2, 3, 4, 5, 6, 7],
-        [8, 9, 10, 11, 12, 13, 14],
-        [15, 16, 17, 18, 19, 20, 21],
-        [22, 23, 24, 25, 26, 27, 28],
-        [29, 30, 31]
-    ];
-
-    for (let dy = 0; dy < daysLayout.length; dy++) {
+    for (let dy = 0; dy < DAYS_LAYOUT.length; dy++) {
         const y = dy + 2;
-        const row = daysLayout[dy];
+        const row = DAYS_LAYOUT[dy];
         for (let x = 0; x < row.length; x++) {
             if (!occupied[y][x]) {
                 // More than one day visible
@@ -211,8 +203,7 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
     // 4. Ensure exactly one of each was found and it's a valid calendar date
     if (foundMonth !== null && foundDay !== null) {
         // Basic date validation
-        const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        if (foundDay <= daysInMonth[foundMonth]) {
+        if (foundDay <= DAYS_IN_MONTH[foundMonth]) {
             return { month: foundMonth, day: foundDay };
         }
     }

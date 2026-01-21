@@ -13,7 +13,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import type { PuzzleDate } from "../../common/types";
-import { MONTHS } from "../../common/types";
+import { MONTHS, DAYS_IN_MONTH } from "../../common/consts";
 import { useQueryParam } from "../hooks/useQueryParam";
 import { useUser } from "../context/UserContext";
 
@@ -21,8 +21,6 @@ interface DatePickerProps {
     currentDate: PuzzleDate;
     onDateChange: (date: PuzzleDate) => void;
 }
-
-const DAYS_IN_MONTH = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; // Using 29 for Feb (leap year max)
 
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
     const theme = useTheme();
