@@ -4,6 +4,7 @@ import { db } from "../db/connection.js";
 import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { config } from "../config.js";
+import { AUTH_GOOGLE_CALLBACK } from "../../common/restPaths.js";
 
 export interface SessionUser {
     id: string;
@@ -17,7 +18,7 @@ export const setupPassport = () => {
     fastifyPassport.use("google", new GoogleStrategy({
         clientID: config.google.clientId as string,
         clientSecret: config.google.clientSecret as string,
-        callbackURL: "/auth/google/callback", // Relative path - resolved from request host
+        callbackURL: AUTH_GOOGLE_CALLBACK, // Relative path - resolved from request host
         proxy: true // Trust X-Forwarded-Proto header from reverse proxies
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {

@@ -6,6 +6,7 @@ import { requireAdmin } from "../auth/requireAuth.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
+import { API_ADMIN_SOLUTION, API_ADMIN_USERDATA } from "../../common/restPaths.js";
 import type { 
     DatePathParams, 
     SolutionResponse, 
@@ -16,7 +17,7 @@ import type {
 export const registerAdminRoutes = (app: FastifyInstance): void => {
     // GET /api/admin/solution/:date - Get full puzzle solution for a date (Admin only)
     app.get<{ Params: DatePathParams; Reply: SolutionResponse | ErrorResponse }>(
-        "/api/admin/solution/:date",
+        API_ADMIN_SOLUTION,
         { 
             preHandler: requireAdmin,
             schema: {
@@ -56,7 +57,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
 
     // GET /api/admin/userdata - Get user activity statistics (Admin only)
     app.get<{ Reply: UserDataResponse | ErrorResponse }>(
-        "/api/admin/userdata",
+        API_ADMIN_USERDATA,
         { 
             preHandler: requireAdmin,
             config: {

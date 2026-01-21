@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import type { PuzzleDate } from "../../common/types.js";
 import { clearCsrfToken, getCsrfToken } from "../service/puzzleService";
 import { logToServer } from "../service/logService.js";
+import { API_AUTH_ME, AUTH_LOGOUT } from "../../common/restPaths.js";
 
 export interface User {
     id: string;
@@ -32,7 +33,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchUser = useCallback(async () => {
         try {
-            const res = await fetch("/api/auth/me", {
+            const res = await fetch(API_AUTH_ME, {
                 credentials: "include"
             });
             if (res.ok) {
@@ -82,7 +83,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         try {
-            await fetch("/auth/logout", {
+            await fetch(AUTH_LOGOUT, {
                 method: "POST",
                 headers,
                 credentials: "include"
