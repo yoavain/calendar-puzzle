@@ -1,14 +1,15 @@
 import type { FastifyInstance } from "fastify";
-import type { IssueRequest, IssueResponse, ErrorResponse } from "../../common/restTypes.js";
+import type { ErrorResponse, IssueRequest, IssueResponse } from "../../common/restTypes.js";
 import { requireAuth } from "../auth/requireAuth.js";
 import { issueSchema } from "./schemas.js";
 import type { SessionUser } from "../auth/passport.js";
 import { submitIssue } from "../service/issueSubmitter.js";
+import { API_ISSUE } from "../../common/restPaths.js";
 
 export const registerIssueRoutes = (app: FastifyInstance): void => {
     // POST /api/issue - Submit a bug report or feature request
     app.post<{ Body: IssueRequest; Reply: IssueResponse | ErrorResponse }>(
-        "/api/issue",
+        API_ISSUE,
         {
             preHandler: requireAuth,
             schema: {

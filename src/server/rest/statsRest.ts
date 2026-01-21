@@ -6,8 +6,9 @@ import type { SessionUser } from "../auth/passport.js";
 import { requireAuth } from "../auth/requireAuth.js";
 import type { Piece } from "../../common/types.js";
 import { puzzleSolvedForDate } from "../../common/gameLogic.js";
-import { statsStartSchema, statsCompleteSchema } from "./schemas.js";
+import { statsCompleteSchema, statsStartSchema } from "./schemas.js";
 import { submitInvalidSolutionReport } from "../service/issueSubmitter.js";
+import { API_STATS_COMPLETE, API_STATS_START } from "../../common/restPaths.js";
 
 interface StatsRequest {
     month: number;
@@ -21,7 +22,7 @@ interface CompleteRequest extends StatsRequest {
 export const registerStatsRoutes = (app: FastifyInstance): void => {
     // Record that a user started a puzzle
     app.post<{ Body: StatsRequest }>(
-        "/api/stats/start",
+        API_STATS_START,
         { 
             preHandler: requireAuth,
             schema: {
@@ -60,7 +61,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
 
     // Record that a user completed a puzzle (with server-side validation)
     app.post<{ Body: CompleteRequest }>(
-        "/api/stats/complete",
+        API_STATS_COMPLETE,
         { 
             preHandler: requireAuth,
             schema: {
