@@ -1,10 +1,9 @@
 import type { FastifyInstance } from "fastify";
-import { Octokit } from "@octokit/rest";
 import type { IssueRequest, IssueResponse, ErrorResponse } from "../../common/restTypes.js";
 import { requireAuth } from "../auth/requireAuth.js";
 import { issueSchema } from "./schemas.js";
-import { config } from "../config.js";
 import type { SessionUser } from "../auth/passport.js";
+import { submitIssue } from "../service/issueSubmitter.js";
 
 export const registerIssueRoutes = (app: FastifyInstance): void => {
     // POST /api/issue - Submit a bug report or feature request
@@ -27,19 +26,12 @@ export const registerIssueRoutes = (app: FastifyInstance): void => {
             const user = request.user as SessionUser;
 
             try {
-                const octokit = new Octokit({
-                    auth: config.github.token
-                });
-
-                const body = `**Reporter:** ${user.name} (${user.email})\n\n**Description:**\n${description}`;
-
-                const response = await octokit.issues.create({
-                    owner: config.github.owner!,
-                    repo: config.github.repo!,
+                const response = await submitIssue(
                     title,
-                    body,
-                    labels: [type]
-                });
+                    description,
+                    type,
+                    user
+                );
 
                 request.log.info({ issueUrl: response.data.html_url }, "GitHub issue created successfully");
 

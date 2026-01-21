@@ -1,13 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db/connection.js";
 import { userPuzzleStats } from "../db/schema.js";
-import { eq, and, isNull } from "drizzle-orm";
+import { isNull } from "drizzle-orm";
 import type { SessionUser } from "../auth/passport.js";
 import { requireAuth } from "../auth/requireAuth.js";
-import type { Piece, PuzzleDate } from "../../common/types.js";
-import { isPuzzleSolved, isValidPlacement, getTransformedShape } from "../../common/gameLogic.js";
-import { initializeBoard } from "../utils/gameInit.js";
+import type { Piece } from "../../common/types.js";
+import { puzzleSolvedForDate } from "../../common/gameLogic.js";
 import { statsStartSchema, statsCompleteSchema } from "./schemas.js";
+import { submitInvalidSolutionReport } from "../service/issueSubmitter.js";
 
 interface StatsRequest {
     month: number;
@@ -76,43 +76,13 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
         async (request, reply) => {
             const { month, day, pieces } = request.body;
             const user = request.user as SessionUser;
-            const puzzleDate: PuzzleDate = { month, day };
 
             try {
-                // 1. Validate the solution on the server
-                const board = initializeBoard(puzzleDate);
-                
-                // Place pieces on the board and check validity
-                let allValid = true;
-                for (const piece of pieces) {
-                    if (piece.position) {
-                        if (!isValidPlacement(board, piece, piece.position)) {
-                            allValid = false;
-                            break;
-                        }
-                        
-                        // Mark as occupied for overlap check of next pieces
-                        const shape = getTransformedShape(piece);
-                        for (let dy = 0; dy < shape.length; dy++) {
-                            for (let dx = 0; dx < shape[0].length; dx++) {
-                                if (shape[dy][dx]) {
-                                    const boardY = piece.position.y + dy;
-                                    const boardX = piece.position.x + dx;
-                                    if (boardY < board.length && boardX < board[boardY].length) {
-                                        board[boardY][boardX].isOccupied = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        // All pieces must be placed for a solution to be valid
-                        allValid = false;
-                        break;
-                    }
-                }
+                // 1. Validate the solution on the server directly using pieces
+                const solvedDate = puzzleSolvedForDate(pieces);
+                const isValid = solvedDate && solvedDate.month === month && solvedDate.day === day;
 
-                if (allValid && isPuzzleSolved(board, puzzleDate)) {
+                if (isValid) {
                     // 2. Record completion in DB
                     await db.insert(userPuzzleStats)
                         .values({
@@ -133,6 +103,23 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                     return { success: true };
                 }
                 else {
+                    // Automatically report a bug to GitHub if a solution fails server-side validation
+                    try {
+                        const actualDateFound = puzzleSolvedForDate(pieces);
+
+                        await submitInvalidSolutionReport(
+                            pieces,
+                            { month, day },
+                            actualDateFound,
+                            user
+                        );
+
+                        request.log.info({ user: user.name, targetDate: `${month + 1}/${day}` }, "Automated bug report created for invalid solution");
+                    }
+                    catch (githubError) {
+                        request.log.error(githubError, "[StatsRoute] Failed to report bug to GitHub");
+                    }
+
                     return reply.code(400).send({ error: "Invalid solution" });
                 }
             }
