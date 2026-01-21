@@ -122,67 +122,94 @@ export const isValidPlacement = (board: Board, piece: Piece, position: Position,
 };
 
 /**
- * Check if the puzzle is solved for the current date
+ * For debugging and validation: Check if the pieces represent a valid solved date.
+ * Returns the date if exactly one valid month and one day are visible, or null otherwise.
+ * Performs strict validation: all 8 pieces must be placed, no overlaps, no out-of-bounds.
  */
-export const isPuzzleSolved = (board: Board, currentDate: PuzzleDate): boolean => {
-    const { month, day } = currentDate;
+export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
+    // 1. All 8 pieces must be placed
+    if (pieces.filter(p => p.position !== null).length !== 8) {
+        return null;
+    }
+
+    // 2. Create occupancy grid (7x7) and check for overlaps/out-of-bounds
+    const occupied = Array(7).fill(null).map(() => Array(7).fill(false));
     
-    // Check if the month cell is visible (not covered)
-    let monthVisible = false;
+    for (const piece of pieces) {
+        if (!piece.position) return null;
+        const shape = getTransformedShape(piece);
+        for (let dy = 0; dy < shape.length; dy++) {
+            for (let dx = 0; dx < shape[0].length; dx++) {
+                if (shape[dy][dx]) {
+                    const by = piece.position.y + dy;
+                    const bx = piece.position.x + dx;
+
+                    // Out of bounds or non-playable cells
+                    if (by < 0 || by >= 7 || bx < 0 || bx >= 7) {
+                        return null;
+                    }
+
+                    // Check if cell is playable
+                    const isPlayable = (
+                        (by < 2 && bx < 6) || // Months
+                        (by >= 2 && by <= 5 && bx < 7) || // Days 1-28
+                        (by === 6 && bx < 3) // Days 29-31
+                    );
+
+                    if (!isPlayable || occupied[by][bx]) {
+                        return null;
+                    }
+
+                    occupied[by][bx] = true;
+                }
+            }
+        }
+    }
+
+    // 3. Define board layout and check for uncovered cells
+    let foundMonth: number | null = null;
+    let foundDay: number | null = null;
+
+    // Check Month cells (Rows 0-1, Cols 0-5)
     for (let y = 0; y < 2; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            if (board[y][x].content === MONTHS[month] && !board[y][x].isOccupied) {
-                monthVisible = true;
-                break;
-            }
-        }
-        if (monthVisible) {
-            break;
-        }
-    }
-    
-    if (!monthVisible) {
-        return false;
-    }
-    
-    // Check if the day cell is visible (not covered)
-    let dayVisible = false;
-    for (let y = 2; y < board.length; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            const content = board[y][x].content;
-            if (content && parseInt(content) === day && !board[y][x].isOccupied) {
-                dayVisible = true;
-                break;
-            }
-        }
-        if (dayVisible) {
-            break;
-        }
-    }
-    
-    if (!dayVisible) {
-        return false;
-    }
-    
-    // Check if all other cells that should be covered are covered
-    for (let y = 0; y < board.length; y++) {
-        for (let x = 0; x < board[y].length; x++) {
-            const cell = board[y][x];
-            
-            // Skip month and day cells
-            if ((y < 2 && cell.content === MONTHS[month]) || 
-                (y >= 2 && parseInt(cell.content) === day)) {
-                continue;
-            }
-            
-            // All other playable cells should be covered
-            if (cell.isPlayable && !cell.isOccupied) {
-                return false;
+        for (let x = 0; x < 6; x++) {
+            if (!occupied[y][x]) {
+                if (foundMonth !== null) return null; // More than one month visible
+                foundMonth = y * 6 + x;
             }
         }
     }
-    
-    return true;
+
+    // Check Day cells (Rows 2-6)
+    const daysLayout = [
+        [1, 2, 3, 4, 5, 6, 7],
+        [8, 9, 10, 11, 12, 13, 14],
+        [15, 16, 17, 18, 19, 20, 21],
+        [22, 23, 24, 25, 26, 27, 28],
+        [29, 30, 31]
+    ];
+
+    for (let dy = 0; dy < daysLayout.length; dy++) {
+        const y = dy + 2;
+        const row = daysLayout[dy];
+        for (let x = 0; x < row.length; x++) {
+            if (!occupied[y][x]) {
+                if (foundDay !== null) return null; // More than one day visible
+                foundDay = row[x];
+            }
+        }
+    }
+
+    // 4. Ensure exactly one of each was found and it's a valid calendar date
+    if (foundMonth !== null && foundDay !== null) {
+        // Basic date validation
+        const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if (foundDay <= daysInMonth[foundMonth]) {
+            return { month: foundMonth, day: foundDay };
+        }
+    }
+
+    return null;
 };
 
 /**

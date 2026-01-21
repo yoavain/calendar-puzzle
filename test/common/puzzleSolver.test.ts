@@ -1,6 +1,6 @@
 import type { Board, Piece, PuzzleDate } from "../../src/common/types";
 import { toPuzzleDate } from "../../src/common/types";
-import { isPuzzleSolved } from "../../src/common/gameLogic";
+import { puzzleSolvedForDate } from "../../src/common/gameLogic";
 import { findSolution } from "../../src/common/puzzleSolver";
 import { initializeBoard, initializePieces } from "../../src/client/utils/initialize";
 
@@ -17,7 +17,8 @@ describe("puzzleSolver", () => {
 
             // ASSERT
             expect(solution).not.toBeNull();
-            expect(isPuzzleSolved(solution!.board, date)).toBe(true);
+            const solvedDate = puzzleSolvedForDate(solution!.pieces);
+            expect(solvedDate).toEqual(date);
         });
     });
 });

@@ -1,0 +1,84 @@
+{
+    "pieces": [
+        {
+            "id": 1,
+            "position": {
+                "x": 1,
+                "y": 2
+            },
+            "rotation": 0,
+            "isFlippedH": false,
+            "isFlippedV": false
+        },
+        {
+            "id": 2,
+            "position": {
+                "x": 3,
+                "y": 0
+            },
+            "rotation": 0,
+            "isFlippedH": false,
+            "isFlippedV": false
+        },
+        {
+            "id": 3,
+            "position": {
+                "x": 2,
+                "y": 1
+            },
+            "rotation": 0,
+            "isFlippedH": false,
+            "isFlippedV": true
+        },
+        {
+            "id": 4,
+            "position": {
+                "x": 2,
+                "y": 3
+            },
+            "rotation": 0,
+            "isFlippedH": false,
+            "isFlippedV": false
+        },
+        {
+            "id": 5,
+            "position": {
+                "x": 0,
+                "y": 0
+            },
+            "rotation": 90,
+            "isFlippedH": true,
+            "isFlippedV": false
+        },
+        {
+            "id": 6,
+            "position": {
+                "x": 4,
+                "y": 3
+            },
+            "rotation": 0,
+            "isFlippedH": true,
+            "isFlippedV": false
+        },
+        {
+            "id": 7,
+            "position": {
+                "x": 5,
+                "y": 2
+            },
+            "rotation": 0,
+            "isFlippedH": false,
+            "isFlippedV": false
+        },
+        {
+            "id": 8,
+            "position": {
+                "x": 0,
+                "y": 3
+            },
+            "rotation": 0,
+            "isFlippedH": false,
+            "isFlippedV": false
+        }
+    ]
+}
