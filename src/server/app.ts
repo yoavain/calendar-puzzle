@@ -82,7 +82,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             path: "/",
             httpOnly: true,
             secure: config.server.nodeEnv === "production",
-            sameSite: "lax"
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 // 7 days in seconds
         }
     });
 

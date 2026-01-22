@@ -622,7 +622,7 @@ export const Game: React.FC = () => {
     useEffect(() => {
         const checkInitialHint = async () => {
             const currentDate = gameState.currentDate;
-            if (user && isBoardEmpty) {
+            if (!userLoading && user && isBoardEmpty) {
                 try {
                     const hintState = await loadPersistentHint(currentDate, gameState.pieces);
                     if (hintState) {
@@ -640,7 +640,7 @@ export const Game: React.FC = () => {
             }
         };
         checkInitialHint();
-    }, [user, gameState.currentDate]); // Run when user logs in or date is set
+    }, [user, userLoading, gameState.currentDate]); // Run when user logs in or date is set
 
     useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);

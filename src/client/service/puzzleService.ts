@@ -30,6 +30,19 @@ let cachedCsrfToken: string | null = null;
 let csrfTokenPromise: Promise<string | null> | null = null;
 
 /**
+ * Custom fetch wrapper to handle 401s and other global concerns
+ */
+const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+    const response = await fetch(url, options);
+    
+    if (response.status === 401) {
+        window.dispatchEvent(new CustomEvent("app:unauthorized"));
+    }
+    
+    return response;
+};
+
+/**
  * Fetches the server's public key once for encryption.
  */
 const getPublicKey = async (): Promise<string | null> => {
@@ -37,7 +50,7 @@ const getPublicKey = async (): Promise<string | null> => {
         return cachedPublicKey;
     }
     try {
-        const response = await fetch(API_AUTH_PUBLIC_KEY, {
+        const response = await apiFetch(API_AUTH_PUBLIC_KEY, {
             credentials: "include"
         });
         if (response.ok) {
@@ -65,7 +78,7 @@ export const getCsrfToken = async (): Promise<string | null> => {
 
     csrfTokenPromise = (async () => {
         try {
-            const response = await fetch(API_AUTH_CSRF_TOKEN, {
+            const response = await apiFetch(API_AUTH_CSRF_TOKEN, {
                 credentials: "include"
             });
             if (response.ok) {
@@ -97,7 +110,7 @@ export const clearCsrfToken = (): void => {
  * Get the full puzzle solution for a specific date (Admin only)
  */
 export const getSolution = async (date: PuzzleDate): Promise<Piece[]> => {
-    const response = await fetch(getAdminSolutionPath(date), {
+    const response = await apiFetch(getAdminSolutionPath(date), {
         credentials: "include"
     });
     
@@ -129,7 +142,7 @@ export const getHint = async (date: PuzzleDate): Promise<Piece> => {
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch(API_HINT, {
+    const response = await apiFetch(API_HINT, {
         method: "PUT",
         headers,
         body: JSON.stringify(body),
@@ -149,7 +162,7 @@ export const getHint = async (date: PuzzleDate): Promise<Piece> => {
  * Check if a hint was already used for a specific date
  */
 export const getHintState = async (date: PuzzleDate): Promise<Piece | null> => {
-    const response = await fetch(getHintStatePath(date), {
+    const response = await apiFetch(getHintStatePath(date), {
         credentials: "include"
     });
     
@@ -179,7 +192,7 @@ export const recordStart = async (date: PuzzleDate): Promise<boolean> => {
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch(API_STATS_START, {
+    const response = await apiFetch(API_STATS_START, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -214,7 +227,7 @@ export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promi
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch(API_STATS_COMPLETE, {
+    const response = await apiFetch(API_STATS_COMPLETE, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -242,7 +255,7 @@ export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
         headers["X-CSRF-Token"] = csrfToken;
     }
 
-    const response = await fetch(API_ISSUE, {
+    const response = await apiFetch(API_ISSUE, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -256,7 +269,7 @@ export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
  * Fetch all user activity statistics (Admin only)
  */
 export const getUserActivity = async (): Promise<UserActivity[]> => {
-    const response = await fetch(API_ADMIN_USERDATA, {
+    const response = await apiFetch(API_ADMIN_USERDATA, {
         credentials: "include"
     });
 
