@@ -1,5 +1,6 @@
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 // Pieces container (the grid that holds all unplaced pieces)
 export const PiecesContainer = styled(Box)(({ theme }) => ({
@@ -17,6 +18,16 @@ export const PiecesContainer = styled(Box)(({ theme }) => ({
     height: 600,
     overflowY: "auto"
 }));
+
+// Game title
+export const GameTitle = styled(Typography)(({ theme }) => ({
+    marginBottom: theme.spacing(2),
+    fontWeight: "bold",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none"
+})) as typeof Typography;
 
 // Individual piece wrapper in the pool
 export const PiecePoolWrapper = styled(Box)(({ theme }) => ({
