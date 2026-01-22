@@ -32,7 +32,7 @@ import { useGameHistory } from "../hooks/useGameHistory";
 import { getSolution, getHint, getHintState, recordStart, recordCompletion } from "../service/puzzleService";
 import { saveSession, loadSession, clearSession } from "../hooks/useGameSession";
 import { logToServer } from "../service/logService";
-import { PiecesContainer, PiecePoolWrapper } from "./Game.styled";
+import { PiecesContainer, PiecePoolWrapper, GameTitle } from "./Game.styled";
 import BarChartIcon from "@mui/icons-material/BarChart";
 
 /**
@@ -946,14 +946,13 @@ export const Game: React.FC = () => {
             </Stack>
 
             {/* Title */}
-            <Typography 
+            <GameTitle 
                 variant="h4" 
                 component="h1" 
                 align="center" 
-                sx={{ mb: 2, fontWeight: "bold" }}
             >
                 Calendar Puzzle
-            </Typography>
+            </GameTitle>
 
             {/* Progress Bar */}
             <ProgressBar {...calculateProgress(gameState.pieces)} />
