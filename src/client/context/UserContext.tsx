@@ -70,6 +70,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         fetchUser();
     }, [fetchUser]);
 
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            setUser(null);
+            setCompletedDates([]);
+            setPlayedDates([]);
+            clearCsrfToken();
+        };
+
+        window.addEventListener("app:unauthorized", handleUnauthorized);
+        return () => window.removeEventListener("app:unauthorized", handleUnauthorized);
+    }, []);
+
     const logout = useCallback(async () => {
         const headers: Record<string, string> = {};
         try {
