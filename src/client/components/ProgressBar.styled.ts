@@ -40,5 +40,9 @@ export const ProgressLabel = styled(Box)({
     fontWeight: "bold",
     color: "#fff",
     textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
-    pointerEvents: "none"
+    pointerEvents: "none",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none"
 });
