@@ -31,7 +31,11 @@ export const BoardContainer = styled("div")(({ theme }) => ({
     minWidth: theme.game.cellSize * 7,
     maxWidth: theme.game.cellSize * 7,
     marginLeft: "auto",
-    marginRight: "auto"
+    marginRight: "auto",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none"
 }));
 
 // Board row
