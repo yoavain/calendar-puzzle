@@ -14,7 +14,9 @@ export interface StyledLinearProgressProps {
     progressColor: string;
 }
 
-export const StyledLinearProgress = styled(LinearProgress)<StyledLinearProgressProps>(({ theme, progressColor }) => ({
+export const StyledLinearProgress = styled(LinearProgress, {
+    shouldForwardProp: (prop) => prop !== "progressColor"
+})<StyledLinearProgressProps>(({ theme, progressColor }) => ({
     height: 25,
     borderRadius: 12,
     [`&.${linearProgressClasses.colorPrimary}`]: {

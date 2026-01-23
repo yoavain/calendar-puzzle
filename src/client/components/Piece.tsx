@@ -10,9 +10,11 @@ interface PieceProps {
     piece: PieceType;
     isSelected: boolean;
     onClick: () => void;
+    onDragStart?: (pieceId: number) => void;
+    onDragEnd?: () => void;
 }
 
-export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
+export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDragStart, onDragEnd }) => {
     const theme = useTheme();
     
     // Track cumulative rotation to ensure smooth clockwise animation
@@ -70,12 +72,31 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
     ].join(" ");
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+        // Notify parent that drag started
+        onDragStart?.(piece.id);
+
+        let firstFilledX = -1;
+        let firstFilledY = -1;
+        outerLoop: for (let y = 0; y < transformedShape.length; y++) {
+            for (let x = 0; x < transformedShape[y].length; x++) {
+                if (transformedShape[y][x]) {
+                    firstFilledX = x;
+                    firstFilledY = y;
+                    break outerLoop;
+                }
+            }
+        }
+        const cellSize = theme.game.cellSize;
+        const offsetX = (firstFilledX * cellSize) + (cellSize / 2);
+        const offsetY = (firstFilledY * cellSize) + (cellSize / 2);
+
         const data = JSON.stringify({
             pieceId: piece.id
         });
         
         try {
             e.dataTransfer.setData("text/plain", data);
+            e.dataTransfer.effectAllowed = "move"; // Set effectAllowed
         }
         catch (err) {
             logToServer("error", "Piece: Failed to set drag data", err);
@@ -116,7 +137,8 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
         });
 
         document.body.appendChild(dragPreview);
-        e.dataTransfer.setDragImage(dragPreview, 25, 25);
+        
+        e.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
         setTimeout(() => document.body.removeChild(dragPreview), 0);
     };
 
@@ -127,6 +149,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick }) => {
             onClick={onClick}
             draggable={!piece.position}
             onDragStart={handleDragStart}
+            onDragEnd={() => onDragEnd?.()}
         >
             <PieceGrid
                 columns={baseWidth}

@@ -60,7 +60,21 @@ export interface BoardCellProps {
 }
 
 // Board cell
-export const BoardCell = styled("div")<BoardCellProps>(({ 
+export const BoardCell = styled("div", {
+    shouldForwardProp: (prop) => ![
+        "isPlayable", 
+        "isHighlighted", 
+        "isPieceCell", 
+        "isHidden", 
+        "isStyled", 
+        "isLocked", 
+        "isInvalidDrop", 
+        "isDragOver", 
+        "pieceId", 
+        "solutionRevealed", 
+        "isSolved"
+    ].includes(prop as string)
+})<BoardCellProps>(({ 
     theme, 
     isPlayable, 
     isHighlighted, 
