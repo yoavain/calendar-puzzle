@@ -34,7 +34,9 @@ export interface PieceWrapperProps {
 }
 
 // Piece wrapper (the outer container for a piece in the pool)
-export const PieceWrapper = styled(Box)<PieceWrapperProps>(({ theme, isSelected, isPlaced }) => ({
+export const PieceWrapper = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "isSelected" && prop !== "isPlaced"
+})<PieceWrapperProps>(({ theme, isSelected, isPlaced }) => ({
     cursor: isPlaced ? "move" : "grab",
     border: "none",
     margin: 0,
