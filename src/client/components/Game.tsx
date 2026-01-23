@@ -147,6 +147,9 @@ export const Game: React.FC = () => {
     // State for success message popup
     const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
 
+    // State for tracking dragged piece for preview
+    const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
+
     // Handle date change from date picker
     const handleDateChange = async (newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
@@ -979,6 +982,9 @@ export const Game: React.FC = () => {
                     invalidDropCells={invalidDropCells}
                     solutionRevealed={gameState.solutionRevealed}
                     isSolved={gameState.isSolved}
+                    draggedPieceId={draggedPieceId}
+                    onDragStart={setDraggedPieceId}
+                    onDragEnd={() => setDraggedPieceId(null)}
                     data-testid="board"
                 />
                 <PiecesContainer
@@ -993,6 +999,8 @@ export const Game: React.FC = () => {
                                     piece={piece}
                                     isSelected={piece.id === gameState.selectedPieceId}
                                     onClick={() => handlePieceSelect(piece.id)}
+                                    onDragStart={setDraggedPieceId}
+                                    onDragEnd={() => setDraggedPieceId(null)}
                                     data-testid={`piece-${piece.id}`}
                                 />
                                 <PieceControls

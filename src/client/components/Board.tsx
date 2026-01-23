@@ -20,9 +20,12 @@ interface BoardProps {
     invalidDropCells?: InvalidDropCell[];
     solutionRevealed?: boolean;
     isSolved?: boolean;
+    draggedPieceId: number | null;
+    onDragStart: (pieceId: number) => void;
+    onDragEnd: () => void;
 }
 
-export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [], solutionRevealed = false, isSolved = false }) => {
+export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [], solutionRevealed = false, isSolved = false, draggedPieceId, onDragStart, onDragEnd }) => {
     const theme = useTheme();
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
 
@@ -31,11 +34,43 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             return;
         }
         e.preventDefault();
-        setDragOverCell({ x, y });
+        e.dataTransfer.dropEffect = "move";
+        
+        const draggedPiece = pieces.find(p => p.id === draggedPieceId);
+        if (draggedPiece) {
+            const shape = getTransformedShape(draggedPiece);
+            let firstFilledX = -1;
+            let firstFilledY = -1;
+            outerLoop: for (let fy = 0; fy < shape.length; fy++) {
+                for (let fx = 0; fx < shape[fy].length; fx++) {
+                    if (shape[fy][fx]) {
+                        firstFilledX = fx;
+                        firstFilledY = fy;
+                        break outerLoop;
+                    }
+                }
+            }
+            // The cursor is on cell (x, y), which corresponds to (firstFilledX, firstFilledY) of the piece.
+            // Therefore, the top-left (0,0) of the piece should be at (x - firstFilledX, y - firstFilledY).
+            setDragOverCell({ 
+                x: x - firstFilledX, 
+                y: y - firstFilledY 
+            });
+        }
+        else {
+            setDragOverCell({ x, y });
+        }
     };
 
-    const handleDragLeave = () => {
-        setDragOverCell(null);
+    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        // Only clear if we're actually leaving the board container
+        const rect = e.currentTarget.getBoundingClientRect();
+        const { clientX, clientY } = e;
+        const isLeaving = clientX < rect.left || clientX >= rect.right || clientY < rect.top || clientY >= rect.bottom;
+        
+        if (isLeaving) {
+            setDragOverCell(null);
+        }
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>, position: Position) => {
@@ -43,7 +78,11 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             return;
         }
         e.preventDefault();
+        
+        const dropPosition = dragOverCell || position;
+
         setDragOverCell(null);
+        onDragEnd();
         
         const data = e.dataTransfer.getData("text/plain");
 
@@ -52,7 +91,8 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                 throw new Error("No data found in dataTransfer");
             }
             const dragItem: DragItem = JSON.parse(data);
-            onPieceDrop(position, dragItem);
+            
+            onPieceDrop(dropPosition, dragItem);
         }
         catch (err) {
             logToServer("error", "Board: Failed to handle drop", err);
@@ -79,13 +119,53 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         return invalidDropCells.some(cell => cell.x === x && cell.y === y);
     };
 
+    // Function to check if a cell would be occupied by the dragged piece preview
+    const isDragPreviewCell = (x: number, y: number): boolean => {
+        if (dragOverCell === null || !draggedPieceId) {
+            return false;
+        }
+
+        const draggedPiece = pieces.find(p => p.id === draggedPieceId);
+        if (!draggedPiece) {
+            return false;
+        }
+
+        const shape = getTransformedShape(draggedPiece);
+        const relativeX = x - dragOverCell.x;
+        const relativeY = y - dragOverCell.y;
+
+        return relativeY >= 0 && relativeY < shape.length &&
+            relativeX >= 0 && relativeX < shape[0].length &&
+            shape[relativeY][relativeX];
+    };
+
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
+        // Track the dragged piece for preview
+        onDragStart(piece.id);
+
+        const shape = getTransformedShape(piece);
+        let firstFilledX = -1;
+        let firstFilledY = -1;
+        outerLoop: for (let y = 0; y < shape.length; y++) {
+            for (let x = 0; x < shape[y].length; x++) {
+                if (shape[y][x]) {
+                    firstFilledX = x;
+                    firstFilledY = y;
+                    break outerLoop;
+                }
+            }
+        }
+        const cellSize = theme.game.cellSize;
+        const offsetX = (firstFilledX * cellSize) + (cellSize / 2);
+        const offsetY = (firstFilledY * cellSize) + (cellSize / 2);
+        
         const data = JSON.stringify({
             pieceId: piece.id
         });
 
         try {
             e.dataTransfer.setData("text/plain", data);
+            e.dataTransfer.effectAllowed = "move"; // Set effectAllowed
         }
         catch (err) {
             logToServer("error", "Board: Failed to set drag data", err);
@@ -102,7 +182,6 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             background-color: transparent;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)) drop-shadow(0 2px 4px rgba(0,0,0,0.15));
         `;
-        const shape = getTransformedShape(piece);
 
         shape.forEach((row) => {
             const rowDiv = document.createElement("div");
@@ -128,12 +207,13 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         });
 
         document.body.appendChild(dragPreview);
-        e.dataTransfer.setDragImage(dragPreview, 25, 25);
+        
+        e.dataTransfer.setDragImage(dragPreview, offsetX, offsetY);
         setTimeout(() => document.body.removeChild(dragPreview), 0);
     };
 
     return (
-        <BoardContainer>
+        <BoardContainer onDragLeave={handleDragLeave}>
             {board.map((row, y) => (
                 <BoardRow key={y}>
                     {row.map((cell, x) => {
@@ -156,8 +236,8 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                         // Check if this cell is part of an invalid drop attempt
                         const isInvalid = isInvalidDropCell(x, y);
 
-                        // Check if this cell is being dragged over
-                        const isDragOver = dragOverCell?.x === x && dragOverCell?.y === y;
+                        // Check if this cell is part of the drag preview
+                        const isPreview = isDragPreviewCell(x, y);
 
                         return (
                             <BoardCell
@@ -169,16 +249,16 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 isStyled={isStyledCell}
                                 isLocked={isLocked}
                                 isInvalidDrop={isInvalid}
-                                isDragOver={isDragOver}
+                                isDragOver={isPreview}
                                 pieceId={piece?.id}
                                 solutionRevealed={solutionRevealed}
                                 isSolved={isSolved}
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={(e) => handleDragOver(e, x, y)}
-                                onDragLeave={handleDragLeave}
                                 onDrop={(e) => handleDrop(e, { x, y })}
                                 draggable={!!piece && !isLocked && !isSolved}
                                 onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
+                                onDragEnd={() => onDragEnd()}
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>
