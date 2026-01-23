@@ -56,7 +56,8 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                 x: x - firstFilledX, 
                 y: y - firstFilledY 
             });
-        } else {
+        }
+        else {
             setDragOverCell({ x, y });
         }
     };
