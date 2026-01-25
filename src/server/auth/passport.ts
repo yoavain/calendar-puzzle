@@ -32,7 +32,7 @@ export const setupPassport = () => {
             // Ensure user exists in DB - only store non-PII
             const [dbUser] = await db.insert(users)
                 .values({
-                    id: profile.id,
+                    id: profile.id
                 })
                 .onConflictDoNothing()
                 .returning();
