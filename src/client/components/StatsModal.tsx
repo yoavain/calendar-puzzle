@@ -51,7 +51,10 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
             fullWidth
             disableScrollLock
             PaperProps={{
-                sx: { borderRadius: 2 }
+                sx: { 
+                    borderRadius: 2,
+                    userSelect: "none"
+                }
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
