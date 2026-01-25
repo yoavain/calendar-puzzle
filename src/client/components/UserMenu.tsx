@@ -33,7 +33,8 @@ export const UserMenu: React.FC = () => {
     };
 
     // Get initials from name or ID
-    const initials = (user.name || user.id)
+    const nameOrId = user.name || user.id || "";
+    const initials = nameOrId
         .split(" ")
         .map(n => n[0])
         .join("")
