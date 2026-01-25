@@ -2,11 +2,11 @@ import type { FastifyInstance } from "fastify";
 import { db } from "../db/connection.js";
 import { users, userPuzzleStats } from "../db/schema.js";
 import { eq, sql, isNotNull, and } from "drizzle-orm";
-import { requireAdmin } from "../auth/requireAuth.js";
+import { requireAdmin, requireAuth } from "../auth/requireAuth.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
-import { API_ADMIN_SOLUTION, API_ADMIN_USERDATA } from "../../common/restPaths.js";
+import { API_ADMIN_SOLUTION, API_HALL_OF_FAME } from "../../common/restPaths.js";
 import type { 
     DatePathParams, 
     SolutionResponse, 
@@ -55,11 +55,11 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
         }
     );
 
-    // GET /api/admin/userdata - Get user activity statistics (Admin only)
+    // GET /api/hall-of-fame - Get user activity statistics (Hall of Fame)
     app.get<{ Reply: UserDataResponse | ErrorResponse }>(
-        API_ADMIN_USERDATA,
+        API_HALL_OF_FAME,
         { 
-            preHandler: requireAdmin,
+            preHandler: requireAuth,
             config: {
                 rateLimit: {
                     max: 5,

@@ -14,9 +14,9 @@ import type {
 import { encryptPayload } from "../utils/encryption.js";
 import { logToServer } from "./logService.js";
 import {
-    API_ADMIN_USERDATA,
     API_AUTH_CSRF_TOKEN,
     API_AUTH_PUBLIC_KEY,
+    API_HALL_OF_FAME,
     API_HINT,
     API_ISSUE,
     API_STATS_COMPLETE,
@@ -266,10 +266,10 @@ export const submitIssue = async (issue: IssueRequest): Promise<boolean> => {
 };
 
 /**
- * Fetch all user activity statistics (Admin only)
+ * Fetch all user activity statistics (Hall of Fame)
  */
 export const getUserActivity = async (): Promise<UserActivity[]> => {
-    const response = await apiFetch(API_ADMIN_USERDATA, {
+    const response = await apiFetch(API_HALL_OF_FAME, {
         credentials: "include"
     });
 
