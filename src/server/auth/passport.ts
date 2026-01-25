@@ -8,10 +8,11 @@ import { AUTH_GOOGLE_CALLBACK } from "../../common/restPaths.js";
 
 export interface SessionUser {
     id: string;
-    email: string;
-    name: string;
-    avatarUrl?: string | null;
     isAdmin: boolean;
+    // PII stored in session only, not in DB
+    email?: string;
+    name?: string;
+    avatarUrl?: string | null;
 }
 
 export const setupPassport = () => {
@@ -22,34 +23,30 @@ export const setupPassport = () => {
         proxy: true // Trust X-Forwarded-Proto header from reverse proxies
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {
-            const user = {
-                id: profile.id,
+            const pii = {
                 email: profile.emails?.[0]?.value ?? "",
                 name: profile.displayName,
                 avatarUrl: profile.photos?.[0]?.value ?? null
             };
 
-            // Ensure user exists in DB - Upsert user information
+            // Ensure user exists in DB - only store non-PII
             const [dbUser] = await db.insert(users)
                 .values({
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    avatarUrl: user.avatarUrl
+                    id: profile.id,
                 })
-                .onConflictDoUpdate({
-                    target: users.id,
-                    set: {
-                        email: user.email,
-                        name: user.name,
-                        avatarUrl: user.avatarUrl
-                    }
-                })
+                .onConflictDoNothing()
                 .returning();
 
+            // If user already existed, dbUser will be undefined from onConflictDoNothing().returning()
+            // So we fetch the actual user state
+            const [finalDbUser] = dbUser 
+                ? [dbUser] 
+                : await db.select().from(users).where(eq(users.id, profile.id));
+
             return done(null, {
-                ...user,
-                isAdmin: dbUser.isAdmin
+                id: profile.id,
+                isAdmin: finalDbUser.isAdmin,
+                ...pii
             });
         }
         catch (error) {
@@ -57,13 +54,10 @@ export const setupPassport = () => {
         }
     }));
 
-    fastifyPassport.registerUserSerializer<SessionUser, string>(
-        async (user) => user.id
+    fastifyPassport.registerUserSerializer<SessionUser, SessionUser>(
+        async (user) => user
     );
-    fastifyPassport.registerUserDeserializer<string, SessionUser>(
-        async (id) => {
-            const [user] = await db.select().from(users).where(eq(users.id, id));
-            return user as SessionUser;
-        }
+    fastifyPassport.registerUserDeserializer<SessionUser, SessionUser>(
+        async (user) => user
     );
 };

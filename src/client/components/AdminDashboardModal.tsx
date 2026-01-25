@@ -17,6 +17,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 import { getUserActivity } from "../service/puzzleService.js";
 import { logToServer } from "../service/logService.js";
 import type { UserActivity } from "../../common/restTypes.js";
@@ -34,7 +35,7 @@ interface HeadCell {
 }
 
 const headCells: HeadCell[] = [
-    { id: "username", label: "Username" },
+    { id: "userId", label: "User" },
     { id: "daysPlayed", label: "Days Played" },
     { id: "daysSolved", label: "Days Solved" },
     { id: "daysPlayedWithHint", label: "Played w/ Hint" },
@@ -122,11 +123,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
                         <Table stickyHeader aria-label="user statistics table">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell />
                                     {headCells.map((headCell) => (
                                         <TableCell
                                             key={headCell.id}
-                                            align={headCell.id === "username" ? "left" : "center"}
+                                            align="center"
                                             sortDirection={orderBy === headCell.id ? order : false}
                                         >
                                             <TableSortLabel
@@ -143,16 +143,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
                             <TableBody>
                                 {sortedData.map((row, index) => (
                                     <TableRow key={index} hover>
-                                        <TableCell sx={{ width: 40, pr: 0 }}>
-                                            <Avatar 
-                                                src={row.avatarUrl || undefined} 
-                                                sx={{ width: 24, height: 24, fontSize: "0.75rem" }}
-                                            >
-                                                {row.username.charAt(0).toUpperCase()}
-                                            </Avatar>
-                                        </TableCell>
-                                        <TableCell component="th" scope="row">
-                                            {row.username}
+                                        <TableCell align="center">
+                                            <Tooltip title={`User ID: ${row.userId}`}>
+                                                <Avatar 
+                                                    src={`https://api.dicebear.com/7.x/identicon/svg?seed=${row.userId}`}
+                                                    sx={{ width: 32, height: 32, margin: "0 auto" }}
+                                                />
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell align="center">{row.daysPlayed}</TableCell>
                                         <TableCell align="center">{row.daysSolved}</TableCell>
@@ -162,7 +159,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
                                 ))}
                                 {sortedData.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
                                             No data available
                                         </TableCell>
                                     </TableRow>

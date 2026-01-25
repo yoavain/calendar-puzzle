@@ -6,10 +6,11 @@ import { API_AUTH_ME, AUTH_LOGOUT } from "../../common/restPaths.js";
 
 export interface User {
     id: string;
-    email: string;
-    name: string;
-    avatarUrl?: string | null;
     isAdmin: boolean;
+    // PII from session only
+    email?: string;
+    name?: string;
+    avatarUrl?: string | null;
 }
 
 interface UserContextValue {
@@ -44,7 +45,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 
                 // Fetch CSRF token separately after authenticated session is established
                 getCsrfToken().catch(err => {
-                    logToServer("error", "UserContext: Failed to fetch CSRF token", err, data.user?.name);
+                    logToServer("error", "UserContext: Failed to fetch CSRF token", err, data.user?.id);
                 });
             }
             else {
@@ -91,7 +92,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
         catch (err) {
-            logToServer("error", "UserContext: Failed to get CSRF token for logout", err, user?.name);
+            logToServer("error", "UserContext: Failed to get CSRF token for logout", err, user?.id);
         }
 
         try {
@@ -102,7 +103,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             });
         }
         catch (err) {
-            logToServer("error", "UserContext: Logout request failed", err, user?.name);
+            logToServer("error", "UserContext: Logout request failed", err, user?.id);
         }
         setUser(null);
         setCompletedDates([]);
