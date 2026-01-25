@@ -10,6 +10,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate } from "../../common/types";
 import { toPuzzleDate } from "../../common/types";
 import { calculateProgress, clearPieceFromBoard, getTransformedShape, puzzleSolvedForDate, isValidPlacement } from "../../common/gameLogic";
@@ -27,6 +28,7 @@ import { DatePicker } from "./DatePicker";
 import { StatsModal } from "./StatsModal";
 import { IssueModal } from "./IssueModal";
 import { ProgressBar } from "./ProgressBar";
+import { HelpModal } from "./HelpModal";
 import { initializeGame, initializeBoard } from "../utils/initialize";
 import { useGameHistory } from "../hooks/useGameHistory";
 import { getSolution, getHint, getHintState, recordStart, recordCompletion } from "../service/puzzleService";
@@ -146,6 +148,9 @@ export const Game: React.FC = () => {
 
     // State for success message popup
     const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
+
+    // State for help modal
+    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
@@ -876,6 +881,19 @@ export const Game: React.FC = () => {
                         </Alert>
                     )}
                     <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
+                    <Tooltip title="How to play" arrow>
+                        <span>
+                            <Button
+                                variant="contained"
+                                onClick={() => setIsHelpModalOpen(true)}
+                                size="small"
+                                sx={{ minWidth: 40, px: 1 }}
+                                color="secondary"
+                            >
+                                <HelpOutlineIcon />
+                            </Button>
+                        </span>
+                    </Tooltip>
                     <Tooltip title={!user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
                         <span>
                             <Button
@@ -971,6 +989,9 @@ export const Game: React.FC = () => {
 
             {/* Issue Modal */}
             <IssueModal open={isIssueModalOpen} onClose={() => setIsIssueModalOpen(false)} />
+
+            {/* Help Modal */}
+            <HelpModal open={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
 
             {/* Game Area */}
             <Box component="main">
