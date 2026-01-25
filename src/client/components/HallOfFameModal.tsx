@@ -10,43 +10,40 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import TableSortLabel from "@mui/material/TableSortLabel";
 import Paper from "@mui/material/Paper";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import { getUserActivity } from "../service/puzzleService.js";
 import { logToServer } from "../service/logService.js";
+import { useUser } from "../context/UserContext.js";
 import type { UserActivity } from "../../common/restTypes.js";
 
-interface AdminDashboardModalProps {
+interface HallOfFameModalProps {
     open: boolean;
     onClose: () => void;
 }
 
-type Order = "asc" | "desc";
-
 interface HeadCell {
-    id: keyof UserActivity;
+    id: string;
     label: string;
 }
 
 const headCells: HeadCell[] = [
+    { id: "rank", label: "" },
     { id: "userId", label: "User" },
     { id: "daysPlayed", label: "Days Played" },
-    { id: "daysSolved", label: "Days Solved" },
-    { id: "daysPlayedWithHint", label: "Played w/ Hint" },
-    { id: "daysSolvedWithHint", label: "Solved w/ Hint" }
+    { id: "daysSolved", label: "Days Solved" }
 ];
 
-export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, onClose }) => {
+export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose }) => {
+    const { user: currentUser } = useUser();
     const [data, setData] = useState<UserActivity[]>([]);
     const [loading, setLoading] = useState(false);
-    const [orderBy, setOrderBy] = useState<keyof UserActivity>("daysPlayed");
-    const [order, setOrder] = useState<Order>("desc");
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -55,7 +52,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
             setData(users);
         }
         catch (error) {
-            logToServer("error", "AdminDashboard: Failed to fetch user activity", error);
+            logToServer("error", "HallOfFame: Failed to fetch user activity", error);
         }
         finally {
             setLoading(false);
@@ -68,30 +65,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
         }
     }, [open, fetchData]);
 
-    const handleRequestSort = (property: keyof UserActivity) => {
-        const isAsc = orderBy === property && order === "asc";
-        setOrder(isAsc ? "desc" : "asc");
-        setOrderBy(property);
-    };
-
     const sortedData = useMemo(() => {
-        return [...data].sort((a, b) => {
-            const valA = a[orderBy];
-            const valB = b[orderBy];
-
-            if (valA === undefined || valB === undefined || valA === null || valB === null) {
-                return 0;
-            }
-
-            if (valA < valB) {
-                return order === "asc" ? -1 : 1;
-            }
-            if (valA > valB) {
-                return order === "asc" ? 1 : -1;
-            }
-            return 0;
-        });
-    }, [data, order, orderBy]);
+        return data
+            .filter(row => row.daysSolved >= 1)
+            .sort((a, b) => {
+                // Primary sort: daysSolved (Descending)
+                if (b.daysSolved !== a.daysSolved) {
+                    return b.daysSolved - a.daysSolved;
+                }
+                // Secondary sort: daysSolvedWithHint (Ascending)
+                return a.daysSolvedWithHint - b.daysSolvedWithHint;
+            });
+    }, [data]);
 
     return (
         <Dialog 
@@ -104,7 +89,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                User Statistics
+                Hall of Fame
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -120,46 +105,60 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({ open, 
                     </Box>
                 ) : (
                     <TableContainer component={Paper} elevation={0}>
-                        <Table stickyHeader aria-label="user statistics table">
+                        <Table stickyHeader aria-label="hall of fame table">
                             <TableHead>
                                 <TableRow>
                                     {headCells.map((headCell) => (
                                         <TableCell
                                             key={headCell.id}
                                             align="center"
-                                            sortDirection={orderBy === headCell.id ? order : false}
                                         >
-                                            <TableSortLabel
-                                                active={orderBy === headCell.id}
-                                                direction={orderBy === headCell.id ? order : "asc"}
-                                                onClick={() => handleRequestSort(headCell.id)}
-                                            >
-                                                {headCell.label}
-                                            </TableSortLabel>
+                                            {headCell.label}
                                         </TableCell>
                                     ))}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {sortedData.map((row, index) => (
-                                    <TableRow key={index} hover>
-                                        <TableCell align="center">
-                                            <Tooltip title={`User ID: ${row.userId}`}>
-                                                <Avatar 
-                                                    src={`https://api.dicebear.com/7.x/identicon/svg?seed=${row.userId}`}
-                                                    sx={{ width: 32, height: 32, margin: "0 auto" }}
-                                                />
-                                            </Tooltip>
-                                        </TableCell>
-                                        <TableCell align="center">{row.daysPlayed}</TableCell>
-                                        <TableCell align="center">{row.daysSolved}</TableCell>
-                                        <TableCell align="center">{row.daysPlayedWithHint}</TableCell>
-                                        <TableCell align="center">{row.daysSolvedWithHint}</TableCell>
-                                    </TableRow>
-                                ))}
+                                {sortedData.map((row, index) => {
+                                    const isCurrentUser = currentUser?.id === row.userId;
+                                    const avatarUrl = isCurrentUser && currentUser?.avatarUrl
+                                        ? currentUser.avatarUrl
+                                        : `https://api.dicebear.com/7.x/identicon/svg?seed=${row.userId}`;
+
+                                    const getRankIcon = (rankIndex: number) => {
+                                        if (rankIndex === 0) {
+                                            return <MilitaryTechIcon sx={{ color: "#FFD700" }} />;
+                                        } // Gold
+                                        if (rankIndex === 1) {
+                                            return <MilitaryTechIcon sx={{ color: "#C0C0C0" }} />;
+                                        } // Silver
+                                        if (rankIndex === 2) {
+                                            return <MilitaryTechIcon sx={{ color: "#CD7F32" }} />;
+                                        } // Bronze
+                                        return null;
+                                    };
+
+                                    return (
+                                        <TableRow key={index} hover selected={isCurrentUser}>
+                                            <TableCell align="center">
+                                                {getRankIcon(index)}
+                                            </TableCell>
+                                            <TableCell align="center">
+                                                <Tooltip title={`User ID: ${row.userId}${isCurrentUser ? " (You)" : ""}`}>
+                                                    <Avatar 
+                                                        src={avatarUrl}
+                                                        sx={{ width: 32, height: 32, margin: "0 auto" }}
+                                                    />
+                                                </Tooltip>
+                                            </TableCell>
+                                            <TableCell align="center">{row.daysPlayed}</TableCell>
+                                            <TableCell align="center">{row.daysSolved}</TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                                 {sortedData.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
                                             No data available
                                         </TableCell>
                                     </TableRow>
