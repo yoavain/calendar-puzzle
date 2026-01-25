@@ -120,7 +120,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 maxWidth="xs"
                 fullWidth
                 PaperProps={{
-                    sx: { borderRadius: 2 }
+                    sx: { 
+                        borderRadius: 2,
+                        userSelect: "none"
+                    }
                 }}
             >
                 <DialogTitle sx={{ pb: 1 }}>

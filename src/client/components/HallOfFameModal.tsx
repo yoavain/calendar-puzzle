@@ -85,7 +85,10 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
             maxWidth="md"
             fullWidth
             PaperProps={{
-                sx: { borderRadius: 2 }
+                sx: { 
+                    borderRadius: 2,
+                    userSelect: "none"
+                }
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -144,12 +147,10 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                                                 {getRankIcon(index)}
                                             </TableCell>
                                             <TableCell align="center">
-                                                <Tooltip title={`User ID: ${row.userId}${isCurrentUser ? " (You)" : ""}`}>
-                                                    <Avatar 
-                                                        src={avatarUrl}
-                                                        sx={{ width: 32, height: 32, margin: "0 auto" }}
-                                                    />
-                                                </Tooltip>
+                                                <Avatar 
+                                                    src={avatarUrl}
+                                                    sx={{ width: 32, height: 32, margin: "0 auto" }}
+                                                />
                                             </TableCell>
                                             <TableCell align="center">{row.daysPlayed}</TableCell>
                                             <TableCell align="center">{row.daysSolved}</TableCell>

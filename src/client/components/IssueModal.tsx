@@ -76,7 +76,10 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
             fullWidth
             disableScrollLock
             PaperProps={{
-                sx: { overflowX: "hidden" }
+                sx: { 
+                    overflowX: "hidden",
+                    userSelect: "none"
+                }
             }}
         >
             <DialogTitle>Submit bug / Request Feature</DialogTitle>
@@ -97,6 +100,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                         disabled={loading || success}
                         required
                         variant="outlined"
+                        sx={{ "& .MuiInputBase-root": { userSelect: "text" } }}
                     />
                     
                     <TextField
@@ -107,6 +111,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                         disabled={loading || success}
                         fullWidth
                         variant="outlined"
+                        sx={{ "& .MuiInputBase-root": { userSelect: "text" } }}
                     >
                         <MenuItem value="bug">Bug</MenuItem>
                         <MenuItem value="enhancement">Feature Request</MenuItem>
@@ -124,6 +129,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                         variant="outlined"
                         inputProps={{ maxLength: 1000 }}
                         helperText={`${description.length}/1000`}
+                        sx={{ "& .MuiInputBase-root": { userSelect: "text" } }}
                     />
                 </Box>
             </DialogContent>
