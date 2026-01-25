@@ -16,9 +16,9 @@ erDiagram
     }
 
     user_puzzle_stats {
-        varchar user_id PK, FK
-        integer month PK
-        integer day PK
+        varchar user_id FK
+        integer month
+        integer day
         timestamp first_started_at
         timestamp first_completed_at
         boolean hint_used
@@ -37,13 +37,11 @@ Stores pre-calculated solutions for each day of the year.
 ### users
 Stores user information from Google OAuth.
 - `id`: Unique Google ID string.
-- `avatarUrl`: Optional URL for the user's avatar (not stored in DB, only in session).
-- `isAdmin`: Flag for administrative access.
+- `is_admin`: Flag for administrative access.
 
 ### user_puzzle_stats
 Tracks user progress and statistics for individual puzzles.
-- `userId`: Reference to the user.
-- `month` / `day`: The specific date of the puzzle.
-- `firstStartedAt`: When the user first opened the puzzle.
-- `firstCompletedAt`: When the user first solved the puzzle.
-- `hintUsed`: Whether the user used a hint for this puzzle.
+- `user_id`: Reference to the user.
+- `month`: Part of the puzzle date.
+- `day`: Part of the puzzle date.
+
