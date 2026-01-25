@@ -32,8 +32,8 @@ export const UserMenu: React.FC = () => {
         await logout();
     };
 
-    // Get initials from name
-    const initials = user.name
+    // Get initials from name or ID
+    const initials = (user.name || user.id)
         .split(" ")
         .map(n => n[0])
         .join("")
@@ -77,9 +77,11 @@ export const UserMenu: React.FC = () => {
                 open={open}
                 onClose={handleClose}
             >
-                <MenuItem disabled>
-                    {user.email}
-                </MenuItem>
+                {user.email && (
+                    <MenuItem disabled>
+                        {user.email}
+                    </MenuItem>
+                )}
                 <MenuItem onClick={handleLogout}>
                     Logout
                 </MenuItem>

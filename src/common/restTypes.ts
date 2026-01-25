@@ -70,8 +70,7 @@ export interface IssueResponse {
 // Returns user activity statistics for admin dashboard
 // ============================================
 export interface UserActivity {
-    username: string;
-    avatarUrl?: string | null;
+    userId: string;
     daysPlayed: number;
     daysSolved: number;
     daysPlayedWithHint: number;

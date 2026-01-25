@@ -71,8 +71,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
             try {
                 const stats = await db
                     .select({
-                        username: users.name,
-                        avatarUrl: users.avatarUrl,
+                        userId: users.id,
                         daysPlayed: sql<number>`count(${userPuzzleStats.userId})`.mapWith(Number),
                         daysSolved: sql<number>`count(${userPuzzleStats.firstCompletedAt})`.mapWith(Number),
                         daysPlayedWithHint: sql<number>`count(CASE WHEN ${userPuzzleStats.hintUsed} THEN 1 END)`.mapWith(Number),
@@ -80,8 +79,8 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
                     })
                     .from(users)
                     .leftJoin(userPuzzleStats, eq(users.id, userPuzzleStats.userId))
-                    .groupBy(users.id, users.name, users.avatarUrl)
-                    .orderBy(users.name);
+                    .groupBy(users.id)
+                    .orderBy(users.id);
 
                 return reply.send({ users: stats });
             }
