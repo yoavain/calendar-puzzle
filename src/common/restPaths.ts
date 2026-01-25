@@ -11,9 +11,9 @@ export const API_AUTH_PUBLIC_KEY = "/api/auth/public-key";
 export const API_AUTH_CSRF_TOKEN = "/api/auth/csrf-token";
 
 /**
- * Admin paths
+ * Hall of Fame paths
  */
-export const API_ADMIN_USERDATA = "/api/admin/userdata";
+export const API_HALL_OF_FAME = "/api/hall-of-fame";
 export const API_ADMIN_SOLUTION = "/api/admin/solution/:date";
 
 /**

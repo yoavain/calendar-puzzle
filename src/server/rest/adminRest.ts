@@ -2,11 +2,11 @@ import type { FastifyInstance } from "fastify";
 import { db } from "../db/connection.js";
 import { users, userPuzzleStats } from "../db/schema.js";
 import { eq, sql, isNotNull, and } from "drizzle-orm";
-import { requireAdmin } from "../auth/requireAuth.js";
+import { requireAdmin, requireAuth } from "../auth/requireAuth.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
-import { API_ADMIN_SOLUTION, API_ADMIN_USERDATA } from "../../common/restPaths.js";
+import { API_ADMIN_SOLUTION, API_HALL_OF_FAME } from "../../common/restPaths.js";
 import type { 
     DatePathParams, 
     SolutionResponse, 
@@ -55,11 +55,11 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
         }
     );
 
-    // GET /api/admin/userdata - Get user activity statistics (Admin only)
+    // GET /api/hall-of-fame - Get user activity statistics (Hall of Fame)
     app.get<{ Reply: UserDataResponse | ErrorResponse }>(
-        API_ADMIN_USERDATA,
+        API_HALL_OF_FAME,
         { 
-            preHandler: requireAdmin,
+            preHandler: requireAuth,
             config: {
                 rateLimit: {
                     max: 5,
@@ -71,8 +71,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
             try {
                 const stats = await db
                     .select({
-                        username: users.name,
-                        avatarUrl: users.avatarUrl,
+                        userId: users.id,
                         daysPlayed: sql<number>`count(${userPuzzleStats.userId})`.mapWith(Number),
                         daysSolved: sql<number>`count(${userPuzzleStats.firstCompletedAt})`.mapWith(Number),
                         daysPlayedWithHint: sql<number>`count(CASE WHEN ${userPuzzleStats.hintUsed} THEN 1 END)`.mapWith(Number),
@@ -80,8 +79,8 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
                     })
                     .from(users)
                     .leftJoin(userPuzzleStats, eq(users.id, userPuzzleStats.userId))
-                    .groupBy(users.id, users.name, users.avatarUrl)
-                    .orderBy(users.name);
+                    .groupBy(users.id)
+                    .orderBy(users.id);
 
                 return reply.send({ users: stats });
             }

@@ -115,7 +115,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                             user
                         );
 
-                        request.log.info({ user: user.name, targetDate: `${month + 1}/${day}` }, "Automated bug report created for invalid solution");
+                        request.log.info({ userId: user.id, targetDate: `${month + 1}/${day}` }, "Automated bug report created for invalid solution");
                     }
                     catch (githubError) {
                         request.log.error(githubError, "[StatsRoute] Failed to report bug to GitHub");

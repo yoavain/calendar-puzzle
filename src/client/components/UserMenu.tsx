@@ -5,9 +5,9 @@ import MenuItem from "@mui/material/MenuItem";
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
-import SsidChartIcon from "@mui/icons-material/SsidChart";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useUser } from "../context/UserContext";
-import { AdminDashboardModal } from "./AdminDashboardModal";
+import { HallOfFameModal } from "./HallOfFameModal";
 
 export const UserMenu: React.FC = () => {
     const { user, logout } = useUser();
@@ -32,8 +32,8 @@ export const UserMenu: React.FC = () => {
         await logout();
     };
 
-    // Get initials from name
-    const initials = user.name
+    // Get initials from name or ID
+    const initials = (user.name || user.id)
         .split(" ")
         .map(n => n[0])
         .join("")
@@ -54,37 +54,37 @@ export const UserMenu: React.FC = () => {
                     {initials}
                 </Avatar>
             </Button>
-            {user.isAdmin && (
-                <Tooltip title="Users statistics">
-                    <IconButton 
-                        onClick={() => setDashboardOpen(true)}
-                        size="small"
-                        sx={{ 
-                            ml: 1,
-                            backgroundColor: "primary.main",
-                            color: "primary.contrastText",
-                            "&:hover": {
-                                backgroundColor: "primary.dark"
-                            }
-                        }}
-                    >
-                        <SsidChartIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-            )}
+            <Tooltip title="Hall of Fame">
+                <IconButton 
+                    onClick={() => setDashboardOpen(true)}
+                    size="small"
+                    sx={{ 
+                        ml: 1,
+                        backgroundColor: "primary.main",
+                        color: "primary.contrastText",
+                        "&:hover": {
+                            backgroundColor: "primary.dark"
+                        }
+                    }}
+                >
+                    <EmojiEventsIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
             <Menu
                 anchorEl={anchorEl}
                 open={open}
                 onClose={handleClose}
             >
-                <MenuItem disabled>
-                    {user.email}
-                </MenuItem>
+                {user.email && (
+                    <MenuItem disabled>
+                        {user.email}
+                    </MenuItem>
+                )}
                 <MenuItem onClick={handleLogout}>
                     Logout
                 </MenuItem>
             </Menu>
-            <AdminDashboardModal 
+            <HallOfFameModal 
                 open={dashboardOpen} 
                 onClose={() => setDashboardOpen(false)} 
             />
