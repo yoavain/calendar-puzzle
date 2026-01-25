@@ -6,11 +6,11 @@ import { eq } from "drizzle-orm";
 const manageAdmin = async () => {
     const args = process.argv.slice(2);
     if (args.length < 2) {
-        console.log("Usage: node dist/scripts/manage-admin.js <add|remove> <email>");
+        console.log("Usage: node dist/scripts/manage-admin.js <add|remove> <userId>");
         process.exit(1);
     }
 
-    const [action, email] = args;
+    const [action, userId] = args;
     const isAdmin = action === "add";
 
     if (action !== "add" && action !== "remove") {
@@ -18,20 +18,20 @@ const manageAdmin = async () => {
         process.exit(1);
     }
 
-    console.log(`${isAdmin ? "Adding" : "Removing"} admin status for ${email}...`);
+    console.log(`${isAdmin ? "Adding" : "Removing"} admin status for user ID ${userId}...`);
 
     try {
         const result = await db.update(users)
             .set({ isAdmin })
-            .where(eq(users.email, email))
+            .where(eq(users.id, userId))
             .returning();
 
         if (result.length === 0) {
-            console.error(`User with email ${email} not found.`);
+            console.error(`User with ID ${userId} not found.`);
             process.exit(1);
         }
 
-        console.log(`Successfully updated ${email}. isAdmin: ${result[0].isAdmin}`);
+        console.log(`Successfully updated user ${userId}. isAdmin: ${result[0].isAdmin}`);
     }
     catch (error) {
         console.error("Error updating admin status:", error);

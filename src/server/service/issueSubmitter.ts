@@ -26,7 +26,7 @@ async function createGitHubIssue(title: string, body: string, labels: string[]) 
  * Submits a generic issue (bug report or feature request)
  */
 export async function submitIssue(title: string, description: string, type: IssueType, user: SessionUser) {
-    const body = `**Reporter:** ${user.name} (${user.email})\n\n**Description:**\n${description}`;
+    const body = `**Reporter ID:** ${user.id}\n\n**Description:**\n${description}`;
     return await createGitHubIssue(title, body, [type]);
 }
 
@@ -40,7 +40,7 @@ export async function submitInvalidSolutionReport(pieces: any, expectedDate: Puz
         
     const title = `Bug: Invalid solution submitted for ${expectedDate.month + 1}/${expectedDate.day}`;
     const description = `
-**User:** ${user.name} (${user.email})
+**User ID:** ${user.id}
 **Target Date:** ${expectedDate.month + 1}/${expectedDate.day}
 **Actual Date Found by Server:** ${actualDateStr}
 
