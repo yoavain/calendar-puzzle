@@ -1,5 +1,5 @@
 import type { Board, Piece, PuzzleDate } from "../../common/types";
-import { MONTHS, DAYS_LAYOUT } from "../../common/consts";
+import { DAYS_LAYOUT, MONTHS } from "../../common/consts";
 import { PIECE_IDS } from "../../common/pieceData";
 
 /**

@@ -1,10 +1,10 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import type { Piece as PieceType } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
-import { getPieceShape, getPieceColor } from "../../common/pieceData";
+import { getPieceColor, getPieceShape } from "../../common/pieceData";
 import { logToServer } from "../service/logService.js";
-import { PieceWrapper, PieceGrid, PieceCell } from "./Piece.styled";
+import { PieceCell, PieceGrid, PieceWrapper } from "./Piece.styled";
 
 interface PieceProps {
     piece: PieceType;

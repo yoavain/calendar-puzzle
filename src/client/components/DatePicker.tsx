@@ -13,7 +13,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import type { PuzzleDate } from "../../common/types";
-import { MONTHS, DAYS_IN_MONTH } from "../../common/consts";
+import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
 import { useQueryParam } from "../hooks/useQueryParam";
 import { useUser } from "../context/UserContext";
 
