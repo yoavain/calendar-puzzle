@@ -1,4 +1,4 @@
-import type { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyReply, FastifyRequest } from "fastify";
 import type { SessionUser } from "./passport.js";
 
 export const requireAuth = async (request: FastifyRequest, reply: FastifyReply) => {

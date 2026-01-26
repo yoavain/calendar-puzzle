@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import type { GameState, GameStateAction, Board } from "../../common/types";
+import { useCallback, useState } from "react";
+import type { Board, GameState, GameStateAction } from "../../common/types";
 
 const MAX_HISTORY = 50; // Maximum number of undo steps
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { PuzzleDate } from "../../common/types.js";
 import { clearCsrfToken, getCsrfToken } from "../service/puzzleService";
 import { logToServer } from "../service/logService.js";

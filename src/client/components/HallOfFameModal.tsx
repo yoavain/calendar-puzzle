@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -17,7 +17,6 @@ import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
-import Tooltip from "@mui/material/Tooltip";
 import { getUserActivity } from "../service/puzzleService.js";
 import { logToServer } from "../service/logService.js";
 import { useUser } from "../context/UserContext.js";
