@@ -12,7 +12,7 @@
         "@octokit/rest": "22.0.1",
         "dlx": "0.2.1",
         "drizzle-orm": "0.45.1",
-        "fastify": "5.7.1",
+        "fastify": "5.7.2",
         "passport-google-oauth20": "2.0.0",
         "pg": "8.17.2"
     },
@@ -33,8 +33,8 @@
         "@types/pg": "8.16.0",
         "@types/react": "19.2.9",
         "@types/react-dom": "19.2.3",
-        "@typescript-eslint/eslint-plugin": "8.53.1",
-        "@typescript-eslint/parser": "8.53.1",
+        "@typescript-eslint/eslint-plugin": "8.54.0",
+        "@typescript-eslint/parser": "8.54.0",
         "@vitejs/plugin-react": "5.1.2",
         "concurrently": "9.2.1",
         "cross-env": "10.1.0",
@@ -60,7 +60,7 @@
         "ts-node": "10.9.2",
         "tsx": "4.21.0",
         "typescript": "5.9.3",
-        "typescript-eslint": "8.53.1",
+        "typescript-eslint": "8.54.0",
         "vite": "7.3.1"
     },
     "scripts": {
@@ -84,7 +84,7 @@
         "jest": "jest",
         "eslint": "eslint src/ test/ scripts/",
         "eslint:fix": "npm run eslint -- --fix",
-        "prebuild:image": "npm run build",
+        "prebuild:image": "npm run test && npm run build",
         "build:image": "docker build --tag calendar-puzzle --progress=plain --file Dockerfile .",
         "predeploy:dev": "npm run build:image && docker compose -p calendar-puzzle-dev down --remove-orphans",
         "deploy:dev": "cross-env PORT=23229 docker compose -p calendar-puzzle-dev up -d",
