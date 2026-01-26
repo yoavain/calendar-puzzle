@@ -1,4 +1,4 @@
-import type { GameState, Board, Piece, Position, BoardCell, PuzzleDate } from "./types";
+import type { Board, BoardCell, GameState, Piece, Position, PuzzleDate } from "./types";
 import { MONTHS } from "./consts";
 import { getTransformedShape } from "./gameLogic";
 import dlx from "dlx";

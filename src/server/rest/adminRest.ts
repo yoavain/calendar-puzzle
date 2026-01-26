@@ -1,18 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import { db } from "../db/connection.js";
-import { users, userPuzzleStats } from "../db/schema.js";
-import { eq, sql, isNotNull, and } from "drizzle-orm";
+import { userPuzzleStats, users } from "../db/schema.js";
+import { eq, sql } from "drizzle-orm";
 import { requireAdmin, requireAuth } from "../auth/requireAuth.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
 import { API_ADMIN_SOLUTION, API_HALL_OF_FAME } from "../../common/restPaths.js";
-import type { 
-    DatePathParams, 
-    SolutionResponse, 
-    UserDataResponse, 
-    ErrorResponse 
-} from "../../common/restTypes.js";
+import type { DatePathParams, ErrorResponse, SolutionResponse, UserDataResponse } from "../../common/restTypes.js";
 
 export const registerAdminRoutes = (app: FastifyInstance): void => {
     // GET /api/admin/solution/:date - Get full puzzle solution for a date (Admin only)
