@@ -9,7 +9,16 @@ const config: Config.InitialOptions = {
         "^.+\\.tsx?$": "ts-jest"
     },
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-    verbose: true
+    verbose: true,
+    collectCoverage: true,
+    coverageDirectory: "coverage",
+    coverageReporters: [
+        "text",
+        "text-summary",
+        "json",
+        "lcov",
+        "clover"
+    ]
 };
 
 export default config; 
