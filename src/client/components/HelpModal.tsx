@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -7,10 +7,10 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import { styled, keyframes } from "@mui/material/styles";
+import { keyframes, styled } from "@mui/material/styles";
 import { Board as BoardComponent } from "./Board";
 import { initializeBoard } from "../utils/initialize";
-import { PIECE_IDS, getPieceColor, getPieceShape } from "../../common/pieceData";
+import { getPieceColor, getPieceShape, PIECE_IDS } from "../../common/pieceData";
 
 // Animation cycle:
 // 0-10%: Fade in at start position (bottom)

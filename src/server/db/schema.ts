@@ -1,4 +1,4 @@
-import { pgTable, varchar, jsonb, integer, timestamp, primaryKey, boolean } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, primaryKey, timestamp, varchar } from "drizzle-orm/pg-core";
 import type { Piece } from "../../common/types.js";
 
 export const solutions = pgTable("solutions", {

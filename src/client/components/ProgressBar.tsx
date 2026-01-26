@@ -1,5 +1,5 @@
 import React from "react";
-import { ProgressContainer, StyledLinearProgress, ProgressLabel } from "./ProgressBar.styled";
+import { ProgressContainer, ProgressLabel, StyledLinearProgress } from "./ProgressBar.styled";
 
 interface ProgressBarProps {
     covered: number;
