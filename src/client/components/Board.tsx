@@ -1,16 +1,11 @@
 import React, { useState } from "react";
 import { useTheme } from "@mui/material/styles";
-import type { DragItem, GameState, Piece as PieceType, Position, Board as BoardType } from "../../common/types";
+import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Position } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
 import { getPieceColor } from "../../common/pieceData";
 import { logToServer } from "../service/logService.js";
 import type { InvalidDropCell } from "./Game";
-import {
-    BoardContainer,
-    BoardRow,
-    BoardCell,
-    StyledCellText
-} from "./Board.styled";
+import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
 interface BoardProps {
     board: BoardType;
@@ -78,6 +73,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             return;
         }
         e.preventDefault();
+        e.stopPropagation();
         
         const dropPosition = dragOverCell || position;
 
@@ -97,6 +93,15 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         catch (err) {
             logToServer("error", "Board: Failed to handle drop", err);
         }
+    };
+
+    const handleBoardAreaDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        // This handler catches drops on the BoardContainer itself (the padding/border area)
+        // or any cell that didn't handle the drop.
+        // We stop propagation to ensure the global drop handler doesn't return the piece to the pile.
+        e.preventDefault();
+        e.stopPropagation();
+        onDragEnd();
     };
 
     // Function to check if a cell is part of a placed piece
@@ -213,7 +218,18 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     return (
-        <BoardContainer onDragLeave={handleDragLeave}>
+        <BoardContainer 
+            onDragLeave={handleDragLeave}
+            onDrop={handleBoardAreaDrop}
+            onDragOver={(e) => {
+                if (isSolved) {
+                    return;
+                }
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+            }}
+            data-testid="board"
+        >
             {board.map((row, y) => (
                 <BoardRow key={y}>
                     {row.map((cell, x) => {

@@ -1,9 +1,8 @@
-import React, { useCallback, useState, useRef, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
 import UndoIcon from "@mui/icons-material/Undo";
@@ -11,9 +10,9 @@ import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import type { DragItem, GameState, Piece as PieceType, Position, Board, PuzzleDate } from "../../common/types";
+import type { Board, DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../common/types";
 import { toPuzzleDate } from "../../common/types";
-import { calculateProgress, clearPieceFromBoard, getTransformedShape, puzzleSolvedForDate, isValidPlacement } from "../../common/gameLogic";
+import { calculateProgress, clearPieceFromBoard, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../common/gameLogic";
 import { Board as BoardComponent } from "./Board";
 import { Piece } from "./Piece";
 import { PieceControls } from "./PieceControls";
@@ -29,12 +28,12 @@ import { StatsModal } from "./StatsModal";
 import { IssueModal } from "./IssueModal";
 import { ProgressBar } from "./ProgressBar";
 import { HelpModal } from "./HelpModal";
-import { initializeGame, initializeBoard } from "../utils/initialize";
+import { initializeBoard, initializeGame } from "../utils/initialize";
 import { useGameHistory } from "../hooks/useGameHistory";
-import { getSolution, getHint, getHintState, recordStart, recordCompletion } from "../service/puzzleService";
-import { saveSession, loadSession, clearSession } from "../hooks/useGameSession";
+import { getHint, getHintState, getSolution, recordCompletion, recordStart } from "../service/puzzleService";
+import { clearSession, loadSession, saveSession } from "../hooks/useGameSession";
 import { logToServer } from "../service/logService";
-import { PiecesContainer, PiecePoolWrapper, GameTitle } from "./Game.styled";
+import { GameTitle, PiecePoolWrapper, PiecesContainer } from "./Game.styled";
 import BarChartIcon from "@mui/icons-material/BarChart";
 
 /**
@@ -861,8 +860,49 @@ export const Game: React.FC = () => {
         pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_V", pieceId });
     };
 
+    const handleGlobalDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        
+        // Check if the drop target is the board or a cell within the board
+        // If it is, we don't want to return the piece to the pile here, 
+        // because the Board's own handleDrop should take care of it (or reject it).
+        // However, since we want "100% outside", we need to be careful.
+        // If the drop event reached here, it means it wasn't caught by a more specific handler
+        // that called stopPropagation().
+
+        // To ensure "100% outside", we check if the drop target is NOT the board
+        // and NOT any child of the board.
+        const boardElement = document.querySelector("[data-testid=\"board\"]");
+        if (boardElement && boardElement.contains(e.target as Node)) {
+            // Drop is inside the board area, ignore here
+            return;
+        }
+
+        const data = e.dataTransfer.getData("text/plain");
+        try {
+            if (!data) {
+                return;
+            }
+            const { pieceId } = JSON.parse(data) as DragItem;
+            handlePieceReturnToPile(pieceId);
+        }
+        catch (err) {
+            // Ignore errors from non-game drag events
+        }
+    };
+
+    const handleGlobalDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+    };
+
     return (
-        <Container maxWidth="lg" sx={{ py: 2, minHeight: "100vh" }}>
+        <Container 
+            maxWidth="lg" 
+            sx={{ py: 2, minHeight: "100vh" }}
+            onDragOver={handleGlobalDragOver}
+            onDrop={handleGlobalDrop}
+        >
             {/* Top Bar */}
             <Stack 
                 direction="row" 
@@ -1006,7 +1046,6 @@ export const Game: React.FC = () => {
                     draggedPieceId={draggedPieceId}
                     onDragStart={setDraggedPieceId}
                     onDragEnd={() => setDraggedPieceId(null)}
-                    data-testid="board"
                 />
                 <PiecesContainer
                     onDragOver={handlePileDropZoneDragOver}
