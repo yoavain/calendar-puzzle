@@ -47,6 +47,7 @@ export const UserMenu: React.FC = () => {
                 onClick={handleClick}
                 size="small"
                 sx={{ minWidth: "auto", padding: "4px" }}
+                aria-label="Open user menu"
             >
                 <Avatar 
                     src={user.avatarUrl || undefined} 
@@ -56,20 +57,23 @@ export const UserMenu: React.FC = () => {
                 </Avatar>
             </Button>
             <Tooltip title="Hall of Fame">
-                <IconButton 
-                    onClick={() => setDashboardOpen(true)}
-                    size="small"
-                    sx={{ 
-                        ml: 1,
-                        backgroundColor: "primary.main",
-                        color: "primary.contrastText",
-                        "&:hover": {
-                            backgroundColor: "primary.dark"
-                        }
-                    }}
-                >
-                    <EmojiEventsIcon fontSize="small" />
-                </IconButton>
+                <span>
+                    <IconButton 
+                        onClick={() => setDashboardOpen(true)}
+                        size="small"
+                        aria-label="Hall of Fame"
+                        sx={{ 
+                            ml: 1,
+                            backgroundColor: "primary.main",
+                            color: "primary.contrastText",
+                            "&:hover": {
+                                backgroundColor: "primary.dark"
+                            }
+                        }}
+                    >
+                        <EmojiEventsIcon fontSize="small" />
+                    </IconButton>
+                </span>
             </Tooltip>
             <Menu
                 anchorEl={anchorEl}
