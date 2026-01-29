@@ -58,7 +58,8 @@ const ScaleContainer = styled(Box)<{ scale: number }>(({ scale }) => {
     const clampedScale = Math.max(scale, 0.3);
     
     // Use a precise scale to avoid sub-pixel misalignment
-    const preciseScale = Math.round(clampedScale * 1000) / 1000;
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const preciseScale = Math.round(clampedScale * dpr * 1000) / (dpr * 1000);
     const marginValue = preciseScale < 1 ? `calc(${BASELINE_HEIGHT}px * (${preciseScale} - 1))` : 0;
     
     return {
