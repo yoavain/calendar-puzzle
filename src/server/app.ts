@@ -107,11 +107,14 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
     const clientBuildPath = path.join(__dirname, "..", "..", "build");
     
-    // Serve index.html at root path only
+    // Serve index.html at root path only (never cache to ensure fresh deployments)
     app.get("/", async (request, reply) => {
         const file = await getCachedFile(clientBuildPath, "index.html");
         if (file) {
-            return reply.type(file.contentType).send(file.content);
+            return reply
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .type(file.contentType)
+                .send(file.content);
         }
         return reply.code(404).send({ error: "Not found" });
     });
@@ -152,7 +155,11 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
         const file = await getCachedFile(clientBuildPath, requestedPath);
         if (file) {
-            return reply.type(file.contentType).send(file.content);
+            // Static assets have content hashes in filenames, safe to cache long-term
+            return reply
+                .header("Cache-Control", "public, max-age=31536000, immutable")
+                .type(file.contentType)
+                .send(file.content);
         }
         
         return reply.code(404).send({ error: "Not found" });
