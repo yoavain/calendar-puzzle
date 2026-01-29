@@ -4,6 +4,7 @@ import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Posit
 import { getTransformedShape } from "../../common/gameLogic";
 import { getPieceColor } from "../../common/pieceData";
 import { logToServer } from "../service/logService.js";
+import { getScaledCellSize } from "../utils/measureUtils";
 import type { InvalidDropCell } from "./Game";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
@@ -161,13 +162,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             }
         }
         // Calculate scale by measuring an actual board cell
-        const boardElement = document.querySelector("[data-testid=\"board\"]");
-        const actualBoardCell = boardElement?.querySelector("div > div > div"); // BoardRow > BoardCell
-        
-        let scaledCellSize = theme.game.cellSize;
-        if (actualBoardCell) {
-            scaledCellSize = actualBoardCell.getBoundingClientRect().width;
-        }
+        const scaledCellSize = getScaledCellSize(theme.game.cellSize, theme.game.cellSizePx);
 
         const offsetX = (firstFilledX * scaledCellSize) + (scaledCellSize / 2);
         const offsetY = (firstFilledY * scaledCellSize) + (scaledCellSize / 2);
@@ -284,6 +279,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 draggable={!!piece && !isLocked && !isSolved}
                                 onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
                                 onDragEnd={() => onDragEnd()}
+                                data-testid="board-cell"
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>
