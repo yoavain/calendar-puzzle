@@ -51,6 +51,7 @@ export const UserMenu: React.FC = () => {
             >
                 <Avatar 
                     src={user.avatarUrl || undefined} 
+                    alt={user.name || "User avatar"}
                     sx={{ width: 32, height: 32, fontSize: "0.875rem" }}
                 >
                     {initials}
