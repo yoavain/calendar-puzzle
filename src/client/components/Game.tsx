@@ -56,13 +56,16 @@ const ScaleContainer = styled(Box)<{ scale: number }>(({ scale }) => {
     // Calculate negative margin to compensate for scaled-down content
     // Clamp scale to prevent excessive negative margins on very small screens
     const clampedScale = Math.max(scale, 0.3);
-    const marginValue = clampedScale < 1 ? `calc(${BASELINE_HEIGHT}px * (${clampedScale} - 1))` : 0;
+    
+    // Use a precise scale to avoid sub-pixel misalignment
+    const preciseScale = Math.round(clampedScale * 1000) / 1000;
+    const marginValue = preciseScale < 1 ? `calc(${BASELINE_HEIGHT}px * (${preciseScale} - 1))` : 0;
     
     return {
         width: BASELINE_SIZE,
         height: "auto",
         minHeight: BASELINE_HEIGHT,
-        transform: `scale(${scale})`,
+        transform: `scale(${preciseScale})`,
         transformOrigin: "top center",
         flexShrink: 0,
         marginBottom: marginValue,

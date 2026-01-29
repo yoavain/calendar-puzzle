@@ -32,7 +32,8 @@ export const PiecesContainer = styled(Box)(({ theme }) => ({
     // Ensure symmetric padding at the bottom by adding a specific bottom padding
     paddingBottom: theme.spacing(2),
     "& > *": {
-        marginBottom: 0
+        marginBottom: 0,
+        width: "100%"
     }
 }));
 
@@ -52,8 +53,8 @@ export const PiecePoolWrapper = styled(Box)(({ theme }) => ({
     padding: theme.spacing(1),
     backgroundColor: theme.palette.background.default,
     borderRadius: PIECE_POOL_BORDER_RADIUS,
-    width: PIECE_POOL_WIDTH,
-    height: PIECE_POOL_HEIGHT,
+    width: `calc(${theme.game.cellSizePx} * 5)`,
+    height: `calc(${theme.game.cellSizePx} * 6)`,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
