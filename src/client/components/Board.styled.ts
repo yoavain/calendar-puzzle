@@ -22,14 +22,14 @@ export const BoardContainer = styled("div")(({ theme }) => ({
     alignItems: "center",
     gap: 0,
     backgroundColor: theme.game.backgroundTertiary,
-    padding: theme.game.cellSize,
+    padding: theme.game.cellSizePx,
     border: `4px solid ${theme.game.boardBorderColor}`,
     borderRadius: 22,
     boxShadow: "0 4px 16px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08)",
     boxSizing: "content-box",
-    width: theme.game.cellSize * 7,
-    minWidth: theme.game.cellSize * 7,
-    maxWidth: theme.game.cellSize * 7,
+    width: `calc(${theme.game.cellSizePx} * 7)`,
+    minWidth: `calc(${theme.game.cellSizePx} * 7)`,
+    maxWidth: `calc(${theme.game.cellSizePx} * 7)`,
     marginLeft: "auto",
     marginRight: "auto",
     userSelect: "none",
@@ -88,8 +88,8 @@ export const BoardCell = styled("div", {
     solutionRevealed,
     isSolved
 }) => ({
-    width: theme.game.cellSize,
-    height: theme.game.cellSize,
+    width: theme.game.cellSizePx,
+    height: theme.game.cellSizePx,
     border: `1px solid ${theme.game.boardBorderColor}`,
     display: isStyled ? "flex" : "block",
     alignItems: isStyled ? "center" : undefined,
@@ -216,8 +216,8 @@ export interface PreviewCellProps {
 
 // Preview cell
 export const PreviewCell = styled("div")<PreviewCellProps>(({ theme, isFilled, pieceId }) => ({
-    width: theme.game.cellSize,
-    height: theme.game.cellSize,
+    width: theme.game.cellSizePx,
+    height: theme.game.cellSizePx,
     border: "none",
     visibility: isFilled ? "visible" : "hidden",
 

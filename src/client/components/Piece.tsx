@@ -87,8 +87,18 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDrag
             }
         }
         const cellSize = theme.game.cellSize;
-        const offsetX = (firstFilledX * cellSize) + (cellSize / 2);
-        const offsetY = (firstFilledY * cellSize) + (cellSize / 2);
+        
+        // Calculate scale by measuring an actual board cell
+        const boardElement = document.querySelector("[data-testid=\"board\"]");
+        const actualBoardCell = boardElement?.querySelector("div > div > div"); // BoardRow > BoardCell
+        
+        let scaledCellSizeForOffset = cellSize;
+        if (actualBoardCell) {
+            scaledCellSizeForOffset = actualBoardCell.getBoundingClientRect().width;
+        }
+
+        const offsetX = (firstFilledX * scaledCellSizeForOffset) + (scaledCellSizeForOffset / 2);
+        const offsetY = (firstFilledY * scaledCellSizeForOffset) + (scaledCellSizeForOffset / 2);
 
         const data = JSON.stringify({
             pieceId: piece.id
@@ -118,9 +128,10 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDrag
             rowDiv.style.cssText = "display: flex; gap: 0;";
             row.forEach((cell) => {
                 const cellDiv = document.createElement("div");
+
                 cellDiv.style.cssText = `
-                    width: ${theme.game.cellSize}px;
-                    height: ${theme.game.cellSize}px;
+                    width: ${scaledCellSizeForOffset}px;
+                    height: ${scaledCellSizeForOffset}px;
                     border: none;
                 `;
 
