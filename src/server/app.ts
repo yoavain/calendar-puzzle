@@ -74,7 +74,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
                 defaultSrc: ["'self'"],
                 scriptSrc: ["'self'"],
                 styleSrc: ["'self'", "'unsafe-inline'"], // Required for MUI/Emotion
-                imgSrc: ["'self'", "data:", "https://api.dicebear.com"], // data: for inline SVGs, dicebear for avatars
+                imgSrc: ["'self'", "data:", "https://api.dicebear.com", "https://lh3.googleusercontent.com"], // data: for inline SVGs, dicebear/Google for avatars
                 fontSrc: ["'self'"],
                 connectSrc: ["'self'"],
                 objectSrc: ["'none'"],
@@ -131,7 +131,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         const file = await getCachedFile(clientBuildPath, "index.html");
         if (file) {
             return reply
-                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Cache-Control", "no-store")
                 .type(file.contentType)
                 .send(file.content);
         }
