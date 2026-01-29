@@ -3,9 +3,23 @@ import React from "react";
 import { styled } from "@mui/material/styles";
 import Switch from "@mui/material/Switch";
 import Box from "@mui/material/Box";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import { useColorMode } from "../theme";
+
+// Visually hidden label for accessibility
+const VisuallyHiddenLabel = styled("span")({
+    position: "absolute",
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    border: 0
+});
 
 // Custom styled switch with sun/moon theme
 const ThemeSwitch = styled(Switch)(({ theme }) => ({
@@ -75,10 +89,14 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
                     transform: isDark ? "scale(0.9)" : "scale(1.1)"
                 }} 
             />
-            <ThemeSwitch
-                checked={isDark}
-                onChange={toggleColorMode}
-                inputProps={{ "aria-label": "Toggle dark mode" }}
+            <FormControlLabel
+                control={
+                    <ThemeSwitch
+                        checked={isDark}
+                        onChange={toggleColorMode}
+                    />
+                }
+                label={<VisuallyHiddenLabel>Toggle dark mode</VisuallyHiddenLabel>}
             />
             <DarkModeIcon 
                 sx={{ 

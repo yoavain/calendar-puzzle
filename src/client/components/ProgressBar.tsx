@@ -32,6 +32,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage }) => {
                 variant="determinate" 
                 value={percentage} 
                 progressColor={progressColor}
+                aria-label="Puzzle completion progress"
             />
             <ProgressLabel>
                 {Math.round(percentage)}%
