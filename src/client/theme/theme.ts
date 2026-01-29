@@ -129,9 +129,9 @@ const darkPalette: ThemeOptions = {
     palette: {
         mode: "dark",
         primary: {
-            main: "#1158c7",
-            dark: "#0550ae",
-            contrastText: "#ffffff"
+            main: "#58a6ff", // Lighter blue for dark mode accessibility (4.5:1 contrast ratio)
+            dark: "#1158c7",
+            contrastText: "#000000"
         },
         secondary: {
             main: "#adb5bd"
