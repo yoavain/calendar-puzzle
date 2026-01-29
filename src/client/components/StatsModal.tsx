@@ -96,6 +96,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                         <LinearProgress 
                             variant="determinate" 
                             value={(completedDates.length / TOTAL_DATES) * 100} 
+                            aria-label="Overall completion progress"
                             sx={{ 
                                 height: 25, 
                                 borderRadius: 12,
