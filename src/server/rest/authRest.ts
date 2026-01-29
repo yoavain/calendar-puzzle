@@ -67,7 +67,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
                 playedDates
             };
         }
-        return reply.code(401).send({ error: "Not authenticated" });
+        return { user: null, completedDates: [], playedDates: [] };
     });
 
     // Get server's public key for encryption (Authenticated)
