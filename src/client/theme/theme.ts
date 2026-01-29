@@ -69,7 +69,7 @@ const lightGameTokens = {
     invalidDropBorderColor: "#dc3545",
     backgroundTertiary: "#eee",
     starColor: "#ffb74d",
-    extensionColor: "#8B5CF6"
+    extensionColor: "#7c3aed"
 };
 
 // Dark theme game tokens
@@ -91,7 +91,7 @@ const darkGameTokens = {
     invalidDropBorderColor: "#ff5252",
     backgroundTertiary: "#333333",
     starColor: "#ffb74d",
-    extensionColor: "#8B5CF6"
+    extensionColor: "#7c3aed"
 };
 
 // Light theme palette (matching existing CSS variables)
@@ -99,15 +99,16 @@ const lightPalette: ThemeOptions = {
     palette: {
         mode: "light",
         primary: {
-            main: "#007bff",
-            dark: "#0056b3"
+            main: "#0550ae",
+            dark: "#033d8b",
+            contrastText: "#ffffff"
         },
         secondary: {
             main: "#6c757d"
         },
         success: {
-            main: "#28a745",
-            dark: "#1e7e34"
+            main: "#1a7f37",
+            dark: "#116329"
         },
         error: {
             main: "#dc3545"
@@ -128,15 +129,16 @@ const darkPalette: ThemeOptions = {
     palette: {
         mode: "dark",
         primary: {
-            main: "#3391ff",
-            dark: "#1a7fff"
+            main: "#1158c7",
+            dark: "#0550ae",
+            contrastText: "#ffffff"
         },
         secondary: {
             main: "#adb5bd"
         },
         success: {
-            main: "#2ea043",
-            dark: "#238636"
+            main: "#238636",
+            dark: "#196c2e"
         },
         error: {
             main: "#f85149"

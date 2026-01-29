@@ -148,6 +148,7 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                                             <TableCell align="center">
                                                 <Avatar 
                                                     src={avatarUrl}
+                                                    alt="Player avatar"
                                                     sx={{ width: 32, height: 32, margin: "0 auto" }}
                                                 />
                                             </TableCell>

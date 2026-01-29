@@ -997,6 +997,7 @@ export const Game: React.FC = () => {
                                             size="small"
                                             sx={{ minWidth: 40, px: 1 }}
                                             color="secondary"
+                                            aria-label="How to play"
                                         >
                                             <HelpOutlineIcon />
                                         </Button>
@@ -1011,6 +1012,7 @@ export const Game: React.FC = () => {
                                             sx={{ minWidth: 40, px: 1 }}
                                             disabled={!user}
                                             color="info"
+                                            aria-label="Submit bug or request feature"
                                         >
                                             <BugReportIcon />
                                         </Button>
@@ -1024,6 +1026,7 @@ export const Game: React.FC = () => {
                                             size="small"
                                             sx={{ minWidth: 40, px: 1 }}
                                             disabled={!user}
+                                            aria-label="Statistics"
                                         >
                                             <BarChartIcon />
                                         </Button>

@@ -39,14 +39,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             });
             if (res.ok) {
                 const data = await res.json();
-                setUser(data.user);
-                setCompletedDates(data.completedDates || []);
-                setPlayedDates(data.playedDates || []);
-                
-                // Fetch CSRF token separately after authenticated session is established
-                getCsrfToken().catch(err => {
-                    logToServer("error", "UserContext: Failed to fetch CSRF token", err, data.user?.id);
-                });
+                if (data.user) {
+                    setUser(data.user);
+                    setCompletedDates(data.completedDates || []);
+                    setPlayedDates(data.playedDates || []);
+                    
+                    // Fetch CSRF token separately after authenticated session is established
+                    getCsrfToken().catch(err => {
+                        logToServer("error", "UserContext: Failed to fetch CSRF token", err, data.user?.id);
+                    });
+                }
+                else {
+                    setUser(null);
+                    setCompletedDates([]);
+                    setPlayedDates([]);
+                    clearCsrfToken();
+                }
             }
             else {
                 setUser(null);
