@@ -6,6 +6,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import fastifyPassport from "@fastify/passport";
 import fastifyCsrf from "@fastify/csrf-protection";
 import fastifyRateLimit from "@fastify/rate-limit";
+import fastifyHelmet from "@fastify/helmet";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -62,6 +63,24 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             catch (error) {
                 app.log.error(error, "Decryption failed");
                 return reply.code(400).send({ error: "Decryption failed" });
+            }
+        }
+    });
+
+    // Register helmet for security headers (early in chain)
+    await app.register(fastifyHelmet, {
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"], // Required for MUI/Emotion
+                imgSrc: ["'self'", "data:", "https://api.dicebear.com"], // data: for inline SVGs, dicebear for avatars
+                fontSrc: ["'self'"],
+                connectSrc: ["'self'"],
+                objectSrc: ["'none'"],
+                frameAncestors: ["'none'"],
+                baseUri: ["'self'"],
+                formAction: ["'self'"]
             }
         }
     });
