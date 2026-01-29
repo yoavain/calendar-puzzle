@@ -72,7 +72,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],
-                scriptSrc: ["'self'"],
+                scriptSrc: ["'self'", "https://static.cloudflareinsights.com"],
                 styleSrc: ["'self'", "'unsafe-inline'"], // Required for MUI/Emotion
                 imgSrc: ["'self'", "data:", "https://api.dicebear.com", "https://lh3.googleusercontent.com"], // data: for inline SVGs, dicebear/Google for avatars
                 fontSrc: ["'self'"],
