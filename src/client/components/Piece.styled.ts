@@ -45,9 +45,9 @@ export const PieceWrapper = styled(Box, {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",
-    height: "calc(100% - 50px)",
-    minHeight: 200,
+    width: isPlaced ? "auto" : "100%",
+    height: isPlaced ? "auto" : `calc(100% - ${theme.game.cellSizePx})`,
+    minHeight: isPlaced ? "auto" : `calc(${theme.game.cellSizePx} * 4)`,
     borderRadius: 4,
 
     // Selected state
@@ -101,8 +101,8 @@ export interface PieceGridProps {
 // Piece grid (the grid that contains piece cells)
 export const PieceGrid = styled("div")<PieceGridProps>(({ theme, columns, rows, transformStyle }) => ({
     display: "grid",
-    gridTemplateColumns: `repeat(${columns}, ${theme.game.cellSize}px)`,
-    gridTemplateRows: `repeat(${rows}, ${theme.game.cellSize}px)`,
+    gridTemplateColumns: `repeat(${columns}, ${theme.game.cellSizePx})`,
+    gridTemplateRows: `repeat(${rows}, ${theme.game.cellSizePx})`,
     gap: 0,
     backgroundColor: "transparent",
     cursor: "grab",
@@ -134,8 +134,8 @@ export interface PieceCellProps {
 
 // Piece cell (individual cells within a piece)
 export const PieceCell = styled("div")<PieceCellProps>(({ theme, isFilled, pieceId }) => ({
-    width: theme.game.cellSize,
-    height: theme.game.cellSize,
+    width: theme.game.cellSizePx,
+    height: theme.game.cellSizePx,
     border: "none",
     outline: "none",
     margin: 0,
