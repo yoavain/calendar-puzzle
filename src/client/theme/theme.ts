@@ -7,6 +7,7 @@ declare module "@mui/material/styles" {
     interface Theme {
         game: {
             cellSize: number;
+            cellSizePx: string;
             cellGap: number;
             pieceBorderWidth: number;
             hintedOpacity: number;
@@ -28,6 +29,7 @@ declare module "@mui/material/styles" {
     interface ThemeOptions {
         game?: {
             cellSize?: number;
+            cellSizePx?: string;
             cellGap?: number;
             pieceBorderWidth?: number;
             hintedOpacity?: number;
@@ -51,6 +53,7 @@ declare module "@mui/material/styles" {
 // Light theme game tokens
 const lightGameTokens = {
     cellSize: 50,
+    cellSizePx: "50px",
     cellGap: 0,
     pieceBorderWidth: 2,
     hintedOpacity: 0.7,
@@ -72,6 +75,7 @@ const lightGameTokens = {
 // Dark theme game tokens
 const darkGameTokens = {
     cellSize: 50,
+    cellSizePx: "50px",
     cellGap: 0,
     pieceBorderWidth: 2,
     hintedOpacity: 0.7,

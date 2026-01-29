@@ -4,6 +4,7 @@ import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Posit
 import { getTransformedShape } from "../../common/gameLogic";
 import { getPieceColor } from "../../common/pieceData";
 import { logToServer } from "../service/logService.js";
+import { getScaledCellSize } from "../utils/measureUtils";
 import type { InvalidDropCell } from "./Game";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
@@ -160,9 +161,11 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                 }
             }
         }
-        const cellSize = theme.game.cellSize;
-        const offsetX = (firstFilledX * cellSize) + (cellSize / 2);
-        const offsetY = (firstFilledY * cellSize) + (cellSize / 2);
+        // Calculate scale by measuring an actual board cell
+        const scaledCellSize = getScaledCellSize(theme.game.cellSize, theme.game.cellSizePx);
+
+        const offsetX = (firstFilledX * scaledCellSize) + (scaledCellSize / 2);
+        const offsetY = (firstFilledY * scaledCellSize) + (scaledCellSize / 2);
         
         const data = JSON.stringify({
             pieceId: piece.id
@@ -193,9 +196,10 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             rowDiv.style.cssText = "display: flex; gap: 0;";
             row.forEach((cell) => {
                 const cellDiv = document.createElement("div");
+
                 cellDiv.style.cssText = `
-                    width: ${theme.game.cellSize}px;
-                    height: ${theme.game.cellSize}px;
+                    width: ${scaledCellSize}px;
+                    height: ${scaledCellSize}px;
                     border: none;
                 `;
 
@@ -275,6 +279,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 draggable={!!piece && !isLocked && !isSolved}
                                 onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
                                 onDragEnd={() => onDragEnd()}
+                                data-testid="board-cell"
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>

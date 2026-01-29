@@ -35,6 +35,44 @@ import { clearSession, loadSession, saveSession } from "../hooks/useGameSession"
 import { logToServer } from "../service/logService";
 import { GameTitle, PiecePoolWrapper, PiecesContainer } from "./Game.styled";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import { styled } from "@mui/material/styles";
+
+// Scaling constants
+const BASELINE_SIZE = 1200;
+const BASELINE_HEIGHT = 1350; // Increased to accommodate pieces container and controls
+const MIN_HEIGHT = 800;
+
+// Styled components for scaling
+const AppWrapper = styled(Box)({
+    width: "100%",
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    overflowX: "hidden"
+});
+
+const ScaleContainer = styled(Box)<{ scale: number }>(({ scale }) => {
+    // Calculate negative margin to compensate for scaled-down content
+    // Clamp scale to prevent excessive negative margins on very small screens
+    const clampedScale = Math.max(scale, 0.3);
+    
+    // Use a precise scale to avoid sub-pixel misalignment
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const preciseScale = Math.round(clampedScale * dpr * 1000) / (dpr * 1000);
+    const marginValue = preciseScale < 1 ? `calc(${BASELINE_HEIGHT}px * (${preciseScale} - 1))` : 0;
+    
+    return {
+        width: BASELINE_SIZE,
+        height: "auto",
+        minHeight: BASELINE_HEIGHT,
+        transform: `scale(${preciseScale})`,
+        transformOrigin: "top center",
+        flexShrink: 0,
+        marginBottom: marginValue,
+        overflow: "visible"
+    };
+});
 
 /**
  * Rebuild game state from saved pieces.
@@ -154,7 +192,32 @@ export const Game: React.FC = () => {
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
 
-    // Handle date change from date picker
+    // Responsive scaling logic
+    const [scale, setScale] = useState(1);
+
+    // Dynamically adjust AppWrapper overflow based on height
+    const [isBelowMinHeight, setIsBelowMinHeight] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const calculateScale = () => {
+            if (!isMounted) {
+                return;
+            }
+            const widthScale = window.innerWidth / BASELINE_SIZE;
+            const heightScale = Math.max(window.innerHeight, MIN_HEIGHT) / BASELINE_HEIGHT;
+            setScale(Math.min(widthScale, heightScale));
+            setIsBelowMinHeight(window.innerHeight < MIN_HEIGHT);
+        };
+
+        calculateScale();
+        window.addEventListener("resize", calculateScale);
+        return () => {
+            isMounted = false;
+            window.removeEventListener("resize", calculateScale);
+        };
+    }, []);
     const handleDateChange = async (newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
         setIsSuccessMessageOpen(false);
@@ -897,183 +960,191 @@ export const Game: React.FC = () => {
     };
 
     return (
-        <Container 
-            maxWidth="lg" 
-            sx={{ py: 2, minHeight: "100vh" }}
+        <AppWrapper 
             onDragOver={handleGlobalDragOver}
             onDrop={handleGlobalDrop}
+            sx={{ overflowY: isBelowMinHeight ? "auto" : "hidden" }}
         >
-            {/* Top Bar */}
-            <Stack 
-                direction="row" 
-                justifyContent="space-between" 
-                alignItems="center" 
-                sx={{ mb: 2 }}
-            >
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <ThemeToggle />
-                    {!userLoading && (user ? <UserMenu /> : <LoginButton />)}
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    {solverError && (
-                        <Alert severity="error" sx={{ py: 0 }}>
-                            {solverError}
-                        </Alert>
-                    )}
-                    <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
-                    <Tooltip title="How to play" arrow>
-                        <span>
-                            <Button
-                                variant="contained"
-                                onClick={() => setIsHelpModalOpen(true)}
-                                size="small"
-                                sx={{ minWidth: 40, px: 1 }}
-                                color="secondary"
+            <Box sx={{ width: "100%", height: isBelowMinHeight ? "auto" : "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <ScaleContainer scale={scale}>
+                    <Container 
+                        maxWidth="lg" 
+                        sx={{ py: 2 }}
+                    >
+                        {/* Top Bar */}
+                        <Stack 
+                            direction="row" 
+                            justifyContent="space-between" 
+                            alignItems="center" 
+                            sx={{ mb: 2 }}
+                        >
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <ThemeToggle />
+                                {!userLoading && (user ? <UserMenu /> : <LoginButton />)}
+                            </Stack>
+                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                {solverError && (
+                                    <Alert severity="error" sx={{ py: 0 }}>
+                                        {solverError}
+                                    </Alert>
+                                )}
+                                <SolutionButton onSolve={handleSolve} isLoading={isLoading} disabled={gameState.isSolved} />
+                                <Tooltip title="How to play" arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => setIsHelpModalOpen(true)}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            color="secondary"
+                                        >
+                                            <HelpOutlineIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title={!user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => setIsIssueModalOpen(true)}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            disabled={!user}
+                                            color="info"
+                                        >
+                                            <BugReportIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title={!user ? "Sign-in to see statistics" : "Statistics"} arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => setIsStatsOpen(true)}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            disabled={!user}
+                                        >
+                                            <BarChartIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <DatePicker currentDate={gameState.currentDate} onDateChange={handleDateChange} />
+                                <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty || gameState.isSolved} />
+                                <Tooltip title="Ctrl+Z" arrow>
+                                    <span>
+                                        <Button 
+                                            variant="contained"
+                                            onClick={undo} 
+                                            disabled={!canUndo || gameState.isSolved}
+                                            size="small"
+                                            startIcon={<UndoIcon />}
+                                        >
+                                        Undo
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title="Ctrl+Y or Ctrl+Shift+Z" arrow>
+                                    <span>
+                                        <Button 
+                                            variant="contained"
+                                            onClick={redo} 
+                                            disabled={!canRedo || gameState.isSolved}
+                                            size="small"
+                                            startIcon={<RedoIcon />}
+                                        >
+                                        Redo
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title="Esc" arrow>
+                                    <span>
+                                        <Button 
+                                            variant="outlined"
+                                            onClick={handleReset}
+                                            disabled={isResetDisabled}
+                                            size="small"
+                                            startIcon={<RestartAltIcon />}
+                                            color="warning"
+                                        >
+                                        Reset
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                            </Stack>
+                        </Stack>
+
+                        {/* Title */}
+                        <GameTitle 
+                            variant="h4" 
+                            component="h1" 
+                            align="center" 
+                        >
+                        Calendar Puzzle
+                        </GameTitle>
+
+                        {/* Progress Bar */}
+                        <ProgressBar {...calculateProgress(gameState.pieces)} />
+
+                        {/* Success Message Dialog */}
+                        <SuccessMessage 
+                            isVisible={isSuccessMessageOpen} 
+                            onClose={() => setIsSuccessMessageOpen(false)} 
+                        />
+
+                        {/* Statistics Modal */}
+                        <StatsModal open={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
+
+                        {/* Issue Modal */}
+                        <IssueModal open={isIssueModalOpen} onClose={() => setIsIssueModalOpen(false)} />
+
+                        {/* Help Modal */}
+                        <HelpModal open={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
+
+                        {/* Game Area */}
+                        <Box component="main">
+                            <BoardComponent 
+                                board={gameState.board} 
+                                pieces={gameState.pieces}
+                                onCellClick={handleCellClick}
+                                onPieceDrop={handlePieceDrop}
+                                invalidDropCells={invalidDropCells}
+                                solutionRevealed={gameState.solutionRevealed}
+                                isSolved={gameState.isSolved}
+                                draggedPieceId={draggedPieceId}
+                                onDragStart={setDraggedPieceId}
+                                onDragEnd={() => setDraggedPieceId(null)}
+                            />
+                            <PiecesContainer
+                                onDragOver={handlePileDropZoneDragOver}
+                                onDrop={handlePileDropZoneDrop}
                             >
-                                <HelpOutlineIcon />
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Tooltip title={!user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
-                        <span>
-                            <Button
-                                variant="contained"
-                                onClick={() => setIsIssueModalOpen(true)}
-                                size="small"
-                                sx={{ minWidth: 40, px: 1 }}
-                                disabled={!user}
-                                color="info"
-                            >
-                                <BugReportIcon />
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Tooltip title={!user ? "Sign-in to see statistics" : "Statistics"} arrow>
-                        <span>
-                            <Button
-                                variant="contained"
-                                onClick={() => setIsStatsOpen(true)}
-                                size="small"
-                                sx={{ minWidth: 40, px: 1 }}
-                                disabled={!user}
-                            >
-                                <BarChartIcon />
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <DatePicker currentDate={gameState.currentDate} onDateChange={handleDateChange} />
-                    <HintButton onHint={handleHint} isLoading={isHintLoading} disabled={!isBoardEmpty || gameState.isSolved} />
-                    <Tooltip title="Ctrl+Z" arrow>
-                        <span>
-                            <Button 
-                                variant="contained"
-                                onClick={undo} 
-                                disabled={!canUndo || gameState.isSolved}
-                                size="small"
-                                startIcon={<UndoIcon />}
-                            >
-                                Undo
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Tooltip title="Ctrl+Y or Ctrl+Shift+Z" arrow>
-                        <span>
-                            <Button 
-                                variant="contained"
-                                onClick={redo} 
-                                disabled={!canRedo || gameState.isSolved}
-                                size="small"
-                                startIcon={<RedoIcon />}
-                            >
-                                Redo
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Tooltip title="Esc" arrow>
-                        <span>
-                            <Button 
-                                variant="outlined"
-                                onClick={handleReset}
-                                disabled={isResetDisabled}
-                                size="small"
-                                startIcon={<RestartAltIcon />}
-                                color="warning"
-                            >
-                                Reset
-                            </Button>
-                        </span>
-                    </Tooltip>
-                </Stack>
-            </Stack>
-
-            {/* Title */}
-            <GameTitle 
-                variant="h4" 
-                component="h1" 
-                align="center" 
-            >
-                Calendar Puzzle
-            </GameTitle>
-
-            {/* Progress Bar */}
-            <ProgressBar {...calculateProgress(gameState.pieces)} />
-
-            {/* Success Message Dialog */}
-            <SuccessMessage 
-                isVisible={isSuccessMessageOpen} 
-                onClose={() => setIsSuccessMessageOpen(false)} 
-            />
-
-            {/* Statistics Modal */}
-            <StatsModal open={isStatsOpen} onClose={() => setIsStatsOpen(false)} />
-
-            {/* Issue Modal */}
-            <IssueModal open={isIssueModalOpen} onClose={() => setIsIssueModalOpen(false)} />
-
-            {/* Help Modal */}
-            <HelpModal open={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
-
-            {/* Game Area */}
-            <Box component="main">
-                <BoardComponent 
-                    board={gameState.board} 
-                    pieces={gameState.pieces}
-                    onCellClick={handleCellClick}
-                    onPieceDrop={handlePieceDrop}
-                    invalidDropCells={invalidDropCells}
-                    solutionRevealed={gameState.solutionRevealed}
-                    isSolved={gameState.isSolved}
-                    draggedPieceId={draggedPieceId}
-                    onDragStart={setDraggedPieceId}
-                    onDragEnd={() => setDraggedPieceId(null)}
-                />
-                <PiecesContainer
-                    onDragOver={handlePileDropZoneDragOver}
-                    onDrop={handlePileDropZoneDrop}
-                >
-                    {gameState.pieces
-                        .filter(piece => !piece.position)
-                        .map(piece => (
-                            <PiecePoolWrapper key={piece.id}>
-                                <Piece
-                                    piece={piece}
-                                    isSelected={piece.id === gameState.selectedPieceId}
-                                    onClick={() => handlePieceSelect(piece.id)}
-                                    onDragStart={setDraggedPieceId}
-                                    onDragEnd={() => setDraggedPieceId(null)}
-                                    data-testid={`piece-${piece.id}`}
-                                />
-                                <PieceControls
-                                    piece={piece}
-                                    onRotate={() => handleRotatePiece(piece.id)}
-                                    onRotateCCW={() => handleRotateCCWPiece(piece.id)}
-                                    onFlipH={() => handleFlipHPiece(piece.id)}
-                                    onFlipV={() => handleFlipVPiece(piece.id)}
-                                />
-                            </PiecePoolWrapper>
-                        ))}
-                </PiecesContainer>
+                                {gameState.pieces
+                                    .filter(piece => !piece.position)
+                                    .map(piece => (
+                                        <PiecePoolWrapper key={piece.id}>
+                                            <Piece
+                                                piece={piece}
+                                                isSelected={piece.id === gameState.selectedPieceId}
+                                                onClick={() => handlePieceSelect(piece.id)}
+                                                onDragStart={setDraggedPieceId}
+                                                onDragEnd={() => setDraggedPieceId(null)}
+                                                data-testid={`piece-${piece.id}`}
+                                            />
+                                            <PieceControls
+                                                piece={piece}
+                                                onRotate={() => handleRotatePiece(piece.id)}
+                                                onRotateCCW={() => handleRotateCCWPiece(piece.id)}
+                                                onFlipH={() => handleFlipHPiece(piece.id)}
+                                                onFlipV={() => handleFlipVPiece(piece.id)}
+                                            />
+                                        </PiecePoolWrapper>
+                                    ))}
+                            </PiecesContainer>
+                        </Box>
+                    </Container>
+                </ScaleContainer>
             </Box>
-        </Container>
+        </AppWrapper>
     );
 };
