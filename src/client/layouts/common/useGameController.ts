@@ -419,9 +419,47 @@ export function useGameController() {
         });
     }, [gameState, pushState]);
 
-    const handleCellClick = useCallback((_position: Position) => {
-        // For now, do nothing when clicking cells
-    }, []);
+    const handleCellClick = useCallback((position: Position) => {
+        // Tap-to-place: If a piece is selected, try to place it at this position
+        if (!gameState.selectedPieceId || gameState.isSolved) {
+            return;
+        }
+
+        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
+        if (!piece || piece.position) {
+            // Piece not found or already placed
+            return;
+        }
+
+        // Check if placement is valid
+        const valid = isValidPlacement(gameState.board, piece, position, true);
+        if (!valid) {
+            // Trigger visual feedback for invalid placement
+            triggerInvalidDropFeedback(piece, position);
+            return;
+        }
+
+        // Place the piece using the helper function
+        const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
+            piece,
+            position,
+            gameState.board,
+            gameState.pieces
+        );
+
+        const newState: GameState = {
+            ...gameState,
+            pieces: newPieces,
+            board: newBoard,
+            selectedPieceId: null // Deselect after placing
+        };
+
+        pushState(newState, {
+            type: "PLACE_PIECE",
+            pieceId: piece.id,
+            position
+        });
+    }, [gameState, pushState, triggerInvalidDropFeedback, updateBoardAndPieces]);
 
     const handlePieceDrop = useCallback((position: Position, dragItem: DragItem) => {
         const { pieceId } = dragItem;
