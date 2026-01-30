@@ -1,0 +1,270 @@
+import React, { useEffect, useState } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Alert from "@mui/material/Alert";
+import Tooltip from "@mui/material/Tooltip";
+import UndoIcon from "@mui/icons-material/Undo";
+import RedoIcon from "@mui/icons-material/Redo";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import BugReportIcon from "@mui/icons-material/BugReport";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import BarChartIcon from "@mui/icons-material/BarChart";
+
+import { Board as BoardComponent } from "../../components/Board";
+import { Piece } from "../../components/Piece";
+import { PieceControls } from "../../components/PieceControls";
+import ThemeToggle from "../../components/ThemeToggle";
+import { SuccessMessage } from "../../components/SuccessMessage";
+import { SolutionButton } from "../../components/SolutionButton";
+import { HintButton } from "../../components/HintButton";
+import { LoginButton } from "../../components/LoginButton";
+import { UserMenu } from "../../components/UserMenu";
+import { DatePicker } from "../../components/DatePicker";
+import { StatsModal } from "../../components/StatsModal";
+import { IssueModal } from "../../components/IssueModal";
+import { ProgressBar } from "../../components/ProgressBar";
+import { HelpModal } from "../../components/HelpModal";
+
+import { useGameController } from "../common/useGameController";
+import {
+    AppWrapper,
+    ScaleContainer,
+    GameTitle,
+    PiecesContainer,
+    PiecePoolWrapper,
+    BASELINE_SIZE,
+    BASELINE_HEIGHT,
+    MIN_HEIGHT
+} from "./DesktopLayout.styled";
+
+/**
+ * Desktop layout component.
+ * 
+ * Renders the game with:
+ * - Top toolbar with all controls
+ * - Board in the center
+ * - 4x2 pieces grid below the board
+ * 
+ * Uses viewport-based scaling to fit different screen sizes.
+ */
+export const DesktopLayout: React.FC = () => {
+    const game = useGameController();
+
+    // Responsive scaling logic
+    const [scale, setScale] = useState(1);
+    const [isBelowMinHeight, setIsBelowMinHeight] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const calculateScale = () => {
+            if (!isMounted) {
+                return;
+            }
+            const widthScale = window.innerWidth / BASELINE_SIZE;
+            const heightScale = Math.max(window.innerHeight, MIN_HEIGHT) / BASELINE_HEIGHT;
+            setScale(Math.min(widthScale, heightScale));
+            setIsBelowMinHeight(window.innerHeight < MIN_HEIGHT);
+        };
+
+        calculateScale();
+        window.addEventListener("resize", calculateScale);
+        return () => {
+            isMounted = false;
+            window.removeEventListener("resize", calculateScale);
+        };
+    }, []);
+
+    return (
+        <AppWrapper 
+            onDragOver={game.handleGlobalDragOver}
+            onDrop={game.handleGlobalDrop}
+            sx={{ overflowY: isBelowMinHeight ? "auto" : "hidden" }}
+        >
+            <Box sx={{ width: "100%", height: isBelowMinHeight ? "auto" : "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <ScaleContainer scale={scale}>
+                    <Container 
+                        maxWidth="lg" 
+                        sx={{ py: 2 }}
+                    >
+                        {/* Top Bar */}
+                        <Stack 
+                            direction="row" 
+                            justifyContent="space-between" 
+                            alignItems="center" 
+                            sx={{ mb: 2 }}
+                        >
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <ThemeToggle />
+                                {!game.userLoading && (game.user ? <UserMenu /> : <LoginButton />)}
+                            </Stack>
+                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                {game.solverError && (
+                                    <Alert severity="error" sx={{ py: 0 }}>
+                                        {game.solverError}
+                                    </Alert>
+                                )}
+                                <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} />
+                                <Tooltip title="How to play" arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={game.modals.help.open}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            color="secondary"
+                                            aria-label="How to play"
+                                        >
+                                            <HelpOutlineIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={game.modals.issue.open}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            disabled={!game.user}
+                                            color="info"
+                                            aria-label="Submit bug or request feature"
+                                        >
+                                            <BugReportIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title={!game.user ? "Sign-in to see statistics" : "Statistics"} arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={game.modals.stats.open}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            disabled={!game.user}
+                                            aria-label="Statistics"
+                                        >
+                                            <BarChartIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} />
+                                <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} />
+                                <Tooltip title="Ctrl+Z" arrow>
+                                    <span>
+                                        <Button 
+                                            variant="contained"
+                                            onClick={game.undo} 
+                                            disabled={!game.canUndo || game.gameState.isSolved}
+                                            size="small"
+                                            startIcon={<UndoIcon />}
+                                        >
+                                        Undo
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title="Ctrl+Y or Ctrl+Shift+Z" arrow>
+                                    <span>
+                                        <Button 
+                                            variant="contained"
+                                            onClick={game.redo} 
+                                            disabled={!game.canRedo || game.gameState.isSolved}
+                                            size="small"
+                                            startIcon={<RedoIcon />}
+                                        >
+                                        Redo
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title="Esc" arrow>
+                                    <span>
+                                        <Button 
+                                            variant="outlined"
+                                            onClick={game.handleReset}
+                                            disabled={game.isResetDisabled}
+                                            size="small"
+                                            startIcon={<RestartAltIcon />}
+                                            color="warning"
+                                        >
+                                        Reset
+                                        </Button>
+                                    </span>
+                                </Tooltip>
+                            </Stack>
+                        </Stack>
+
+                        {/* Title */}
+                        <GameTitle 
+                            variant="h4" 
+                            component="h1" 
+                            align="center" 
+                        >
+                        Calendar Puzzle
+                        </GameTitle>
+
+                        {/* Progress Bar */}
+                        <ProgressBar {...game.calculateProgress()} />
+
+                        {/* Success Message Dialog */}
+                        <SuccessMessage 
+                            isVisible={game.modals.success.isOpen} 
+                            onClose={game.modals.success.close} 
+                        />
+
+                        {/* Statistics Modal */}
+                        <StatsModal open={game.modals.stats.isOpen} onClose={game.modals.stats.close} />
+
+                        {/* Issue Modal */}
+                        <IssueModal open={game.modals.issue.isOpen} onClose={game.modals.issue.close} />
+
+                        {/* Help Modal */}
+                        <HelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
+
+                        {/* Game Area */}
+                        <Box component="main">
+                            <BoardComponent 
+                                board={game.gameState.board} 
+                                pieces={game.gameState.pieces}
+                                onCellClick={game.handleCellClick}
+                                onPieceDrop={game.handlePieceDrop}
+                                invalidDropCells={game.invalidDropCells}
+                                solutionRevealed={game.gameState.solutionRevealed}
+                                isSolved={game.gameState.isSolved}
+                                draggedPieceId={game.draggedPieceId}
+                                onDragStart={game.setDraggedPieceId}
+                                onDragEnd={() => game.setDraggedPieceId(null)}
+                            />
+                            <PiecesContainer
+                                onDragOver={game.handlePileDropZoneDragOver}
+                                onDrop={game.handlePileDropZoneDrop}
+                            >
+                                {game.gameState.pieces
+                                    .filter(piece => !piece.position)
+                                    .map(piece => (
+                                        <PiecePoolWrapper key={piece.id}>
+                                            <Piece
+                                                piece={piece}
+                                                isSelected={piece.id === game.gameState.selectedPieceId}
+                                                onClick={() => game.handlePieceSelect(piece.id)}
+                                                onDragStart={game.setDraggedPieceId}
+                                                onDragEnd={() => game.setDraggedPieceId(null)}
+                                            />
+                                            <PieceControls
+                                                piece={piece}
+                                                onRotate={() => game.handleRotatePiece(piece.id)}
+                                                onRotateCCW={() => game.handleRotateCCWPiece(piece.id)}
+                                                onFlipH={() => game.handleFlipHPiece(piece.id)}
+                                                onFlipV={() => game.handleFlipVPiece(piece.id)}
+                                            />
+                                        </PiecePoolWrapper>
+                                    ))}
+                            </PiecesContainer>
+                        </Box>
+                    </Container>
+                </ScaleContainer>
+            </Box>
+        </AppWrapper>
+    );
+};
