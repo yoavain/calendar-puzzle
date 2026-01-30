@@ -13,9 +13,11 @@ interface PieceProps {
     onClick: () => void;
     onDragStart?: (pieceId: number) => void;
     onDragEnd?: () => void;
+    /** If true, hides the selection border (useful in carousel where only one piece is visible) */
+    hideSelectionBorder?: boolean;
 }
 
-export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDragStart, onDragEnd }) => {
+export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDragStart, onDragEnd, hideSelectionBorder = false }) => {
     const theme = useTheme();
     
     // Track cumulative rotation to ensure smooth clockwise animation
@@ -148,7 +150,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDrag
 
     return (
         <PieceWrapper
-            isSelected={isSelected}
+            isSelected={isSelected && !hideSelectionBorder}
             isPlaced={!!piece.position}
             onClick={onClick}
             draggable={!piece.position}
