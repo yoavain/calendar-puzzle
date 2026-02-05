@@ -188,13 +188,13 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
     return (
         <CarouselContainer>
-            <CarouselViewport ref={emblaRef}>
-                <CarouselTrack>
+            <CarouselViewport ref={emblaRef} aria-roledescription="carousel">
+                <CarouselTrack role="list">
                     {pieces.map((piece, index) => {
                         const slideState = getSlideState(index, activeIndex, pieces.length);
-                        
+                        const isActive = index === activeIndex;
                         return (
-                            <CarouselSlide key={piece.id} slideState={slideState}>
+                            <CarouselSlide key={piece.id} slideState={slideState} role="listitem" aria-selected={isActive}>
                                 <PieceWrapper>
                                     <DraggablePiece
                                         piece={piece}
@@ -262,12 +262,21 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
             </CarouselViewport>
 
             {/* Position indicator dots */}
-            <IndicatorContainer>
+            <IndicatorContainer role="tablist" aria-label="Pieces">
                 {pieces.map((piece, index) => (
                     <IndicatorDot 
                         key={piece.id} 
                         isActive={index === activeIndex}
                         onClick={() => scrollToIndex(index)}
+                        role="tab"
+                        aria-label={`Piece ${index + 1} of ${pieces.length}`}
+                        aria-selected={index === activeIndex}
+                        tabIndex={0}
+                        onKeyDown={(e: React.KeyboardEvent) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                scrollToIndex(index);
+                            }
+                        }}
                     />
                 ))}
             </IndicatorContainer>

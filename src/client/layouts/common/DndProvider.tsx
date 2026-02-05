@@ -9,7 +9,7 @@ import {
     pointerWithin,
     rectIntersection
 } from "@dnd-kit/core";
-import type { DragStartEvent, DragEndEvent, Modifier } from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent, Modifier, ClientRect } from "@dnd-kit/core";
 import { useTheme } from "@mui/material/styles";
 import type { Piece as PieceType, Position } from "../../../common/types";
 import { getTransformedShape } from "../../../common/gameLogic";
@@ -84,7 +84,7 @@ function findFirstFilledCell(piece: PieceType): { x: number; y: number } {
 /**
  * Calculate the cell position from pointer coordinates, accounting for board scale.
  */
-function calculateCellFromPointer(
+export function calculateCellFromPointer(
     pointerX: number,
     pointerY: number,
     boardElement: HTMLElement,
@@ -102,9 +102,8 @@ function calculateCellFromPointer(
     const scaledCellSize = cellSize * scale;
     
     // Calculate cell coordinates
-    // Board has 1-cell padding, so subtract 1 from the result
-    const cellX = Math.floor(relativeX / scaledCellSize) - 1;
-    const cellY = Math.floor(relativeY / scaledCellSize) - 1;
+    const cellX = Math.floor(relativeX / scaledCellSize);
+    const cellY = Math.floor(relativeY / scaledCellSize);
     
     // Validate bounds (board is 7x7 playable area)
     if (cellX < 0 || cellX > 6 || cellY < 0 || cellY > 6) {
@@ -128,11 +127,18 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     const [isDragging, setIsDragging] = useState(false);
     const [hoverPosition, setHoverPosition] = useState<Position | null>(null);
     
+    // Store whether the piece being dragged is from the board
+    const isFromBoardRef = useRef<boolean>(false);
     // Store the last pointer position for accurate drop calculation
     const lastPointerPositionRef = useRef<{ x: number; y: number } | null>(null);
     // Store the board element ref for hover calculations
     const boardElementRef = useRef<HTMLElement | null>(null);
-
+    // Store the initial click offset within the draggable element (for accurate overlay positioning)
+    const initialClickOffsetRef = useRef<{ x: number; y: number } | null>(null);
+    // Store the initial draggable element rect
+    const initialDragRectRef = useRef<ClientRect | null>(null);
+    const cellOffsetRef = useRef<{ x: number; y: number } | null>(null);
+ 
     // Track pointer position globally during drag using event listeners
     // Also calculate hover position for board preview
     useEffect(() => {
@@ -156,11 +162,26 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                 );
                 
                 if (cellPosition) {
-                    // Adjust for first filled cell offset to get piece top-left
-                    const firstCell = findFirstFilledCell(activePiece);
+                    // Convert the pointer‑to‑element click offset into grid cells
+                    // This tells us WHICH cell of the piece was clicked (e.g., 0,0 or 1,2)
+                    const clickX = initialClickOffsetRef.current?.x ?? 0;
+                    const clickY = initialClickOffsetRef.current?.y ?? 0;
+                    
+                    // We need to use the piece's own scale for this calculation
+                    // If it's from the board, it's already boardScale.
+                    // If it's from the carousel, it's scale(1) (but visual size might differ).
+                    // However, PieceDragPreview is rendered at boardScale, and our clickOffset
+                    // is relative to the draggable element's initial rect.
+                    const scaledCellSize = theme.game.cellSize * boardScale;
+                    
+                    const cellOffset = {
+                        x: Math.floor(clickX / scaledCellSize),
+                        y: Math.floor(clickY / scaledCellSize)
+                    };
+                    
                     const piecePosition: Position = {
-                        x: cellPosition.x - firstCell.x,
-                        y: cellPosition.y - firstCell.y
+                        x: cellPosition.x - cellOffset.x,
+                        y: cellPosition.y - cellOffset.y
                     };
                     setHoverPosition(piecePosition);
                 }
@@ -210,25 +231,32 @@ export const DndProvider: React.FC<DndProviderProps> = ({
 
     // Calculate drag overlay offset to position piece so first filled cell is at pointer
     // The overlay is scaled to match the board, so we use scaled cell size
-    const dragOverlayModifier: Modifier = useMemo(() => {
+    // 
+    // Key insight: @dnd-kit's DragOverlay positions based on the draggable element's rect,
+    // not the pointer position. The transform represents delta from initial pointer to current.
+    // We need to account for:
+    // 1. Where the user clicked within the draggable element
+    // 2. The first filled cell position within the scaled piece
+    const dragOverlayModifier: Modifier = useCallback(({ transform }) => {
         if (!activePiece) {
-            return ({ transform }) => transform;
+            return transform;
         }
 
-        const firstCell = findFirstFilledCell(activePiece);
-        // Use scaled cell size since we're scaling the DragOverlay to match the board
-        const scaledCellSize = theme.game.cellSize * boardScale;
-        
-        // Offset the overlay so the center of the first filled cell is at the pointer
-        const offsetX = (firstCell.x * scaledCellSize) + (scaledCellSize / 2);
-        const offsetY = (firstCell.y * scaledCellSize) + (scaledCellSize / 2);
+        const cellOffset = cellOffsetRef.current;
+        const clickOffset = initialClickOffsetRef.current;
+        const initialRect = initialDragRectRef.current;
 
-        return ({ transform }) => ({
-            ...transform,
-            x: transform.x - offsetX,
-            y: transform.y - offsetY
-        });
-    }, [activePiece, theme.game.cellSize, boardScale]);
+        if (cellOffset && clickOffset && initialRect) {
+            const targetClickX = cellOffset.x * boardScale * theme.game.cellSize;
+            const targetClickY = cellOffset.y * boardScale * theme.game.cellSize;
+            return {
+                ...transform,
+                x: transform.x + (clickOffset.x - targetClickX),
+                y: transform.y + (clickOffset.y - targetClickY)
+            };
+        }
+        return transform;
+    }, [activePiece, boardScale, theme.game.cellSize]);
 
     const handleDragStart = useCallback((event: DragStartEvent) => {
         const { active, activatorEvent } = event;
@@ -240,18 +268,58 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                 setActivePiece(piece);
                 setIsDragging(true);
                 
-                // Capture initial pointer position
+                // Capture initial pointer position and element rect for accurate overlay positioning
+                let pointerX = 0;
+                let pointerY = 0;
+                
                 if (activatorEvent instanceof PointerEvent || activatorEvent instanceof MouseEvent) {
-                    lastPointerPositionRef.current = { 
-                        x: activatorEvent.clientX, 
-                        y: activatorEvent.clientY 
-                    };
+                    pointerX = activatorEvent.clientX;
+                    pointerY = activatorEvent.clientY;
+                    lastPointerPositionRef.current = { x: pointerX, y: pointerY };
                 }
                 else if (activatorEvent instanceof TouchEvent && activatorEvent.touches[0]) {
-                    lastPointerPositionRef.current = { 
-                        x: activatorEvent.touches[0].clientX, 
-                        y: activatorEvent.touches[0].clientY 
+                    pointerX = activatorEvent.touches[0].clientX;
+                    pointerY = activatorEvent.touches[0].clientY;
+                    lastPointerPositionRef.current = { x: pointerX, y: pointerY };
+                }
+                
+                // Store the initial element rect and click offset
+                // This is needed because DragOverlay positions based on element rect, not pointer
+                const initialRect = active.rect.current.initial;
+                isFromBoardRef.current = active.data.current?.fromBoard === true;
+
+                if (initialRect) {
+                    initialDragRectRef.current = initialRect;
+                    // Calculate where the user clicked relative to the element's top-left
+                    const clickOffset = {
+                        x: pointerX - initialRect.left,
+                        y: pointerY - initialRect.top
                     };
+                    // Determine cell offset within the piece based on clickOffset and boardScale
+                    const scaledCellSize = theme.game.cellSize * boardScale;
+                    const cellOffset = {
+                        x: Math.floor(clickOffset.x / scaledCellSize),
+                        y: Math.floor(clickOffset.y / scaledCellSize)
+                    };
+                    // Validate that the clicked cell is filled in the piece
+                    const shape = getTransformedShape(piece);
+                    if (!shape[cellOffset.y] || !shape[cellOffset.y][cellOffset.x]) {
+                        // Clicked on empty cell; abort drag
+                        setActivePiece(null);
+                        setIsDragging(false);
+                        return;
+                    }
+                    // Store for later use
+                    cellOffsetRef.current = cellOffset;
+                }
+                else {
+                    // Fallback: use pointer position as offset if rect unavailable
+                    initialDragRectRef.current = null;
+                    initialClickOffsetRef.current = {
+                        x: 0,
+                        y: 0
+                    };
+                    cellOffsetRef.current = null;
                 }
                 
                 onDragStart?.(pieceId);
@@ -287,10 +355,11 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                         );
                         
                         if (cellPosition) {
-                            const firstCell = findFirstFilledCell(piece);
+                        // Convert the pointer‑to‑element click offset into grid cells
+                            const cellOffset = cellOffsetRef.current || { x:0, y:0 };
                             dropPosition = {
-                                x: cellPosition.x - firstCell.x,
-                                y: cellPosition.y - firstCell.y
+                                x: cellPosition.x - cellOffset.x,
+                                y: cellPosition.y - cellOffset.y
                             };
                         }
                     }
@@ -317,6 +386,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         setIsDragging(false);
         setHoverPosition(null);
         lastPointerPositionRef.current = null;
+        initialClickOffsetRef.current = null;
+        initialDragRectRef.current = null;
+        isFromBoardRef.current = false;
         // Don't clear boardElementRef - it should persist for future drags
         onDragEnd?.();
     }, [onPieceDrop, onPieceRemove, onDragEnd, hoverPosition, boardScale, theme.game.cellSize]);
@@ -326,6 +398,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         setIsDragging(false);
         setHoverPosition(null);
         lastPointerPositionRef.current = null;
+        initialClickOffsetRef.current = null;
+        initialDragRectRef.current = null;
+        isFromBoardRef.current = false;
         onDragEnd?.();
     }, [onDragEnd]);
 
