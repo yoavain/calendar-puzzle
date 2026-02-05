@@ -137,19 +137,20 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
         );
 
         // Wrap piece cells in DraggableBoardCell
+        const key = `${x}-${y}`;
         if (piece && !piece.isLocked && !isSolved) {
             return (
-                <DraggableBoardCell
-                    key={`${x}-${y}`}
-                    piece={piece}
-                    isDraggable={true}
-                >
+                <DraggableBoardCell key={key} piece={piece} isDraggable>
                     {cellElement}
                 </DraggableBoardCell>
             );
         }
 
-        return <React.Fragment key={`${x}-${y}`}>{cellElement}</React.Fragment>;
+        return (
+            <div key={key} style={{ display: "contents" }}>
+                {cellElement}
+            </div>
+        );
     };
 
     return (
