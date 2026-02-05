@@ -35,6 +35,8 @@ import {
 
 interface MobileToolbarProps {
     game: GameController;
+    /** Layout direction: horizontal (default) for portrait top bar, vertical for landscape left strip. */
+    orientation?: "horizontal" | "vertical";
 }
 
 /**
@@ -52,7 +54,7 @@ interface MobileToolbarProps {
  * - Help, Stats, Bug Report
  * - Solution, Hint
  */
-export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game }) => {
+export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation = "horizontal" }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
 
@@ -67,13 +69,13 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game }) => {
 
     return (
         <>
-            <ToolbarContainer>
-                <ToolbarLeft>
+            <ToolbarContainer orientation={orientation}>
+                <ToolbarLeft orientation={orientation}>
                     <ThemeToggle />
                     {!game.userLoading && (game.user ? <UserMenu /> : <LoginButton />)}
                 </ToolbarLeft>
 
-                <ToolbarCenter>
+                <ToolbarCenter orientation={orientation}>
                     <IconButton
                         onClick={game.undo}
                         disabled={!game.canUndo || game.gameState.isSolved}
@@ -101,7 +103,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game }) => {
                     </IconButton>
                 </ToolbarCenter>
 
-                <ToolbarRight>
+                <ToolbarRight orientation={orientation}>
                     <IconButton
                         onClick={openDrawer}
                         aria-label="Open menu"

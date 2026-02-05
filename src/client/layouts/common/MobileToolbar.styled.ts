@@ -2,57 +2,79 @@ import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 
 /**
- * Height of the mobile toolbar in pixels.
+ * Height of the mobile toolbar in pixels (horizontal layout).
  */
 export const MOBILE_TOOLBAR_HEIGHT = 56;
 
+export type ToolbarOrientation = "horizontal" | "vertical";
+
 /**
  * Container for the mobile toolbar.
- * Fixed height, horizontal layout with space between items.
+ * Horizontal: full-width bar. Vertical: narrow strip (e.g. landscape left column).
  */
-export const ToolbarContainer = styled(Box)(({ theme }) => ({
+export const ToolbarContainer = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "orientation"
+})<{ orientation?: ToolbarOrientation }>(({ theme, orientation }) => ({
     display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: theme.spacing(1, 2),
-    height: MOBILE_TOOLBAR_HEIGHT,
+    flexDirection: orientation === "vertical" ? "column" : "row",
+    alignItems: orientation === "vertical" ? "center" : "center",
+    justifyContent: orientation === "vertical" ? "flex-start" : "space-between",
+    gap: orientation === "vertical" ? theme.spacing(1) : 0,
+    padding: orientation === "vertical" ? theme.spacing(1, 0.5) : theme.spacing(1, 2),
+    ...(orientation === "vertical"
+        ? {
+            width: "100%",
+            minHeight: MOBILE_TOOLBAR_HEIGHT,
+            borderBottom: "none"
+        }
+        : {
+            height: MOBILE_TOOLBAR_HEIGHT,
+            borderBottom: `1px solid ${theme.palette.divider}`
+        }),
     backgroundColor: theme.palette.background.paper,
-    borderBottom: `1px solid ${theme.palette.divider}`,
     flexShrink: 0
 }));
 
 /**
  * Left section of toolbar (theme toggle, user menu).
+ * Stacks vertically when orientation is vertical.
  */
-export const ToolbarLeft = styled(Box)({
+export const ToolbarLeft = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "orientation"
+})<{ orientation?: ToolbarOrientation }>(({ orientation }) => ({
     display: "flex",
-    flexDirection: "row",
+    flexDirection: orientation === "vertical" ? "column" : "row",
     alignItems: "center",
     gap: 4
-});
+}));
 
 /**
  * Center section of toolbar (game actions: undo, redo, reset).
+ * Stacks vertically when orientation is vertical.
  */
-export const ToolbarCenter = styled(Box)({
+export const ToolbarCenter = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "orientation"
+})<{ orientation?: ToolbarOrientation }>(({ orientation }) => ({
     display: "flex",
-    flexDirection: "row",
+    flexDirection: orientation === "vertical" ? "column" : "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
-    flex: 1
-});
+    ...(orientation === "vertical" ? {} : { flex: 1 })
+}));
 
 /**
  * Right section of toolbar (hamburger menu).
+ * Stacks vertically when orientation is vertical.
  */
-export const ToolbarRight = styled(Box)({
+export const ToolbarRight = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "orientation"
+})<{ orientation?: ToolbarOrientation }>(({ orientation }) => ({
     display: "flex",
-    flexDirection: "row",
+    flexDirection: orientation === "vertical" ? "column" : "row",
     alignItems: "center",
     gap: 4
-});
+}));
 
 /**
  * Content container for the hamburger menu drawer.

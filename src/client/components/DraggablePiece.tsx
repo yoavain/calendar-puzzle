@@ -12,6 +12,8 @@ interface DraggablePieceProps {
     isDraggable?: boolean;
     /** If true, hides the selection border (useful in carousel where only one piece is visible) */
     hideSelectionBorder?: boolean;
+    /** Optional override for cell size in px (e.g. to match scaled board in carousel). */
+    cellSizePx?: string;
 }
 
 /**
@@ -26,7 +28,8 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
     isSelected,
     onClick,
     isDraggable = true,
-    hideSelectionBorder = false
+    hideSelectionBorder = false,
+    cellSizePx
 }) => {
     const canDrag = isDraggable && !piece.position;
     
@@ -65,6 +68,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
                 isSelected={isSelected}
                 onClick={onClick}
                 hideSelectionBorder={hideSelectionBorder}
+                cellSizePx={cellSizePx}
             />
         </div>
     );
