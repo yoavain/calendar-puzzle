@@ -65,6 +65,14 @@ export const ProgressArea = styled(Box)({
 });
 
 /**
+ * Compact banner for the mobile Beta disclaimer.
+ * Keeps flex layout stable and uses minimal vertical space.
+ */
+export const BetaBanner = styled(Box)({
+    flexShrink: 0
+});
+
+/**
  * Calculate the scale factor for the board based on available space.
  * Board visual dimensions include:
  * - 7 cells for content
@@ -88,12 +96,15 @@ export function calculateBoardScale(
     return Math.min(widthScale, heightScale, 1);
 }
 
+/** Approximate height of the Beta disclaimer banner (dense Alert). */
+const BETA_BANNER_HEIGHT = 36;
+
 /**
  * Get available height for the board area.
  */
 export function getAvailableBoardHeight(viewportHeight: number): number {
-    // Subtract toolbar, carousel, progress bar, and padding
+    // Subtract toolbar, carousel, progress bar, beta banner, and padding
     const progressBarHeight = 32;
     const padding = 8;
-    return viewportHeight - MOBILE_TOOLBAR_HEIGHT - CAROUSEL_HEIGHT - progressBarHeight - padding;
+    return viewportHeight - MOBILE_TOOLBAR_HEIGHT - CAROUSEL_HEIGHT - progressBarHeight - BETA_BANNER_HEIGHT - padding;
 }

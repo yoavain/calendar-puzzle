@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
+import Alert from "@mui/material/Alert";
 
 import { MobileBoard } from "../../components/MobileBoard";
 import { SuccessMessage } from "../../components/SuccessMessage";
@@ -19,6 +20,7 @@ import {
     BoardArea,
     BoardScaleWrapper,
     ProgressArea,
+    BetaBanner,
     calculateBoardScale,
     getAvailableBoardHeight
 } from "./PortraitLayout.styled";
@@ -97,6 +99,18 @@ export const PortraitLayout: React.FC = () => {
             <PortraitContainer>
                 {/* Mobile Toolbar with Hamburger Menu */}
                 <MobileToolbar game={game} />
+
+                {/* Beta disclaimer - mobile layout only */}
+                <BetaBanner sx={{ px: 1 }}>
+                    <Alert
+                        severity="info"
+                        role="status"
+                        aria-live="polite"
+                        sx={{ py: 0.5, px: 1.5 }}
+                    >
+                        Mobile layout (Beta)
+                    </Alert>
+                </BetaBanner>
 
                 {/* Content Area - Progress + Board */}
                 <ContentArea>
