@@ -76,18 +76,17 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
     const isDark = effectiveMode === "dark";
 
     return (
-        <Box 
-            sx={{ display: "flex", alignItems: "center" }}
+        <Box
+            sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
             className={className}
         >
-            <LightModeIcon 
-                sx={{ 
+            <LightModeIcon
+                sx={{
                     color: isDark ? "text.disabled" : "warning.main",
                     fontSize: 20,
-                    mr: 0.5,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(0.9)" : "scale(1.1)"
-                }} 
+                }}
             />
             <FormControlLabel
                 control={
@@ -97,15 +96,15 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
                     />
                 }
                 label={<VisuallyHiddenLabel>Toggle dark mode</VisuallyHiddenLabel>}
+                sx={{ margin: 0, gap: 0, "& .MuiFormControlLabel-label": { margin: 0 } }}
             />
-            <DarkModeIcon 
-                sx={{ 
+            <DarkModeIcon
+                sx={{
                     color: isDark ? "primary.main" : "text.disabled",
                     fontSize: 20,
-                    ml: 0.5,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(1.1)" : "scale(0.9)"
-                }} 
+                }}
             />
         </Box>
     );

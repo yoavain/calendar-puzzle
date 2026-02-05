@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import { useTheme } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -34,6 +35,10 @@ interface PieceCarouselProps {
     onFlipHPiece: (pieceId: number) => void;
     /** Handler for flipping a piece vertically */
     onFlipVPiece: (pieceId: number) => void;
+    /** Scroll axis: horizontal (default) or vertical */
+    axis?: "x" | "y";
+    /** When provided, pieces are rendered at this scale to match the board (carousel = drag = board size). */
+    boardScale?: number;
 }
 
 /**
@@ -61,9 +66,9 @@ function getSlideState(index: number, activeIndex: number, totalSlides: number):
 }
 
 /**
- * Horizontal carousel for displaying and selecting pieces.
+ * Carousel for displaying and selecting pieces (horizontal or vertical).
  * Uses embla-carousel for smooth, cyclic navigation.
- * 
+ *
  * Features:
  * - Infinite loop scrolling
  * - Touch/swipe support (tap to select, tap on board to place)
@@ -79,12 +84,21 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     onRotatePiece,
     onRotateCCWPiece,
     onFlipHPiece,
-    onFlipVPiece
+    onFlipVPiece,
+    axis = "x",
+    boardScale
 }) => {
+    const theme = useTheme();
+    const pieceCellSizePx =
+        boardScale != null
+            ? `${theme.game.cellSize * boardScale}px`
+            : undefined;
+
     const [emblaRef, emblaApi] = useEmblaCarousel({
-        loop: true, // Enable infinite loop
+        axis: axis === "y" ? "y" : "x",
+        loop: true,
         align: "center",
-        containScroll: false, // Required for loop to work properly
+        containScroll: false,
         dragFree: false,
         skipSnaps: false
     });
@@ -180,27 +194,28 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
     if (pieces.length === 0) {
         return (
-            <CarouselContainer>
+            <CarouselContainer axis={axis}>
                 {/* Empty state - all pieces placed */}
             </CarouselContainer>
         );
     }
 
     return (
-        <CarouselContainer>
-            <CarouselViewport ref={emblaRef} aria-roledescription="carousel">
-                <CarouselTrack role="list">
+        <CarouselContainer axis={axis}>
+            <CarouselViewport ref={emblaRef} axis={axis} aria-roledescription="carousel">
+                <CarouselTrack axis={axis} role="list">
                     {pieces.map((piece, index) => {
                         const slideState = getSlideState(index, activeIndex, pieces.length);
                         const isActive = index === activeIndex;
                         return (
-                            <CarouselSlide key={piece.id} slideState={slideState} role="listitem" aria-selected={isActive}>
+                            <CarouselSlide key={piece.id} slideState={slideState} axis={axis} role="listitem" aria-selected={isActive}>
                                 <PieceWrapper>
                                     <DraggablePiece
                                         piece={piece}
                                         isSelected={piece.id === selectedPieceId}
                                         onClick={() => onPieceSelect(piece.id)}
                                         hideSelectionBorder
+                                        cellSizePx={pieceCellSizePx}
                                     />
                                 </PieceWrapper>
                                 
@@ -262,7 +277,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
             </CarouselViewport>
 
             {/* Position indicator dots */}
-            <IndicatorContainer role="tablist" aria-label="Pieces">
+            <IndicatorContainer axis={axis} role="tablist" aria-label="Pieces">
                 {pieces.map((piece, index) => (
                     <IndicatorDot 
                         key={piece.id} 

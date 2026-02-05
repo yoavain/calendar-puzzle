@@ -15,9 +15,11 @@ interface PieceProps {
     onDragEnd?: () => void;
     /** If true, hides the selection border (useful in carousel where only one piece is visible) */
     hideSelectionBorder?: boolean;
+    /** Optional override for cell size in px (e.g. to match scaled board in carousel). */
+    cellSizePx?: string;
 }
 
-export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDragStart, onDragEnd, hideSelectionBorder = false }) => {
+export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDragStart, onDragEnd, hideSelectionBorder = false, cellSizePx }) => {
     const theme = useTheme();
     
     // Track cumulative rotation to ensure smooth clockwise animation
@@ -161,6 +163,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDrag
                 columns={baseWidth}
                 rows={baseHeight}
                 transformStyle={transformStyle}
+                cellSizePx={cellSizePx}
             >
                 {baseShape.map((row, y) =>
                     row.map((cell, x) => (
@@ -168,6 +171,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDrag
                             key={`${x}-${y}`}
                             isFilled={cell}
                             pieceId={piece.id}
+                            cellSizePx={cellSizePx}
                         />
                     ))
                 )}

@@ -3,6 +3,7 @@ import type { LayoutType } from "./types";
 import { LayoutProvider } from "./LayoutContext";
 import { DesktopLayout } from "./desktop/DesktopLayout";
 import { PortraitLayout } from "./mobile-portrait/PortraitLayout";
+import { LandscapeLayout } from "./mobile-landscape/LandscapeLayout";
 
 interface LayoutRootProps {
     /**
@@ -27,9 +28,7 @@ export const LayoutRoot: React.FC<LayoutRootProps> = ({ layoutSelector }) => {
         <LayoutProvider layout={layout}>
             {layout === "desktop" && <DesktopLayout />}
             {layout === "mobile-portrait" && <PortraitLayout />}
-            {/* Mobile landscape layout will be added in a future phase:
             {layout === "mobile-landscape" && <LandscapeLayout />}
-            */}
         </LayoutProvider>
     );
 };

@@ -14,5 +14,8 @@ export { DesktopLayout } from "./desktop";
 // Mobile portrait layout
 export { PortraitLayout } from "./mobile-portrait";
 
+// Mobile landscape layout
+export { LandscapeLayout } from "./mobile-landscape";
+
 // Common components
 export { MobileToolbar, PieceCarousel } from "./common";

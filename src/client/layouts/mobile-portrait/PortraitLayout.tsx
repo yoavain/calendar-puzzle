@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
-import Alert from "@mui/material/Alert";
 
 import { MobileBoard } from "../../components/MobileBoard";
 import { SuccessMessage } from "../../components/SuccessMessage";
@@ -10,18 +9,17 @@ import { HelpModal } from "../../components/HelpModal";
 import { ProgressBar } from "../../components/ProgressBar";
 
 import { useGameController } from "../common/useGameController";
+import { BetaBanner } from "../common/BetaBanner";
 import { MobileToolbar } from "../common/MobileToolbar";
 import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
+import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
 import type { Position } from "../../../common/types";
 import {
     PortraitContainer,
     ContentArea,
     BoardArea,
-    BoardScaleWrapper,
     ProgressArea,
-    BetaBanner,
-    calculateBoardScale,
     getAvailableBoardHeight
 } from "./PortraitLayout.styled";
 
@@ -101,16 +99,7 @@ export const PortraitLayout: React.FC = () => {
                 <MobileToolbar game={game} />
 
                 {/* Beta disclaimer - mobile layout only */}
-                <BetaBanner sx={{ px: 1 }}>
-                    <Alert
-                        severity="info"
-                        role="status"
-                        aria-live="polite"
-                        sx={{ py: 0.5, px: 1.5 }}
-                    >
-                        Mobile layout (Beta)
-                    </Alert>
-                </BetaBanner>
+                <BetaBanner />
 
                 {/* Content Area - Progress + Board */}
                 <ContentArea>
@@ -144,6 +133,7 @@ export const PortraitLayout: React.FC = () => {
                     onRotateCCWPiece={game.handleRotateCCWPiece}
                     onFlipHPiece={game.handleFlipHPiece}
                     onFlipVPiece={game.handleFlipVPiece}
+                    boardScale={boardScale}
                 />
 
                 {/* Modals */}

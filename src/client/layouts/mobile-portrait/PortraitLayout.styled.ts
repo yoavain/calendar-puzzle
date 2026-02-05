@@ -4,12 +4,6 @@ import { MOBILE_TOOLBAR_HEIGHT } from "../common/MobileToolbar.styled";
 import { CAROUSEL_HEIGHT } from "../common/PieceCarousel.styled";
 
 /**
- * Additional space needed for board border and shadow.
- */
-const BOARD_BORDER_SIZE = 8; // 4px border on each side
-const BOARD_EXTRA_PADDING = 16; // Extra breathing room for shadows
-
-/**
  * Main container for the portrait layout.
  * Uses dynamic viewport height (dvh) for better mobile support.
  */
@@ -49,52 +43,12 @@ export const BoardArea = styled(Box)({
 });
 
 /**
- * Wrapper that applies scaling to the board.
- */
-export const BoardScaleWrapper = styled(Box)<{ scale: number }>(({ scale }) => ({
-    transform: `scale(${scale})`,
-    transformOrigin: "center center"
-}));
-
-/**
  * Progress bar container.
  */
 export const ProgressArea = styled(Box)({
     flexShrink: 0,
     padding: "0 4px"
 });
-
-/**
- * Compact banner for the mobile Beta disclaimer.
- * Keeps flex layout stable and uses minimal vertical space.
- */
-export const BetaBanner = styled(Box)({
-    flexShrink: 0
-});
-
-/**
- * Calculate the scale factor for the board based on available space.
- * Board visual dimensions include:
- * - 7 cells for content
- * - 1 cell padding on each side (cellSize * 2)
- * - 4px border on each side (8px total)
- */
-export function calculateBoardScale(
-    availableWidth: number,
-    availableHeight: number,
-    cellSize: number
-): number {
-    // Board dimensions: 7 cells + 1 cell padding each side + border + extra padding
-    const boardWidth = cellSize * 9 + BOARD_BORDER_SIZE + BOARD_EXTRA_PADDING;
-    const boardHeight = cellSize * 9 + BOARD_BORDER_SIZE + BOARD_EXTRA_PADDING;
-    
-    const widthScale = availableWidth / boardWidth;
-    const heightScale = availableHeight / boardHeight;
-    
-    // Use the smaller scale to fit within both dimensions
-    // Cap at 1 to prevent upscaling
-    return Math.min(widthScale, heightScale, 1);
-}
 
 /** Approximate height of the Beta disclaimer banner (dense Alert). */
 const BETA_BANNER_HEIGHT = 36;
