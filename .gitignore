@@ -10,3 +10,6 @@
 /private-key.pem
 /public-key.pem
 /coverage/
+/test-results/
+/playwright-report/
+/blob-report/
