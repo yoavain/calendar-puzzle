@@ -12,28 +12,31 @@ const PIECE_CAROUSEL_INDEX = 3;
 const PIECE_CELL_COUNT = 5;
 
 /**
- * Expected board cells occupied when piece 4 (rotation 0) is placed at
- * board position (2, 2).
+ * Expected board cells occupied when piece 4 (rotation 0) is dropped
+ * onto target cell (2, 2).
  *
  * Piece 4 shape (col, row):
- *   .X   → (1, 0)
+ *   .X   → (1, 0)  ← firstFilledCell
  *   .X   → (1, 1)
  *   XX   → (0, 2), (1, 2)
  *   X.   → (0, 3)
  *
- * Position (2, 2) → absolute cells:
- *   (2+1, 2+0) = (3, 2)
- *   (2+1, 2+1) = (3, 3)
- *   (2+0, 2+2) = (2, 4)
- *   (2+1, 2+2) = (3, 4)
- *   (2+0, 2+3) = (2, 5)
+ * firstFilledCell = (1, 0), so:
+ *   piece position = (targetX - 1, targetY - 0) = (1, 2)
+ *
+ * Position (1, 2) → absolute cells:
+ *   (1+1, 2+0) = (2, 2)
+ *   (1+1, 2+1) = (2, 3)
+ *   (1+0, 2+2) = (1, 4)
+ *   (1+1, 2+2) = (2, 4)
+ *   (1+0, 2+3) = (1, 5)
  */
 const EXPECTED_CELLS: { x: number; y: number }[] = [
-    { x: 3, y: 2 },
-    { x: 3, y: 3 },
+    { x: 2, y: 2 },
+    { x: 2, y: 3 },
+    { x: 1, y: 4 },
     { x: 2, y: 4 },
-    { x: 3, y: 4 },
-    { x: 2, y: 5 }
+    { x: 1, y: 5 }
 ];
 
 // ─── Layout detection ────────────────────────────────────────
@@ -118,6 +121,28 @@ test.describe("Drag and drop – deterministic", () => {
 
     test.beforeEach(async ({ page }, testInfo) => {
         layout = layoutFromProject(testInfo.project.name);
+
+        // Mock all /api/* routes so the app doesn't hit the real backend
+        await page.route("**/api/**", async (route) => {
+            const url = route.request().url();
+            if (url.includes("/api/auth/me")) {
+                // Not logged in
+                await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Unauthorized" }) });
+            }
+            else if (url.includes("/api/auth/csrf-token")) {
+                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ csrfToken: "mock-csrf" }) });
+            }
+            else if (url.includes("/api/auth/public-key")) {
+                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ publicKey: "" }) });
+            }
+            else if (url.includes("/api/log")) {
+                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+            }
+            else {
+                // Fallback: 200 with empty JSON for any other API call
+                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({}) });
+            }
+        });
 
         // Clear any saved session / localStorage to prevent stale state
         await page.addInitScript(() => {
@@ -226,10 +251,11 @@ test.describe("Drag and drop – deterministic", () => {
         //   Month "Oct" = index 9  → cell (3, 1) is highlighted
         //   Day 11 is in DAYS_LAYOUT[1][3] → cell (3, 3) is highlighted
         //
-        // On desktop, hoverPosition = (2, 2), piece occupies (3, 3) which
-        // collides with day 11.
-        // On mobile, cellOffset varies but the piece always collides with
-        // either OCT at (3, 1) or day 11 at (3, 3).
+        // firstFilledCell for piece 4 = (1, 0).
+        // Desktop targets cell (3, 2) → position = (3-1, 2-0) = (2, 2).
+        //   Piece cells include (2+1, 2+1) = (3, 3) → collides with day 11.
+        // Mobile targets cell (3, 2) as well; cellOffset varies but the
+        //   piece always collides with either OCT at (3, 1) or day 11 at (3, 3).
         await mockDate(page, new Date(2024, 9, 11));
 
         game = new GamePage(page, layout);
@@ -241,7 +267,8 @@ test.describe("Drag and drop – deterministic", () => {
         }
 
         const piece = game.carouselPiece(PIECE_ID);
-        const target = targetCell(game);
+        // Target cell (3, 2) so piece position = (2, 2) and cell (3, 3) conflicts
+        const target = game.boardCell(3, 2);
 
         await dragPieceToBoard(page, piece, target, layout);
 
