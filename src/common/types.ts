@@ -52,6 +52,10 @@ export interface GameState {
 
 export interface DragItem {
     pieceId: number;
+    /** Anchor cell X offset within the piece shape (set during board drag). */
+    cellX?: number;
+    /** Anchor cell Y offset within the piece shape (set during board drag). */
+    cellY?: number;
 }
 
 export interface GameHistory {

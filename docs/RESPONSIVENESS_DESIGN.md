@@ -100,6 +100,8 @@ Ensuring that the "Drag Preview" created in `Board.tsx` and `Piece.tsx` also use
 **File:** `src/client/components/Board.tsx` & `src/client/components/Piece.tsx`
 **Change:** The `dragPreview` element creation uses `theme.game.cellSize`. Since this will now be a CSS variable string, the helper should be updated to handle it correctly or use `getComputedStyle`.
 
+> **Note (Feb 2026):** Mobile layouts now use `DndProvider` (`src/client/layouts/common/DndProvider.tsx`) with `@dnd-kit`'s `DragOverlay` (rendered via `createPortal` into `document.body`) instead of the desktop HTML5 drag preview. The `DragOverlay` is already scaled by `boardScale`, so Phase 3 concerns mostly apply to the desktop layout. See `docs/drag-drop-guidelines.md` for mobile drag architecture.
+
 ### 1.5 Test Plan (Stage 3)
 1. **Drag Preview Size:** Start dragging a piece at 100% zoom and 150% zoom.
    - **Expectation:** The "ghost" image under the cursor must exactly match the size of the board cells at both zoom levels.

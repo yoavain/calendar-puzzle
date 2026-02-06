@@ -113,6 +113,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
             <BoardCell
                 data-cell-x={x}
                 data-cell-y={y}
+                data-piece-id={piece?.id}
                 isPlayable={isPlayable}
                 isPieceCell={isPieceCell}
                 isHidden={isHidden}
@@ -124,6 +125,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                 isSolved={isSolved}
                 isHighlighted={cell.isHighlighted}
                 isDragOver={isHoverPreview && !isPieceCell}
+                data-drag-over={(isHoverPreview && !isPieceCell) || undefined}
                 onClick={() => {
                     if (!isSolved) {
                         onCellClick({ x, y });
@@ -136,11 +138,15 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
             </BoardCell>
         );
 
-        // Wrap piece cells in DraggableBoardCell
+        // Wrap piece cells in DraggableBoardCell (anchor = this cell in piece coords)
         const key = `${x}-${y}`;
-        if (piece && !piece.isLocked && !isSolved) {
+        if (piece && piece.position && !piece.isLocked && !isSolved) {
+            const anchorInPiece = {
+                x: x - piece.position.x,
+                y: y - piece.position.y
+            };
             return (
-                <DraggableBoardCell key={key} piece={piece} isDraggable>
+                <DraggableBoardCell key={key} piece={piece} isDraggable anchorInPiece={anchorInPiece}>
                     {cellElement}
                 </DraggableBoardCell>
             );
@@ -154,7 +160,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
     };
 
     return (
-        <BoardContainer ref={setRefs} data-droppable-board="true">
+        <BoardContainer ref={setRefs} data-droppable-board="true" data-testid="board">
             {board.map((row, y) => (
                 <BoardRow key={y}>
                     {row.map((cell, x) => renderCell(cell, x, y))}

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect, createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 import {
     DndContext,
     DragOverlay,
@@ -65,6 +66,62 @@ interface DndProviderProps {
  * 
  * The DragOverlay renders a preview of the piece being dragged.
  */
+/**
+ * Find the PieceGrid's visual bounding rect within a draggable element.
+ *
+ * The PieceGrid uses CSS transforms (rotate / flip) that are purely visual —
+ * they do NOT change the element's layout dimensions. So the wrapper div's
+ * `getBoundingClientRect()` returns the pre-transform (layout) rect, which
+ * can differ from the actual visual dimensions after rotation.
+ *
+ * This helper locates the inner CSS Grid element (display: grid) and returns
+ * its `getBoundingClientRect()`, which accounts for CSS transforms and gives
+ * the correct visual dimensions.
+ */
+function findVisualPieceRect(
+    containerEl: Element
+): { left: number; top: number; width: number; height: number } | null {
+    const descendants = containerEl.querySelectorAll("*");
+    for (const el of descendants) {
+        if (window.getComputedStyle(el).display === "grid") {
+            const r = el.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) {
+                return { left: r.left, top: r.top, width: r.width, height: r.height };
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * When the user starts a drag from an empty (false) cell of the piece
+ * grid, find the nearest filled cell to snap to. This prevents the drag
+ * from being cancelled when the touch lands on a transparent gap between
+ * filled cells.
+ *
+ * Uses Manhattan distance; ties broken by top-left preference.
+ */
+function findNearestFilledCell(
+    shape: boolean[][],
+    fromX: number,
+    fromY: number
+): { x: number; y: number } | null {
+    let minDist = Infinity;
+    let nearest: { x: number; y: number } | null = null;
+    for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < (shape[y]?.length ?? 0); x++) {
+            if (shape[y][x]) {
+                const dist = Math.abs(x - fromX) + Math.abs(y - fromY);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = { x, y };
+                }
+            }
+        }
+    }
+    return nearest;
+}
+
 /**
  * Find the first filled cell in a piece's transformed shape.
  * This is used to calculate the offset for accurate drop positioning.
@@ -138,7 +195,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     // Store the initial draggable element rect
     const initialDragRectRef = useRef<ClientRect | null>(null);
     const cellOffsetRef = useRef<{ x: number; y: number } | null>(null);
- 
+    // Store the board grid origin at drag start for snapping overlay to board grid
+    const boardGridOriginRef = useRef<{ left: number; top: number; gridOriginX: number; gridOriginY: number } | null>(null);
+
     // Track pointer position globally during drag using event listeners
     // Also calculate hover position for board preview
     useEffect(() => {
@@ -162,22 +221,10 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                 );
                 
                 if (cellPosition) {
-                    // Convert the pointer‑to‑element click offset into grid cells
-                    // This tells us WHICH cell of the piece was clicked (e.g., 0,0 or 1,2)
-                    const clickX = initialClickOffsetRef.current?.x ?? 0;
-                    const clickY = initialClickOffsetRef.current?.y ?? 0;
-                    
-                    // We need to use the piece's own scale for this calculation
-                    // If it's from the board, it's already boardScale.
-                    // If it's from the carousel, it's scale(1) (but visual size might differ).
-                    // However, PieceDragPreview is rendered at boardScale, and our clickOffset
-                    // is relative to the draggable element's initial rect.
-                    const scaledCellSize = theme.game.cellSize * boardScale;
-                    
-                    const cellOffset = {
-                        x: Math.floor(clickX / scaledCellSize),
-                        y: Math.floor(clickY / scaledCellSize)
-                    };
+                    // Use the pre-computed cellOffset from handleDragStart
+                    // (which accounts for the piece's own DOM dimensions,
+                    //  not the board's scaled cell size).
+                    const cellOffset = cellOffsetRef.current ?? { x: 0, y: 0 };
                     
                     const piecePosition: Position = {
                         x: cellPosition.x - cellOffset.x,
@@ -234,9 +281,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     // 
     // Key insight: @dnd-kit's DragOverlay positions based on the draggable element's rect,
     // not the pointer position. The transform represents delta from initial pointer to current.
-    // We need to account for:
-    // 1. Where the user clicked within the draggable element
-    // 2. The first filled cell position within the scaled piece
+    // Snap the DragOverlay so each piece cell aligns with the
+    // corresponding board cell. This eliminates the sub-cell offset
+    // between the overlay and the hover preview (shadow).
     const dragOverlayModifier: Modifier = useCallback(({ transform }) => {
         if (!activePiece) {
             return transform;
@@ -245,7 +292,35 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         const cellOffset = cellOffsetRef.current;
         const clickOffset = initialClickOffsetRef.current;
         const initialRect = initialDragRectRef.current;
+        const boardInfo = boardGridOriginRef.current;
 
+        if (cellOffset && clickOffset && initialRect && boardInfo) {
+            const scaledCellSize = boardScale * theme.game.cellSize;
+
+            // Reconstruct current pointer position
+            const pointerX = initialRect.left + clickOffset.x + transform.x;
+            const pointerY = initialRect.top + clickOffset.y + transform.y;
+
+            // Cell under pointer (same logic as calculateCellFromPointer)
+            const cellPosX = Math.floor((pointerX - boardInfo.left) / scaledCellSize);
+            const cellPosY = Math.floor((pointerY - boardInfo.top) / scaledCellSize);
+
+            // Hover position = cellPosition - cellOffset
+            const hoverX = cellPosX - cellOffset.x;
+            const hoverY = cellPosY - cellOffset.y;
+
+            // Align overlay cell (0,0) with the shadow cell at game position (hoverX, hoverY)
+            const desiredX = boardInfo.gridOriginX + hoverX * scaledCellSize;
+            const desiredY = boardInfo.gridOriginY + hoverY * scaledCellSize;
+
+            return {
+                ...transform,
+                x: desiredX - initialRect.left,
+                y: desiredY - initialRect.top
+            };
+        }
+
+        // Fallback: use sub-cell offset adjustment
         if (cellOffset && clickOffset && initialRect) {
             const targetClickX = cellOffset.x * boardScale * theme.game.cellSize;
             const targetClickY = cellOffset.y * boardScale * theme.game.cellSize;
@@ -286,42 +361,156 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                 // Store the initial element rect and click offset
                 // This is needed because DragOverlay positions based on element rect, not pointer
                 const initialRect = active.rect.current.initial;
-                isFromBoardRef.current = active.data.current?.fromBoard === true;
+                const fromBoard = active.data.current?.fromBoard === true;
+                isFromBoardRef.current = fromBoard;
 
-                if (initialRect) {
-                    initialDragRectRef.current = initialRect;
-                    // Calculate where the user clicked relative to the element's top-left
-                    const clickOffset = {
-                        x: pointerX - initialRect.left,
-                        y: pointerY - initialRect.top
-                    };
-                    // Determine cell offset within the piece based on clickOffset and boardScale
-                    const scaledCellSize = theme.game.cellSize * boardScale;
-                    const cellOffset = {
-                        x: Math.floor(clickOffset.x / scaledCellSize),
-                        y: Math.floor(clickOffset.y / scaledCellSize)
-                    };
-                    // Validate that the clicked cell is filled in the piece
-                    const shape = getTransformedShape(piece);
-                    if (!shape[cellOffset.y] || !shape[cellOffset.y][cellOffset.x]) {
-                        // Clicked on empty cell; abort drag
+                const shape = getTransformedShape(piece);
+
+                if (fromBoard && active.data.current?.anchorX !== undefined && active.data.current?.anchorY !== undefined) {
+                    // Anchor from board: use anchor from draggable data (single-cell wrapper)
+                    const anchorX = active.data.current.anchorX as number;
+                    const anchorY = active.data.current.anchorY as number;
+                    if (!shape[anchorY]?.[anchorX]) {
                         setActivePiece(null);
                         setIsDragging(false);
                         return;
                     }
-                    // Store for later use
+                    cellOffsetRef.current = { x: anchorX, y: anchorY };
+                    initialDragRectRef.current = initialRect ?? null;
+                    const scaledCellSize = theme.game.cellSize * boardScale;
+                    initialClickOffsetRef.current = {
+                        x: anchorX * scaledCellSize + scaledCellSize / 2,
+                        y: anchorY * scaledCellSize + scaledCellSize / 2
+                    };
+                }
+                else if (initialRect) {
+                    initialDragRectRef.current = initialRect;
+                    // clickOffset is relative to the wrapper rect (used by the modifier
+                    // to reconstruct the current pointer position via initialRect + clickOffset + transform).
+                    const clickOffset = {
+                        x: pointerX - initialRect.left,
+                        y: pointerY - initialRect.top
+                    };
+                    // Use the PieceGrid's VISUAL rect (after CSS rotation/flip) to
+                    // calculate cellOffset, but ONLY when the piece has a non-trivial
+                    // CSS transform. CSS transforms don't change layout dimensions, so
+                    // the wrapper's rect may have stale dimensions (e.g. 2×4 for a
+                    // piece that visually appears 4×2 after 90° rotation). This caused
+                    // cellOffset to be out-of-bounds when the user dragged from a cell
+                    // outside the wrapper but inside the visual piece.
+                    const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
+                    let visualRect: { left: number; top: number; width: number; height: number } | null = null;
+                    if (hasTransform) {
+                        const draggableNode = document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
+                            ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
+                        visualRect = draggableNode ? findVisualPieceRect(draggableNode) : null;
+                    }
+                    const rectForCells = visualRect ?? initialRect;
+                    const shapeCols = shape[0]?.length ?? 1;
+                    const shapeRows = shape.length;
+                    const pieceCellW = rectForCells.width / shapeCols;
+                    const pieceCellH = rectForCells.height / shapeRows;
+                    const cellClickOffset = {
+                        x: pointerX - rectForCells.left,
+                        y: pointerY - rectForCells.top
+                    };
+                    let cellOffset = {
+                        x: Math.floor(cellClickOffset.x / pieceCellW),
+                        y: Math.floor(cellClickOffset.y / pieceCellH)
+                    };
+                    // If the touch landed on an empty cell (e.g. a transparent gap
+                    // in the piece grid), snap to the nearest filled cell instead
+                    // of cancelling. This prevents a "ghost drag" where @dnd-kit
+                    // moves the original piece but the DragOverlay renders nothing.
+                    if (!shape[cellOffset.y]?.[cellOffset.x]) {
+                        const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
+                        if (!nearest) {
+                            setActivePiece(null);
+                            setIsDragging(false);
+                            return;
+                        }
+                        cellOffset = nearest;
+                    }
                     cellOffsetRef.current = cellOffset;
+                    initialClickOffsetRef.current = clickOffset;
                 }
                 else {
-                    // Fallback: use pointer position as offset if rect unavailable
-                    initialDragRectRef.current = null;
-                    initialClickOffsetRef.current = {
-                        x: 0,
-                        y: 0
-                    };
-                    cellOffsetRef.current = null;
+                    // @dnd-kit's rect measurement may be null when drag is
+                    // initiated via CDP touch events. Fall back to reading the
+                    // DOM element's bounding rect directly.
+                    const evtTarget = (activatorEvent as Event)?.target as HTMLElement | null;
+                    const draggableEl = evtTarget?.closest?.("[data-piece-id]") as HTMLElement
+                        ?? document.querySelector(`[data-piece-id="${pieceId}"]`) as HTMLElement | null;
+                    const domRect = draggableEl?.getBoundingClientRect?.();
+                    if (domRect && domRect.width > 0) {
+                        const fallbackRect = { left: domRect.left, top: domRect.top, right: domRect.right, bottom: domRect.bottom, width: domRect.width, height: domRect.height };
+                        initialDragRectRef.current = fallbackRect;
+                        const clickOffset = {
+                            x: pointerX - fallbackRect.left,
+                            y: pointerY - fallbackRect.top
+                        };
+                        // Use PieceGrid visual rect only when CSS transform is active.
+                        const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
+                        const visualRect = (hasTransform && draggableEl) ? findVisualPieceRect(draggableEl) : null;
+                        // (visualRect used only for rotated/flipped pieces)
+                        const rectForCells = visualRect ?? fallbackRect;
+                        const shapeCols = shape[0]?.length ?? 1;
+                        const shapeRows = shape.length;
+                        const pieceCellW = rectForCells.width / shapeCols;
+                        const pieceCellH = rectForCells.height / shapeRows;
+                        const cellClickOffset = {
+                            x: pointerX - rectForCells.left,
+                            y: pointerY - rectForCells.top
+                        };
+                        let cellOffset = {
+                            x: Math.floor(cellClickOffset.x / pieceCellW),
+                            y: Math.floor(cellClickOffset.y / pieceCellH)
+                        };
+                        // Snap to nearest filled cell if touch landed on empty cell
+                        if (!shape[cellOffset.y]?.[cellOffset.x]) {
+                            const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
+                            if (!nearest) {
+                                setActivePiece(null);
+                                setIsDragging(false);
+                                return;
+                            }
+                            cellOffset = nearest;
+                        }
+                        cellOffsetRef.current = cellOffset;
+                        initialClickOffsetRef.current = clickOffset;
+                    }
+                    else {
+                        initialDragRectRef.current = null;
+                        initialClickOffsetRef.current = { x: 0, y: 0 };
+                        cellOffsetRef.current = null;
+                    }
                 }
                 
+                // Capture board rect and grid origin at drag start for
+                // the grid-snapping modifier. We find cell (0,0) in the DOM
+                // to get the exact visual grid origin (avoids CSS transform
+                // scaling issues with computed border/padding values).
+                const boardEl = boardElementRef.current;
+                if (boardEl) {
+                    const bRect = boardEl.getBoundingClientRect();
+                    const firstCell = boardEl.querySelector("[data-cell-x=\"0\"][data-cell-y=\"0\"]") as HTMLElement | null;
+                    if (firstCell) {
+                        const fcRect = firstCell.getBoundingClientRect();
+                        boardGridOriginRef.current = {
+                            left: bRect.left,
+                            top: bRect.top,
+                            gridOriginX: fcRect.left,
+                            gridOriginY: fcRect.top
+                        };
+                    }
+                    else {
+                        boardGridOriginRef.current = null;
+                    }
+                }
+                else {
+                    boardGridOriginRef.current = null;
+                }
+
                 onDragStart?.(pieceId);
             }
         }
@@ -438,16 +627,20 @@ export const DndProvider: React.FC<DndProviderProps> = ({
             >
                 {children}
                 
-                <DragOverlay 
-                    dropAnimation={null}
-                    modifiers={[dragOverlayModifier]}
-                >
-                    {activePiece ? (
-                        <div style={{ transform: `scale(${boardScale})`, transformOrigin: "top left" }}>
-                            <PieceDragPreview piece={activePiece} />
-                        </div>
-                    ) : null}
-                </DragOverlay>
+                {createPortal(
+                    <DragOverlay 
+                        dropAnimation={null}
+                        modifiers={[dragOverlayModifier]}
+                        zIndex={9999}
+                    >
+                        {activePiece ? (
+                            <div style={{ transform: `scale(${boardScale})`, transformOrigin: "top left" }}>
+                                <PieceDragPreview piece={activePiece} />
+                            </div>
+                        ) : null}
+                    </DragOverlay>,
+                    document.body
+                )}
             </DndContext>
         </DragStateContext.Provider>
     );
