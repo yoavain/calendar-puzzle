@@ -119,21 +119,95 @@ Touch sequence:
 
 | File | Purpose |
 |---|---|
-| `test/e2e/drag-drop.spec.ts` | Test specification with happy path and failing path |
+| `test/e2e/drag-drop.spec.ts` | Happy path and failing path tests (all layouts) |
+| `test/e2e/drag-stale-rect.spec.ts` | Stale rect and empty cell snap regression tests (mobile only) |
 | `test/e2e/fixtures/gamePage.ts` | Page Object Model — board/piece selectors and assertion helpers |
 | `test/e2e/helpers/dragHelpers.ts` | Layout-aware drag functions (desktop HTML5 DnD, mobile CDP touch) |
 | `playwright.config.ts` | Playwright project definitions for desktop, mobile-portrait, mobile-landscape |
 
+---
+
+## Stale Rect Regression Tests (`drag-stale-rect.spec.ts`)
+
+A separate test file covers two regression scenarios discovered during mobile drag-and-drop debugging. These tests only run on mobile layouts (portrait and landscape) because the bugs are specific to `@dnd-kit`'s touch drag flow and CSS transform handling.
+
+### Background
+
+Piece rendering uses CSS `transform: rotate()` for visual rotation. CSS transforms do **not** change an element's layout dimensions, so `@dnd-kit`'s cached draggable rect can be stale after rotation. See `docs/drag-drop-guidelines.md` §5 for the full explanation.
+
+### Piece Under Test
+
+**Piece 1** (peach/coral) — a T-shaped piece used because its rotation produces a dramatic layout-vs-visual mismatch.
+
+Base shape (2-col × 4-row):
+```
+X .
+X X
+X .
+X .
+```
+
+After 90° CW CSS rotation (visually 4-col × 2-row):
+```
+X X X X
+. X . .
+```
+
+### Test 1: Drag from outer cell after rotation
+
+**Goal:** Verify that starting a drag from a cell that exists in the **visual** piece but falls **outside** the stale layout rect still produces a working `DragOverlay`.
+
+**Steps:**
+1. Mock date to Jan 1, 2024.
+2. Scroll carousel to piece 1 and rotate 90° CW.
+3. Assert the PieceGrid has a CSS transform and is visually wider than tall.
+4. Start a CDP touch drag from the **leftmost** cell of the visual grid (outside the wrapper's layout bounds).
+5. Move toward the board center.
+
+**Assertions:**
+- `DragOverlay` has content (the piece preview) — confirms `findVisualPieceRect` correctly identified the visual bounds.
+- Overlay overlaps the board area.
+- Exactly 5 `data-drag-over="true"` cells appear on the board.
+- After drop, 5 cells on the board carry `data-piece-id="1"`.
+
+### Test 2: Drag from empty cell after rotation
+
+**Goal:** Verify that starting a drag from a **transparent gap** in the piece shape snaps the anchor to the nearest filled cell instead of cancelling the drag.
+
+**Steps:**
+1. Same setup as Test 1 (rotate piece 1 by 90° CW).
+2. Start a CDP touch drag from the **bottom-left** corner of the visual grid — this is cell (0, 1) which is **empty** in the rotated T-shape.
+3. Move toward the board center.
+
+**Assertions:**
+- `DragOverlay` has content — confirms `findNearestFilledCell` snapped the anchor to a filled cell.
+- 5 hover preview cells appear on the board.
+- After drop, 5 cells on the board carry `data-piece-id="1"`.
+
+### File
+
+| File | Purpose |
+|---|---|
+| `test/e2e/drag-stale-rect.spec.ts` | Stale rect and empty cell snap regression tests |
+
+---
+
 ## Running the Tests
 
 ```bash
-# All 6 tests
+# All tests (happy path + failing path + stale rect regressions)
 npx playwright test
 
 # Specific project
 npx playwright test --project mobile-portrait
 
-# Specific test
+# Specific test file
+npx playwright test test/e2e/drag-drop.spec.ts
+npx playwright test test/e2e/drag-stale-rect.spec.ts
+
+# By test name
 npx playwright test -g "succeeds"
 npx playwright test -g "blocked"
+npx playwright test -g "outer cell"
+npx playwright test -g "empty cell"
 ```

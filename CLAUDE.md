@@ -25,12 +25,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `npm run deploy:dev` | Build image & run Compose for dev. |
 | `npm run deploy:production` | Build image & run Compose for prod. |
 
-**Running a single test**
+**Running a single unit test**
 
 ```bash
 npm test -- path/to/__tests__/piece.test.ts
 # or
 npx jest path/to/__tests__/piece.test.ts
+```
+
+**Running E2E tests (Playwright)**
+
+```bash
+npx playwright test                              # All E2E tests
+npx playwright test --project mobile-portrait     # Specific layout
+npx playwright test test/e2e/drag-drop.spec.ts    # Specific test file
+npx playwright test -g "outer cell"               # By test name
 ```
 
 ## Project Structure
@@ -53,6 +62,16 @@ calendar-puzzle/
 - Drag‑and‑drop via `@dnd‑kit`.
 - State via React context + reducer (`GameState`).
 - API client in `src/client/service/`.
+- Three layout modes: desktop, mobile-portrait, mobile-landscape (`src/client/layouts/`).
+
+### Drag-and-Drop Architecture
+
+The `DndProvider` (`src/client/layouts/common/DndProvider.tsx`) is the central drag-and-drop controller. Key patterns:
+
+- **Portal rendering**: `DragOverlay` is rendered via `createPortal` into `document.body` to escape CSS stacking contexts.
+- **Visual rect detection**: `findVisualPieceRect` queries the PieceGrid's `getBoundingClientRect()` for accurate dimensions after CSS rotation/flip transforms.
+- **Empty cell handling**: `findNearestFilledCell` snaps the drag anchor to the nearest filled cell when the touch lands on a transparent gap.
+- See `docs/drag-drop-guidelines.md` for full details and pitfalls.
 
 ### Backend (`src/server/`)
 
