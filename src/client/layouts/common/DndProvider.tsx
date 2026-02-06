@@ -140,20 +140,38 @@ function findFirstFilledCell(piece: PieceType): { x: number; y: number } {
 
 /**
  * Calculate the cell position from pointer coordinates, accounting for board scale.
+ *
+ * @param gridOrigin  Optional pre-computed origin of cell (0,0). When supplied,
+ *                    the pointer is measured relative to this origin instead of
+ *                    the board container edge. This is important because the
+ *                    BoardContainer has padding + border that shift the grid
+ *                    inward by ~1 cell.
  */
 export function calculateCellFromPointer(
     pointerX: number,
     pointerY: number,
     boardElement: HTMLElement,
     scale: number,
-    cellSize: number
+    cellSize: number,
+    gridOrigin?: { left: number; top: number }
 ): Position | null {
-    const boardRect = boardElement.getBoundingClientRect();
+    // Use the grid origin (cell 0,0 position) when available, otherwise
+    // fall back to the board container rect (less accurate if padding exists).
+    let originX: number;
+    let originY: number;
+    if (gridOrigin) {
+        originX = gridOrigin.left;
+        originY = gridOrigin.top;
+    }
+    else {
+        const boardRect = boardElement.getBoundingClientRect();
+        originX = boardRect.left;
+        originY = boardRect.top;
+    }
     
-    // Calculate position relative to board, accounting for scale
-    // The board rect is in scaled coordinates, so we need to work with that
-    const relativeX = pointerX - boardRect.left;
-    const relativeY = pointerY - boardRect.top;
+    // Calculate position relative to the grid origin
+    const relativeX = pointerX - originX;
+    const relativeY = pointerY - originY;
     
     // The cell size in screen pixels (scaled)
     const scaledCellSize = cellSize * scale;
@@ -212,12 +230,18 @@ export const DndProvider: React.FC<DndProviderProps> = ({
             // Calculate hover cell position for board preview
             const boardElement = boardElementRef.current;
             if (boardElement) {
+                // Use the cached grid origin so we measure from cell (0,0),
+                // not the board container edge (which has padding + border).
+                const gridOriginForHover = boardGridOriginRef.current
+                    ? { left: boardGridOriginRef.current.gridOriginX, top: boardGridOriginRef.current.gridOriginY }
+                    : undefined;
                 const cellPosition = calculateCellFromPointer(
                     clientX,
                     clientY,
                     boardElement,
                     boardScale,
-                    theme.game.cellSize
+                    theme.game.cellSize,
+                    gridOriginForHover
                 );
                 
                 if (cellPosition) {
@@ -277,13 +301,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     );
 
     // Calculate drag overlay offset to position piece so first filled cell is at pointer
-    // The overlay is scaled to match the board, so we use scaled cell size
-    // 
-    // Key insight: @dnd-kit's DragOverlay positions based on the draggable element's rect,
-    // not the pointer position. The transform represents delta from initial pointer to current.
-    // Snap the DragOverlay so each piece cell aligns with the
-    // corresponding board cell. This eliminates the sub-cell offset
-    // between the overlay and the hover preview (shadow).
+    // Smooth drag overlay modifier: positions the overlay so that the CENTER
+    // of the grabbed cell tracks the pointer smoothly (no grid snapping).
+    // The board shadow (blue highlight) snaps independently via hoverPosition.
     const dragOverlayModifier: Modifier = useCallback(({ transform }) => {
         if (!activePiece) {
             return transform;
@@ -291,43 +311,18 @@ export const DndProvider: React.FC<DndProviderProps> = ({
 
         const cellOffset = cellOffsetRef.current;
         const clickOffset = initialClickOffsetRef.current;
-        const initialRect = initialDragRectRef.current;
-        const boardInfo = boardGridOriginRef.current;
 
-        if (cellOffset && clickOffset && initialRect && boardInfo) {
+        // Adjust so the grabbed cell CENTER stays under the finger
+        if (cellOffset && clickOffset) {
             const scaledCellSize = boardScale * theme.game.cellSize;
-
-            // Reconstruct current pointer position
-            const pointerX = initialRect.left + clickOffset.x + transform.x;
-            const pointerY = initialRect.top + clickOffset.y + transform.y;
-
-            // Cell under pointer (same logic as calculateCellFromPointer)
-            const cellPosX = Math.floor((pointerX - boardInfo.left) / scaledCellSize);
-            const cellPosY = Math.floor((pointerY - boardInfo.top) / scaledCellSize);
-
-            // Hover position = cellPosition - cellOffset
-            const hoverX = cellPosX - cellOffset.x;
-            const hoverY = cellPosY - cellOffset.y;
-
-            // Align overlay cell (0,0) with the shadow cell at game position (hoverX, hoverY)
-            const desiredX = boardInfo.gridOriginX + hoverX * scaledCellSize;
-            const desiredY = boardInfo.gridOriginY + hoverY * scaledCellSize;
-
+            const targetClickX = (cellOffset.x + 0.5) * scaledCellSize;
+            const targetClickY = (cellOffset.y + 0.5) * scaledCellSize;
+            const adjustX = clickOffset.x - targetClickX;
+            const adjustY = clickOffset.y - targetClickY;
             return {
                 ...transform,
-                x: desiredX - initialRect.left,
-                y: desiredY - initialRect.top
-            };
-        }
-
-        // Fallback: use sub-cell offset adjustment
-        if (cellOffset && clickOffset && initialRect) {
-            const targetClickX = cellOffset.x * boardScale * theme.game.cellSize;
-            const targetClickY = cellOffset.y * boardScale * theme.game.cellSize;
-            return {
-                ...transform,
-                x: transform.x + (clickOffset.x - targetClickX),
-                y: transform.y + (clickOffset.y - targetClickY)
+                x: transform.x + adjustX,
+                y: transform.y + adjustY
             };
         }
         return transform;
@@ -378,10 +373,12 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                     cellOffsetRef.current = { x: anchorX, y: anchorY };
                     initialDragRectRef.current = initialRect ?? null;
                     const scaledCellSize = theme.game.cellSize * boardScale;
-                    initialClickOffsetRef.current = {
-                        x: anchorX * scaledCellSize + scaledCellSize / 2,
-                        y: anchorY * scaledCellSize + scaledCellSize / 2
-                    };
+                    // Use actual pointer offset from the single-cell wrapper
+                    // (same pattern as carousel). The old code set piece-space
+                    // coords which made adjustX/Y always 0 in the modifier.
+                    initialClickOffsetRef.current = initialRect
+                        ? { x: pointerX - initialRect.left, y: pointerY - initialRect.top }
+                        : { x: scaledCellSize / 2, y: scaledCellSize / 2 };
                 }
                 else if (initialRect) {
                     initialDragRectRef.current = initialRect;
@@ -534,13 +531,17 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                     let dropPosition = hoverPosition;
                     
                     if (!dropPosition && lastPointerPositionRef.current && boardElementRef.current) {
-                        // Fallback: calculate position now
+                        // Fallback: calculate position now (use grid origin for accuracy)
+                        const gridOriginForDrop = boardGridOriginRef.current
+                            ? { left: boardGridOriginRef.current.gridOriginX, top: boardGridOriginRef.current.gridOriginY }
+                            : undefined;
                         const cellPosition = calculateCellFromPointer(
                             lastPointerPositionRef.current.x,
                             lastPointerPositionRef.current.y,
                             boardElementRef.current,
                             boardScale,
-                            theme.game.cellSize
+                            theme.game.cellSize,
+                            gridOriginForDrop
                         );
                         
                         if (cellPosition) {
