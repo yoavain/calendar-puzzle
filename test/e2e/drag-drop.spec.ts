@@ -210,7 +210,10 @@ test.describe("Drag and drop – deterministic", () => {
                 );
             }
 
-            // ── STAGE 2b: Overlay-shadow offset must be < 0.5 cells ──
+            // ── STAGE 2b: Overlay tracks the pointer smoothly ──
+            // The overlay follows the finger (smooth), while the shadow snaps
+            // to the nearest board cell. We verify the grabbed cell CENTER in
+            // the overlay is close to the pointer (< 0.5 cells).
             // Only check on mobile — desktop uses HTML5 DnD (no @dnd-kit overlay).
             if (layout !== "desktop") {
                 // Find the DragOverlay by its high z-index (9999), not the @dnd-kit
@@ -232,19 +235,35 @@ test.describe("Drag and drop – deterministic", () => {
                     const shadowRects = await page.$$eval("[data-drag-over='true']", els =>
                         els.map(el => {
                             const r = el.getBoundingClientRect();
-                            return { px: r.left, py: r.top, pw: r.width };
+                            return { px: r.left, py: r.top, pw: r.width, ph: r.height };
                         })
                     );
-                    if (overlayBox && shadowRects.length > 0) {
-                        const cellSizePx = shadowRects[0].pw; // visual cell size
-                        const firstShadow = shadowRects[0];
-                        // First shadow cell = piece local (1, 0) → overlay at (1*cell, 0*cell)
-                        const overlayFirstCellX = overlayBox.x + 1 * cellSizePx;
-                        const overlayFirstCellY = overlayBox.y + 0 * cellSizePx;
-                        const offsetX = Math.abs(overlayFirstCellX - firstShadow.px) / cellSizePx;
-                        const offsetY = Math.abs(overlayFirstCellY - firstShadow.py) / cellSizePx;
-                        expect(offsetX).toBeLessThan(0.5);
-                        expect(offsetY).toBeLessThan(0.5);
+                    if (shadowRects.length > 0) {
+                        // Use board cell size as reference unit. The overlay
+                        // renders cells at approximately the same scale.
+                        const cellSizePx = shadowRects[0].pw;
+
+                        // The overlay's visual cell size ≈ scaledCellSize.
+                        // We can approximate from the overlay wrapper: piece 4
+                        // is 2 cols × 4 rows, and the wrapper width matches
+                        // the unscaled piece. The visual cell size ≈ wrapper
+                        // width / cols (for untransformed pieces, the wrapper
+                        // width ≈ visual width because boardScale ≈ scaledCellSize
+                        // / baseCellSize). For a robust measurement, compute
+                        // the visual cell height from the shadow (same scale).
+                        const overlayCellSize = shadowRects[0].ph; // board cell height ≈ overlay cell size
+
+                        // Center of grabbed cell (1, 2) in the overlay.
+                        // The overlay top-left is the piece (0,0) top-left.
+                        const grabbedCellCenterX = overlayBox.x + (1 + 0.5) * overlayCellSize;
+                        const grabbedCellCenterY = overlayBox.y + (2 + 0.5) * overlayCellSize;
+
+                        // The grabbed cell center should be close to the pointer
+                        const pointerOffsetX = Math.abs(grabbedCellCenterX - pointerPos.x) / cellSizePx;
+                        const pointerOffsetY = Math.abs(grabbedCellCenterY - pointerPos.y) / cellSizePx;
+
+                        expect(pointerOffsetX).toBeLessThan(0.5);
+                        expect(pointerOffsetY).toBeLessThan(0.5);
                     }
                 }
             }
