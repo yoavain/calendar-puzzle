@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect, createContext, useContext } from "react";
+import { createPortal } from "react-dom";
 import {
     DndContext,
     DragOverlay,
@@ -65,6 +66,62 @@ interface DndProviderProps {
  * 
  * The DragOverlay renders a preview of the piece being dragged.
  */
+/**
+ * Find the PieceGrid's visual bounding rect within a draggable element.
+ *
+ * The PieceGrid uses CSS transforms (rotate / flip) that are purely visual —
+ * they do NOT change the element's layout dimensions. So the wrapper div's
+ * `getBoundingClientRect()` returns the pre-transform (layout) rect, which
+ * can differ from the actual visual dimensions after rotation.
+ *
+ * This helper locates the inner CSS Grid element (display: grid) and returns
+ * its `getBoundingClientRect()`, which accounts for CSS transforms and gives
+ * the correct visual dimensions.
+ */
+function findVisualPieceRect(
+    containerEl: Element
+): { left: number; top: number; width: number; height: number } | null {
+    const descendants = containerEl.querySelectorAll("*");
+    for (const el of descendants) {
+        if (window.getComputedStyle(el).display === "grid") {
+            const r = el.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) {
+                return { left: r.left, top: r.top, width: r.width, height: r.height };
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * When the user starts a drag from an empty (false) cell of the piece
+ * grid, find the nearest filled cell to snap to. This prevents the drag
+ * from being cancelled when the touch lands on a transparent gap between
+ * filled cells.
+ *
+ * Uses Manhattan distance; ties broken by top-left preference.
+ */
+function findNearestFilledCell(
+    shape: boolean[][],
+    fromX: number,
+    fromY: number
+): { x: number; y: number } | null {
+    let minDist = Infinity;
+    let nearest: { x: number; y: number } | null = null;
+    for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < (shape[y]?.length ?? 0); x++) {
+            if (shape[y][x]) {
+                const dist = Math.abs(x - fromX) + Math.abs(y - fromY);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = { x, y };
+                }
+            }
+        }
+    }
+    return nearest;
+}
+
 /**
  * Find the first filled cell in a piece's transformed shape.
  * This is used to calculate the offset for accurate drop positioning.
@@ -140,7 +197,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     const cellOffsetRef = useRef<{ x: number; y: number } | null>(null);
     // Store the board grid origin at drag start for snapping overlay to board grid
     const boardGridOriginRef = useRef<{ left: number; top: number; gridOriginX: number; gridOriginY: number } | null>(null);
- 
+
     // Track pointer position globally during drag using event listeners
     // Also calculate hover position for board preview
     useEffect(() => {
@@ -328,25 +385,51 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                 }
                 else if (initialRect) {
                     initialDragRectRef.current = initialRect;
+                    // clickOffset is relative to the wrapper rect (used by the modifier
+                    // to reconstruct the current pointer position via initialRect + clickOffset + transform).
                     const clickOffset = {
                         x: pointerX - initialRect.left,
                         y: pointerY - initialRect.top
                     };
-                    // For carousel pieces, calculate cellOffset using the piece
-                    // element's own dimensions (which may differ from the board
-                    // scale in landscape mode).
+                    // Use the PieceGrid's VISUAL rect (after CSS rotation/flip) to
+                    // calculate cellOffset, but ONLY when the piece has a non-trivial
+                    // CSS transform. CSS transforms don't change layout dimensions, so
+                    // the wrapper's rect may have stale dimensions (e.g. 2×4 for a
+                    // piece that visually appears 4×2 after 90° rotation). This caused
+                    // cellOffset to be out-of-bounds when the user dragged from a cell
+                    // outside the wrapper but inside the visual piece.
+                    const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
+                    let visualRect: { left: number; top: number; width: number; height: number } | null = null;
+                    if (hasTransform) {
+                        const draggableNode = document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
+                            ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
+                        visualRect = draggableNode ? findVisualPieceRect(draggableNode) : null;
+                    }
+                    const rectForCells = visualRect ?? initialRect;
                     const shapeCols = shape[0]?.length ?? 1;
                     const shapeRows = shape.length;
-                    const pieceCellW = initialRect.width / shapeCols;
-                    const pieceCellH = initialRect.height / shapeRows;
-                    const cellOffset = {
-                        x: Math.floor(clickOffset.x / pieceCellW),
-                        y: Math.floor(clickOffset.y / pieceCellH)
+                    const pieceCellW = rectForCells.width / shapeCols;
+                    const pieceCellH = rectForCells.height / shapeRows;
+                    const cellClickOffset = {
+                        x: pointerX - rectForCells.left,
+                        y: pointerY - rectForCells.top
                     };
+                    let cellOffset = {
+                        x: Math.floor(cellClickOffset.x / pieceCellW),
+                        y: Math.floor(cellClickOffset.y / pieceCellH)
+                    };
+                    // If the touch landed on an empty cell (e.g. a transparent gap
+                    // in the piece grid), snap to the nearest filled cell instead
+                    // of cancelling. This prevents a "ghost drag" where @dnd-kit
+                    // moves the original piece but the DragOverlay renders nothing.
                     if (!shape[cellOffset.y]?.[cellOffset.x]) {
-                        setActivePiece(null);
-                        setIsDragging(false);
-                        return;
+                        const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
+                        if (!nearest) {
+                            setActivePiece(null);
+                            setIsDragging(false);
+                            return;
+                        }
+                        cellOffset = nearest;
                     }
                     cellOffsetRef.current = cellOffset;
                     initialClickOffsetRef.current = clickOffset;
@@ -366,21 +449,32 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                             x: pointerX - fallbackRect.left,
                             y: pointerY - fallbackRect.top
                         };
-                        // For carousel pieces, use the piece element's own
-                        // dimensions to compute cellOffset (the board's scaled
-                        // cell size may differ significantly in landscape).
+                        // Use PieceGrid visual rect only when CSS transform is active.
+                        const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
+                        const visualRect = (hasTransform && draggableEl) ? findVisualPieceRect(draggableEl) : null;
+                        // (visualRect used only for rotated/flipped pieces)
+                        const rectForCells = visualRect ?? fallbackRect;
                         const shapeCols = shape[0]?.length ?? 1;
                         const shapeRows = shape.length;
-                        const pieceCellW = fallbackRect.width / shapeCols;
-                        const pieceCellH = fallbackRect.height / shapeRows;
-                        const cellOffset = {
-                            x: Math.floor(clickOffset.x / pieceCellW),
-                            y: Math.floor(clickOffset.y / pieceCellH)
+                        const pieceCellW = rectForCells.width / shapeCols;
+                        const pieceCellH = rectForCells.height / shapeRows;
+                        const cellClickOffset = {
+                            x: pointerX - rectForCells.left,
+                            y: pointerY - rectForCells.top
                         };
+                        let cellOffset = {
+                            x: Math.floor(cellClickOffset.x / pieceCellW),
+                            y: Math.floor(cellClickOffset.y / pieceCellH)
+                        };
+                        // Snap to nearest filled cell if touch landed on empty cell
                         if (!shape[cellOffset.y]?.[cellOffset.x]) {
-                            setActivePiece(null);
-                            setIsDragging(false);
-                            return;
+                            const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
+                            if (!nearest) {
+                                setActivePiece(null);
+                                setIsDragging(false);
+                                return;
+                            }
+                            cellOffset = nearest;
                         }
                         cellOffsetRef.current = cellOffset;
                         initialClickOffsetRef.current = clickOffset;
@@ -533,16 +627,20 @@ export const DndProvider: React.FC<DndProviderProps> = ({
             >
                 {children}
                 
-                <DragOverlay 
-                    dropAnimation={null}
-                    modifiers={[dragOverlayModifier]}
-                >
-                    {activePiece ? (
-                        <div style={{ transform: `scale(${boardScale})`, transformOrigin: "top left" }}>
-                            <PieceDragPreview piece={activePiece} />
-                        </div>
-                    ) : null}
-                </DragOverlay>
+                {createPortal(
+                    <DragOverlay 
+                        dropAnimation={null}
+                        modifiers={[dragOverlayModifier]}
+                        zIndex={9999}
+                    >
+                        {activePiece ? (
+                            <div style={{ transform: `scale(${boardScale})`, transformOrigin: "top left" }}>
+                                <PieceDragPreview piece={activePiece} />
+                            </div>
+                        ) : null}
+                    </DragOverlay>,
+                    document.body
+                )}
             </DndContext>
         </DragStateContext.Provider>
     );

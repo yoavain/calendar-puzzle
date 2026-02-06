@@ -213,9 +213,22 @@ test.describe("Drag and drop – deterministic", () => {
             // ── STAGE 2b: Overlay-shadow offset must be < 0.5 cells ──
             // Only check on mobile — desktop uses HTML5 DnD (no @dnd-kit overlay).
             if (layout !== "desktop") {
-                const overlayCount = await page.locator("[style*='position: fixed']").count();
-                if (overlayCount > 0) {
-                    const overlayBox = await page.locator("[style*='position: fixed']").first().boundingBox();
+                // Find the DragOverlay by its high z-index (9999), not the @dnd-kit
+                // accessibility live region (which is also position: fixed but 1px wide).
+                const overlayBox = await page.evaluate(() => {
+                    const els = Array.from(document.querySelectorAll<HTMLElement>("div"));
+                    for (const el of els) {
+                        const s = window.getComputedStyle(el);
+                        if (s.position === "fixed" && parseInt(s.zIndex) > 100 && el.children.length > 0 && el.innerHTML.length > 50) {
+                            const r = el.getBoundingClientRect();
+                            if (r.width > 10) {
+                                return { x: r.left, y: r.top, width: r.width, height: r.height };
+                            }
+                        }
+                    }
+                    return null;
+                });
+                if (overlayBox) {
                     const shadowRects = await page.$$eval("[data-drag-over='true']", els =>
                         els.map(el => {
                             const r = el.getBoundingClientRect();

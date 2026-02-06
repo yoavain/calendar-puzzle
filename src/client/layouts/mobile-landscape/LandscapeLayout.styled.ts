@@ -19,7 +19,12 @@ export const LandscapeContainer = styled(Box)({
     maxHeight: "100vh",
     display: "flex",
     flexDirection: "row",
-    overflow: "hidden"
+    overflow: "hidden",
+    // Create an explicit stacking context so the board's transform-based
+    // stacking context (from BoardScaleWrapper) is contained here and
+    // cannot paint above the DragOverlay (z-index: 999).
+    position: "relative",
+    zIndex: 0
 });
 
 /**
