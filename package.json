@@ -85,7 +85,7 @@
         "preview": "vite preview",
         "prestart": "npm run build",
         "start": "node dist/server/index.js",
-        "test": "npm run type-check && npm run eslint && npm run jest && npm run test:e2e",
+        "test": "npm run type-check && npm run eslint && npm run jest && playwright test --reporter=list",
         "type-check": "tsc --noEmit",
         "jest": "jest",
         "test:e2e": "playwright test",
