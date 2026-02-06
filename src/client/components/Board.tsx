@@ -8,6 +8,18 @@ import { getScaledCellSize } from "../utils/measureUtils";
 import type { InvalidDropCell } from "./Game";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
+/** Find the first filled cell (top-left-most) in a piece shape. */
+const getFirstFilledCell = (shape: boolean[][]): { x: number; y: number } => {
+    for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < shape[y].length; x++) {
+            if (shape[y][x]) {
+                return { x, y };
+            }
+        }
+    }
+    return { x: 0, y: 0 };
+};
+
 interface BoardProps {
     board: BoardType;
     pieces: GameState["pieces"];
@@ -28,6 +40,13 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     // getData() is unavailable during dragover in HTML5 DnD, so we persist the
     // anchor in a ref instead.
     const anchorRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+    // Tracks whether the current drag originated from the board (vs carousel)
+    const dragFromBoardRef = useRef(false);
+
+    const handleDragEnd = () => {
+        dragFromBoardRef.current = false;
+        onDragEnd();
+    };
 
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
         if (isSolved) {
@@ -36,10 +55,24 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
 
-        setDragOverCell({
-            x: x - anchorRef.current.x,
-            y: y - anchorRef.current.y
-        });
+        if (dragFromBoardRef.current) {
+            // Board-to-board drag: use the anchor set in handleDragStart
+            setDragOverCell({
+                x: x - anchorRef.current.x,
+                y: y - anchorRef.current.y
+            });
+        }
+        else {
+            // Carousel-to-board drag: derive offset from the piece's first filled cell
+            const draggedPiece = pieces.find(p => p.id === draggedPieceId);
+            if (draggedPiece) {
+                const first = getFirstFilledCell(getTransformedShape(draggedPiece));
+                setDragOverCell({ x: x - first.x, y: y - first.y });
+            }
+            else {
+                setDragOverCell({ x, y });
+            }
+        }
     };
 
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
@@ -61,7 +94,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         e.stopPropagation();
 
         setDragOverCell(null);
-        onDragEnd();
+        handleDragEnd();
         
         const data = e.dataTransfer.getData("text/plain");
 
@@ -71,10 +104,12 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             }
             const dragItem: DragItem = JSON.parse(data);
 
-            // Recalculate position using the anchor from the drag data.
-            // getData() is available during drop events, so we can read it here.
-            const anchorX = dragItem.cellX ?? anchorRef.current.x;
-            const anchorY = dragItem.cellY ?? anchorRef.current.y;
+            // Determine the anchor offset for computing the piece's top-left drop position.
+            // Board drags include cellX/cellY; carousel drags don't, so fall back to firstFilledCell.
+            const piece = pieces.find(p => p.id === dragItem.pieceId);
+            const fallback = piece ? getFirstFilledCell(getTransformedShape(piece)) : { x: 0, y: 0 };
+            const anchorX = dragItem.cellX ?? fallback.x;
+            const anchorY = dragItem.cellY ?? fallback.y;
             const dropPosition = {
                 x: position.x - anchorX,
                 y: position.y - anchorY
@@ -93,7 +128,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         // We stop propagation to ensure the global drop handler doesn't return the piece to the pile.
         e.preventDefault();
         e.stopPropagation();
-        onDragEnd();
+        handleDragEnd();
     };
 
     // Function to check if a cell is part of a placed piece
@@ -168,6 +203,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
 
         // Persist anchor so handleDragOver can use it (getData is blocked during dragover)
         anchorRef.current = { x: anchorX, y: anchorY };
+        dragFromBoardRef.current = true;
 
         onDragStart(piece.id);
 
@@ -288,7 +324,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 onDrop={(e) => handleDrop(e, { x, y })}
                                 draggable={!!piece && !isLocked && !isSolved}
                                 onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
-                                onDragEnd={() => onDragEnd()}
+                                onDragEnd={() => handleDragEnd()}
                                 data-cell-x={x}
                                 data-cell-y={y}
                                 data-piece-id={piece?.id}
