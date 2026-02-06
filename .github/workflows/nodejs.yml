@@ -28,6 +28,11 @@ jobs:
         env:
           CI: true
 
+      - name: Playwright Install
+        run: npx playwright install
+        env:
+          CI: true
+
       - name: Test
         run: npm run test
         env:
