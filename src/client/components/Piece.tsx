@@ -158,6 +158,8 @@ export const Piece: React.FC<PieceProps> = ({ piece, isSelected, onClick, onDrag
             draggable={!piece.position}
             onDragStart={handleDragStart}
             onDragEnd={() => onDragEnd?.()}
+            data-piece-id={piece.id}
+            data-testid={`piece-${piece.id}`}
         >
             <PieceGrid
                 columns={baseWidth}

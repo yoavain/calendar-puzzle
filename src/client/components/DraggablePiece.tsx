@@ -61,6 +61,8 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
         <div
             ref={setNodeRef}
             style={style}
+            data-piece-id={piece.id}
+            data-testid={`carousel-piece-${piece.id}`}
             {...(canDrag ? { ...listeners, ...attributes } : {})}
         >
             <Piece
