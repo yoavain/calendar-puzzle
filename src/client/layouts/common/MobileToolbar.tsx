@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import Drawer from "@mui/material/Drawer";
-import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
@@ -30,7 +30,7 @@ import {
     DrawerContent,
     DrawerHeader,
     DrawerSection,
-    DrawerSectionTitle
+    DrawerButton
 } from "./MobileToolbar.styled";
 
 interface MobileToolbarProps {
@@ -65,6 +65,13 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
     const handleAction = (action: () => void) => {
         action();
         closeDrawer();
+    };
+
+    // Shared sx for child components (DatePicker, SolutionButton, HintButton) in the drawer
+    const drawerButtonSx = {
+        justifyContent: "flex-start",
+        pl: 3,
+        gap: 1.5
     };
 
     return (
@@ -129,25 +136,27 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
 
                     {/* Date & Navigation Section */}
                     <DrawerSection>
-                        <DrawerSectionTitle>Date</DrawerSectionTitle>
-                        <DatePicker 
-                            currentDate={game.gameState.currentDate} 
-                            onDateChange={(date) => handleAction(() => game.handleDateChange(date))} 
+                        <DatePicker
+                            currentDate={game.gameState.currentDate}
+                            onDateChange={(date) => handleAction(() => game.handleDateChange(date))}
+                            fullWidth
+                            sx={drawerButtonSx}
                         />
-                        <Button
+                        <DrawerButton
                             fullWidth
                             variant="outlined"
                             startIcon={<EmojiEventsIcon />}
                             onClick={() => handleAction(() => setIsHallOfFameOpen(true))}
                         >
                             Hall of Fame
-                        </Button>
+                        </DrawerButton>
                     </DrawerSection>
+
+                    <Divider />
 
                     {/* Help & Info Section */}
                     <DrawerSection>
-                        <DrawerSectionTitle>Help & Info</DrawerSectionTitle>
-                        <Button
+                        <DrawerButton
                             fullWidth
                             variant="outlined"
                             startIcon={<HelpOutlineIcon />}
@@ -155,8 +164,8 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             color="secondary"
                         >
                             How to Play
-                        </Button>
-                        <Button
+                        </DrawerButton>
+                        <DrawerButton
                             fullWidth
                             variant="outlined"
                             startIcon={<BarChartIcon />}
@@ -164,8 +173,8 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             disabled={!game.user}
                         >
                             Statistics
-                        </Button>
-                        <Button
+                        </DrawerButton>
+                        <DrawerButton
                             fullWidth
                             variant="outlined"
                             startIcon={<BugReportIcon />}
@@ -174,21 +183,26 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             color="info"
                         >
                             Report Bug
-                        </Button>
+                        </DrawerButton>
                     </DrawerSection>
+
+                    <Divider />
 
                     {/* Solver Section */}
                     <DrawerSection>
-                        <DrawerSectionTitle>Puzzle Helpers</DrawerSectionTitle>
-                        <SolutionButton 
-                            onSolve={() => handleAction(game.handleSolve)} 
-                            isLoading={game.isLoading} 
-                            disabled={game.gameState.isSolved} 
+                        <SolutionButton
+                            onSolve={() => handleAction(game.handleSolve)}
+                            isLoading={game.isLoading}
+                            disabled={game.gameState.isSolved}
+                            fullWidth
+                            sx={drawerButtonSx}
                         />
-                        <HintButton 
-                            onHint={() => handleAction(game.handleHint)} 
-                            isLoading={game.isHintLoading} 
-                            disabled={!game.isBoardEmpty || game.gameState.isSolved} 
+                        <HintButton
+                            onHint={() => handleAction(game.handleHint)}
+                            isLoading={game.isHintLoading}
+                            disabled={!game.isBoardEmpty || game.gameState.isSolved}
+                            fullWidth
+                            sx={drawerButtonSx}
                         />
                     </DrawerSection>
                 </DrawerContent>
