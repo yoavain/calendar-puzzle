@@ -1,5 +1,6 @@
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import MuiButton from "@mui/material/Button";
 
 /**
  * Height of the mobile toolbar in pixels (horizontal layout).
@@ -80,7 +81,7 @@ export const ToolbarRight = styled(Box, {
  * Content container for the hamburger menu drawer.
  */
 export const DrawerContent = styled(Box)(({ theme }) => ({
-    width: 280,
+    width: 220,
     padding: theme.spacing(2),
     display: "flex",
     flexDirection: "column",
@@ -110,12 +111,10 @@ export const DrawerSection = styled(Box)(({ theme }) => ({
 }));
 
 /**
- * Section title in the drawer.
+ * Drawer button with left-aligned icon + text.
  */
-export const DrawerSectionTitle = styled(Box)(({ theme }) => ({
-    fontSize: "0.75rem",
-    fontWeight: 600,
-    textTransform: "uppercase",
-    color: theme.palette.text.secondary,
-    marginBottom: theme.spacing(0.5)
+export const DrawerButton = styled(MuiButton)(({ theme }) => ({
+    justifyContent: "flex-start",
+    paddingLeft: theme.spacing(3),
+    gap: theme.spacing(1.5)
 }));
