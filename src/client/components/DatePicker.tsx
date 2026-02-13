@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
+import type { SxProps, Theme } from "@mui/material/styles";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
 import ExtensionIcon from "@mui/icons-material/Extension";
@@ -20,9 +21,11 @@ import { useUser } from "../context/UserContext";
 interface DatePickerProps {
     currentDate: PuzzleDate;
     onDateChange: (date: PuzzleDate) => void;
+    fullWidth?: boolean;
+    sx?: SxProps<Theme>;
 }
 
-export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange }) => {
+export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange, fullWidth, sx }) => {
     const theme = useTheme();
     const { user, completedDates, playedDates } = useUser();
     const hasValidCode = useQueryParam("code");
@@ -93,15 +96,19 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
             startIcon={<CalendarMonthIcon />}
             size="small"
             color={isCurrentDateCompleted ? "success" : "primary"}
-            sx={{
-                ...(isCurrentDatePlayed && !isCurrentDateCompleted && {
-                    bgcolor: theme.game.extensionColor,
-                    "&:hover": {
+            fullWidth={fullWidth}
+            sx={[
+                {
+                    ...(isCurrentDatePlayed && !isCurrentDateCompleted && {
                         bgcolor: theme.game.extensionColor,
-                        opacity: 0.9
-                    }
-                })
-            }}
+                        "&:hover": {
+                            bgcolor: theme.game.extensionColor,
+                            opacity: 0.9
+                        }
+                    })
+                },
+                ...(Array.isArray(sx) ? sx : sx ? [sx] : [])
+            ]}
             disabled={isLoginRequired}
         >
             {formatDate(currentDate)}
