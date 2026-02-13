@@ -110,7 +110,11 @@ export const CarouselSlide = styled(Box)<{ slideState: SlideState; axis?: Carous
             }),
         opacity: slideState === "active" ? 1 : slideState === "adjacent" ? 0.4 : 0,
         transform: slideState === "active" ? "scale(1)" : "scale(0.85)",
-        transition: "opacity 0.15s ease, transform 0.15s ease",
+        // Hidden slides must disappear instantly to prevent the "fly across" glitch
+        // during embla's loop repositioning. Only animate between active/adjacent.
+        transition: slideState === "hidden"
+            ? "none"
+            : "opacity 0.15s ease, transform 0.15s ease",
         pointerEvents: slideState === "hidden" ? "none" : "auto"
     })
 );

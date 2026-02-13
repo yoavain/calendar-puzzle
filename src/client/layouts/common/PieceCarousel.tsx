@@ -52,26 +52,20 @@ interface SlideEntry {
 
 /**
  * Determine slide state based on position relative to active slide.
- * Used to hide non-adjacent slides during loop transitions.
+ * Uses the `inView` set (from embla's slidesInView()) to gate visibility,
+ * preventing the "fly across" glitch during loop repositioning.
  */
-function getSlideState(index: number, activeIndex: number, totalSlides: number): SlideState {
+function getSlideState(index: number, activeIndex: number, inView: ReadonlySet<number>): SlideState {
     if (index === activeIndex) {
         return "active";
     }
 
-    // Calculate distance considering loop wrap-around
-    const distance = Math.min(
-        Math.abs(index - activeIndex),
-        Math.abs(index - activeIndex + totalSlides),
-        Math.abs(index - activeIndex - totalSlides)
-    );
-
-    // Only show immediate neighbors (distance of 1)
-    if (distance === 1) {
-        return "adjacent";
+    // If embla says the slide is not physically in the viewport, hide it
+    if (!inView.has(index)) {
+        return "hidden";
     }
 
-    return "hidden";
+    return "adjacent";
 }
 
 /**
@@ -138,6 +132,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     });
 
     const [activeIndex, setActiveIndex] = useState(0);
+    const [slidesInView, setSlidesInView] = useState<ReadonlySet<number>>(new Set());
 
     // The real piece index corresponding to the active slide
     const activeRealIndex = slides[activeIndex]?.realIndex ?? 0;
@@ -146,6 +141,14 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     const prevPiecesCountRef = useRef(pieces.length);
     // Flag to prevent feedback loop when we're scrolling programmatically
     const isScrollingRef = useRef(false);
+
+    // Keep slidesInView in sync during scroll animations
+    const updateSlidesInView = useCallback(() => {
+        if (!emblaApi) {
+            return;
+        }
+        setSlidesInView(new Set(emblaApi.slidesInView()));
+    }, [emblaApi]);
 
     // Update active index when carousel scrolls (user interaction)
     const onSelect = useCallback(() => {
@@ -170,12 +173,19 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
         emblaApi.on("select", onSelect);
         emblaApi.on("reInit", onSelect);
+        emblaApi.on("slidesInView", updateSlidesInView);
+        emblaApi.on("reInit", updateSlidesInView);
+
+        // Initial population
+        updateSlidesInView();
 
         return () => {
             emblaApi.off("select", onSelect);
             emblaApi.off("reInit", onSelect);
+            emblaApi.off("slidesInView", updateSlidesInView);
+            emblaApi.off("reInit", updateSlidesInView);
         };
-    }, [emblaApi, onSelect]);
+    }, [emblaApi, onSelect, updateSlidesInView]);
 
     // Handle pieces array changes (e.g., reset adds all pieces back)
     useEffect(() => {
@@ -249,7 +259,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
             <CarouselViewport ref={emblaRef} axis={axis} aria-roledescription="carousel">
                 <CarouselTrack axis={axis} role="list">
                     {slides.map(({ piece, realIndex }, index) => {
-                        const slideState = getSlideState(index, activeIndex, slides.length);
+                        const slideState = getSlideState(index, activeIndex, slidesInView);
                         const isActive = index === activeIndex;
                         return (
                             <CarouselSlide key={`${piece.id}-${index}`} slideState={slideState} axis={axis} role="listitem" aria-selected={isActive}>
