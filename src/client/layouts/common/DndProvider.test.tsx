@@ -1,4 +1,4 @@
-import { calculateCellFromPointer } from "./DndProvider";
+import { calculateCellFromPointer } from "../../utils/dragHelpers";
 
 // Mock HTMLElement with getBoundingClientRect
 class MockElement {

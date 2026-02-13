@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { keyframes } from "@emotion/react";
-import { getPieceColor } from "../../common/pieceData";
+import { getPieceColor } from "../utils/pieceColors";
 
 // Animations
 export const pieceDropIn = keyframes`
