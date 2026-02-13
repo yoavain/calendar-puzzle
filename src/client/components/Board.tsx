@@ -2,23 +2,12 @@ import React, { useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Position } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
-import { getPieceColor } from "../../common/pieceData";
+import { findFirstFilledCell } from "../../common/utils/shapeHelpers";
+import { getPieceColor } from "../utils/pieceColors";
 import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
 import type { InvalidDropCell } from "./Game";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
-
-/** Find the first filled cell (top-left-most) in a piece shape. */
-const getFirstFilledCell = (shape: boolean[][]): { x: number; y: number } => {
-    for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < shape[y].length; x++) {
-            if (shape[y][x]) {
-                return { x, y };
-            }
-        }
-    }
-    return { x: 0, y: 0 };
-};
 
 interface BoardProps {
     board: BoardType;
@@ -66,7 +55,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             // Carousel-to-board drag: derive offset from the piece's first filled cell
             const draggedPiece = pieces.find(p => p.id === draggedPieceId);
             if (draggedPiece) {
-                const first = getFirstFilledCell(getTransformedShape(draggedPiece));
+                const first = findFirstFilledCell(getTransformedShape(draggedPiece));
                 setDragOverCell({ x: x - first.x, y: y - first.y });
             }
             else {
@@ -107,7 +96,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             // Determine the anchor offset for computing the piece's top-left drop position.
             // Board drags include cellX/cellY; carousel drags don't, so fall back to firstFilledCell.
             const piece = pieces.find(p => p.id === dragItem.pieceId);
-            const fallback = piece ? getFirstFilledCell(getTransformedShape(piece)) : { x: 0, y: 0 };
+            const fallback = piece ? findFirstFilledCell(getTransformedShape(piece)) : { x: 0, y: 0 };
             const anchorX = dragItem.cellX ?? fallback.x;
             const anchorY = dragItem.cellY ?? fallback.y;
             const dropPosition = {
