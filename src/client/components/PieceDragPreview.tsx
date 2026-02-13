@@ -2,7 +2,7 @@ import React from "react";
 import { styled } from "@mui/material/styles";
 import type { Piece as PieceType } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
-import { getPieceColor } from "../../common/pieceData";
+import { getPieceColor } from "../utils/pieceColors";
 
 interface PieceDragPreviewProps {
     piece: PieceType;

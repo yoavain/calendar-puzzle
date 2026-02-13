@@ -10,9 +10,10 @@ import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import type { Board, DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../common/types";
+import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../common/types";
 import { toPuzzleDate } from "../../common/types";
-import { calculateProgress, clearPieceFromBoard, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../common/gameLogic";
+import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../common/gameLogic";
+import { rebuildGameState, updateBoardAndPieces } from "../../common/boardOperations";
 import { Board as BoardComponent } from "./Board";
 import { Piece } from "./Piece";
 import { PieceControls } from "./PieceControls";
@@ -74,41 +75,7 @@ const ScaleContainer = styled(Box)<{ scale: number }>(({ scale }) => {
     };
 });
 
-/**
- * Rebuild game state from saved pieces.
- * Reconstructs the board by placing each piece at its saved position.
- */
-const rebuildGameState = (pieces: PieceType[], date: PuzzleDate, isSolved: boolean): GameState => {
-    const board = initializeBoard(date);
-
-    // Place each piece on the board
-    for (const piece of pieces) {
-        if (piece.position) {
-            const shape = getTransformedShape(piece);
-            for (let y = 0; y < shape.length; y++) {
-                for (let x = 0; x < shape[y].length; x++) {
-                    if (shape[y][x]) {
-                        const boardY = piece.position.y + y;
-                        const boardX = piece.position.x + x;
-                        if (boardY < board.length && boardX < board[boardY].length) {
-                            board[boardY][boardX].isOccupied = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return {
-        board,
-        pieces,
-        selectedPieceId: null,
-        currentDate: date,
-        isSolved,
-        isGameComplete: isSolved,
-        solutionRevealed: false
-    };
-};
+// rebuildGameState is now imported from common/boardOperations
 
 /**
  * Get the initial game state, restoring from session if available and date matches today.
@@ -399,45 +366,7 @@ export const Game: React.FC = () => {
         // Remove this function if cell clicks aren't needed
     };
 
-    const updateBoardAndPieces = (
-        piece: PieceType,
-        newPosition: Position | null,
-        currentBoard: Board,
-        currentPieces: PieceType[]
-    ): { board: Board, pieces: PieceType[] } => {
-        // Create new board - deep clone cells to avoid mutating the original state
-        let newBoard = currentBoard.map(row => row.map(cell => ({ ...cell })));
-
-        // Clear old position if exists
-        if (piece.position) {
-            clearPieceFromBoard(newBoard, piece);
-        }
-
-        // Place in new position if provided
-        if (newPosition) {
-            const transformedShape = getTransformedShape(piece);
-            for (let y = 0; y < transformedShape.length; y++) {
-                for (let x = 0; x < transformedShape[y].length; x++) {
-                    if (transformedShape[y][x]) {
-                        const boardY = newPosition.y + y;
-                        const boardX = newPosition.x + x;
-                        if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
-                            newBoard[boardY][boardX].isOccupied = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Update pieces array
-        const newPieces = currentPieces.map(p => 
-            p.id === piece.id 
-                ? { ...p, position: newPosition, rotation: piece.rotation, isFlippedH: piece.isFlippedH, isFlippedV: piece.isFlippedV, isLocked: piece.isLocked }
-                : p
-        );
-
-        return { board: newBoard, pieces: newPieces };
-    };
+    // updateBoardAndPieces is now imported from common/boardOperations (pure function)
 
     // Helper to load persistent hint from server
     const loadPersistentHint = useCallback(async (date: PuzzleDate, currentPieces: PieceType[]) => {

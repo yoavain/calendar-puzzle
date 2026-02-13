@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import { keyframes } from "@emotion/react";
-import { getPieceColor } from "../../common/pieceData";
+import { getPieceColor } from "../utils/pieceColors";
 
 // Animations
 export const invalidDropShake = keyframes`
