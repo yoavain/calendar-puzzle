@@ -10,7 +10,8 @@ import Stack from "@mui/material/Stack";
 import { keyframes, styled } from "@mui/material/styles";
 import { Board as BoardComponent } from "./Board";
 import { initializeBoard } from "../utils/initialize";
-import { getPieceColor, getPieceShape, PIECE_IDS } from "../../common/pieceData";
+import { getPieceShape, PIECE_IDS } from "../../common/pieceData";
+import { getPieceColor } from "../utils/pieceColors";
 
 // Animation cycle:
 // 0-10%: Fade in at start position (bottom)

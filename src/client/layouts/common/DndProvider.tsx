@@ -1,19 +1,12 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect, createContext, useContext } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-    DndContext,
-    DragOverlay,
-    useSensor,
-    useSensors,
-    PointerSensor,
-    TouchSensor,
-    pointerWithin,
-    rectIntersection
-} from "@dnd-kit/core";
-import type { DragStartEvent, DragEndEvent, Modifier, ClientRect } from "@dnd-kit/core";
+import type { ClientRect, DragEndEvent, DragStartEvent, Modifier } from "@dnd-kit/core";
+import { DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useTheme } from "@mui/material/styles";
 import type { Piece as PieceType, Position } from "../../../common/types";
 import { getTransformedShape } from "../../../common/gameLogic";
+import { findNearestFilledCell } from "../../../common/utils/shapeHelpers";
+import { calculateCellFromPointer, findVisualPieceRect } from "../../utils/dragHelpers";
 import { PieceDragPreview } from "../../components/PieceDragPreview";
 
 /**
@@ -59,134 +52,13 @@ interface DndProviderProps {
 
 /**
  * Provides drag-and-drop context for the mobile layout.
- * 
+ *
  * Uses @dnd-kit with configured sensors for both touch and mouse:
  * - PointerSensor: 8px movement threshold before drag starts
  * - TouchSensor: 200ms delay to distinguish from carousel swipe
- * 
+ *
  * The DragOverlay renders a preview of the piece being dragged.
  */
-/**
- * Find the PieceGrid's visual bounding rect within a draggable element.
- *
- * The PieceGrid uses CSS transforms (rotate / flip) that are purely visual —
- * they do NOT change the element's layout dimensions. So the wrapper div's
- * `getBoundingClientRect()` returns the pre-transform (layout) rect, which
- * can differ from the actual visual dimensions after rotation.
- *
- * This helper locates the inner CSS Grid element (display: grid) and returns
- * its `getBoundingClientRect()`, which accounts for CSS transforms and gives
- * the correct visual dimensions.
- */
-function findVisualPieceRect(
-    containerEl: Element
-): { left: number; top: number; width: number; height: number } | null {
-    const descendants = containerEl.querySelectorAll("*");
-    for (const el of descendants) {
-        if (window.getComputedStyle(el).display === "grid") {
-            const r = el.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) {
-                return { left: r.left, top: r.top, width: r.width, height: r.height };
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * When the user starts a drag from an empty (false) cell of the piece
- * grid, find the nearest filled cell to snap to. This prevents the drag
- * from being cancelled when the touch lands on a transparent gap between
- * filled cells.
- *
- * Uses Manhattan distance; ties broken by top-left preference.
- */
-function findNearestFilledCell(
-    shape: boolean[][],
-    fromX: number,
-    fromY: number
-): { x: number; y: number } | null {
-    let minDist = Infinity;
-    let nearest: { x: number; y: number } | null = null;
-    for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < (shape[y]?.length ?? 0); x++) {
-            if (shape[y][x]) {
-                const dist = Math.abs(x - fromX) + Math.abs(y - fromY);
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearest = { x, y };
-                }
-            }
-        }
-    }
-    return nearest;
-}
-
-/**
- * Find the first filled cell in a piece's transformed shape.
- * This is used to calculate the offset for accurate drop positioning.
- */
-function findFirstFilledCell(piece: PieceType): { x: number; y: number } {
-    const shape = getTransformedShape(piece);
-    for (let y = 0; y < shape.length; y++) {
-        for (let x = 0; x < shape[y].length; x++) {
-            if (shape[y][x]) {
-                return { x, y };
-            }
-        }
-    }
-    return { x: 0, y: 0 };
-}
-
-/**
- * Calculate the cell position from pointer coordinates, accounting for board scale.
- *
- * @param gridOrigin  Optional pre-computed origin of cell (0,0). When supplied,
- *                    the pointer is measured relative to this origin instead of
- *                    the board container edge. This is important because the
- *                    BoardContainer has padding + border that shift the grid
- *                    inward by ~1 cell.
- */
-export function calculateCellFromPointer(
-    pointerX: number,
-    pointerY: number,
-    boardElement: HTMLElement,
-    scale: number,
-    cellSize: number,
-    gridOrigin?: { left: number; top: number }
-): Position | null {
-    // Use the grid origin (cell 0,0 position) when available, otherwise
-    // fall back to the board container rect (less accurate if padding exists).
-    let originX: number;
-    let originY: number;
-    if (gridOrigin) {
-        originX = gridOrigin.left;
-        originY = gridOrigin.top;
-    }
-    else {
-        const boardRect = boardElement.getBoundingClientRect();
-        originX = boardRect.left;
-        originY = boardRect.top;
-    }
-    
-    // Calculate position relative to the grid origin
-    const relativeX = pointerX - originX;
-    const relativeY = pointerY - originY;
-    
-    // The cell size in screen pixels (scaled)
-    const scaledCellSize = cellSize * scale;
-    
-    // Calculate cell coordinates
-    const cellX = Math.floor(relativeX / scaledCellSize);
-    const cellY = Math.floor(relativeY / scaledCellSize);
-    
-    // Validate bounds (board is 7x7 playable area)
-    if (cellX < 0 || cellX > 6 || cellY < 0 || cellY > 6) {
-        return null;
-    }
-    
-    return { x: cellX, y: cellY };
-}
 
 export const DndProvider: React.FC<DndProviderProps> = ({
     children,
