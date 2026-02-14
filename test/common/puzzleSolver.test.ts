@@ -6,19 +6,34 @@ import { initializeBoard, initializePieces } from "../../src/client/utils/initia
 
 describe("puzzleSolver", () => {
     describe("findSolution", () => {
-        it("should find a solution for March 1st", () => {
-            // SETUP
-            const date: PuzzleDate = toPuzzleDate(new Date(2025, 2, 1)); // Month is 0-indexed, so 2 = March
+        const solvesFor = (date: PuzzleDate) => {
             const board: Board = initializeBoard(date);
             const pieces: Piece[] = initializePieces();
-
-            // ACT
             const solution = findSolution(board, pieces, date);
 
-            // ASSERT
             expect(solution).not.toBeNull();
             const solvedDate = puzzleSolvedForDate(solution!.pieces);
             expect(solvedDate).toEqual(date);
+        };
+
+        it("should find a solution for March 1st", () => {
+            solvesFor(toPuzzleDate(new Date(2025, 2, 1)));
+        });
+
+        it("should find a solution for January 1st", () => {
+            solvesFor({ month: 0, day: 1 });
+        });
+
+        it("should find a solution for December 31st", () => {
+            solvesFor({ month: 11, day: 31 });
+        });
+
+        it("should find a solution for February 29th", () => {
+            solvesFor({ month: 1, day: 29 });
+        });
+
+        it("should find a solution for June 15th", () => {
+            solvesFor({ month: 5, day: 15 });
         });
     });
 });
