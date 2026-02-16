@@ -1,4 +1,4 @@
-import { calculateStreaks } from "../../src/common/streakUtils";
+import { calculateStreaks, getDayOfYear, isConsecutive } from "../../src/common/streakUtils";
 import type { PuzzleDate } from "../../src/common/types";
 
 describe("streakUtils", () => {
@@ -137,6 +137,72 @@ describe("streakUtils", () => {
             ];
             const result = calculateStreaks(history);
             expect(result.max).toBe(2);
+        });
+    });
+
+    describe("getDayOfYear", () => {
+        it("should return 1 for January 1st", () => {
+            expect(getDayOfYear({ month: 0, day: 1 })).toBe(1);
+        });
+
+        it("should return 31 for January 31st", () => {
+            expect(getDayOfYear({ month: 0, day: 31 })).toBe(31);
+        });
+
+        it("should return 32 for February 1st", () => {
+            expect(getDayOfYear({ month: 1, day: 1 })).toBe(32);
+        });
+
+        it("should return 59 for February 28th", () => {
+            expect(getDayOfYear({ month: 1, day: 28 })).toBe(59);
+        });
+
+        it("should return 60 for February 29th", () => {
+            expect(getDayOfYear({ month: 1, day: 29 })).toBe(60);
+        });
+
+        it("should return 61 for March 1st", () => {
+            expect(getDayOfYear({ month: 2, day: 1 })).toBe(61);
+        });
+
+        it("should return 366 for December 31st", () => {
+            expect(getDayOfYear({ month: 11, day: 31 })).toBe(366);
+        });
+
+        it("should handle each month boundary correctly", () => {
+            // Cumulative days: Jan=31, Feb=29, Mar=31, Apr=30, May=31, Jun=30, Jul=31, Aug=31, Sep=30, Oct=31, Nov=30, Dec=31
+            const monthStarts = [1, 32, 61, 92, 122, 153, 183, 214, 245, 275, 306, 336];
+            for (let m = 0; m < 12; m++) {
+                expect(getDayOfYear({ month: m, day: 1 })).toBe(monthStarts[m]);
+            }
+        });
+    });
+
+    describe("isConsecutive", () => {
+        it("should return true for standard consecutive days", () => {
+            expect(isConsecutive(2, 1)).toBe(true);
+            expect(isConsecutive(100, 99)).toBe(true);
+        });
+
+        it("should return false for same day", () => {
+            expect(isConsecutive(5, 5)).toBe(false);
+        });
+
+        it("should return false for non-consecutive days", () => {
+            expect(isConsecutive(5, 3)).toBe(false);
+            expect(isConsecutive(10, 7)).toBe(false);
+        });
+
+        it("should return true for year wrap-around (Jan 1 after Dec 31)", () => {
+            expect(isConsecutive(1, 366)).toBe(true);
+        });
+
+        it("should return true for leap year transition (Mar 1 after Feb 28, skipping Feb 29)", () => {
+            expect(isConsecutive(61, 59)).toBe(true);
+        });
+
+        it("should return false for reversed order", () => {
+            expect(isConsecutive(1, 2)).toBe(false);
         });
     });
 });

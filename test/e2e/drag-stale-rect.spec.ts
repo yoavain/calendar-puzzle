@@ -1,6 +1,6 @@
-import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import { GamePage, type LayoutKind } from "./fixtures/gamePage";
+import { layoutFromProject, mockDate, mockApiRoutes, clearStorage } from "./helpers/testUtils";
 
 /**
  * Regression test for stale draggable rect after CSS rotation.
@@ -26,40 +26,6 @@ const PIECE_ID = 1;
 const PIECE_CAROUSEL_INDEX = 0;
 const PIECE_CELL_COUNT = 5;
 
-// ─── Helpers ──────────────────────────────────────────────────
-
-function layoutFromProject(projectName: string | undefined): LayoutKind {
-    if (projectName?.includes("portrait")) {
-        return "mobile-portrait";
-    }
-    if (projectName?.includes("landscape")) {
-        return "mobile-landscape";
-    }
-    return "desktop";
-}
-
-async function mockDate(page: Page, fakeDate: Date) {
-    const ts = fakeDate.getTime();
-    await page.addInitScript((timestamp: number) => {
-        const RealDate = globalThis.Date;
-        function FakeDate(this: any, ...args: any[]) {
-            if (new.target) {
-                if (args.length === 0) {
-                    return new RealDate(timestamp);
-                }
-                // @ts-expect-error – spread into Date constructor
-                return new RealDate(...args);
-            }
-            return new RealDate(timestamp).toString();
-        }
-        FakeDate.prototype = RealDate.prototype;
-        FakeDate.now = () => timestamp;
-        FakeDate.parse = RealDate.parse.bind(RealDate);
-        FakeDate.UTC = RealDate.UTC.bind(RealDate);
-        (globalThis as any).Date = FakeDate;
-    }, ts);
-}
-
 // ─── Tests ────────────────────────────────────────────────────
 
 test.describe("Drag stale rect – overlay position after rotation", () => {
@@ -72,35 +38,8 @@ test.describe("Drag stale rect – overlay position after rotation", () => {
         // Skip non-mobile layouts — this bug only affects @dnd-kit touch drag
         test.skip(layout === "desktop", "Stale rect issue only affects mobile @dnd-kit layouts");
 
-        await page.route("**/api/**", async (route) => {
-            const url = route.request().url();
-            if (url.includes("/api/auth/me")) {
-                await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Unauthorized" }) });
-            }
-            else if (url.includes("/api/auth/csrf-token")) {
-                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ csrfToken: "mock-csrf" }) });
-            }
-            else if (url.includes("/api/auth/public-key")) {
-                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ publicKey: "" }) });
-            }
-            else if (url.includes("/api/log")) {
-                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
-            }
-            else {
-                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({}) });
-            }
-        });
-
-        await page.addInitScript(() => {
-            try {
-                localStorage.clear(); 
-            }
-            catch { /* noop */ }
-            try {
-                sessionStorage.clear(); 
-            }
-            catch { /* noop */ }
-        });
+        await mockApiRoutes(page);
+        await clearStorage(page);
     });
 
     test("drag from outer cell after rotation: overlay must appear on top of board", async ({ page }) => {
