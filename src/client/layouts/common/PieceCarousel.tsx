@@ -75,6 +75,9 @@ function getSlideState(index: number, activeIndex: number, inView: ReadonlySet<n
  * (e.g. [A,B] → [A,B,A,B], never [A,B,A]).
  */
 function buildSlides(pieces: PieceType[]): SlideEntry[] {
+    if (pieces.length === 0) {
+        return [];
+    }
     const onePass = pieces.map((piece, i): SlideEntry => ({ piece, realIndex: i }));
     if (pieces.length >= MIN_SLIDES_FOR_LOOP) {
         return onePass;
