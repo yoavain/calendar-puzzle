@@ -126,8 +126,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
     const clientBuildPath = path.join(__dirname, "..", "..", "build");
     
-    // Serve index.html at root path only (never cache to ensure fresh deployments)
-    app.get("/", async (request, reply) => {
+    // Serve index.html for SPA routes (never cache to ensure fresh deployments)
+    const serveIndexHtml = async (request: FastifyRequest, reply: FastifyReply) => {
         const file = await getCachedFile(clientBuildPath, "index.html");
         if (file) {
             return reply
@@ -136,7 +136,10 @@ export const buildApp = async (): Promise<FastifyInstance> => {
                 .send(file.content);
         }
         return reply.code(404).send({ error: "Not found" });
-    });
+    };
+
+    app.get("/", serveIndexHtml);
+    app.get("/play", serveIndexHtml);
 
     // Serve favicon
     app.get("/favicon.ico", async (request, reply) => {
