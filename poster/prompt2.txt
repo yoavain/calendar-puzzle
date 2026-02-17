@@ -1,0 +1,70 @@
+## **AI IMAGE GENERATION PROMPT**
+
+**Main Prompt:**
+
+Create a professional 3D game promotional image for "CALENDAR PUZZLE", a Tetris-style calendar puzzle game. The composition features a tilted game board with vibrant colorful pieces, displayed in a modern isometric perspective against a dark gradient background.
+
+**Layout & Composition:**
+- Top section: 3D text reading "CALENDAR" on first line, "PUZZLE" on second line, stacked vertically
+- Middle section: 3D game board tilted forward at 25-30 degrees, showing calendar grid
+- Bottom section: Seven colorful game pieces arranged in a row beneath the board
+
+**Title Text Specifications:**
+- Text: "CALENDAR" (top line) and "PUZZLE" (bottom line), same size, centered alignment
+- Font style: Blocky, pixel-art inspired geometric font with slight 3D depth
+- Each letter has unique vibrant color: coral orange, mint green, brown, purple, pink, yellow, lime green, blue, teal - matching the game piece colors
+- Letters have black outline and subtle 3D extrusion effect
+- Text tilted forward at the same 25-30 degree angle as the board
+- Positioned above the game board with clear hierarchy
+
+**Game Board Specifications:**
+- Dark charcoal gray board with subtle rounded corners and border
+- Calendar grid showing months (JAN through DEC) at top
+- Number grid below (1-31) arranged in rows
+- Two cells highlighted in bright yellow (#FFD700) representing today's date (cells 1 and 2)
+- Yellow cells should have subtle 3D depth, appearing as raised pieces on the board
+- One teal/mint green L-shaped piece already placed on the board with 3D depth
+- Board tilted forward in isometric view, creating dynamic perspective
+- Soft shadow beneath the board
+
+**Game Pieces (7 remaining pieces below board):**
+- Arrange horizontally in a row below the board
+- Each piece has 3D depth, beveled edges, and subtle highlights
+- Piece 1: Brown/copper T-tetromino shape (#8B6F47)
+- Piece 2: Bright purple L-tetromino (#9B7FD9)
+- Piece 3: Coral pink Z-tetromino (#FF8FA3)
+- Piece 4: Golden yellow L-tetromino (#FFB627)
+- Piece 5: Lime green I-tetromino (vertical rectangle) (#A4C639)
+- Piece 6: Royal blue L-tetromino (#5B9BF3)
+- All pieces floating slightly with subtle drop shadows
+
+**Visual Style:**
+- Modern, clean 3D render with soft lighting
+- Studio-quality lighting from top-left, creating natural highlights and shadows
+- Dark gradient background transitioning from deep navy (#1a1a2e) to charcoal (#0f0f1a)
+- Vibrant, saturated colors for pieces contrasting with dark background
+- Slight rim lighting on pieces for depth and separation
+- Professional game marketing aesthetic
+- Energetic and inviting mood
+
+**Technical Specifications:**
+- Aspect ratio: 16:9 or 1200x630px (optimized for social media)
+- High contrast between dark background and vibrant pieces
+- All elements sharp and crisp, suitable for Twitter/Facebook promotion
+- Depth of field: everything in focus with slight background blur
+- Render quality: high-resolution, anti-aliased edges
+
+**Lighting & Atmosphere:**
+- Main light: soft directional from upper left (45-degree angle)
+- Fill light: subtle ambient lighting to prevent harsh shadows
+- Rim lighting: slight blue-white edge lighting on pieces for definition
+- Overall mood: energetic, modern, playful, professional
+- Color temperature: slightly cool to complement the dark background
+
+**Additional Notes:**
+- Maintain clear visual hierarchy: Title → Board → Pieces
+- Ensure text remains legible with multi-colored letters
+- All 3D elements share consistent perspective and angle
+- Clean, uncluttered composition with breathing room
+- Professional game promotional quality suitable for app stores and social media
+

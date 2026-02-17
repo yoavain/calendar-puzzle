@@ -1,0 +1,40 @@
+Act as a professional graphic designer and prompt engineer.
+
+Create a detailed AI image generation prompt for a high-quality, professional game promotion.
+
+Design Requirements:
+- Style: modern, vibrant
+- Color palette: Dark background, designer’s choice
+- Mood & emotion: energetic
+- Layout: clear hierarchy with headline, supporting text, and call-to-action
+- Lighting: studio-quality, well-balanced highlights and shadows
+- Typography style: clean, readable, modern (no distorted text)
+- Background: gradient or blurred, designer’s choice
+- Platform: optimized for social media (Twitter / Facebook)
+
+Additional details:
+I'm attaching 2 images. Analyze them, so you understand the context below.
+
+## The board
+
+One is a screenshot of the puzzle game.
+Game consists of a board, 2 yellow cells covering 2 cells on the board (represnting the current date), and 8 game pieces.
+The purpose of the game is to use the pieces, rotate/flip them, and cover the board with them, without putting them on the yellow cells.
+Screenshot has a single piece already on the board.
+I want a 3D view of the board, leaning forward. Give it some depth.
+I want the 2 yellow cells to also give a small "depth" as if they are also pieces placed on the board.
+I want the placed piece, with original color, to also have some depth, to look like a placed piece.
+I want all other 7 pieces, with their original shape and color, to be waiting below the board. Give them depth, the same as the placed piece.
+
+## The title
+
+I gave a second transparent screenshot, with the text "CALENDAR PUZZLE". It is already in the font and colors that I want.
+I want to break them into the two words. Placing them one on top of the other. 
+First line: CALENDAR
+Second line: PUZZLE
+Words should be the same size.
+Important: Keep text as is. Same colors, same font. Just place it as is.
+Make the text 3D as well, leaning forward, the same angle as the board.
+Text should be above the board.
+
+
