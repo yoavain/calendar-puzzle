@@ -7,10 +7,10 @@ import { StaticPieces } from "../components/landing/StaticPieces";
 import {
     LandingContainer,
     TitleSection,
-    PerspectiveContainer,
-    TiltedContent,
-    BoardWrapper,
-    PiecesRow
+    SceneContainer,
+    TiltedScene,
+    BoardCenter,
+    BoardDepth
 } from "./LandingPage.styled";
 import calendarImg from "../assets/CALENDAR.png";
 import puzzleImg from "../assets/PUZZLE.png";
@@ -19,28 +19,27 @@ export const LandingPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleClick = () => {
-        void navigate("/play");
+        void navigate("/");
     };
 
     return (
         <ThemeProvider theme={darkTheme}>
             <LandingContainer onClick={handleClick}>
-                <PerspectiveContainer>
-                    <TiltedContent>
-                        <TitleSection>
-                            <img src={calendarImg} alt="Calendar" />
-                            <img src={puzzleImg} alt="Puzzle" />
-                        </TitleSection>
+                <TitleSection>
+                    <img src={calendarImg} alt="Calendar" />
+                    <img src={puzzleImg} alt="Puzzle" />
+                </TitleSection>
 
-                        <BoardWrapper>
-                            <StaticBoard />
-                        </BoardWrapper>
-
-                        <PiecesRow>
-                            <StaticPieces />
-                        </PiecesRow>
-                    </TiltedContent>
-                </PerspectiveContainer>
+                <SceneContainer>
+                    <TiltedScene>
+                        <BoardCenter>
+                            <BoardDepth>
+                                <StaticBoard />
+                            </BoardDepth>
+                        </BoardCenter>
+                        <StaticPieces />
+                    </TiltedScene>
+                </SceneContainer>
             </LandingContainer>
         </ThemeProvider>
     );

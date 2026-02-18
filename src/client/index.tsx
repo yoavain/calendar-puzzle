@@ -31,8 +31,8 @@ root.render(
             <ThemeProvider>
                 <BrowserRouter basename={basename}>
                     <Routes>
-                        <Route path="/" element={<LandingPage />} />
-                        <Route path="/play" element={<App />} />
+                        <Route path="/" element={<App />} />
+                        <Route path="/poster" element={<LandingPage />} />
                     </Routes>
                 </BrowserRouter>
             </ThemeProvider>

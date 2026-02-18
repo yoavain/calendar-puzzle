@@ -139,7 +139,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     };
 
     app.get("/", serveIndexHtml);
-    app.get("/play", serveIndexHtml);
+    app.get("/poster", serveIndexHtml);
 
     // Serve favicon
     app.get("/favicon.ico", async (request, reply) => {

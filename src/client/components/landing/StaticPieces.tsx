@@ -1,24 +1,66 @@
 import React from "react";
 import { styled } from "@mui/material/styles";
-import { PIECE_DATA, PIECE_IDS } from "../../../common/pieceData";
+import type { PieceId } from "../../../common/pieceData";
+import { PIECE_DATA } from "../../../common/pieceData";
 import { getPieceColor } from "../../utils/pieceColors";
 
-const CELL_SIZE = 28;
-const DEPTH = 8;
+const CELL_SIZE = 50;
+const DEPTH = 12;
 
-const PiecesContainer = styled("div")({
-    display: "grid",
-    gridTemplateColumns: "repeat(4, auto)",
-    gap: 20,
-    justifyItems: "center",
-    alignItems: "center"
+interface PiecePlacement {
+    id: PieceId;
+    x: number;
+    y: number;
+    rotation: number;
+}
+
+/**
+ * Hand-tuned positions to scatter pieces around the board,
+ * inspired by the concept image layout.
+ * Coordinates are relative to the scene center.
+ */
+const PIECE_PLACEMENTS: PiecePlacement[] = [
+    { id: 2, x: -310, y: -120, rotation: 12 }, // Teal — upper left
+    { id: 1, x: -290, y: 100, rotation: -20 }, // Coral — left
+    { id: 3, x: -200, y: 280, rotation: -10 }, // Chocolate — lower left
+    { id: 6, x: -20, y: 310, rotation: 6 }, // Marigold — bottom center-left
+    { id: 4, x: 120, y: 330, rotation: -15 }, // Violet — bottom center
+    { id: 7, x: 230, y: 260, rotation: 18 }, // Olive — bottom right
+    { id: 5, x: 310, y: -80, rotation: -8 }, // Rose — right upper
+    { id: 8, x: 320, y: 120, rotation: 14 } // Royal blue — right
+];
+
+/**
+ * Darken a hex color by a factor (0 = no change, 1 = black).
+ */
+function darkenColor(hex: string, factor: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgb(${Math.round(r * (1 - factor))}, ${Math.round(g * (1 - factor))}, ${Math.round(b * (1 - factor))})`;
+}
+
+/**
+ * Generate a box-shadow string that simulates extrusion depth.
+ */
+function extrusionShadow(color: string, depth: number): string {
+    const dark = darkenColor(color, 0.45);
+    const layers = [];
+    for (let i = 1; i <= depth; i++) {
+        layers.push(`${i}px ${i}px 0 ${dark}`);
+    }
+    return layers.join(", ");
+}
+
+const PieceWrapper = styled("div")({
+    position: "absolute",
+    transformStyle: "preserve-3d"
 });
 
 const PieceGrid = styled("div")({
     display: "flex",
     flexDirection: "column",
-    gap: 0,
-    transformStyle: "preserve-3d"
+    gap: 0
 });
 
 const PieceRow = styled("div")({
@@ -29,75 +71,60 @@ const PieceRow = styled("div")({
 interface PieceCellProps {
     filled: boolean;
     color: string;
+    shadow: string;
 }
 
 const PieceCell = styled("div", {
-    shouldForwardProp: (prop) => prop !== "filled" && prop !== "color"
-})<PieceCellProps>(({ filled, color }) => ({
+    shouldForwardProp: (prop) => !["filled", "color", "shadow"].includes(prop as string)
+})<PieceCellProps>(({ filled, color, shadow }) => ({
     width: CELL_SIZE,
     height: CELL_SIZE,
-    position: "relative" as const,
-    transformStyle: "preserve-3d",
     backgroundColor: filled ? color : "transparent",
     backgroundImage: filled
-        ? "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+        ? "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 40%, transparent 50%, rgba(0,0,0,0.08) 100%)"
         : "none",
     visibility: filled ? "visible" : "hidden",
-    // 3D depth extrusion via pseudo-element
-    ...(filled && {
-        "&::before": {
-            content: "\"\"",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: darkenColor(color, 0.4),
-            transform: `translateZ(-${DEPTH}px)`,
-            // Hide pseudo-element behind the face
-            zIndex: -1
-        }
-    })
+    boxShadow: filled ? shadow : "none"
 }));
 
 /**
- * Darken a hex color by a factor (0 = no change, 1 = black).
- */
-function darkenColor(hex: string, factor: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    const dr = Math.round(r * (1 - factor));
-    const dg = Math.round(g * (1 - factor));
-    const db = Math.round(b * (1 - factor));
-    return `rgb(${dr}, ${dg}, ${db})`;
-}
-
-/**
- * Static display of all 8 puzzle pieces in a 4x2 grid for the landing page.
+ * Renders all 8 pieces scattered around the board with 3D extruded depth.
+ * Pieces are positioned absolutely within the scene.
  */
 export const StaticPieces: React.FC = () => {
     return (
-        <PiecesContainer>
-            {PIECE_IDS.map((id) => {
+        <>
+            {PIECE_PLACEMENTS.map(({ id, x, y, rotation }) => {
                 const shape = PIECE_DATA[id].shape;
                 const color = getPieceColor(id);
+                const shadow = extrusionShadow(color, DEPTH);
+
                 return (
-                    <PieceGrid key={id}>
-                        {shape.map((row, y) => (
-                            <PieceRow key={y}>
-                                {row.map((filled, x) => (
-                                    <PieceCell
-                                        key={`${y}-${x}`}
-                                        filled={filled}
-                                        color={color}
-                                    />
-                                ))}
-                            </PieceRow>
-                        ))}
-                    </PieceGrid>
+                    <PieceWrapper
+                        key={id}
+                        style={{
+                            top: "50%",
+                            left: "50%",
+                            transform: `translate(-50%, -55%) translate(${x}px, ${y}px) rotate(${rotation}deg)`
+                        }}
+                    >
+                        <PieceGrid>
+                            {shape.map((row, rowIdx) => (
+                                <PieceRow key={rowIdx}>
+                                    {row.map((filled, colIdx) => (
+                                        <PieceCell
+                                            key={`${rowIdx}-${colIdx}`}
+                                            filled={filled}
+                                            color={color}
+                                            shadow={shadow}
+                                        />
+                                    ))}
+                                </PieceRow>
+                            ))}
+                        </PieceGrid>
+                    </PieceWrapper>
                 );
             })}
-        </PiecesContainer>
+        </>
     );
 };
