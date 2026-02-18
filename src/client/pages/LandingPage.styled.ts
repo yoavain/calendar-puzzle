@@ -2,28 +2,13 @@ import { styled } from "@mui/material/styles";
 
 export const LandingContainer = styled("div")({
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
+    background: "linear-gradient(180deg, #222 0%, #111 40%, #0a0a0a 100%)",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
-    padding: "40px 16px",
     overflow: "hidden"
-});
-
-export const PerspectiveContainer = styled("div")({
-    perspective: 1000,
-    perspectiveOrigin: "50% 45%"
-});
-
-export const TiltedContent = styled("div")({
-    transform: "rotateX(35deg)",
-    transformStyle: "preserve-3d",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 32
 });
 
 export const TitleSection = styled("div")({
@@ -31,34 +16,53 @@ export const TitleSection = styled("div")({
     flexDirection: "column",
     alignItems: "center",
     gap: 4,
-    transformStyle: "preserve-3d",
+    marginBottom: 24,
+    zIndex: 10,
     "& img": {
         height: 128,
         width: "auto",
-        filter: "drop-shadow(0 4px 12px rgba(255, 255, 255, 0.15))"
+        filter: "drop-shadow(0 4px 16px rgba(255, 255, 255, 0.12))"
     }
 });
 
-export const BoardWrapper = styled("div")({
+export const SceneContainer = styled("div")({
     position: "relative",
-    transformStyle: "preserve-3d",
-    // 3D depth extrusion for the board
-    "&::before": {
-        content: "\"\"",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "linear-gradient(180deg, #2a2a2a 0%, #111 100%)",
-        borderRadius: 22,
-        transform: "translateZ(-20px)",
-        boxShadow: "0 40px 80px rgba(0, 0, 0, 0.8)"
-    }
+    width: 700,
+    height: 560,
+    perspective: 1200,
+    perspectiveOrigin: "50% 40%"
 });
 
-export const PiecesRow = styled("div")({
-    display: "flex",
-    justifyContent: "center",
+export const TiltedScene = styled("div")({
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    transform: "rotateX(24deg) rotateY(-3deg)",
     transformStyle: "preserve-3d"
+});
+
+export const BoardCenter = styled("div")({
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -55%)",
+    transformStyle: "preserve-3d"
+});
+
+// Generate box-shadow extrusion layers for the board slab
+const BOARD_DEPTH = 16;
+const boardExtrusion = Array.from({ length: BOARD_DEPTH }, (_, i) => {
+    const n = i + 1;
+    // Darken gradually from #2a2a2a toward #111
+    const shade = Math.max(0x11, 0x2a - Math.round((n / BOARD_DEPTH) * 0x19));
+    const hex = shade.toString(16).padStart(2, "0");
+    return `${n}px ${n}px 0 #${hex}${hex}${hex}`;
+}).join(", ");
+
+export const BoardDepth = styled("div")({
+    position: "relative",
+    borderRadius: 22,
+    boxShadow: `${boardExtrusion}, 0 30px 60px rgba(0,0,0,0.7), 0 60px 100px rgba(0,0,0,0.5)`
 });
