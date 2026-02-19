@@ -12,6 +12,7 @@ export const getMimeType = (extension: string): string => {
     switch (extension) {
         case ".html": return "text/html";
         case ".ico": return "image/x-icon";
+        case ".png": return "image/png";
         case ".js": return "application/javascript";
         case ".map": return "application/json";
         default:
