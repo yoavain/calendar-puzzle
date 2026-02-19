@@ -150,6 +150,15 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         return reply.code(404).send({ error: "Not found" });
     });
 
+    // Serve poster
+    app.get("/poster.png", async (request, reply) => {
+        const file = await getCachedFile(clientBuildPath, "poster.png");
+        if (file) {
+            return reply.type(file.contentType).send(file.content);
+        }
+        return reply.code(404).send({ error: "Not found" });
+    });
+
     // Serve static client files from /client/* with path traversal protection
     app.get("/client/*", async (request, reply) => {
         // Extract the path after /client/
