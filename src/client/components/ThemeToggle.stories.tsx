@@ -14,20 +14,22 @@ export default meta;
 
 type Story = StoryObj<typeof ThemeToggle>;
 
+const DefaultStory = (): React.JSX.Element => {
+    const [mode, setMode] = useState<"light" | "dark">("dark");
+    return (
+        <ColorModeContext.Provider value={{
+            mode,
+            effectiveMode: mode,
+            toggleColorMode: () => setMode(m => m === "dark" ? "light" : "dark"),
+            setMode: (m) => setMode(m === "system" ? "dark" : m)
+        }}>
+            <MuiThemeProvider theme={mode === "dark" ? darkTheme : lightTheme}>
+                <ThemeToggle />
+            </MuiThemeProvider>
+        </ColorModeContext.Provider>
+    );
+};
+
 export const Default: Story = {
-    render: () => {
-        const [mode, setMode] = useState<"light" | "dark">("dark");
-        return (
-            <ColorModeContext.Provider value={{
-                mode,
-                effectiveMode: mode,
-                toggleColorMode: () => setMode(m => m === "dark" ? "light" : "dark"),
-                setMode: (m) => setMode(m === "system" ? "dark" : m)
-            }}>
-                <MuiThemeProvider theme={mode === "dark" ? darkTheme : lightTheme}>
-                    <ThemeToggle />
-                </MuiThemeProvider>
-            </ColorModeContext.Provider>
-        );
-    }
+    render: DefaultStory
 };
