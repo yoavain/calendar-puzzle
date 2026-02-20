@@ -168,7 +168,8 @@ export const PieceCell = styled("div", {
             backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
             color: "#ffffff",
             // Prevent sub-pixel gaps by extending color with box-shadow
-            boxShadow: `inset 0 0 0 1px ${pieceId ? getPieceColor(pieceId) : getPieceColor(1)}`
+            boxShadow: `inset 0 0 0 1px ${pieceId ? getPieceColor(pieceId) : getPieceColor(1)}`,
+            backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
         })
     };
 });

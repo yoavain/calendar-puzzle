@@ -37,6 +37,9 @@ const PreviewCell = styled("div")<{ isFilled: boolean; pieceId: number }>(
         boxSizing: "border-box",
         visibility: isFilled ? "visible" : "hidden",
         backgroundColor: isFilled ? getPieceColor(pieceId) : "transparent",
+        backgroundImage: isFilled
+            ? "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+            : "none",
         // Prevent sub-pixel gaps
         boxShadow: isFilled ? `inset 0 0 0 1px ${getPieceColor(pieceId)}` : "none"
     })
