@@ -26,7 +26,8 @@ export const SuccessMessage: React.FC<SuccessMessageProps> = ({ isVisible, onClo
                     px: 4,
                     py: 3,
                     textAlign: "center",
-                    minWidth: 300
+                    minWidth: 300,
+                    userSelect: "none"
                 }
             }}
         >

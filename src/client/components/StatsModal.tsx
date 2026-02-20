@@ -1,6 +1,6 @@
 import React from "react";
-import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
+import { BaseDialog } from "./BaseDialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
@@ -44,17 +44,11 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
     const winPercent = playedCount > 0 ? Math.round((completedDates.length / playedCount) * 100) : 0;
 
     return (
-        <Dialog 
-            open={open} 
+        <BaseDialog
+            open={open}
             onClose={onClose}
-            maxWidth="xs"
-            fullWidth
-            disableScrollLock
             PaperProps={{
-                sx: { 
-                    borderRadius: 2,
-                    userSelect: "none"
-                }
+                sx: { borderRadius: 2 }
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
@@ -129,6 +123,6 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                     Close
                 </Button>
             </DialogActions>
-        </Dialog>
+        </BaseDialog>
     );
 };

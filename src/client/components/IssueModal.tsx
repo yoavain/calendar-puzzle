@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
+import { BaseDialog } from "./BaseDialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
@@ -69,17 +69,11 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={handleClose} 
-            maxWidth="sm" 
-            fullWidth
-            disableScrollLock
+        <BaseDialog
+            open={open}
+            onClose={handleClose}
             PaperProps={{
-                sx: { 
-                    overflowX: "hidden",
-                    userSelect: "none"
-                }
+                sx: { overflowX: "hidden" }
             }}
         >
             <DialogTitle>Submit bug / Request Feature</DialogTitle>
@@ -146,6 +140,6 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                     {loading ? "Submitting..." : "Submit"}
                 </Button>
             </DialogActions>
-        </Dialog>
+        </BaseDialog>
     );
 };

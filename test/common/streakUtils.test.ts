@@ -1,4 +1,4 @@
-import { calculateStreaks, getDayOfYear, isConsecutive } from "../../src/common/streakUtils";
+import { calculateStreaks, getDayOfYear, isConsecutive, findLastUnsolvedDate } from "../../src/common/streakUtils";
 import type { PuzzleDate } from "../../src/common/types";
 
 describe("streakUtils", () => {
@@ -175,6 +175,69 @@ describe("streakUtils", () => {
             for (let m = 0; m < 12; m++) {
                 expect(getDayOfYear({ month: m, day: 1 })).toBe(monthStarts[m]);
             }
+        });
+    });
+
+    describe("findLastUnsolvedDate", () => {
+        it("should return the day before beforeDate when no dates are completed", () => {
+            const result = findLastUnsolvedDate([], { month: 0, day: 3 });
+            expect(result).toEqual({ month: 0, day: 2 }); // Jan 2
+        });
+
+        it("should skip consecutive solved dates and find the first unsolved one", () => {
+            // Jan 1-5 solved, searching before Jan 6
+            const completed = [
+                { month: 0, day: 1 },
+                { month: 0, day: 2 },
+                { month: 0, day: 3 },
+                { month: 0, day: 4 },
+                { month: 0, day: 5 }
+            ];
+            const result = findLastUnsolvedDate(completed, { month: 0, day: 6 });
+            // Starts at Jan 5 (solved), then Jan 4 (solved), ... Jan 1 (solved), then Dec 31 (unsolved)
+            expect(result).toEqual({ month: 11, day: 31 });
+        });
+
+        it("should handle year wrap-around (Dec 31 -> Jan 1)", () => {
+            // Jan 1-3 solved, Dec 31 solved, searching before Jan 4
+            const completed = [
+                { month: 11, day: 31 },
+                { month: 0, day: 1 },
+                { month: 0, day: 2 },
+                { month: 0, day: 3 }
+            ];
+            const result = findLastUnsolvedDate(completed, { month: 0, day: 4 });
+            // Jan 3 (solved), Jan 2 (solved), Jan 1 (solved), Dec 31 (solved), Dec 30 (unsolved)
+            expect(result).toEqual({ month: 11, day: 30 });
+        });
+
+        it("should return Feb 29 if it is unsolved", () => {
+            // Feb 28 and Mar 1 solved, searching before Mar 2
+            const completed = [
+                { month: 1, day: 28 },
+                { month: 2, day: 1 }
+            ];
+            const result = findLastUnsolvedDate(completed, { month: 2, day: 2 });
+            // Mar 1 (solved), Feb 29 (unsolved)
+            expect(result).toEqual({ month: 1, day: 29 });
+        });
+
+        it("should return null if all 366 dates are completed", () => {
+            const completed: { month: number; day: number }[] = [];
+            const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            for (let m = 0; m < 12; m++) {
+                for (let d = 1; d <= daysInMonth[m]; d++) {
+                    completed.push({ month: m, day: d });
+                }
+            }
+            const result = findLastUnsolvedDate(completed, { month: 5, day: 15 });
+            expect(result).toBeNull();
+        });
+
+        it("should not skip beforeDate itself (only searches before it)", () => {
+            // beforeDate itself is unsolved, but we should look at the day before
+            const result = findLastUnsolvedDate([], { month: 5, day: 15 });
+            expect(result).toEqual({ month: 5, day: 14 }); // Jun 14, not Jun 15
         });
     });
 

@@ -51,7 +51,7 @@ export const getDayOfYear = (d: PuzzleDate): number => {
  * Returns the day of year for "yesterday" in a year-independent calendar.
  * Handles the special leap year benefit of doubt (Mar 1 -> Feb 28).
  */
-const getYesterday = (day: number): number => {
+export const getYesterday = (day: number): number => {
     if (day === 1) {
         return 366;
     }
@@ -59,6 +59,53 @@ const getYesterday = (day: number): number => {
         return 59;
     } // Skip Feb 29 benefit of doubt
     return day - 1;
+};
+
+/**
+ * Reverses getDayOfYear: maps a day-of-year (1-366) back to a PuzzleDate.
+ * Feb 29 is day 60.
+ */
+const dayOfYearToPuzzleDate = (day: number): PuzzleDate => {
+    const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let remaining = day;
+    for (let m = 0; m < 12; m++) {
+        if (remaining <= daysInMonth[m]) {
+            return { month: m, day: remaining };
+        }
+        remaining -= daysInMonth[m];
+    }
+    return { month: 11, day: 31 };
+};
+
+/**
+ * Steps one day backwards without skipping Feb 29.
+ */
+const getPrevDay = (day: number): number => {
+    if (day === 1) {
+        return 366;
+    }
+    return day - 1;
+};
+
+/**
+ * Finds the most recent unsolved date before (but not including) `beforeDate`.
+ * Checks every date including Feb 29 (unlike getYesterday which skips it).
+ * Returns null if all 366 dates are completed.
+ */
+export const findLastUnsolvedDate = (
+    completedDates: PuzzleDate[],
+    beforeDate: PuzzleDate
+): PuzzleDate | null => {
+    const completedSet = new Set(completedDates.map(getDayOfYear));
+    const startDay = getDayOfYear(beforeDate);
+    let checkDay = getPrevDay(startDay);
+    for (let count = 0; count < 366; count++) {
+        if (!completedSet.has(checkDay)) {
+            return dayOfYearToPuzzleDate(checkDay);
+        }
+        checkDay = getPrevDay(checkDay);
+    }
+    return null;
 };
 
 export const calculateStreaks = (history: PuzzleDate[]) => {
