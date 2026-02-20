@@ -64,42 +64,44 @@ export const TwoPieces: Story = {
     }
 };
 
+const DesktopWidthStory = (): React.JSX.Element => {
+    const [pieces, setPieces] = useState(makeMockPieces);
+    const [selectedPieceId, setSelectedPieceId] = useState<number | null>(pieces[0]?.id ?? null);
+
+    const updatePiece = (id: number, patch: Partial<Piece>) =>
+        setPieces(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
+
+    return (
+        <PiecesContainer>
+            <PieceCarousel
+                pieces={pieces}
+                selectedPieceId={selectedPieceId}
+                onPieceSelect={setSelectedPieceId}
+                onRotatePiece={id => {
+                    const p = pieces.find(p => p.id === id)!;
+                    updatePiece(id, { rotation: ((p.rotation + 90) % 360) as Piece["rotation"] });
+                }}
+                onRotateCCWPiece={id => {
+                    const p = pieces.find(p => p.id === id)!;
+                    updatePiece(id, { rotation: ((p.rotation + 270) % 360) as Piece["rotation"] });
+                }}
+                onFlipHPiece={id => {
+                    const p = pieces.find(p => p.id === id)!;
+                    updatePiece(id, { isFlippedH: !p.isFlippedH });
+                }}
+                onFlipVPiece={id => {
+                    const p = pieces.find(p => p.id === id)!;
+                    updatePiece(id, { isFlippedV: !p.isFlippedV });
+                }}
+            />
+        </PiecesContainer>
+    );
+};
+
 export const DesktopWidth: Story = {
     name: "Desktop Width",
     parameters: { layout: "fullscreen" },
-    render: () => {
-        const [pieces, setPieces] = useState(makeMockPieces);
-        const [selectedPieceId, setSelectedPieceId] = useState<number | null>(pieces[0]?.id ?? null);
-
-        const updatePiece = (id: number, patch: Partial<Piece>) =>
-            setPieces(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
-
-        return (
-            <PiecesContainer>
-                <PieceCarousel
-                    pieces={pieces}
-                    selectedPieceId={selectedPieceId}
-                    onPieceSelect={setSelectedPieceId}
-                    onRotatePiece={id => {
-                        const p = pieces.find(p => p.id === id)!;
-                        updatePiece(id, { rotation: ((p.rotation + 90) % 360) as Piece["rotation"] });
-                    }}
-                    onRotateCCWPiece={id => {
-                        const p = pieces.find(p => p.id === id)!;
-                        updatePiece(id, { rotation: ((p.rotation + 270) % 360) as Piece["rotation"] });
-                    }}
-                    onFlipHPiece={id => {
-                        const p = pieces.find(p => p.id === id)!;
-                        updatePiece(id, { isFlippedH: !p.isFlippedH });
-                    }}
-                    onFlipVPiece={id => {
-                        const p = pieces.find(p => p.id === id)!;
-                        updatePiece(id, { isFlippedV: !p.isFlippedV });
-                    }}
-                />
-            </PiecesContainer>
-        );
-    }
+    render: DesktopWidthStory
 };
 
 export const Empty: Story = {
