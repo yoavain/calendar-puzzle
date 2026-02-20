@@ -6,6 +6,7 @@ import { SuccessMessage } from "../../components/SuccessMessage";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
+import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { ProgressBar } from "../../components/ProgressBar";
 
 import { useGameController } from "../common/useGameController";
@@ -149,6 +150,12 @@ export const LandscapeLayout: React.FC = () => {
                 <HelpModal
                     open={game.modals.help.isOpen}
                     onClose={game.modals.help.close}
+                />
+                <PlayAnotherDialog
+                    isOpen={game.modals.playAnother.isOpen}
+                    mode={game.modals.playAnother.mode}
+                    onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate!)}
+                    onDecline={game.modals.playAnother.close}
                 />
             </LandscapeContainer>
         </DndProvider>
