@@ -24,7 +24,7 @@ interface UserContextValue {
     addPlayedDate: (date: PuzzleDate) => void;
 }
 
-const UserContext = createContext<UserContextValue | null>(null);
+export const UserContext = createContext<UserContextValue | null>(null);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
