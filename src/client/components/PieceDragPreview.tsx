@@ -2,7 +2,7 @@ import React from "react";
 import { styled } from "@mui/material/styles";
 import type { Piece as PieceType } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
-import { getPieceColor } from "../utils/pieceColors";
+import { getPieceColor, PIECE_CELL_GRADIENT } from "../utils/pieceColors";
 
 interface PieceDragPreviewProps {
     piece: PieceType;
@@ -38,7 +38,7 @@ const PreviewCell = styled("div")<{ isFilled: boolean; pieceId: number }>(
         visibility: isFilled ? "visible" : "hidden",
         backgroundColor: isFilled ? getPieceColor(pieceId) : "transparent",
         backgroundImage: isFilled
-            ? "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+            ? PIECE_CELL_GRADIENT
             : "none",
         // Prevent sub-pixel gaps
         boxShadow: isFilled ? `inset 0 0 0 1px ${getPieceColor(pieceId)}` : "none"

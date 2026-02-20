@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { keyframes } from "@emotion/react";
-import { getPieceColor } from "../utils/pieceColors";
+import { getPieceColor, PIECE_CELL_GRADIENT } from "../utils/pieceColors";
 
 // Animations
 export const pieceDropIn = keyframes`
@@ -169,7 +169,7 @@ export const PieceCell = styled("div", {
             color: "#ffffff",
             // Prevent sub-pixel gaps by extending color with box-shadow
             boxShadow: `inset 0 0 0 1px ${pieceId ? getPieceColor(pieceId) : getPieceColor(1)}`,
-            backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+            backgroundImage: PIECE_CELL_GRADIENT
         })
     };
 });
