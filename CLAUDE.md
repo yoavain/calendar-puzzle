@@ -70,25 +70,30 @@ calendar-puzzle/
 **UI layer - React components, DOM interactions, presentation logic.**
 
 - **Tech stack**: React 19 + Vite, Material‑UI, Emotion
-- **Layouts**: Three modes (desktop, mobile-portrait, mobile-landscape)
-  - Desktop: `Game.tsx` with HTML5 drag-and-drop
-  - Mobile: `useGameController.ts` with `@dnd-kit`
+- **Layouts**: Three modes in `layouts/` directory (desktop, mobile-portrait, mobile-landscape)
+  - Desktop: `layouts/desktop/DesktopLayout.tsx` uses `Game.tsx` with HTML5 drag-and-drop
+  - Mobile: `layouts/mobile-portrait/`, `layouts/mobile-landscape/` use `@dnd-kit`
+  - Shared mobile: `layouts/common/` — `DndProvider.tsx`, `useGameController.ts`, `PieceCarousel.tsx`, `MobileToolbar.tsx`
 - **State management**: React context + `useGameHistory` hook (undo/redo)
-- **Components** (`components/`) - React UI components
+- **Components** (`components/`) - React UI components (including `PlayAnotherDialog.tsx`)
 - **Hooks** (`hooks/`) - Custom React hooks
   - `useGameHistory.ts` - Undo/redo with immer
   - `useGameSession.ts` - Session persistence
+  - `useLayout.ts` - Responsive layout detection
+  - `useQueryParam.ts` - URL query parameter management
 - **Utils** (`utils/`) - UI utilities
   - `dragHelpers.ts` - DOM-aware drag utilities
   - `pieceColors.ts` - UI color definitions
   - `initialize.ts` - Game initialization
-- **API client** (`service/`) - REST API calls
+  - `encryption.ts` - Client-side payload encryption
+  - `measureUtils.ts` - DOM measurement helpers
+- **API client** (`service/`) - REST API calls (`puzzleService.ts`, `logService.ts`)
 
 ### Drag-and-Drop Architecture
 
 **Two implementations:**
 - **Desktop**: `Game.tsx` uses HTML5 Drag and Drop API
-- **Mobile**: `DndProvider.tsx` uses `@dnd-kit` library for touch support
+- **Mobile**: `layouts/common/DndProvider.tsx` uses `@dnd-kit` library for touch support; `layouts/common/useGameController.ts` holds shared mobile game logic
 
 **Shared pure utilities** (`src/common/utils/shapeHelpers.ts`):
 - `findFirstFilledCell()` - Find top-left filled cell in a shape
@@ -126,7 +131,10 @@ See [docs/drag-drop-guidelines.md](docs/drag-drop-guidelines.md) for full detail
   - `isValidPlacement()` - Validate piece placement
   - `puzzleSolvedForDate()` - Check if puzzle is solved
 - **Piece data** (`pieceData.ts`) - Piece shape definitions (data only)
-- **Solver** (`puzzleSolver.ts`) - Puzzle solving algorithm
+- **Solver** (`puzzleSolver.ts`) - DLX-based puzzle solving algorithm
+- **Streak logic** (`streakUtils.ts`) - Streak & history calculation
+  - `calculateStreaks(history)` - Current and max streaks
+  - `findLastUnsolvedDate(completedDates, beforeDate)` - Find most recent unsolved date
 - **Utils** (`utils/shapeHelpers.ts`) - Pure shape analysis
   - `findFirstFilledCell()` - Find top-left filled cell
   - `findNearestFilledCell()` - Snap to nearest filled cell
