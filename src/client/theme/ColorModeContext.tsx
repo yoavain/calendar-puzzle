@@ -20,7 +20,7 @@ interface ColorModeContextType {
     setMode: (mode: ThemeMode) => void;
 }
 
-const ColorModeContext = createContext<ColorModeContextType>({
+export const ColorModeContext = createContext<ColorModeContextType>({
     mode: "system",
     effectiveMode: "dark",
     toggleColorMode: () => {},
