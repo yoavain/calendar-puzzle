@@ -125,7 +125,7 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                                     const isCurrentUser = currentUser?.id === row.userId;
                                     const avatarUrl = isCurrentUser && currentUser?.avatarUrl
                                         ? currentUser.avatarUrl
-                                        : `https://api.dicebear.com/7.x/identicon/svg?seed=${row.userId}`;
+                                        : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(row.userId)}`;
 
                                     const getRankIcon = (rankIndex: number) => {
                                         if (rankIndex === 0) {
