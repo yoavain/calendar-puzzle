@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
 import { toPuzzleDate } from "../../../common/types";
+import { findLastUnsolvedDate } from "../../../common/streakUtils";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { initializeBoard, initializeGame } from "../../utils/initialize";
@@ -88,6 +89,14 @@ export function useGameController() {
     const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
     const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const [isPlayAnotherOpen, setIsPlayAnotherOpen] = useState(false);
+    const [playAnotherDate, setPlayAnotherDate] = useState<PuzzleDate | null>(null);
+    const [playAnotherMode, setPlayAnotherMode] = useState<"just-solved" | "already-solved">("already-solved");
+
+    // Refs for play-another dialog flow control
+    const justSolvedRef = useRef(false);
+    const hasShownPlayAnotherRef = useRef(false);
+    const statsAutoOpenTimeoutRef = useRef<number | null>(null);
 
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
@@ -429,10 +438,14 @@ export function useGameController() {
                        solvedDate.month === gameState.currentDate.month && 
                        solvedDate.day === gameState.currentDate.day;
         if (solved) {
+            justSolvedRef.current = true;
             setIsSuccessMessageOpen(true);
             // Automatically show stats on completion after a short delay
             if (user) {
-                setTimeout(() => setIsStatsOpen(true), 1500);
+                statsAutoOpenTimeoutRef.current = window.setTimeout(() => {
+                    statsAutoOpenTimeoutRef.current = null;
+                    setIsStatsOpen(true);
+                }, 1500);
             }
         }
 
@@ -709,6 +722,24 @@ export function useGameController() {
         e.dataTransfer.dropEffect = "move";
     }, []);
 
+    // Helper: compute and show the play-another dialog for a given solved date
+    const checkAndSuggestNextPuzzle = useCallback((solvedDate: PuzzleDate, mode: "just-solved" | "already-solved") => {
+        const suggested = findLastUnsolvedDate(
+            [...completedDates, solvedDate],
+            solvedDate
+        );
+        if (suggested) {
+            setPlayAnotherDate(suggested);
+            setPlayAnotherMode(mode);
+            setIsPlayAnotherOpen(true);
+        }
+    }, [completedDates]);
+
+    const handlePlayAnother = useCallback((date: PuzzleDate) => {
+        setIsPlayAnotherOpen(false);
+        handleDateChange(date);
+    }, [handleDateChange]);
+
     // Keyboard shortcuts handler
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
@@ -804,6 +835,32 @@ export function useGameController() {
         checkInitialHint();
     }, [user, userLoading, gameState.currentDate]); // Run when user logs in or date is set
 
+    // Trigger 1: after both success and stats dialogs are closed following a solve, show "play another" dialog
+    useEffect(() => {
+        if (!isSuccessMessageOpen && !isStatsOpen && justSolvedRef.current && user) {
+            if (statsAutoOpenTimeoutRef.current !== null) {
+                window.clearTimeout(statsAutoOpenTimeoutRef.current);
+                statsAutoOpenTimeoutRef.current = null;
+            }
+            justSolvedRef.current = false;
+            checkAndSuggestNextPuzzle(gameState.currentDate, "just-solved");
+        }
+    }, [isSuccessMessageOpen, isStatsOpen, user, checkAndSuggestNextPuzzle, gameState.currentDate]);
+
+    // Trigger 2+3: on page load or after login, suggest a puzzle if today is already solved
+    useEffect(() => {
+        if (!userLoading && user && !hasShownPlayAnotherRef.current) {
+            const today = toPuzzleDate(new Date());
+            const todayAlreadySolved = completedDates.some(
+                d => d.month === today.month && d.day === today.day
+            );
+            if (todayAlreadySolved) {
+                hasShownPlayAnotherRef.current = true;
+                checkAndSuggestNextPuzzle(today, "already-solved");
+            }
+        }
+    }, [userLoading, user, completedDates, checkAndSuggestNextPuzzle]);
+
     // Keyboard event listener
     useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);
@@ -874,6 +931,13 @@ export function useGameController() {
                 isOpen: isHelpModalOpen,
                 open: () => setIsHelpModalOpen(true),
                 close: () => setIsHelpModalOpen(false)
+            },
+            playAnother: {
+                isOpen: isPlayAnotherOpen,
+                suggestedDate: playAnotherDate,
+                mode: playAnotherMode,
+                open: () => setIsPlayAnotherOpen(true),
+                close: () => setIsPlayAnotherOpen(false)
             }
         },
 
@@ -882,6 +946,7 @@ export function useGameController() {
 
         // Game handlers
         handleDateChange,
+        handlePlayAnother,
         handleReset,
         handlePieceSelect,
         handleRotate,

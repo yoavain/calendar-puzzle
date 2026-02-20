@@ -26,6 +26,7 @@ import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { ProgressBar } from "../../components/ProgressBar";
 import { HelpModal } from "../../components/HelpModal";
+import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 
 import { useGameController } from "../common/useGameController";
 import {
@@ -221,6 +222,14 @@ export const DesktopLayout: React.FC = () => {
 
                         {/* Help Modal */}
                         <HelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
+
+                        {/* Play Another Dialog */}
+                        <PlayAnotherDialog
+                            isOpen={game.modals.playAnother.isOpen}
+                            mode={game.modals.playAnother.mode}
+                            onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate!)}
+                            onDecline={game.modals.playAnother.close}
+                        />
 
                         {/* Game Area */}
                         <Box component="main">
