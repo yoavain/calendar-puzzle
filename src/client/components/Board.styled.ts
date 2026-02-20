@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import { keyframes } from "@emotion/react";
-import { getPieceColor } from "../utils/pieceColors";
+import { getPieceColor, PIECE_CELL_GRADIENT } from "../utils/pieceColors";
 
 // Animations
 export const invalidDropShake = keyframes`
@@ -157,7 +157,7 @@ export const BoardCell = styled("div", {
         boxSizing: "border-box",
         display: "block",
         // Subtle inset gradient for depth perception on placed pieces
-        backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)",
+        backgroundImage: PIECE_CELL_GRADIENT,
         // Apply opacity for hinted pieces (30% faded) or solution revealed (15% faded)
         opacity: isLocked ? theme.game.hintedOpacity : (solutionRevealed ? theme.game.solutionRevealedOpacity : 1),
         
@@ -224,6 +224,6 @@ export const PreviewCell = styled("div")<PreviewCellProps>(({ theme, isFilled, p
     ...(isFilled && {
         backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
         // Subtle gradient for depth perception in drag preview
-        backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)"
+        backgroundImage: PIECE_CELL_GRADIENT
     })
 }));

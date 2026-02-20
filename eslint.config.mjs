@@ -398,10 +398,21 @@ export const TEST_CONFIG = {
 
 // endregion config
 
+// ------------------------------------------------------------------------------------------
+// Storybook story files — Storybook requires `export default meta`
+// ------------------------------------------------------------------------------------------
+export const STORIES_CONFIG = {
+    files: ["**/*.stories.ts", "**/*.stories.tsx"],
+    rules: {
+        "import/no-default-export": "off"
+    }
+};
+
 export default [
     IGNORE_CONFIG,
     JS_CONFIG,
     TS_CONFIG,
     REACT_CONFIG,
-    TEST_CONFIG
+    TEST_CONFIG,
+    STORIES_CONFIG
 ];

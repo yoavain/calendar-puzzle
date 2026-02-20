@@ -30,3 +30,11 @@ export const PIECE_COLORS: Record<PieceId, string> = {
  */
 export const getPieceColor = (id: number): string =>
     PIECE_COLORS[id as PieceId];
+
+/**
+ * Subtle diagonal gradient applied to filled piece cells to give a slight
+ * bevel/depth effect (lighter top-left, darker bottom-right).
+ * Used consistently across all piece rendering contexts.
+ */
+export const PIECE_CELL_GRADIENT =
+    "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)";
