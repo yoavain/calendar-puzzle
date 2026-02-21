@@ -13,7 +13,9 @@ export const getMimeType = (extension: string): string => {
         case ".html": return "text/html";
         case ".ico": return "image/x-icon";
         case ".png": return "image/png";
+        case ".svg": return "image/svg+xml";
         case ".js": return "application/javascript";
+        case ".css": return "text/css";
         case ".map": return "application/json";
         default:
             throw new Error(`Unsupported file type: ${extension}`);
@@ -51,7 +53,7 @@ export const getCachedFile = async (basePath: string, relativePath: string): Pro
         staticCache.set(normalizedPath, cachedFile);
         return cachedFile;
     }
-    catch (error) {
+    catch {
         return null;
     }
 };

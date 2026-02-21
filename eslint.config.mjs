@@ -97,36 +97,6 @@ const JS_RULES = {
     "no-eval": "error",
     "no-implied-eval": "error",
     "no-prototype-builtins": "warn",
-    "no-restricted-imports": [
-        "error",
-        {
-            "paths": [
-                {
-                    "name": "@fortawesome/pro-regular-svg-icons",
-                    "message": "Please use `import { <icon name> } from '@fortawesome/pro-regular-svg-icons/<icon name>'` instead."
-                },
-                {
-                    "name": "@fortawesome/pro-solid-svg-icons",
-                    "message": "Please use `import { <icon name> } from '@fortawesome/pro-solid-svg-icons/<icon name>'` instead."
-                },
-                {
-                    "name": "@fortawesome/pro-light-svg-icons",
-                    "message": "Please use `import { <icon name> } from '@fortawesome/pro-light-svg-icons/<icon name>'` instead."
-                },
-                {
-                    "name": "@fortawesome/free-brands-svg-icons",
-                    "message": "Please use `import { <icon name> } from '@fortawesome/free-brands-svg-icons/<icon name>'` instead."
-                }
-            ],
-            "patterns": [
-                "@sundaysky/smartvideo-hub-*/*",
-                "!@fortawesome/pro-regular-svg-icons/*",
-                "!@fortawesome/pro-solid-svg-icons/*",
-                "!@fortawesome/pro-light-svg-icons/*",
-                "!@fortawesome/free-brands-svg-icons/*"
-            ]
-        }
-    ],
     "no-await-in-loop": "warn",
     "require-atomic-updates": "warn",
     "no-promise-executor-return": "warn",

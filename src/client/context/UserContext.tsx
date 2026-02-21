@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { PuzzleDate } from "../../common/types.js";
 import { clearCsrfToken, getCsrfToken } from "../service/puzzleService";
 import { logToServer } from "../service/logService.js";
@@ -139,17 +139,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }, []);
 
+    const contextValue = useMemo(() => ({
+        user,
+        completedDates,
+        playedDates,
+        loading,
+        logout,
+        refreshUser: fetchUser,
+        addCompletedDate,
+        addPlayedDate
+    }), [user, completedDates, playedDates, loading, logout, fetchUser, addCompletedDate, addPlayedDate]);
+
     return (
-        <UserContext.Provider value={{ 
-            user, 
-            completedDates, 
-            playedDates,
-            loading, 
-            logout, 
-            refreshUser: fetchUser,
-            addCompletedDate,
-            addPlayedDate
-        }}>
+        <UserContext.Provider value={contextValue}>
             {children}
         </UserContext.Provider>
     );
