@@ -99,6 +99,9 @@ export function useGameController() {
     const hasShownPlayAnotherRef = useRef(false);
     const statsAutoOpenTimeoutRef = useRef<number | null>(null);
 
+    // Generation counter to discard stale hint responses
+    const hintLoadIdRef = useRef(0);
+
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
 
@@ -204,7 +207,11 @@ export function useGameController() {
         clearHistory(newGameState);
         
         // Load persistent hint if available
+        const thisHintLoadId = ++hintLoadIdRef.current;
         loadPersistentHint(newDate, newGameState.pieces).then(hintState => {
+            if (hintLoadIdRef.current !== thisHintLoadId) {
+                return;
+            }
             if (hintState) {
                 const stateWithHint = {
                     ...newGameState,
@@ -231,7 +238,11 @@ export function useGameController() {
         clearHistory(newGameState);
 
         // Load persistent hint if available
+        const thisHintLoadId = ++hintLoadIdRef.current;
         loadPersistentHint(currentDate, newGameState.pieces).then(hintState => {
+            if (hintLoadIdRef.current !== thisHintLoadId) {
+                return;
+            }
             if (hintState) {
                 const stateWithHint = {
                     ...newGameState,
@@ -828,7 +839,11 @@ export function useGameController() {
             const currentDate = gameState.currentDate;
             if (!userLoading && user && isBoardEmpty) {
                 try {
+                    const thisHintLoadId = ++hintLoadIdRef.current;
                     const hintState = await loadPersistentHint(currentDate, gameState.pieces);
+                    if (hintLoadIdRef.current !== thisHintLoadId) {
+                        return;
+                    }
                     if (hintState) {
                         const stateWithHint = {
                             ...gameState,
