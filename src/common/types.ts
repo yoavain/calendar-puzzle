@@ -58,6 +58,14 @@ export interface DragItem {
     cellY?: number;
 }
 
+export function isDragItem(obj: unknown): obj is DragItem {
+    return (
+        (typeof obj === "object") &&
+        (obj !== null) &&
+        (typeof (obj as DragItem).pieceId === "number")
+    );
+}
+
 export interface GameHistory {
     past: GameState[];
     present: GameState;
