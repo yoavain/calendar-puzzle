@@ -30,15 +30,32 @@ let cachedCsrfToken: string | null = null;
 let csrfTokenPromise: Promise<string | null> | null = null;
 
 /**
- * Custom fetch wrapper to handle 401s and other global concerns
+ * Custom fetch wrapper to handle 401s and other global concerns.
+ * On a 403, if the request carried a CSRF token, the cache is cleared,
+ * a fresh token is fetched, and the request is retried once.
  */
 const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
     const response = await fetch(url, options);
-    
+
     if (response.status === 401) {
         window.dispatchEvent(new CustomEvent("app:unauthorized"));
     }
-    
+
+    const headers = options.headers as Record<string, string> | undefined;
+    if (response.status === 403 && headers?.["X-CSRF-Token"]) {
+        cachedCsrfToken = null;
+        csrfTokenPromise = null;
+        const freshToken = await getCsrfToken();
+        if (freshToken) {
+            const retryHeaders = { ...headers, "X-CSRF-Token": freshToken };
+            const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+            if (retryResponse.status === 401) {
+                window.dispatchEvent(new CustomEvent("app:unauthorized"));
+            }
+            return retryResponse;
+        }
+    }
+
     return response;
 };
 
