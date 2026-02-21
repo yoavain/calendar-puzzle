@@ -373,6 +373,14 @@ export const OVERRIDES = [
                 }
             ]
         }
+    },
+    {
+        // Vite ?raw imports have query-string suffixes that eslint-plugin-barrel-files
+        // cannot resolve with readFileSync — disable the barrel check for these files.
+        files: ["**/client/**/ShareDialog.tsx"],
+        rules: {
+            "barrel-files/avoid-importing-barrel-files": "off"
+        }
     }
 ];
 

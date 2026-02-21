@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
-import { toPuzzleDate } from "../../../common/types";
+import { isDragItem, toPuzzleDate } from "../../../common/types";
 import { findLastUnsolvedDate } from "../../../common/streakUtils";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
@@ -503,8 +503,11 @@ export function useGameController() {
             if (!data) {
                 throw new Error("No data found in dataTransfer");
             }
-            const { pieceId } = JSON.parse(data) as DragItem;
-            handlePieceReturnToPile(pieceId);
+            const parsed: unknown = JSON.parse(data);
+            if (!isDragItem(parsed)) {
+                throw new Error("Invalid drag payload");
+            }
+            handlePieceReturnToPile(parsed.pieceId);
         }
         catch (err) {
             logToServer("error", "Game: Failed to handle pile drop", err, user?.name);
@@ -709,8 +712,11 @@ export function useGameController() {
             if (!data) {
                 return;
             }
-            const { pieceId } = JSON.parse(data) as DragItem;
-            handlePieceReturnToPile(pieceId);
+            const parsed: unknown = JSON.parse(data);
+            if (!isDragItem(parsed)) {
+                throw new Error("Invalid drag payload");
+            }
+            handlePieceReturnToPile(parsed.pieceId);
         }
         catch {
             // Ignore errors from non-game drag events

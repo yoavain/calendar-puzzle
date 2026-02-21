@@ -1,12 +1,13 @@
 import React, { useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
+import { isDragItem } from "../../common/types";
 import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Position } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
 import { findFirstFilledCell } from "../../common/utils/shapeHelpers";
 import { getPieceColor } from "../utils/pieceColors";
 import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
-import type { InvalidDropCell } from "../layouts/common";
+import type { InvalidDropCell } from "../layouts/common/useGameController";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
 interface BoardProps {
@@ -91,7 +92,11 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             if (!data) {
                 throw new Error("No data found in dataTransfer");
             }
-            const dragItem: DragItem = JSON.parse(data);
+            const parsed: unknown = JSON.parse(data);
+            if (!isDragItem(parsed)) {
+                throw new Error("Invalid drag payload");
+            }
+            const dragItem: DragItem = parsed;
 
             // Determine the anchor offset for computing the piece's top-left drop position.
             // Board drags include cellX/cellY; carousel drags don't, so fall back to firstFilledCell.
