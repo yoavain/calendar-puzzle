@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useColorMode } from "../theme";
+import { useColorMode } from "../theme/ColorModeContext";
 
 // Visually hidden label for accessibility
 const VisuallyHiddenLabel = styled("span")({

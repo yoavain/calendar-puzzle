@@ -10,6 +10,7 @@ import Stack from "@mui/material/Stack";
 import { keyframes, styled } from "@mui/material/styles";
 import { Board as BoardComponent } from "./Board";
 import { initializeBoard } from "../utils/initialize";
+import type { PieceId } from "../../common/pieceData";
 import { getPieceShape, PIECE_IDS } from "../../common/pieceData";
 import { getPieceColor } from "../utils/pieceColors";
 
@@ -74,7 +75,7 @@ const ScaledBoardWrapper = styled(Box)(({ theme }) => ({
 }));
 
 // Simple piece component for the animation that doesn't use complex CSS transforms
-const SimplePiece: React.FC<{ pieceId: number }> = ({ pieceId }) => {
+const SimplePiece: React.FC<{ pieceId: PieceId }> = ({ pieceId }) => {
     const shape = getPieceShape(pieceId);
     const color = getPieceColor(pieceId);
     
@@ -115,7 +116,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
     const board = useMemo(() => initializeBoard(boardDate), []);
     
     // Pick a random piece ID when the modal opens
-    const [randomPieceId, setRandomPieceId] = useState<number>(1);
+    const [randomPieceId, setRandomPieceId] = useState<PieceId>(1);
 
     useEffect(() => {
         if (open) {

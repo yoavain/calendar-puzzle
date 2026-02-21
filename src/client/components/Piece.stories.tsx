@@ -3,10 +3,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Piece } from "./Piece";
 import { PieceControls } from "./PieceControls";
 import type { Piece as PieceType } from "../../common/types";
+import type { PieceId } from "../../common/pieceData";
 import { PIECE_IDS } from "../../common/pieceData";
-import { PiecesContainer, PiecePoolWrapper } from "../layouts/desktop/DesktopLayout.styled";
+import { PiecePoolWrapper, PiecesContainer } from "../layouts/desktop/DesktopLayout.styled";
 
-const makePiece = (id: number, overrides: Partial<PieceType> = {}): PieceType => ({
+const makePiece = (id: PieceId, overrides: Partial<PieceType> = {}): PieceType => ({
     id,
     position: null,
     isFlippedH: false,

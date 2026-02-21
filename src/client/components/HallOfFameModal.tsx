@@ -103,7 +103,7 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
             <DialogContent dividers>
                 {loading ? (
                     <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                        <CircularProgress />
+                        <CircularProgress aria-label="Loading" />
                     </Box>
                 ) : (
                     <TableContainer component={Paper} elevation={0}>

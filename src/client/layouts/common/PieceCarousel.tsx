@@ -8,6 +8,7 @@ import FlipIcon from "@mui/icons-material/Flip";
 
 import { DraggablePiece } from "../../components/DraggablePiece";
 import type { Piece as PieceType } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
 import {
     CarouselContainer,
     CarouselViewport,
@@ -27,17 +28,17 @@ interface PieceCarouselProps {
     /** Array of pieces to display (unplaced pieces only) */
     pieces: PieceType[];
     /** Currently selected piece ID */
-    selectedPieceId: number | null;
+    selectedPieceId: PieceId | null;
     /** Handler when a piece is selected */
-    onPieceSelect: (pieceId: number) => void;
+    onPieceSelect: (pieceId: PieceId) => void;
     /** Handler for rotating a piece clockwise */
-    onRotatePiece: (pieceId: number) => void;
+    onRotatePiece: (pieceId: PieceId) => void;
     /** Handler for rotating a piece counter-clockwise */
-    onRotateCCWPiece: (pieceId: number) => void;
+    onRotateCCWPiece: (pieceId: PieceId) => void;
     /** Handler for flipping a piece horizontally */
-    onFlipHPiece: (pieceId: number) => void;
+    onFlipHPiece: (pieceId: PieceId) => void;
     /** Handler for flipping a piece vertically */
-    onFlipVPiece: (pieceId: number) => void;
+    onFlipVPiece: (pieceId: PieceId) => void;
     /** Scroll axis: horizontal (default) or vertical */
     axis?: "x" | "y";
     /** When provided, pieces are rendered at this scale to match the board (carousel = drag = board size). */

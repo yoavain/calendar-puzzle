@@ -16,6 +16,7 @@ import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
 import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
 import type { Position } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
 import {
     PortraitContainer,
     ContentArea,
@@ -67,12 +68,12 @@ export const PortraitLayout: React.FC = () => {
     const unplacedPieces = game.gameState.pieces.filter(piece => !piece.position);
 
     // Handle piece drop from @dnd-kit
-    const handleDndPieceDrop = useCallback((position: Position, pieceId: number) => {
+    const handleDndPieceDrop = useCallback((position: Position, pieceId: PieceId) => {
         game.handlePieceDrop(position, { pieceId });
     }, [game]);
 
     // Handle piece removal (return to carousel)
-    const handleDndPieceRemove = useCallback((pieceId: number) => {
+    const handleDndPieceRemove = useCallback((pieceId: PieceId) => {
         game.handlePieceReturnToPile(pieceId);
     }, [game]);
 
