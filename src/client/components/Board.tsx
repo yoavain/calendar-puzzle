@@ -1,12 +1,13 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
+import { isDragItem } from "../../common/types";
 import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Position } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
 import { findFirstFilledCell } from "../../common/utils/shapeHelpers";
 import { getPieceColor } from "../utils/pieceColors";
 import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
-import type { InvalidDropCell } from "../layouts/common";
+import type { InvalidDropCell } from "../layouts/common/useGameController";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
 interface BoardProps {
@@ -22,7 +23,11 @@ interface BoardProps {
     onDragEnd: () => void;
 }
 
-export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPieceDrop, invalidDropCells = [], solutionRevealed = false, isSolved = false, draggedPieceId, onDragStart, onDragEnd }) => {
+export const Board = React.memo<BoardProps>(({
+    board, pieces, onCellClick, onPieceDrop,
+    invalidDropCells = [], solutionRevealed = false, isSolved = false,
+    draggedPieceId, onDragStart, onDragEnd
+}) => {
     const theme = useTheme();
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
     // Store the anchor offset (in piece coordinates) set during handleDragStart.
@@ -91,7 +96,11 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             if (!data) {
                 throw new Error("No data found in dataTransfer");
             }
-            const dragItem: DragItem = JSON.parse(data);
+            const parsed: unknown = JSON.parse(data);
+            if (!isDragItem(parsed)) {
+                throw new Error("Invalid drag payload");
+            }
+            const dragItem: DragItem = parsed;
 
             // Determine the anchor offset for computing the piece's top-left drop position.
             // Board drags include cellX/cellY; carousel drags don't, so fall back to firstFilledCell.
@@ -121,7 +130,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
     };
 
     // Function to check if a cell is part of a placed piece
-    const getPieceAtCell = (x: number, y: number) => {
+    const getPieceAtCell = useCallback((x: number, y: number) => {
         return pieces.find(piece => {
             if (!piece.position) {
                 return false;
@@ -133,15 +142,15 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                    pieceX >= 0 && pieceX < shape[0].length &&
                    shape[pieceY][pieceX];
         });
-    };
+    }, [pieces]);
 
     // Function to check if a cell is in the invalid drop feedback zone
-    const isInvalidDropCell = (x: number, y: number) => {
+    const isInvalidDropCell = useCallback((x: number, y: number) => {
         return invalidDropCells.some(cell => cell.x === x && cell.y === y);
-    };
+    }, [invalidDropCells]);
 
     // Function to check if a cell would be occupied by the dragged piece preview
-    const isDragPreviewCell = (x: number, y: number): boolean => {
+    const isDragPreviewCell = useCallback((x: number, y: number): boolean => {
         if (dragOverCell === null || !draggedPieceId) {
             return false;
         }
@@ -158,7 +167,7 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
         return relativeY >= 0 && relativeY < shape.length &&
             relativeX >= 0 && relativeX < shape[0].length &&
             shape[relativeY][relativeX];
-    };
+    }, [dragOverCell, draggedPieceId, pieces]);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
         if (!piece.position) {
@@ -294,6 +303,8 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                         // Check if this cell is part of the drag preview
                         const isPreview = isDragPreviewCell(x, y);
 
+                        const isDraggable = !!piece && !isLocked && !isSolved;
+
                         return (
                             <BoardCell
                                 key={`${x}-${y}`}
@@ -311,14 +322,17 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={(e) => handleDragOver(e, x, y)}
                                 onDrop={(e) => handleDrop(e, { x, y })}
-                                draggable={!!piece && !isLocked && !isSolved}
+                                draggable={isDraggable}
                                 onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
-                                onDragEnd={() => handleDragEnd()}
+                                onDragEnd={handleDragEnd}
                                 data-cell-x={x}
                                 data-cell-y={y}
                                 data-piece-id={piece?.id}
                                 data-drag-over={isPreview || undefined}
                                 data-testid="board-cell"
+                                aria-hidden={isHiddenCell || undefined}
+                                aria-label={isDraggable ? `Piece ${piece!.id}` : undefined}
+                                aria-roledescription={isDraggable ? "Draggable piece" : undefined}
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>
@@ -331,4 +345,5 @@ export const Board: React.FC<BoardProps> = ({ board, pieces, onCellClick, onPiec
             ))}
         </BoardContainer>
     );
-};
+});
+Board.displayName = "Board";

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { DatePathParams, ErrorResponse, HintResponse } from "../../common/restTypes.js";
+import type { DatePathParams, ErrorResponse, HintResponse, HintStateResponse } from "../../common/restTypes.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { getHintPiece } from "../service/solverService.js";
 import { requireAuth } from "../auth/requireAuth.js";
@@ -63,7 +63,7 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
     );
 
     // GET /api/hint/:date/state - Check if a hint was used and return it
-    app.get<{ Params: DatePathParams; Reply: { piece: any } | ErrorResponse }>(
+    app.get<{ Params: DatePathParams; Reply: HintStateResponse | ErrorResponse }>(
         API_HINT_STATE,
         {
             preHandler: requireAuth,

@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LayoutRoot } from "./layouts";
+import { LayoutRoot } from "./layouts/LayoutRoot";
 import { useLayout } from "./hooks/useLayout";
-import { ThemeProvider } from "./theme";
+import { ThemeProvider } from "./theme/ColorModeContext";
 import { UserProvider } from "./context/UserContext";
 import { LandingPage } from "./pages/LandingPage";
 

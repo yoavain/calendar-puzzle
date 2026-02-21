@@ -85,5 +85,5 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
  * @param id - Piece ID (1-8)
  * @returns The boolean grid representing the piece shape
  */
-export const getPieceShape = (id: number): boolean[][] =>
-    PIECE_DATA[id as PieceId].shape;
+export const getPieceShape = (id: PieceId): boolean[][] =>
+    PIECE_DATA[id].shape;

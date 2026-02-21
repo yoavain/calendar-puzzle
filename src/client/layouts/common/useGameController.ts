@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
-import { toPuzzleDate } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
+import { isDragItem, toPuzzleDate } from "../../../common/types";
 import { findLastUnsolvedDate } from "../../../common/streakUtils";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
@@ -98,8 +99,15 @@ export function useGameController() {
     const hasShownPlayAnotherRef = useRef(false);
     const statsAutoOpenTimeoutRef = useRef<number | null>(null);
 
+    // Generation counter to discard stale hint responses
+    const hintLoadIdRef = useRef(0);
+
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
+
+    const handleDragEnd = useCallback(() => {
+        setDraggedPieceId(null);
+    }, []);
 
     // updateBoardAndPieces is now imported from common/boardOperations (pure function)
 
@@ -199,7 +207,11 @@ export function useGameController() {
         clearHistory(newGameState);
         
         // Load persistent hint if available
+        const thisHintLoadId = ++hintLoadIdRef.current;
         loadPersistentHint(newDate, newGameState.pieces).then(hintState => {
+            if (hintLoadIdRef.current !== thisHintLoadId) {
+                return;
+            }
             if (hintState) {
                 const stateWithHint = {
                     ...newGameState,
@@ -226,7 +238,11 @@ export function useGameController() {
         clearHistory(newGameState);
 
         // Load persistent hint if available
+        const thisHintLoadId = ++hintLoadIdRef.current;
         loadPersistentHint(currentDate, newGameState.pieces).then(hintState => {
+            if (hintLoadIdRef.current !== thisHintLoadId) {
+                return;
+            }
             if (hintState) {
                 const stateWithHint = {
                     ...newGameState,
@@ -242,7 +258,7 @@ export function useGameController() {
         setSolverError(null);
     }, [gameState.currentDate, clearHistory, loadPersistentHint, updatePresent, user?.name]);
 
-    const handlePieceSelect = useCallback((pieceId: number) => {
+    const handlePieceSelect = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || piece?.isLocked) {
             return;
@@ -466,7 +482,7 @@ export function useGameController() {
         });
     }, [gameState, updatePresent, updateBoardAndPieces, triggerInvalidDropFeedback, pushState, user]);
 
-    const handlePieceReturnToPile = useCallback((pieceId: number) => {
+    const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece?.position || piece.isLocked) {
             return;
@@ -503,8 +519,11 @@ export function useGameController() {
             if (!data) {
                 throw new Error("No data found in dataTransfer");
             }
-            const { pieceId } = JSON.parse(data) as DragItem;
-            handlePieceReturnToPile(pieceId);
+            const parsed: unknown = JSON.parse(data);
+            if (!isDragItem(parsed)) {
+                throw new Error("Invalid drag payload");
+            }
+            handlePieceReturnToPile(parsed.pieceId);
         }
         catch (err) {
             logToServer("error", "Game: Failed to handle pile drop", err, user?.name);
@@ -635,7 +654,7 @@ export function useGameController() {
     }, [gameState, isHintLoading, isBoardEmpty, updateBoardAndPieces, clearHistory, user?.name]);
 
     // Per-piece control handlers
-    const handleRotatePiece = useCallback((pieceId: number) => {
+    const handleRotatePiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -653,7 +672,7 @@ export function useGameController() {
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
 
-    const handleRotateCCWPiece = useCallback((pieceId: number) => {
+    const handleRotateCCWPiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -672,7 +691,7 @@ export function useGameController() {
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
 
-    const handleFlipHPiece = useCallback((pieceId: number) => {
+    const handleFlipHPiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -683,7 +702,7 @@ export function useGameController() {
         pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_H", pieceId });
     }, [gameState, pushState]);
 
-    const handleFlipVPiece = useCallback((pieceId: number) => {
+    const handleFlipVPiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -709,8 +728,11 @@ export function useGameController() {
             if (!data) {
                 return;
             }
-            const { pieceId } = JSON.parse(data) as DragItem;
-            handlePieceReturnToPile(pieceId);
+            const parsed: unknown = JSON.parse(data);
+            if (!isDragItem(parsed)) {
+                throw new Error("Invalid drag payload");
+            }
+            handlePieceReturnToPile(parsed.pieceId);
         }
         catch {
             // Ignore errors from non-game drag events
@@ -817,7 +839,11 @@ export function useGameController() {
             const currentDate = gameState.currentDate;
             if (!userLoading && user && isBoardEmpty) {
                 try {
+                    const thisHintLoadId = ++hintLoadIdRef.current;
                     const hintState = await loadPersistentHint(currentDate, gameState.pieces);
+                    if (hintLoadIdRef.current !== thisHintLoadId) {
+                        return;
+                    }
                     if (hintState) {
                         const stateWithHint = {
                             ...gameState,
@@ -943,6 +969,7 @@ export function useGameController() {
 
         // Drag state
         setDraggedPieceId,
+        handleDragEnd,
 
         // Game handlers
         handleDateChange,

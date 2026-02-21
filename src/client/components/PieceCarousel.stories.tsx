@@ -4,6 +4,7 @@ import { DndContext } from "@dnd-kit/core";
 import { PieceCarousel } from "../layouts/common/PieceCarousel";
 import { makeMockPieces } from "../storybook/mockData";
 import type { Piece } from "../../common/types";
+import type { PieceId } from "../../common/pieceData";
 import { PiecesContainer } from "../layouts/desktop/DesktopLayout.styled";
 
 // DraggablePiece uses useDndMonitor which requires a DndContext ancestor
@@ -66,7 +67,7 @@ export const TwoPieces: Story = {
 
 const DesktopWidthStory = (): React.JSX.Element => {
     const [pieces, setPieces] = useState(makeMockPieces);
-    const [selectedPieceId, setSelectedPieceId] = useState<number | null>(pieces[0]?.id ?? null);
+    const [selectedPieceId, setSelectedPieceId] = useState<PieceId | null>(pieces[0]?.id ?? null);
 
     const updatePiece = (id: number, patch: Partial<Piece>) =>
         setPieces(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
