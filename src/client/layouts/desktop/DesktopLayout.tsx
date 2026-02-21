@@ -11,6 +11,7 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import ShareIcon from "@mui/icons-material/Share";
 
 import { Board as BoardComponent } from "../../components/Board";
 import { Piece } from "../../components/Piece";
@@ -27,6 +28,7 @@ import { IssueModal } from "../../components/IssueModal";
 import { ProgressBar } from "../../components/ProgressBar";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
+import { ShareDialog } from "../../components/ShareDialog";
 
 import { useGameController } from "../common/useGameController";
 import {
@@ -56,6 +58,7 @@ export const DesktopLayout: React.FC = () => {
     // Responsive scaling logic
     const [scale, setScale] = useState(1);
     const [isBelowMinHeight, setIsBelowMinHeight] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -151,6 +154,20 @@ export const DesktopLayout: React.FC = () => {
                                         </Button>
                                     </span>
                                 </Tooltip>
+                                <Tooltip title="Share" arrow>
+                                    <span>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => setIsShareOpen(true)}
+                                            size="small"
+                                            sx={{ minWidth: 40, px: 1 }}
+                                            color="secondary"
+                                            aria-label="Share"
+                                        >
+                                            <ShareIcon />
+                                        </Button>
+                                    </span>
+                                </Tooltip>
                                 <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} />
                                 <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} />
                                 <Tooltip title="Ctrl+Z" arrow>
@@ -222,6 +239,9 @@ export const DesktopLayout: React.FC = () => {
 
                         {/* Help Modal */}
                         <HelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
+
+                        {/* Share Modal */}
+                        <ShareDialog open={isShareOpen} onClose={() => setIsShareOpen(false)} />
 
                         {/* Play Another Dialog */}
                         <PlayAnotherDialog
