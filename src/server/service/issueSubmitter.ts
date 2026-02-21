@@ -1,6 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import { config } from "../config.js";
-import type { PuzzleDate } from "../../common/types.js";
+import type { Piece, PuzzleDate } from "../../common/types.js";
 import type { SessionUser } from "../auth/passport.js";
 
 const octokit = new Octokit({
@@ -33,7 +33,7 @@ export async function submitIssue(title: string, description: string, type: Issu
 /**
  * Specifically reports an invalid solution submitted by a user
  */
-export async function submitInvalidSolutionReport(pieces: any, expectedDate: PuzzleDate, actualDate: PuzzleDate | null, user: SessionUser) {
+export async function submitInvalidSolutionReport(pieces: Piece[], expectedDate: PuzzleDate, actualDate: PuzzleDate | null, user: SessionUser) {
     const actualDateStr = actualDate 
         ? `${actualDate.month + 1}/${actualDate.day}` 
         : "None/Invalid";
