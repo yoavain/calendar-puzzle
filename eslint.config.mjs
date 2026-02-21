@@ -7,6 +7,7 @@ import n from "eslint-plugin-n";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import unicorn from "eslint-plugin-unicorn";
+import barrelFiles from "eslint-plugin-barrel-files";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
@@ -183,30 +184,6 @@ const TS_RULES = {
     "@typescript-eslint/no-floating-promises": "warn",
     "@typescript-eslint/await-thenable": "warn",
     "@typescript-eslint/no-misused-promises": "warn",
-    "@typescript-eslint/no-restricted-imports": ["error", {
-        "paths": [
-            {
-                "name": "@sundaysky/smartvideo-hub-accounts",
-                "message":  "Please use \"smartvideo-hub/server/services/accountsService\" instead."
-            },
-            {
-                "name": "@sundaysky/smartvideo-hub-cognito",
-                "message": "Please use \"@sundaysky/smartvideo-hub-auth\" instead."
-            },
-            {
-                "name": "request",
-                "message": "Please use \"got\" instead."
-            },
-            {
-                "name": "url-parse",
-                "message": "Please use native WHATWG URL API instead."
-            },
-            {
-                "name": "got",
-                "message": "Please use our \"gotWithDnsCache\" instead."
-            }
-        ]
-    }],
     "@typescript-eslint/no-unnecessary-condition": "warn",
     "n/exports-style": "off"
 };
@@ -287,7 +264,7 @@ export const JS_CONFIG = {
     settings: {
         ...SHARED_SETTINGS,
         node: {
-            allowModules: ["chai", "@sundaysky/smartvideo-hub-dal"],
+            allowModules: ["chai"],
             tryExtensions: [".ts", ".tsx", ".js", ".jsx", ".d.ts", ".json"]
         },
         import: {
@@ -366,7 +343,6 @@ export const TEST_CONFIG = {
     rules: TEST_RULES
 };
 
-// endregion config
 
 // ------------------------------------------------------------------------------------------
 // Storybook story files — Storybook requires `export default meta`
@@ -378,11 +354,36 @@ export const STORIES_CONFIG = {
     }
 };
 
+export const OVERRIDES = [
+    {
+        files: ["**/client/**/*.{ts,tsx}"],
+        plugins: {
+            "barrel-files": barrelFiles
+        },
+        rules: {
+            "barrel-files/avoid-barrel-files": "error",
+            "barrel-files/avoid-importing-barrel-files": [
+                "error",
+                {
+                    allowList: [
+                        "@mui/material",
+                        "@mui/material/styles"
+                    ],
+                    amountOfExportsToConsiderModuleAsBarrel: 10
+                }
+            ]
+        }
+    }
+];
+
+// endregion config
+
 export default [
     IGNORE_CONFIG,
     JS_CONFIG,
     TS_CONFIG,
     REACT_CONFIG,
     TEST_CONFIG,
-    STORIES_CONFIG
+    STORIES_CONFIG,
+    ...OVERRIDES
 ];

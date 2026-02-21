@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
-import { darkTheme } from "../theme";
+import { darkTheme } from "../theme/theme";
 import { StaticBoard } from "../components/landing/StaticBoard";
 import { StaticPieces } from "../components/landing/StaticPieces";
 import {
