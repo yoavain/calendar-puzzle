@@ -5,14 +5,9 @@ import { db } from "../db/connection.js";
 import { userPuzzleStats } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { config } from "../config.js";
 import { requireAuth } from "../auth/requireAuth.js";
 import { API_AUTH_CSRF_TOKEN, API_AUTH_ME, API_AUTH_PUBLIC_KEY, AUTH_GOOGLE, AUTH_GOOGLE_CALLBACK, AUTH_LOGOUT } from "../../common/restPaths.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export const registerAuthRoutes = (app: FastifyInstance): void => {
     // Initiate Google OAuth flow
