@@ -12,6 +12,7 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import ShareIcon from "@mui/icons-material/Share";
 
 import ThemeToggle from "../../components/ThemeToggle";
 import { LoginButton } from "../../components/LoginButton";
@@ -20,6 +21,7 @@ import { DatePicker } from "../../components/DatePicker";
 import { SolutionButton } from "../../components/SolutionButton";
 import { HintButton } from "../../components/HintButton";
 import { HallOfFameModal } from "../../components/HallOfFameModal";
+import { ShareDialog } from "../../components/ShareDialog";
 
 import type { GameController } from "./useGameController";
 import {
@@ -57,6 +59,7 @@ interface MobileToolbarProps {
 export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation = "horizontal" }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
 
     const openDrawer = () => setIsDrawerOpen(true);
     const closeDrawer = () => setIsDrawerOpen(false);
@@ -184,6 +187,15 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                         >
                             Report Bug
                         </DrawerButton>
+                        <DrawerButton
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<ShareIcon />}
+                            onClick={() => handleAction(() => setIsShareOpen(true))}
+                            color="secondary"
+                        >
+                            Share
+                        </DrawerButton>
                     </DrawerSection>
 
                     <Divider />
@@ -209,10 +221,13 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
             </Drawer>
 
             {/* Hall of Fame Modal */}
-            <HallOfFameModal 
-                open={isHallOfFameOpen} 
-                onClose={() => setIsHallOfFameOpen(false)} 
+            <HallOfFameModal
+                open={isHallOfFameOpen}
+                onClose={() => setIsHallOfFameOpen(false)}
             />
+
+            {/* Share Modal */}
+            <ShareDialog open={isShareOpen} onClose={() => setIsShareOpen(false)} />
         </>
     );
 };
