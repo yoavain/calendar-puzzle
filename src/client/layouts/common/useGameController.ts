@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
 import { findLastUnsolvedDate } from "../../../common/streakUtils";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
@@ -242,7 +243,7 @@ export function useGameController() {
         setSolverError(null);
     }, [gameState.currentDate, clearHistory, loadPersistentHint, updatePresent, user?.name]);
 
-    const handlePieceSelect = useCallback((pieceId: number) => {
+    const handlePieceSelect = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || piece?.isLocked) {
             return;
@@ -466,7 +467,7 @@ export function useGameController() {
         });
     }, [gameState, updatePresent, updateBoardAndPieces, triggerInvalidDropFeedback, pushState, user]);
 
-    const handlePieceReturnToPile = useCallback((pieceId: number) => {
+    const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece?.position || piece.isLocked) {
             return;
@@ -638,7 +639,7 @@ export function useGameController() {
     }, [gameState, isHintLoading, isBoardEmpty, updateBoardAndPieces, clearHistory, user?.name]);
 
     // Per-piece control handlers
-    const handleRotatePiece = useCallback((pieceId: number) => {
+    const handleRotatePiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -656,7 +657,7 @@ export function useGameController() {
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
 
-    const handleRotateCCWPiece = useCallback((pieceId: number) => {
+    const handleRotateCCWPiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -675,7 +676,7 @@ export function useGameController() {
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
 
-    const handleFlipHPiece = useCallback((pieceId: number) => {
+    const handleFlipHPiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -686,7 +687,7 @@ export function useGameController() {
         pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_H", pieceId });
     }, [gameState, pushState]);
 
-    const handleFlipVPiece = useCallback((pieceId: number) => {
+    const handleFlipVPiece = useCallback((pieceId: PieceId) => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;

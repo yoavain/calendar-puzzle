@@ -1,6 +1,7 @@
-import { saveSession, loadSession, clearSession } from "../../src/client/hooks/useGameSession";
 import type { SessionData } from "../../src/client/hooks/useGameSession";
-import type { Piece, PuzzleDate } from "../../src/common/types";
+import { clearSession, loadSession, saveSession } from "../../src/client/hooks/useGameSession";
+import type { Piece } from "../../src/common/types";
+import type { PieceId } from "../../src/common/pieceData";
 
 describe("useGameSession", () => {
     const STORAGE_KEY = "calendar-puzzle-session";
@@ -30,7 +31,7 @@ describe("useGameSession", () => {
         }
     });
 
-    const makePiece = (id: number): Piece => ({
+    const makePiece = (id: PieceId): Piece => ({
         id,
         position: null,
         rotation: 0,

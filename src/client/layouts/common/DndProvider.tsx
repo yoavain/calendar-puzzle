@@ -4,6 +4,7 @@ import type { ClientRect, DragEndEvent, DragStartEvent, Modifier } from "@dnd-ki
 import { DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useTheme } from "@mui/material/styles";
 import type { Piece as PieceType, Position } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
 import { getTransformedShape } from "../../../common/gameLogic";
 import { findNearestFilledCell } from "../../../common/utils/shapeHelpers";
 import { calculateCellFromPointer, findVisualPieceRect } from "../../utils/dragHelpers";
@@ -39,11 +40,11 @@ interface DndProviderProps {
     /** All pieces in the game */
     pieces: PieceType[];
     /** Handler when a piece is dropped on a cell */
-    onPieceDrop: (position: Position, pieceId: number) => void;
+    onPieceDrop: (position: Position, pieceId: PieceId) => void;
     /** Handler when a piece is removed from the board (dropped outside) */
-    onPieceRemove?: (pieceId: number) => void;
+    onPieceRemove?: (pieceId: PieceId) => void;
     /** Handler when drag starts */
-    onDragStart?: (pieceId: number) => void;
+    onDragStart?: (pieceId: PieceId) => void;
     /** Handler when drag ends (regardless of drop success) */
     onDragEnd?: () => void;
     /** Scale factor applied to the board (for drag preview sizing) */
@@ -202,7 +203,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
 
     const handleDragStart = useCallback((event: DragStartEvent) => {
         const { active, activatorEvent } = event;
-        const pieceId = active.data.current?.pieceId as number | undefined;
+        const pieceId = active.data.current?.pieceId as PieceId | undefined;
         
         if (pieceId !== undefined) {
             const piece = pieces.find(p => p.id === pieceId);
@@ -390,7 +391,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         const pieceData = active.data.current;
         
         if (pieceData?.type === "piece") {
-            const pieceId = pieceData.pieceId as number;
+            const pieceId = pieceData.pieceId as PieceId;
             const piece = pieceData.piece as PieceType;
             const fromBoard = pieceData.fromBoard as boolean | undefined;
             

@@ -1,3 +1,6 @@
+import { PIECE_IDS } from "./pieceData";
+import type { PieceId } from "./pieceData";
+
 export interface Position {
     x: number;
     y: number;
@@ -14,7 +17,7 @@ export const toPuzzleDate = (date: Date): PuzzleDate => {
 };
 
 export interface Piece {
-    id: number;
+    id: PieceId;
     position: Position | null; // null when not placed on board
     isFlippedH: boolean; // Horizontal flip
     isFlippedV: boolean; // Vertical flip
@@ -43,7 +46,7 @@ export type Board = BoardCell[][];
 export interface GameState {
     board: Board;
     pieces: Piece[];
-    selectedPieceId: number | null;
+    selectedPieceId: PieceId | null;
     currentDate: PuzzleDate;
     isSolved: boolean;
     isGameComplete: boolean;
@@ -51,7 +54,7 @@ export interface GameState {
 }
 
 export interface DragItem {
-    pieceId: number;
+    pieceId: PieceId;
     /** Anchor cell X offset within the piece shape (set during board drag). */
     cellX?: number;
     /** Anchor cell Y offset within the piece shape (set during board drag). */
@@ -62,7 +65,7 @@ export function isDragItem(obj: unknown): obj is DragItem {
     return (
         (typeof obj === "object") &&
         (obj !== null) &&
-        (typeof (obj as DragItem).pieceId === "number")
+        ((PIECE_IDS as readonly number[]).includes((obj as DragItem).pieceId))
     );
 }
 
@@ -74,6 +77,6 @@ export interface GameHistory {
 
 export interface GameStateAction {
     type: "PLACE_PIECE" | "REMOVE_PIECE" | "ROTATE_PIECE" | "FLIP_PIECE_H" | "FLIP_PIECE_V" | "SELECT_PIECE" | "SOLVE_PUZZLE";
-    pieceId: number;
+    pieceId: PieceId;
     position?: Position;
 }
