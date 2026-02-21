@@ -303,6 +303,8 @@ export const Board = React.memo<BoardProps>(({
                         // Check if this cell is part of the drag preview
                         const isPreview = isDragPreviewCell(x, y);
 
+                        const isDraggable = !!piece && !isLocked && !isSolved;
+
                         return (
                             <BoardCell
                                 key={`${x}-${y}`}
@@ -320,7 +322,7 @@ export const Board = React.memo<BoardProps>(({
                                 onClick={() => onCellClick({ x, y })}
                                 onDragOver={(e) => handleDragOver(e, x, y)}
                                 onDrop={(e) => handleDrop(e, { x, y })}
-                                draggable={!!piece && !isLocked && !isSolved}
+                                draggable={isDraggable}
                                 onDragStart={(e) => piece && !isLocked && !isSolved && handleDragStart(e, piece)}
                                 onDragEnd={handleDragEnd}
                                 data-cell-x={x}
@@ -328,6 +330,9 @@ export const Board = React.memo<BoardProps>(({
                                 data-piece-id={piece?.id}
                                 data-drag-over={isPreview || undefined}
                                 data-testid="board-cell"
+                                aria-hidden={isHiddenCell || undefined}
+                                aria-label={isDraggable ? `Piece ${piece!.id}` : undefined}
+                                aria-roledescription={isDraggable ? "Draggable piece" : undefined}
                             >
                                 {!piece && isStyledCell && cell.content && (
                                     <StyledCellText>{cell.content.toUpperCase()}</StyledCellText>
