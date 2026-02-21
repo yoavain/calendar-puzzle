@@ -16,6 +16,7 @@ import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
 import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
 import type { Position } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
 import {
     LandscapeContainer,
     ToolbarColumn,
@@ -67,11 +68,11 @@ export const LandscapeLayout: React.FC = () => {
 
     const unplacedPieces = game.gameState.pieces.filter(piece => !piece.position);
 
-    const handleDndPieceDrop = useCallback((position: Position, pieceId: number) => {
+    const handleDndPieceDrop = useCallback((position: Position, pieceId: PieceId) => {
         game.handlePieceDrop(position, { pieceId });
     }, [game]);
 
-    const handleDndPieceRemove = useCallback((pieceId: number) => {
+    const handleDndPieceRemove = useCallback((pieceId: PieceId) => {
         game.handlePieceReturnToPile(pieceId);
     }, [game]);
 
