@@ -6,7 +6,7 @@ import { findFirstFilledCell } from "../../common/utils/shapeHelpers";
 import { getPieceColor } from "../utils/pieceColors";
 import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
-import type { InvalidDropCell } from "./Game";
+import type { InvalidDropCell } from "../layouts/common";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
 
 interface BoardProps {

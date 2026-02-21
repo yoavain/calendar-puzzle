@@ -11,6 +11,7 @@ const config: Config.InitialOptions = {
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     verbose: true,
     collectCoverage: true,
+    collectCoverageFrom: ["src/**/*.{ts,tsx}", "!src/**/*.stories.{ts,tsx}"],
     coverageDirectory: "coverage",
     coverageReporters: [
         "text",
@@ -18,7 +19,12 @@ const config: Config.InitialOptions = {
         "json",
         "lcov",
         "clover"
-    ]
+    ],
+    coverageThreshold: {
+        global: {
+            lines: 30
+        }
+    }
 };
 
 export default config; 

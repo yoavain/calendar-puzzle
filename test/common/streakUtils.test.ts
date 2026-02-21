@@ -37,7 +37,6 @@ describe("streakUtils", () => {
                 { month: 0, day: 2 }
             ];
             const result = calculateStreaks(history);
-            // EXPECTED: 4 (currently fails because it doesn't wrap)
             expect(result.max).toBe(4);
         });
 
@@ -47,7 +46,6 @@ describe("streakUtils", () => {
                 { month: 2, day: 1 }
             ];
             const result = calculateStreaks(history);
-            // EXPECTED: 2 (currently fails because Feb 29 is day 60, Mar 1 is 61)
             expect(result.max).toBe(2);
         });
 
@@ -115,7 +113,6 @@ describe("streakUtils", () => {
                 { month: 11, day: 30 }
             ];
             const result = calculateStreaks(history);
-            // EXPECTED: 4 (currently fails due to no wrap-around)
             expect(result.current).toBe(4);
             // Reset to Jan 23 for other tests
             jest.setSystemTime(new Date(2026, 0, 23));

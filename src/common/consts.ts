@@ -18,3 +18,5 @@ export const DAYS_LAYOUT = [
 
 /** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
 export const TOTAL_PLAYABLE_CELLS = 41;
+
+export const SHARE_URL = "https://calendar-puzzle.yoavain.org";
