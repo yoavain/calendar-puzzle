@@ -263,7 +263,7 @@ export const DesktopLayout: React.FC = () => {
                                 isSolved={game.gameState.isSolved}
                                 draggedPieceId={game.draggedPieceId}
                                 onDragStart={game.setDraggedPieceId}
-                                onDragEnd={() => game.setDraggedPieceId(null)}
+                                onDragEnd={game.handleDragEnd}
                             />
                             <PiecesContainer
                                 onDragOver={game.handlePileDropZoneDragOver}
@@ -278,7 +278,7 @@ export const DesktopLayout: React.FC = () => {
                                                 isSelected={piece.id === game.gameState.selectedPieceId}
                                                 onClick={() => game.handlePieceSelect(piece.id)}
                                                 onDragStart={game.setDraggedPieceId}
-                                                onDragEnd={() => game.setDraggedPieceId(null)}
+                                                onDragEnd={game.handleDragEnd}
                                             />
                                             <PieceControls
                                                 piece={piece}

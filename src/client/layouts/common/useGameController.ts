@@ -102,6 +102,10 @@ export function useGameController() {
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
 
+    const handleDragEnd = useCallback(() => {
+        setDraggedPieceId(null);
+    }, []);
+
     // updateBoardAndPieces is now imported from common/boardOperations (pure function)
 
     // Helper to load persistent hint from server
@@ -950,6 +954,7 @@ export function useGameController() {
 
         // Drag state
         setDraggedPieceId,
+        handleDragEnd,
 
         // Game handlers
         handleDateChange,
