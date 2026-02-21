@@ -5,18 +5,18 @@ import path from "node:path";
 
 const nodeModulesRe: RegExp = /node_modules\/(@[^/]+\/[^/]+|[^/]+)/;
 
-const vendorPackages: Set<string> = new Set<string>([
-    "react",
-    "react-dom",
-    "react-router-dom",
-    "embla-carousel-react",
-    "@mui/material",
-    "@mui/icons-material",
-    "@emotion/react",
-    "@emotion/styled",
-    "@dnd-kit/core",
-    "@dnd-kit/utilities"
-]);
+const vendorPackagesChunk: Record<string, string> = {
+    "react": "react",
+    "react-dom": "react",
+    "react-router-dom": "react",
+    "embla-carousel-react": "vendor",
+    "@mui/material": "vendor",
+    "@mui/icons-material": "vendor",
+    "@emotion/react": "vendor",
+    "@emotion/styled": "vendor",
+    "@dnd-kit/core": "vendor",
+    "@dnd-kit/utilities": "vendor"
+};
 
 export default defineConfig({
     plugins: [
@@ -30,14 +30,14 @@ export default defineConfig({
         outDir: "../build",
         emptyOutDir: true,
         sourcemap: true,
-        chunkSizeWarningLimit: 600,
+        chunkSizeWarningLimit: 500,
         rollupOptions: {
             output: {
                 manualChunks(id) {
                     // Extract package name from node_modules path, handling scoped packages (@scope/name)
                     const match = id.match(nodeModulesRe);
-                    if (match && vendorPackages.has(match[1])) {
-                        return "vendor";
+                    if (match) {
+                        return vendorPackagesChunk[match[1]];
                     }
                 }
             }
