@@ -3,6 +3,9 @@ import IconButton from "@mui/material/IconButton";
 import Drawer from "@mui/material/Drawer";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import UndoIcon from "@mui/icons-material/Undo";
@@ -13,6 +16,8 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ShareIcon from "@mui/icons-material/Share";
+import DeveloperModeIcon from "@mui/icons-material/DeveloperMode";
+import { debugLogger } from "../../utils/debugLogger";
 
 import ThemeToggle from "../../components/ThemeToggle";
 import { LoginButton } from "../../components/LoginButton";
@@ -60,6 +65,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
+    const [debugEnabled, setDebugEnabled] = useState(debugLogger.isEnabled());
 
     const openDrawer = () => setIsDrawerOpen(true);
     const closeDrawer = () => setIsDrawerOpen(false);
@@ -217,6 +223,34 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             sx={drawerButtonSx}
                         />
                     </DrawerSection>
+
+                    {/* Dev Tools Section — admin only */}
+                    {game.user?.isAdmin && (
+                        <>
+                            <Divider />
+                            <DrawerSection>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={debugEnabled}
+                                            onChange={(_, checked) => {
+                                                debugLogger.setEnabled(checked);
+                                                setDebugEnabled(checked);
+                                            }}
+                                            size="small"
+                                        />
+                                    }
+                                    label={
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <DeveloperModeIcon fontSize="small" />
+                                            Debug Logging
+                                        </Box>
+                                    }
+                                    sx={{ pl: 2 }}
+                                />
+                            </DrawerSection>
+                        </>
+                    )}
                 </DrawerContent>
             </Drawer>
 

@@ -9,6 +9,7 @@ import { getTransformedShape } from "../../../common/gameLogic";
 import { findNearestFilledCell } from "../../../common/utils/shapeHelpers";
 import { calculateCellFromPointer, findVisualPieceRect } from "../../utils/dragHelpers";
 import { PieceDragPreview } from "../../components/PieceDragPreview";
+import { debugLogger } from "../../utils/debugLogger";
 
 /**
  * Context for sharing drag state with board components.
@@ -88,6 +89,8 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     const cellOffsetRef = useRef<{ x: number; y: number } | null>(null);
     // Store the board grid origin at drag start for snapping overlay to board grid
     const boardGridOriginRef = useRef<{ left: number; top: number; gridOriginX: number; gridOriginY: number } | null>(null);
+    // Counter for throttling onDragMove logs (log every 10th move)
+    const dragMoveCountRef = useRef(0);
 
     // Track pointer position globally during drag using event listeners
     // Also calculate hover position for board preview
@@ -99,7 +102,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
 
         const updatePosition = (clientX: number, clientY: number) => {
             lastPointerPositionRef.current = { x: clientX, y: clientY };
-            
+
             // Calculate hover cell position for board preview
             const boardElement = boardElementRef.current;
             if (boardElement) {
@@ -116,18 +119,22 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                     theme.game.cellSize,
                     gridOriginForHover
                 );
-                
+
                 if (cellPosition) {
                     // Use the pre-computed cellOffset from handleDragStart
                     // (which accounts for the piece's own DOM dimensions,
                     //  not the board's scaled cell size).
                     const cellOffset = cellOffsetRef.current ?? { x: 0, y: 0 };
-                    
+
                     const piecePosition: Position = {
                         x: cellPosition.x - cellOffset.x,
                         y: cellPosition.y - cellOffset.y
                     };
                     setHoverPosition(piecePosition);
+                    dragMoveCountRef.current++;
+                    if (dragMoveCountRef.current % 10 === 0) {
+                        debugLogger.log("dnd:dragMove", { hoverPosition: piecePosition, pointer: { x: clientX, y: clientY } });
+                    }
                 }
                 else {
                     setHoverPosition(null);
@@ -381,6 +388,15 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                     boardGridOriginRef.current = null;
                 }
 
+                dragMoveCountRef.current = 0;
+                debugLogger.log("dnd:dragStart", {
+                    pieceId,
+                    isFromBoard: fromBoard,
+                    pointerPos: lastPointerPositionRef.current,
+                    cellOffset: cellOffsetRef.current,
+                    boardGridOrigin: boardGridOriginRef.current
+                });
+
                 onDragStart?.(pieceId);
             }
         }
@@ -445,6 +461,15 @@ export const DndProvider: React.FC<DndProviderProps> = ({
             }
         }
         
+        debugLogger.log("dnd:dragEnd", {
+            pieceId: pieceData?.pieceId,
+            dropType: over
+                ? (over.data.current?.type === "board" ? "board" : "pile")
+                : "cancel",
+            dropPosition: hoverPosition,
+            fromBoard: pieceData?.fromBoard
+        });
+
         setActivePiece(null);
         setIsDragging(false);
         setHoverPosition(null);
@@ -457,6 +482,7 @@ export const DndProvider: React.FC<DndProviderProps> = ({
     }, [onPieceDrop, onPieceRemove, onDragEnd, hoverPosition, boardScale, theme.game.cellSize]);
 
     const handleDragCancel = useCallback(() => {
+        debugLogger.log("dnd:dragCancel", { pieceId: activePiece?.id });
         setActivePiece(null);
         setIsDragging(false);
         setHoverPosition(null);

@@ -6,6 +6,9 @@ import { useLayout } from "./hooks/useLayout";
 import { ThemeProvider } from "./theme/ColorModeContext";
 import { UserProvider } from "./context/UserContext";
 import { LandingPage } from "./pages/LandingPage";
+import { debugLogger } from "./utils/debugLogger";
+
+debugLogger.init();
 
 const root = ReactDOM.createRoot(
     document.getElementById("root") as HTMLElement

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import type { Board, GameState, GameStateAction } from "../../common/types";
+import { debugLogger } from "../utils/debugLogger";
 
 const MAX_HISTORY = 50; // Maximum number of undo steps
 
@@ -25,6 +26,7 @@ export const useGameHistory = (initialState: GameState) => {
     });
 
     const pushState = useCallback((newState: GameState, action: GameStateAction) => {
+        debugLogger.log("history:pushState", { action, state: newState });
         setHistory(prev => ({
             past: [...prev.past, cloneGameState(prev.present)],
             present: cloneGameState(newState),
@@ -33,6 +35,7 @@ export const useGameHistory = (initialState: GameState) => {
     }, []);
 
     const updatePresent = useCallback((newState: GameState) => {
+        debugLogger.log("history:updatePresent", { state: newState });
         setHistory(prev => ({
             ...prev,
             present: cloneGameState(newState)
@@ -40,6 +43,7 @@ export const useGameHistory = (initialState: GameState) => {
     }, []);
 
     const undo = useCallback(() => {
+        debugLogger.log("history:undo", {});
         setHistory(prev => {
             if (prev.past.length === 0) {
                 return prev;
@@ -48,6 +52,7 @@ export const useGameHistory = (initialState: GameState) => {
             const previous = prev.past[prev.past.length - 1];
             const newPast = prev.past.slice(0, -1);
 
+            debugLogger.log("history:undo:result", { state: previous });
             return {
                 past: newPast,
                 present: cloneGameState(previous),
@@ -57,6 +62,7 @@ export const useGameHistory = (initialState: GameState) => {
     }, []);
 
     const redo = useCallback(() => {
+        debugLogger.log("history:redo", {});
         setHistory(prev => {
             if (prev.future.length === 0) {
                 return prev;
@@ -65,6 +71,7 @@ export const useGameHistory = (initialState: GameState) => {
             const next = prev.future[0];
             const newFuture = prev.future.slice(1);
 
+            debugLogger.log("history:redo:result", { state: next });
             return {
                 past: [...prev.past, cloneGameState(prev.present)],
                 present: cloneGameState(next),
