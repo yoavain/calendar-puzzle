@@ -14,6 +14,7 @@ import { BetaBanner } from "../common/BetaBanner";
 import { MobileToolbar } from "../common/MobileToolbar";
 import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
+import { DebugPanel } from "../../components/DebugPanel";
 import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
 import type { Position } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
@@ -158,6 +159,7 @@ export const LandscapeLayout: React.FC = () => {
                     onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate!)}
                     onDecline={game.modals.playAnother.close}
                 />
+                <DebugPanel />
             </LandscapeContainer>
         </DndProvider>
     );

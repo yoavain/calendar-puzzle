@@ -11,6 +11,7 @@ import { getHint, getHintState, getSolution, recordCompletion, recordStart } fro
 import { clearSession, loadSession, saveSession } from "../../hooks/useGameSession";
 import { logToServer } from "../../service/logService";
 import { useUser } from "../../context/UserContext";
+import { debugLogger } from "../../utils/debugLogger";
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {
@@ -229,6 +230,7 @@ export function useGameController() {
     }, [clearHistory, loadPersistentHint, updatePresent, user?.name]);
 
     const handleReset = useCallback(async () => {
+        debugLogger.log("ctrl:handleReset", { date: gameState.currentDate });
         const currentDate = gameState.currentDate;
         const jsDate = new Date(2024, currentDate.month, currentDate.day);
         const newGameState = initializeGame(jsDate);
@@ -259,6 +261,7 @@ export function useGameController() {
     }, [gameState.currentDate, clearHistory, loadPersistentHint, updatePresent, user?.name]);
 
     const handlePieceSelect = useCallback((pieceId: PieceId) => {
+        debugLogger.log("ctrl:handlePieceSelect", { pieceId });
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || piece?.isLocked) {
             return;
@@ -416,6 +419,7 @@ export function useGameController() {
 
     const handlePieceDrop = useCallback((position: Position, dragItem: DragItem) => {
         const { pieceId } = dragItem;
+        debugLogger.log("ctrl:handlePieceDrop", { pieceId, position });
         if (gameState.isSolved) {
             return;
         }
@@ -483,6 +487,7 @@ export function useGameController() {
     }, [gameState, updatePresent, updateBoardAndPieces, triggerInvalidDropFeedback, pushState, user]);
 
     const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
+        debugLogger.log("ctrl:handlePieceReturnToPile", { pieceId });
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece?.position || piece.isLocked) {
             return;
@@ -531,6 +536,7 @@ export function useGameController() {
     }, [handlePieceReturnToPile, user?.name]);
 
     const handleSolve = useCallback(async () => {
+        debugLogger.log("ctrl:handleSolve", { date: gameState.currentDate });
         if (gameState.isSolved || isLoading) {
             return;
         }
@@ -597,6 +603,7 @@ export function useGameController() {
     }, [gameState, isLoading, clearHistory, user?.name]);
 
     const handleHint = useCallback(async () => {
+        debugLogger.log("ctrl:handleHint", { date: gameState.currentDate });
         if (gameState.isSolved || isHintLoading || !isBoardEmpty) {
             return;
         }
