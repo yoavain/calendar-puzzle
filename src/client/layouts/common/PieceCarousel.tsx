@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
+import type { EmblaCarouselType } from "embla-carousel";
 import { useTheme } from "@mui/material/styles";
+import { debugLogger } from "../../utils/debugLogger";
 import IconButton from "@mui/material/IconButton";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -23,6 +25,43 @@ import {
 
 /** Minimum number of slides embla-carousel needs for loop mode to work properly. */
 const MIN_SLIDES_FOR_LOOP = 3;
+
+/**
+ * Embla `watchDrag` callback: yields touch gestures on the active carousel slide's
+ * piece to dnd-kit, while still letting Embla handle swipes on adjacent slides and
+ * the carousel background.
+ *
+ * **Why this exists:**
+ * When the piece pile transitions from 1 → 2+ items (crossing the `singlePiece`
+ * boundary), Embla reinitialises with `loop: true` and `watchDrag: true`. After
+ * that reInit, Embla's non-passive `touchmove` listener fires and calls
+ * `evt.preventDefault()` on the first move, preventing dnd-kit's TouchSensor from
+ * completing the gesture (dragStart fires but 0 move events → cancel).
+ *
+ * By returning `false` for touches on the active piece, we stop Embla from adding
+ * its non-passive `touchmove` handler for that touch sequence, letting dnd-kit
+ * drive the drag unobstructed.
+ *
+ * **Stability:** defined at module scope so its `toString()` never changes between
+ * renders. Embla's `areOptionsEqual` uses `${fn} === ${fn}` (string comparison) to
+ * decide whether to reInit — a stable function reference prevents spurious reinits.
+ */
+function watchDragYieldToActivePiece(_emblaApi: EmblaCarouselType, evt: MouseEvent | TouchEvent): boolean {
+    const target = evt.target as Element | null;
+    if (!target) {
+        return true;
+    }
+    // Find the dnd-kit draggable wrapper (DraggablePiece renders <div data-piece-id=...>)
+    const pieceEl = target.closest("[data-piece-id]");
+    if (!pieceEl) {
+        // Touch on carousel background or control buttons — let Embla handle
+        return true;
+    }
+    // Touch is on a piece. Let Embla handle ONLY if this is an adjacent (non-active)
+    // slide so the user can swipe to navigate. For the active slide, yield to dnd-kit.
+    // CarouselSlide renders with aria-selected="true" on the active slide.
+    return !pieceEl.closest("[aria-selected='true']");
+}
 
 interface PieceCarouselProps {
     /** Array of pieces to display (unplaced pieces only) */
@@ -132,7 +171,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         containScroll: false,
         dragFree: false,
         skipSnaps: false,
-        watchDrag: !singlePiece
+        watchDrag: singlePiece ? false : watchDragYieldToActivePiece
     });
 
     const [activeIndex, setActiveIndex] = useState(0);
@@ -143,6 +182,8 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
     // Track previous pieces count to detect reset
     const prevPiecesCountRef = useRef(pieces.length);
+    // Track previous singlePiece state to detect the false→true→false boundary
+    const prevSinglePieceRef = useRef(singlePiece);
     // Flag to prevent feedback loop when we're scrolling programmatically
     const isScrollingRef = useRef(false);
 
@@ -164,6 +205,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
         // Select the piece when it becomes active (only for user-initiated scrolls)
         const slide = slides[index];
+        debugLogger.log("carousel:onSelect", { slideIndex: index, realPieceId: slide?.piece.id });
         if (slide && slide.piece.id !== selectedPieceId) {
             onPieceSelect(slide.piece.id);
         }
@@ -191,7 +233,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         };
     }, [emblaApi, onSelect, updateSlidesInView]);
 
-    // Handle pieces array changes (e.g., reset adds all pieces back)
+    // Handle pieces array changes (e.g., reset adds all pieces back, or singlePiece boundary crossed)
     useEffect(() => {
         if (!emblaApi) {
             return;
@@ -199,22 +241,40 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
         const prevCount = prevPiecesCountRef.current;
         const currentCount = pieces.length;
+        const prevSinglePiece = prevSinglePieceRef.current;
+        const currentSinglePiece = currentCount <= 1;
+
         prevPiecesCountRef.current = currentCount;
+        prevSinglePieceRef.current = currentSinglePiece;
 
         // If pieces count increased significantly (like a reset), reinitialize
         if (currentCount > prevCount + 1) {
-            // Reset to first slide after reInit
+            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "count-jump" });
             emblaApi.reInit();
-            // Use setTimeout to ensure reInit is complete before scrolling
             setTimeout(() => {
                 isScrollingRef.current = true;
-                emblaApi.scrollTo(0, true); // Jump instantly, no animation
+                emblaApi.scrollTo(0, true);
                 setActiveIndex(0);
                 if (pieces[0]) {
                     onPieceSelect(pieces[0].id);
                 }
                 isScrollingRef.current = false;
             }, 0);
+        }
+        // When transitioning out of single-piece mode, useEmblaCarousel has already
+        // triggered a reInit internally (loop/watchDrag options changed). That first
+        // reInit happens before dnd-kit's useDraggable effects run, which can leave
+        // Embla's touch-event listeners in a state that prevents dnd-kit from
+        // detecting drags. A second explicit reInit here — which runs after all
+        // React effects (including useDraggable) have settled — re-establishes
+        // Embla's listeners at the right point in time.
+        //
+        // No scrollTo(0): the carousel should stay on whatever piece just returned
+        // to the pile. Embla's own "reInit" event fires onSelect, which handles
+        // the active-slide update without forcing an unwanted swipe.
+        else if (prevSinglePiece && !currentSinglePiece) {
+            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "single-to-multi" });
+            emblaApi.reInit();
         }
     }, [emblaApi, pieces, onPieceSelect]);
 

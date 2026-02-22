@@ -46,7 +46,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                 open={open}
                 onClose={onClose}
                 PaperProps={{
-                    sx: { borderRadius: 2 }
+                    sx: { borderRadius: 2, minWidth: 420 }
                 }}
             >
                 <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
@@ -65,9 +65,9 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                     </IconButton>
                 </DialogTitle>
                 <DialogContent>
-                    <Stack direction="row" spacing={4} justifyContent="center" sx={{ mt: 1 }}>
+                    <Stack direction="row" sx={{ mt: 1 }}>
                         {/* Copy Link */}
-                        <Stack alignItems="center" spacing={1}>
+                        <Stack alignItems="center" spacing={1} sx={{ flex: 1 }}>
                             <Button
                                 variant="outlined"
                                 onClick={handleCopy}
@@ -75,13 +75,13 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                             >
                                 {copied ? "Copied!" : "Copy Link"}
                             </Button>
-                            <Typography variant="caption" sx={{ color: "text.secondary", wordBreak: "break-all", maxWidth: 160, textAlign: "center" }}>
+                            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "bold", whiteSpace: "nowrap", textAlign: "center" }}>
                                 {SHARE_URL}
                             </Typography>
                         </Stack>
 
                         {/* QR Code */}
-                        <Stack alignItems="center" spacing={1}>
+                        <Stack alignItems="center" spacing={1} sx={{ flex: 1 }}>
                             <Tooltip title="Click to enlarge" arrow>
                                 <Box
                                     component="img"
