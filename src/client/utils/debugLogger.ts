@@ -1,7 +1,8 @@
 /**
  * Client-side circular-buffer debug logger.
  *
- * Only active when `?debug=1` is present in the URL.
+ * Only active when enabled via the admin "Debug Logging" toggle in the hamburger menu.
+ * State is persisted to localStorage and survives page reloads.
  * Zero cost in normal usage — all methods are no-ops unless enabled.
  *
  * Usage:
@@ -11,6 +12,7 @@
  */
 
 const MAX_ENTRIES = 2000;
+const STORAGE_KEY = "puzzle:debugEnabled";
 
 interface LogEntry {
     ts: number;
@@ -23,8 +25,18 @@ let enabled = false;
 
 export const debugLogger = {
     init: (): void => {
-        enabled = new URLSearchParams(location.search).has("debug");
+        enabled = localStorage.getItem(STORAGE_KEY) === "true";
         if (enabled) {
+            // eslint-disable-next-line no-console
+            console.info("[DebugLogger] enabled — buffer size:", MAX_ENTRIES);
+        }
+    },
+
+    setEnabled: (value: boolean): void => {
+        enabled = value;
+        localStorage.setItem(STORAGE_KEY, String(value));
+        window.dispatchEvent(new Event("debug:mode-changed"));
+        if (value) {
             // eslint-disable-next-line no-console
             console.info("[DebugLogger] enabled — buffer size:", MAX_ENTRIES);
         }

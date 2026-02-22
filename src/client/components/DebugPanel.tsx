@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { debugLogger } from "../utils/debugLogger";
+import { useUser } from "../context/UserContext";
 
 /**
- * Floating debug panel — only renders when ?debug=1 is in the URL.
+ * Floating debug panel — admin-only, visible when debug logging is enabled.
  *
  * Provides:
  * - Live entry count
@@ -10,20 +11,29 @@ import { debugLogger } from "../utils/debugLogger";
  * - "Clear" button to reset the buffer
  */
 export const DebugPanel: React.FC = () => {
+    const { user } = useUser();
+    const [enabled, setEnabled] = useState(debugLogger.isEnabled());
     const [count, setCount] = useState(0);
+
+    // React to enable/disable events from the admin toggle
+    useEffect(() => {
+        const handler = () => setEnabled(debugLogger.isEnabled());
+        window.addEventListener("debug:mode-changed", handler);
+        return () => window.removeEventListener("debug:mode-changed", handler);
+    }, []);
 
     // Refresh count every second so the display stays current
     useEffect(() => {
-        if (!debugLogger.isEnabled()) {
+        if (!enabled) {
             return;
         }
         const id = window.setInterval(() => {
             setCount(debugLogger.count());
         }, 1000);
         return () => window.clearInterval(id);
-    }, []);
+    }, [enabled]);
 
-    if (!debugLogger.isEnabled()) {
+    if (!user?.isAdmin || !enabled) {
         return null;
     }
 
