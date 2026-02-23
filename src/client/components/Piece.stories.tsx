@@ -27,40 +27,36 @@ type Story = StoryObj<typeof Piece>;
 
 // One story per piece ID
 export const Piece1: Story = {
-    render: () => <Piece piece={makePiece(1)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(1)} onClick={() => {}} />
 };
 export const Piece2: Story = {
-    render: () => <Piece piece={makePiece(2)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(2)} onClick={() => {}} />
 };
 export const Piece3: Story = {
-    render: () => <Piece piece={makePiece(3)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(3)} onClick={() => {}} />
 };
 export const Piece4: Story = {
-    render: () => <Piece piece={makePiece(4)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(4)} onClick={() => {}} />
 };
 export const Piece5: Story = {
-    render: () => <Piece piece={makePiece(5)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(5)} onClick={() => {}} />
 };
 export const Piece6: Story = {
-    render: () => <Piece piece={makePiece(6)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(6)} onClick={() => {}} />
 };
 export const Piece7: Story = {
-    render: () => <Piece piece={makePiece(7)} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(7)} onClick={() => {}} />
 };
 export const Piece8: Story = {
-    render: () => <Piece piece={makePiece(8)} isSelected={false} onClick={() => {}} />
-};
-
-export const Selected: Story = {
-    render: () => <Piece piece={makePiece(1)} isSelected={true} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(8)} onClick={() => {}} />
 };
 
 export const Rotated90: Story = {
-    render: () => <Piece piece={makePiece(1, { rotation: 90 })} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(1, { rotation: 90 })} onClick={() => {}} />
 };
 
 export const FlippedH: Story = {
-    render: () => <Piece piece={makePiece(1, { isFlippedH: true })} isSelected={false} onClick={() => {}} />
+    render: () => <Piece piece={makePiece(1, { isFlippedH: true })} onClick={() => {}} />
 };
 
 /** All 8 pieces in the game's 4×2 grid layout */
@@ -70,7 +66,7 @@ export const AllPieces: Story = {
         <PiecesContainer>
             {PIECE_IDS.map(id => (
                 <PiecePoolWrapper key={id}>
-                    <Piece piece={makePiece(id)} isSelected={false} onClick={() => {}} />
+                    <Piece piece={makePiece(id)} onClick={() => {}} />
                 </PiecePoolWrapper>
             ))}
         </PiecesContainer>
@@ -96,7 +92,7 @@ const AllPiecesWithControlsStory = (): React.JSX.Element => {
                 const piece: PieceType = { id, position: null, ...t };
                 return (
                     <PiecePoolWrapper key={id}>
-                        <Piece piece={piece} isSelected={false} onClick={() => {}} />
+                        <Piece piece={piece} onClick={() => {}} />
                         <PieceControls
                             piece={piece}
                             onRotate={() => update(id, { rotation: ((t.rotation + 90) % 360) as PieceTransform["rotation"] })}
