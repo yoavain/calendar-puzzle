@@ -15,28 +15,15 @@ export const pieceDropIn = keyframes`
     }
 `;
 
-export const selectionPulse = keyframes`
-    0% {
-        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.5);
-    }
-    50% {
-        box-shadow: 0 0 0 8px rgba(0, 123, 255, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
-    }
-`;
-
 // Piece wrapper props
 export interface PieceWrapperProps {
-    isSelected?: boolean;
     isPlaced?: boolean;
 }
 
 // Piece wrapper (the outer container for a piece in the pool)
 export const PieceWrapper = styled(Box, {
-    shouldForwardProp: (prop) => prop !== "isSelected" && prop !== "isPlaced"
-})<PieceWrapperProps>(({ theme, isSelected, isPlaced }) => ({
+    shouldForwardProp: (prop) => prop !== "isPlaced"
+})<PieceWrapperProps>(({ theme, isPlaced }) => ({
     cursor: isPlaced ? "move" : "grab",
     border: "none",
     margin: 0,
@@ -49,21 +36,6 @@ export const PieceWrapper = styled(Box, {
     height: isPlaced ? "auto" : `calc(100% - ${theme.game.cellSizePx})`,
     minHeight: isPlaced ? "auto" : `calc(${theme.game.cellSizePx} * 4)`,
     borderRadius: 4,
-
-    // Selected state
-    ...(isSelected && !isPlaced && {
-        outline: `${theme.game.pieceBorderWidth}px solid ${theme.palette.primary.main}`,
-        outlineOffset: 1,
-        boxShadow: `0 0 0 3px ${theme.palette.primary.main}, 0 2px 8px rgba(0,0,0,0.16)`,
-        animation: `${selectionPulse} 0.5s ease-out`
-    }),
-
-    // Selected and placed state
-    ...(isSelected && isPlaced && {
-        outline: `${theme.game.pieceBorderWidth}px solid ${theme.palette.success.main}`,
-        outlineOffset: 1,
-        border: "none"
-    }),
 
     // Placed state
     ...(isPlaced && {
