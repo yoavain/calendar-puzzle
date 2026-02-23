@@ -6,12 +6,9 @@ import { Piece } from "./Piece";
 
 interface DraggablePieceProps {
     piece: PieceType;
-    isSelected: boolean;
     onClick: () => void;
     /** If true, this piece can be dragged */
     isDraggable?: boolean;
-    /** If true, hides the selection border (useful in carousel where only one piece is visible) */
-    hideSelectionBorder?: boolean;
     /** Optional override for cell size in px (e.g. to match scaled board in carousel). */
     cellSizePx?: string;
 }
@@ -19,16 +16,14 @@ interface DraggablePieceProps {
 /**
  * Wrapper component that makes a Piece draggable using @dnd-kit.
  * Works with both touch and mouse input.
- * 
+ *
  * The drag data includes the pieceId which is used by droppable
  * cells to determine placement.
  */
 export const DraggablePiece: React.FC<DraggablePieceProps> = ({
     piece,
-    isSelected,
     onClick,
     isDraggable = true,
-    hideSelectionBorder = false,
     cellSizePx
 }) => {
     const canDrag = isDraggable && !piece.position;
@@ -67,9 +62,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
         >
             <Piece
                 piece={piece}
-                isSelected={isSelected}
                 onClick={onClick}
-                hideSelectionBorder={hideSelectionBorder}
                 cellSizePx={cellSizePx}
             />
         </div>

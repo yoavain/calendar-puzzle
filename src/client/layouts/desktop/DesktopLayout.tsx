@@ -266,8 +266,9 @@ export const DesktopLayout: React.FC = () => {
                                 onDragEnd={game.handleDragEnd}
                             />
                             <PiecesContainer
-                                onDragOver={game.handlePileDropZoneDragOver}
-                                onDrop={game.handlePileDropZoneDrop}
+                                onDragOver={!game.gameState.isSolved ? game.handlePileDropZoneDragOver : undefined}
+                                onDrop={!game.gameState.isSolved ? game.handlePileDropZoneDrop : undefined}
+                                sx={game.gameState.isSolved ? { cursor: "default" } : undefined}
                             >
                                 {game.gameState.pieces
                                     .filter(piece => !piece.position)
@@ -275,7 +276,6 @@ export const DesktopLayout: React.FC = () => {
                                         <PiecePoolWrapper key={piece.id}>
                                             <Piece
                                                 piece={piece}
-                                                isSelected={piece.id === game.gameState.selectedPieceId}
                                                 onClick={() => game.handlePieceSelect(piece.id)}
                                                 onDragStart={game.setDraggedPieceId}
                                                 onDragEnd={game.handleDragEnd}
