@@ -88,6 +88,11 @@ export const PiecesContainer = styled(Box)(({ theme }) => ({
     marginBottom: theme.spacing(2),
     // Ensure symmetric padding at the bottom by adding a specific bottom padding
     paddingBottom: theme.spacing(2),
+    cursor: "default",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none",
     "& > *": {
         marginBottom: 0,
         width: "100%"
