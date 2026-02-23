@@ -275,7 +275,6 @@ export const DesktopLayout: React.FC = () => {
                                         <PiecePoolWrapper key={piece.id}>
                                             <Piece
                                                 piece={piece}
-                                                isSelected={piece.id === game.gameState.selectedPieceId}
                                                 onClick={() => game.handlePieceSelect(piece.id)}
                                                 onDragStart={game.setDraggedPieceId}
                                                 onDragEnd={game.handleDragEnd}

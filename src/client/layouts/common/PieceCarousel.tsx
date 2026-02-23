@@ -330,9 +330,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                 <PieceWrapper>
                                     <DraggablePiece
                                         piece={piece}
-                                        isSelected={piece.id === selectedPieceId}
                                         onClick={() => onPieceSelect(piece.id)}
-                                        hideSelectionBorder
                                         cellSizePx={pieceCellSizePx}
                                     />
                                 </PieceWrapper>
