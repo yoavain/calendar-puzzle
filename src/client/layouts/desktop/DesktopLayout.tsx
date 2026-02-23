@@ -268,7 +268,6 @@ export const DesktopLayout: React.FC = () => {
                             <PiecesContainer
                                 onDragOver={!game.gameState.isSolved ? game.handlePileDropZoneDragOver : undefined}
                                 onDrop={!game.gameState.isSolved ? game.handlePileDropZoneDrop : undefined}
-                                sx={game.gameState.isSolved ? { cursor: "default" } : undefined}
                             >
                                 {game.gameState.pieces
                                     .filter(piece => !piece.position)
