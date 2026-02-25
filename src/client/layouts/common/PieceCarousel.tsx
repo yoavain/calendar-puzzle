@@ -42,11 +42,19 @@ const MIN_SLIDES_FOR_LOOP = 3;
  * its non-passive `touchmove` handler for that touch sequence, letting dnd-kit
  * drive the drag unobstructed.
  *
+ * **Why we use emblaApi directly (not aria-selected):**
+ * After every flip/rotate, React creates a new `pieces` array → new `slides` memo →
+ * new `onSelect` closure → the subscription effect re-subscribes. During this cycle
+ * there is a narrow window where `aria-selected` in the DOM can diverge from Embla's
+ * internal scroll state, causing this callback to return the wrong value and letting
+ * Embla intercept a drag that should go to dnd-kit. Querying emblaApi directly is
+ * authoritative and immune to React render timing.
+ *
  * **Stability:** defined at module scope so its `toString()` never changes between
  * renders. Embla's `areOptionsEqual` uses `${fn} === ${fn}` (string comparison) to
  * decide whether to reInit — a stable function reference prevents spurious reinits.
  */
-function watchDragYieldToActivePiece(_emblaApi: EmblaCarouselType, evt: MouseEvent | TouchEvent): boolean {
+function watchDragYieldToActivePiece(emblaApi: EmblaCarouselType, evt: MouseEvent | TouchEvent): boolean {
     const target = evt.target as Element | null;
     if (!target) {
         return true;
@@ -57,10 +65,13 @@ function watchDragYieldToActivePiece(_emblaApi: EmblaCarouselType, evt: MouseEve
         // Touch on carousel background or control buttons — let Embla handle
         return true;
     }
-    // Touch is on a piece. Let Embla handle ONLY if this is an adjacent (non-active)
-    // slide so the user can swipe to navigate. For the active slide, yield to dnd-kit.
-    // CarouselSlide renders with aria-selected="true" on the active slide.
-    return !pieceEl.closest("[aria-selected='true']");
+    // Touch is on a piece. Use Embla's own state to identify the active slide —
+    // more reliable than the aria-selected DOM attribute which React may not yet
+    // have committed when this callback fires.
+    const activeSlideIndex = emblaApi.selectedScrollSnap();
+    const activeSlide = emblaApi.slideNodes()[activeSlideIndex];
+    // Yield to dnd-kit for the active slide; let Embla handle adjacent slides.
+    return !activeSlide?.contains(pieceEl);
 }
 
 interface PieceCarouselProps {
@@ -274,6 +285,17 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         // the active-slide update without forcing an unwanted swipe.
         else if (prevSinglePiece && !currentSinglePiece) {
             debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "single-to-multi" });
+            emblaApi.reInit();
+        }
+        // When piece count crosses the MIN_SLIDES_FOR_LOOP threshold (e.g. 2→3 or 3→2),
+        // buildSlides switches between duplicated slides (e.g. 4 slides) and non-duplicated
+        // (3 slides). Embla's MutationObserver auto-reInit fires during React's DOM commit,
+        // before dnd-kit's useDraggable effects for the newly mounted carousel slides have
+        // settled. This is the same timing issue as single-to-multi, and requires the same
+        // second explicit reInit to re-establish Embla's touch-event listeners at the
+        // correct point in time.
+        else if ((prevCount < MIN_SLIDES_FOR_LOOP) !== (currentCount < MIN_SLIDES_FOR_LOOP)) {
+            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "duplication-threshold-crossed" });
             emblaApi.reInit();
         }
     }, [emblaApi, pieces, onPieceSelect]);
