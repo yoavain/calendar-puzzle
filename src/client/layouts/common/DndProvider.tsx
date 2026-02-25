@@ -268,20 +268,19 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                         x: pointerX - initialRect.left,
                         y: pointerY - initialRect.top
                     };
-                    // Use the PieceGrid's VISUAL rect (after CSS rotation/flip) to
-                    // calculate cellOffset, but ONLY when the piece has a non-trivial
-                    // CSS transform. CSS transforms don't change layout dimensions, so
-                    // the wrapper's rect may have stale dimensions (e.g. 2×4 for a
-                    // piece that visually appears 4×2 after 90° rotation). This caused
-                    // cellOffset to be out-of-bounds when the user dragged from a cell
-                    // outside the wrapper but inside the visual piece.
-                    const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
-                    let visualRect: { left: number; top: number; width: number; height: number } | null = null;
-                    if (hasTransform) {
-                        const draggableNode = document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
-                            ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
-                        visualRect = draggableNode ? findVisualPieceRect(draggableNode) : null;
-                    }
+                    // Always use the PieceGrid's VISUAL rect for cellOffset calculation.
+                    // The DraggablePiece wrapper div spans the full carousel slide width
+                    // (~70% viewport), while the PieceGrid is much smaller (cols × cellSize).
+                    // Using the wrapper rect gives a wrong pieceCellW, leading to wrong
+                    // cellOffset values (either out-of-bounds or placing the anchor cell
+                    // at the wrong position under the finger).
+                    // CSS transforms (rotate/flip) also change the visual dimensions vs
+                    // layout dimensions, so getBoundingClientRect() on the grid element
+                    // (which accounts for transforms) is always the correct reference.
+                    const draggableNode = document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
+                        ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
+                    const visualRect: { left: number; top: number; width: number; height: number } | null =
+                        draggableNode ? findVisualPieceRect(draggableNode) : null;
                     const rectForCells = visualRect ?? initialRect;
                     const shapeCols = shape[0]?.length ?? 1;
                     const shapeRows = shape.length;
@@ -326,10 +325,9 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                             x: pointerX - fallbackRect.left,
                             y: pointerY - fallbackRect.top
                         };
-                        // Use PieceGrid visual rect only when CSS transform is active.
-                        const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
-                        const visualRect = (hasTransform && draggableEl) ? findVisualPieceRect(draggableEl) : null;
-                        // (visualRect used only for rotated/flipped pieces)
+                        // Always use PieceGrid visual rect for accurate cellOffset (same
+                        // reason as the initialRect branch above).
+                        const visualRect = draggableEl ? findVisualPieceRect(draggableEl) : null;
                         const rectForCells = visualRect ?? fallbackRect;
                         const shapeCols = shape[0]?.length ?? 1;
                         const shapeRows = shape.length;

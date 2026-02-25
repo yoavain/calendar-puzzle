@@ -89,13 +89,20 @@ async function mobileDragFromCell(
         throw new Error("Target element has no bounding box");
     }
 
+    // The DraggablePiece div spans the full carousel slide width (~257px), but
+    // DndProvider.handleDragStart uses findVisualPieceRect (the inner PieceGrid's
+    // actual dimensions) for pieceCellW. Use the same reference here so the touch
+    // coordinates map to the same cellOffset that DndProvider computes.
+    const gridBox = await pieceLocator.locator("[data-testid='piece-grid']").boundingBox();
+    const rectForCells = gridBox ?? pieceBox;
+
     // Compute pixel position of anchor cell center within the piece element
     const shapeCols = shape[0].length;
     const shapeRows = shape.length;
-    const cellW = pieceBox.width / shapeCols;
-    const cellH = pieceBox.height / shapeRows;
-    const srcX = pieceBox.x + (anchorCell.x + 0.5) * cellW;
-    const srcY = pieceBox.y + (anchorCell.y + 0.5) * cellH;
+    const cellW = rectForCells.width / shapeCols;
+    const cellH = rectForCells.height / shapeRows;
+    const srcX = rectForCells.x + (anchorCell.x + 0.5) * cellW;
+    const srcY = rectForCells.y + (anchorCell.y + 0.5) * cellH;
 
     // Target: center of the board cell
     const dstX = targetBox.x + targetBox.width / 2;
