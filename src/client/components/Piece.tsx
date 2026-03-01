@@ -163,6 +163,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDra
                 rows={baseHeight}
                 transformStyle={transformStyle}
                 cellSizePx={cellSizePx}
+                data-testid="piece-grid"
             >
                 {baseShape.map((row, y) =>
                     row.map((cell, x) => (

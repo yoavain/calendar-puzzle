@@ -11,6 +11,12 @@ interface DraggablePieceProps {
     isDraggable?: boolean;
     /** Optional override for cell size in px (e.g. to match scaled board in carousel). */
     cellSizePx?: string;
+    /**
+     * Override the dnd-kit draggable ID. Use this when multiple slides render the same piece
+     * (duplicate slides for small piece counts in the carousel) to ensure unique IDs per slide.
+     * The real piece ID is always stored in `data.pieceId` regardless of this value.
+     */
+    draggableId?: string;
 }
 
 /**
@@ -24,10 +30,11 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
     piece,
     onClick,
     isDraggable = true,
-    cellSizePx
+    cellSizePx,
+    draggableId
 }) => {
     const canDrag = isDraggable && !piece.position;
-    
+
     const {
         attributes,
         listeners,
@@ -35,7 +42,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
         transform,
         isDragging
     } = useDraggable({
-        id: `piece-${piece.id}`,
+        id: draggableId ?? `piece-${piece.id}`,
         data: {
             type: "piece",
             pieceId: piece.id,
