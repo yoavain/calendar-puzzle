@@ -277,7 +277,15 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                     // CSS transforms (rotate/flip) also change the visual dimensions vs
                     // layout dimensions, so getBoundingClientRect() on the grid element
                     // (which accounts for transforms) is always the correct reference.
-                    const draggableNode = document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
+                    //
+                    // IMPORTANT: use activatorEvent.target to find the element the user
+                    // actually touched, NOT document.querySelector which always returns
+                    // the first DOM node. When the carousel has duplicate slides for the
+                    // same piece (count < MIN_SLIDES_FOR_LOOP), querySelector would return
+                    // a slide that is not the one being touched, giving a wrong visual rect.
+                    const evtTarget = (activatorEvent as Event)?.target as HTMLElement | null;
+                    const draggableNode = (evtTarget?.closest("[data-piece-id]") as HTMLElement | null)
+                        ?? document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
                         ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
                     const visualRect: { left: number; top: number; width: number; height: number } | null =
                         draggableNode ? findVisualPieceRect(draggableNode) : null;

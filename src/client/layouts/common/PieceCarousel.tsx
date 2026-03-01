@@ -197,6 +197,8 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     const prevSinglePieceRef = useRef(singlePiece);
     // Flag to prevent feedback loop when we're scrolling programmatically
     const isScrollingRef = useRef(false);
+    // Flag to distinguish our explicit reInits from Embla's auto-reInits
+    const isExplicitReInitRef = useRef(false);
 
     // Keep slidesInView in sync during scroll animations
     const updateSlidesInView = useCallback(() => {
@@ -204,6 +206,37 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
             return;
         }
         setSlidesInView(new Set(emblaApi.slidesInView()));
+    }, [emblaApi]);
+
+    // Wrapper for explicit emblaApi.reInit() calls.
+    //
+    // WHY setTimeout: Embla's MutationObserver fires as a microtask, AFTER React's
+    // synchronous effects phase. A synchronous reInit inside a useEffect would be
+    // undone by the MutationObserver's reInit that fires milliseconds later.
+    // Running via setTimeout (macrotask) ensures we fire AFTER all MutationObserver
+    // callbacks have settled, making our reInit the final word on Embla's state.
+    //
+    // WHY scrollTo after reInit: after a reInit where loop-mode changes (e.g.
+    // single-to-multi), Embla's selectedScrollSnap() may point to a duplicate slide
+    // (e.g. index 2) while the VISUALLY centered slide is a different DOM node
+    // (e.g. index 0, another copy of the same piece). watchDragYieldToActivePiece
+    // uses slideNodes()[selectedScrollSnap()], so the mismatch causes it to return
+    // the wrong value — Embla intercepts the touch instead of yielding to dnd-kit.
+    // scrollTo(selectedScrollSnap(), true) physically re-centers the logical snap
+    // slide, making the DOM node and selectedScrollSnap consistent again.
+    const doExplicitReInit = useCallback((reason: string, prevCount: number, currentCount: number) => {
+        setTimeout(() => {
+            if (!emblaApi) {
+                return;
+            }
+            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason });
+            isExplicitReInitRef.current = true;
+            emblaApi.reInit();
+            emblaApi.scrollTo(emblaApi.selectedScrollSnap(), true);
+            queueMicrotask(() => {
+                isExplicitReInitRef.current = false;
+            });
+        }, 0);
     }, [emblaApi]);
 
     // Update active index when carousel scrolls (user interaction)
@@ -228,10 +261,17 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
             return;
         }
 
+        const onReInit = () => {
+            if (!isExplicitReInitRef.current) {
+                debugLogger.log("carousel:autoReInit", { count: pieces.length, singlePiece });
+            }
+        };
+
         emblaApi.on("select", onSelect);
         emblaApi.on("reInit", onSelect);
         emblaApi.on("slidesInView", updateSlidesInView);
         emblaApi.on("reInit", updateSlidesInView);
+        emblaApi.on("reInit", onReInit);
 
         // Initial population
         updateSlidesInView();
@@ -241,6 +281,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
             emblaApi.off("reInit", onSelect);
             emblaApi.off("slidesInView", updateSlidesInView);
             emblaApi.off("reInit", updateSlidesInView);
+            emblaApi.off("reInit", onReInit);
         };
     }, [emblaApi, onSelect, updateSlidesInView]);
 
@@ -260,8 +301,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
         // If pieces count increased significantly (like a reset), reinitialize
         if (currentCount > prevCount + 1) {
-            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "count-jump" });
-            emblaApi.reInit();
+            doExplicitReInit("count-jump", prevCount, currentCount);
             setTimeout(() => {
                 isScrollingRef.current = true;
                 emblaApi.scrollTo(0, true);
@@ -272,33 +312,33 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                 isScrollingRef.current = false;
             }, 0);
         }
-        // When transitioning out of single-piece mode, useEmblaCarousel has already
-        // triggered a reInit internally (loop/watchDrag options changed). That first
-        // reInit happens before dnd-kit's useDraggable effects run, which can leave
-        // Embla's touch-event listeners in a state that prevents dnd-kit from
-        // detecting drags. A second explicit reInit here — which runs after all
-        // React effects (including useDraggable) have settled — re-establishes
-        // Embla's listeners at the right point in time.
-        //
-        // No scrollTo(0): the carousel should stay on whatever piece just returned
-        // to the pile. Embla's own "reInit" event fires onSelect, which handles
-        // the active-slide update without forcing an unwanted swipe.
+        // When options change (loop/watchDrag), useEmblaCarousel auto-reinits early
+        // (before dnd-kit's useDraggable effects settle). Our explicit second reInit
+        // runs via setTimeout — after all MutationObserver callbacks and React effects
+        // have settled — and re-centers the logical snap slide so that
+        // watchDragYieldToActivePiece returns the correct value.
         else if (prevSinglePiece && !currentSinglePiece) {
-            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "single-to-multi" });
-            emblaApi.reInit();
+            doExplicitReInit("single-to-multi", prevCount, currentCount);
+        }
+        // Symmetric: transitioning into single-piece mode (2+ → 1).
+        else if (!prevSinglePiece && currentSinglePiece) {
+            doExplicitReInit("multi-to-single", prevCount, currentCount);
         }
         // When piece count crosses the MIN_SLIDES_FOR_LOOP threshold (e.g. 2→3 or 3→2),
-        // buildSlides switches between duplicated slides (e.g. 4 slides) and non-duplicated
-        // (3 slides). Embla's MutationObserver auto-reInit fires during React's DOM commit,
-        // before dnd-kit's useDraggable effects for the newly mounted carousel slides have
-        // settled. This is the same timing issue as single-to-multi, and requires the same
-        // second explicit reInit to re-establish Embla's touch-event listeners at the
-        // correct point in time.
+        // buildSlides changes the slide count (duplicated ↔ non-duplicated), triggering
+        // Embla's MutationObserver. Same fix: an explicit second reInit via setTimeout.
         else if ((prevCount < MIN_SLIDES_FOR_LOOP) !== (currentCount < MIN_SLIDES_FOR_LOOP)) {
-            debugLogger.log("carousel:reInit", { prevCount, currentCount, reason: "duplication-threshold-crossed" });
-            emblaApi.reInit();
+            doExplicitReInit("duplication-threshold-crossed", prevCount, currentCount);
         }
-    }, [emblaApi, pieces, onPieceSelect]);
+        // Catch-all: any other slide-count change (e.g. 8→7, 7→6, 5→4, 4→3).
+        // Embla's MutationObserver fires for EVERY childList change on the carousel
+        // track — not just at option-change thresholds. Without a second explicit
+        // reInit, these auto-reinits can leave selectedScrollSnap() misaligned with
+        // the visually centered slide, breaking watchDragYieldToActivePiece.
+        else if (currentCount !== prevCount) {
+            doExplicitReInit("slide-count-change", prevCount, currentCount);
+        }
+    }, [emblaApi, pieces, onPieceSelect, doExplicitReInit]);
 
     // Scroll to selected piece when selection changes externally
     useEffect(() => {
@@ -352,6 +392,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                 <PieceWrapper>
                                     <DraggablePiece
                                         piece={piece}
+                                        draggableId={`piece-${piece.id}-slide-${index}`}
                                         onClick={() => onPieceSelect(piece.id)}
                                         cellSizePx={pieceCellSizePx}
                                     />
