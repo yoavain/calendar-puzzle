@@ -19,8 +19,6 @@ export interface InvalidDropCell {
     y: number;
 }
 
-// rebuildGameState is now imported from common/boardOperations
-
 /**
  * Get the initial game state, restoring from session if available and date matches today.
  */
@@ -110,8 +108,6 @@ export function useGameController() {
         setDraggedPieceId(null);
     }, []);
 
-    // updateBoardAndPieces is now imported from common/boardOperations (pure function)
-
     // Helper to load persistent hint from server
     const loadPersistentHint = useCallback(async (date: PuzzleDate, currentPieces: PieceType[]) => {
         if (!user) {
@@ -152,7 +148,7 @@ export function useGameController() {
             logToServer("error", "Game: Failed to load persistent hint", error, user?.name);
         }
         return null;
-    }, [user, updateBoardAndPieces]);
+    }, [user]);
 
     // Helper function to trigger invalid drop feedback
     const triggerInvalidDropFeedback = useCallback((piece: PieceType, position: Position) => {
@@ -415,7 +411,7 @@ export function useGameController() {
             pieceId: piece.id,
             position
         });
-    }, [gameState, pushState, triggerInvalidDropFeedback, updateBoardAndPieces]);
+    }, [gameState, pushState, triggerInvalidDropFeedback]);
 
     const handlePieceDrop = useCallback((position: Position, dragItem: DragItem) => {
         const { pieceId } = dragItem;
@@ -484,7 +480,7 @@ export function useGameController() {
             pieceId,
             position
         });
-    }, [gameState, updatePresent, updateBoardAndPieces, triggerInvalidDropFeedback, pushState, user]);
+    }, [gameState, updatePresent, triggerInvalidDropFeedback, pushState, user]);
 
     const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceReturnToPile", { pieceId });
@@ -511,7 +507,7 @@ export function useGameController() {
             type: "REMOVE_PIECE",
             pieceId
         });
-    }, [gameState, updateBoardAndPieces, pushState]);
+    }, [gameState, pushState]);
 
     const handlePileDropZoneDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
@@ -549,29 +545,6 @@ export function useGameController() {
             // Call the server to get the solution using the playing date
             const solutionPieces = await getSolution(gameState.currentDate);
 
-            // Build the new board state with the solution pieces placed
-            let newBoard = gameState.board.map(row => 
-                row.map(cell => ({ ...cell, isOccupied: false }))
-            );
-
-            // Place each piece on the board
-            for (const piece of solutionPieces) {
-                if (piece.position) {
-                    const transformedShape = getTransformedShape(piece);
-                    for (let y = 0; y < transformedShape.length; y++) {
-                        for (let x = 0; x < transformedShape[y].length; x++) {
-                            if (transformedShape[y][x]) {
-                                const boardY = piece.position.y + y;
-                                const boardX = piece.position.x + x;
-                                if (boardY < newBoard.length && boardX < newBoard[boardY].length) {
-                                    newBoard[boardY][boardX].isOccupied = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             // Mark all pieces as locked when showing solution
             const lockedPieces = solutionPieces.map(piece => ({
                 ...piece,
@@ -579,12 +552,8 @@ export function useGameController() {
             }));
 
             const solvedState = {
-                ...gameState,
-                board: newBoard,
-                pieces: lockedPieces,
-                isSolved: true,
-                solutionRevealed: true, // Mark that solution was revealed, not solved by user
-                selectedPieceId: null
+                ...rebuildGameState(lockedPieces, gameState.currentDate, true),
+                solutionRevealed: true // Mark that solution was revealed, not solved by user
             };
 
             // Clear history to prevent undoing the solution (like hint)
@@ -658,7 +627,7 @@ export function useGameController() {
         finally {
             setIsHintLoading(false);
         }
-    }, [gameState, isHintLoading, isBoardEmpty, updateBoardAndPieces, clearHistory, user?.name]);
+    }, [gameState, isHintLoading, isBoardEmpty, clearHistory, user?.name]);
 
     // Per-piece control handlers
     const handleRotatePiece = useCallback((pieceId: PieceId) => {
