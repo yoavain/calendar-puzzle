@@ -11,6 +11,57 @@ import { calculateCellFromPointer, findVisualPieceRect } from "../../utils/dragH
 import { PieceDragPreview } from "../../components/PieceDragPreview";
 import { debugLogger } from "../../utils/debugLogger";
 
+// ---------------------------------------------------------------------------
+// Helpers for handleDragStart — shared by the `else if (initialRect)` and
+// `else` (CDP fallback) branches which otherwise duplicate ~45 lines.
+// ---------------------------------------------------------------------------
+
+type SimpleRect = { left: number; top: number; width: number; height: number };
+
+/** Find the draggable DOM node for a piece, preferring the touched element. */
+function findDraggableNode(evtTarget: HTMLElement | null, pieceId: PieceId): HTMLElement | null {
+    return (evtTarget?.closest("[data-piece-id]") as HTMLElement | null)
+        ?? document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
+        ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
+}
+
+/**
+ * Compute the cell anchor and click offset from a known base rect.
+ * Returns null when the touch lands on an empty cell with no nearest filled neighbour.
+ */
+function computeCellAndClickOffset(
+    baseRect: SimpleRect,
+    draggableNode: HTMLElement | null,
+    pointerX: number,
+    pointerY: number,
+    shape: boolean[][]
+): { cellOffset: { x: number; y: number }; clickOffset: { x: number; y: number } } | null {
+    const clickOffset = { x: pointerX - baseRect.left, y: pointerY - baseRect.top };
+    // Always use the PieceGrid's VISUAL rect for cellOffset calculation.
+    // CSS transforms (rotate/flip) change visual dimensions vs layout dimensions, so
+    // getBoundingClientRect on the grid element is the correct reference.
+    const visualRect = draggableNode ? findVisualPieceRect(draggableNode) : null;
+    const rectForCells = visualRect ?? baseRect;
+    const shapeCols = shape[0]?.length ?? 1;
+    const shapeRows = shape.length;
+    const pieceCellW = rectForCells.width / shapeCols;
+    const pieceCellH = rectForCells.height / shapeRows;
+    const cellClickOffset = { x: pointerX - rectForCells.left, y: pointerY - rectForCells.top };
+    let cellOffset = {
+        x: Math.floor(cellClickOffset.x / pieceCellW),
+        y: Math.floor(cellClickOffset.y / pieceCellH)
+    };
+    // If touch landed on an empty cell (transparent gap in piece grid), snap to nearest filled cell
+    if (!shape[cellOffset.y]?.[cellOffset.x]) {
+        const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
+        if (!nearest) {
+            return null;
+        }
+        cellOffset = nearest;
+    }
+    return { cellOffset, clickOffset };
+}
+
 /**
  * Context for sharing drag state with board components.
  */
@@ -261,106 +312,41 @@ export const DndProvider: React.FC<DndProviderProps> = ({
                         : { x: scaledCellSize / 2, y: scaledCellSize / 2 };
                 }
                 else if (initialRect) {
-                    initialDragRectRef.current = initialRect;
-                    // clickOffset is relative to the wrapper rect (used by the modifier
-                    // to reconstruct the current pointer position via initialRect + clickOffset + transform).
-                    const clickOffset = {
-                        x: pointerX - initialRect.left,
-                        y: pointerY - initialRect.top
-                    };
-                    // Always use the PieceGrid's VISUAL rect for cellOffset calculation.
-                    // The DraggablePiece wrapper div spans the full carousel slide width
-                    // (~70% viewport), while the PieceGrid is much smaller (cols × cellSize).
-                    // Using the wrapper rect gives a wrong pieceCellW, leading to wrong
-                    // cellOffset values (either out-of-bounds or placing the anchor cell
-                    // at the wrong position under the finger).
-                    // CSS transforms (rotate/flip) also change the visual dimensions vs
-                    // layout dimensions, so getBoundingClientRect() on the grid element
-                    // (which accounts for transforms) is always the correct reference.
-                    //
                     // IMPORTANT: use activatorEvent.target to find the element the user
                     // actually touched, NOT document.querySelector which always returns
                     // the first DOM node. When the carousel has duplicate slides for the
                     // same piece (count < MIN_SLIDES_FOR_LOOP), querySelector would return
                     // a slide that is not the one being touched, giving a wrong visual rect.
                     const evtTarget = (activatorEvent as Event)?.target as HTMLElement | null;
-                    const draggableNode = (evtTarget?.closest("[data-piece-id]") as HTMLElement | null)
-                        ?? document.querySelector(`[data-testid="carousel-piece-${pieceId}"]`)
-                        ?? document.querySelector(`[data-piece-id="${pieceId}"]`);
-                    const visualRect: { left: number; top: number; width: number; height: number } | null =
-                        draggableNode ? findVisualPieceRect(draggableNode) : null;
-                    const rectForCells = visualRect ?? initialRect;
-                    const shapeCols = shape[0]?.length ?? 1;
-                    const shapeRows = shape.length;
-                    const pieceCellW = rectForCells.width / shapeCols;
-                    const pieceCellH = rectForCells.height / shapeRows;
-                    const cellClickOffset = {
-                        x: pointerX - rectForCells.left,
-                        y: pointerY - rectForCells.top
-                    };
-                    let cellOffset = {
-                        x: Math.floor(cellClickOffset.x / pieceCellW),
-                        y: Math.floor(cellClickOffset.y / pieceCellH)
-                    };
-                    // If the touch landed on an empty cell (e.g. a transparent gap
-                    // in the piece grid), snap to the nearest filled cell instead
-                    // of cancelling. This prevents a "ghost drag" where @dnd-kit
-                    // moves the original piece but the DragOverlay renders nothing.
-                    if (!shape[cellOffset.y]?.[cellOffset.x]) {
-                        const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
-                        if (!nearest) {
-                            setActivePiece(null);
-                            setIsDragging(false);
-                            return;
-                        }
-                        cellOffset = nearest;
+                    const draggableNode = findDraggableNode(evtTarget, pieceId);
+                    const result = computeCellAndClickOffset(initialRect, draggableNode, pointerX, pointerY, shape);
+                    if (!result) {
+                        setActivePiece(null);
+                        setIsDragging(false);
+                        return;
                     }
-                    cellOffsetRef.current = cellOffset;
-                    initialClickOffsetRef.current = clickOffset;
+                    initialDragRectRef.current = initialRect;
+                    cellOffsetRef.current = result.cellOffset;
+                    initialClickOffsetRef.current = result.clickOffset;
                 }
                 else {
                     // @dnd-kit's rect measurement may be null when drag is
                     // initiated via CDP touch events. Fall back to reading the
                     // DOM element's bounding rect directly.
                     const evtTarget = (activatorEvent as Event)?.target as HTMLElement | null;
-                    const draggableEl = evtTarget?.closest?.("[data-piece-id]") as HTMLElement
-                        ?? document.querySelector(`[data-piece-id="${pieceId}"]`) as HTMLElement | null;
+                    const draggableEl = findDraggableNode(evtTarget, pieceId);
                     const domRect = draggableEl?.getBoundingClientRect?.();
                     if (domRect && domRect.width > 0) {
                         const fallbackRect = { left: domRect.left, top: domRect.top, right: domRect.right, bottom: domRect.bottom, width: domRect.width, height: domRect.height };
-                        initialDragRectRef.current = fallbackRect;
-                        const clickOffset = {
-                            x: pointerX - fallbackRect.left,
-                            y: pointerY - fallbackRect.top
-                        };
-                        // Always use PieceGrid visual rect for accurate cellOffset (same
-                        // reason as the initialRect branch above).
-                        const visualRect = draggableEl ? findVisualPieceRect(draggableEl) : null;
-                        const rectForCells = visualRect ?? fallbackRect;
-                        const shapeCols = shape[0]?.length ?? 1;
-                        const shapeRows = shape.length;
-                        const pieceCellW = rectForCells.width / shapeCols;
-                        const pieceCellH = rectForCells.height / shapeRows;
-                        const cellClickOffset = {
-                            x: pointerX - rectForCells.left,
-                            y: pointerY - rectForCells.top
-                        };
-                        let cellOffset = {
-                            x: Math.floor(cellClickOffset.x / pieceCellW),
-                            y: Math.floor(cellClickOffset.y / pieceCellH)
-                        };
-                        // Snap to nearest filled cell if touch landed on empty cell
-                        if (!shape[cellOffset.y]?.[cellOffset.x]) {
-                            const nearest = findNearestFilledCell(shape, cellOffset.x, cellOffset.y);
-                            if (!nearest) {
-                                setActivePiece(null);
-                                setIsDragging(false);
-                                return;
-                            }
-                            cellOffset = nearest;
+                        const result = computeCellAndClickOffset(fallbackRect, draggableEl, pointerX, pointerY, shape);
+                        if (!result) {
+                            setActivePiece(null);
+                            setIsDragging(false);
+                            return;
                         }
-                        cellOffsetRef.current = cellOffset;
-                        initialClickOffsetRef.current = clickOffset;
+                        initialDragRectRef.current = fallbackRect;
+                        cellOffsetRef.current = result.cellOffset;
+                        initialClickOffsetRef.current = result.clickOffset;
                     }
                     else {
                         initialDragRectRef.current = null;

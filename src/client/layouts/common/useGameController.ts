@@ -500,7 +500,7 @@ export function useGameController() {
     }, [gameState, isHintLoading, isBoardEmpty, clearHistory, user?.name]);
 
     // Per-piece control handlers
-    const handleRotatePiece = useCallback((pieceId: PieceId) => {
+    const rotatePiece = useCallback((pieceId: PieceId, direction: "cw" | "ccw") => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
@@ -509,55 +509,39 @@ export function useGameController() {
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
 
         // When exactly one flip is active, we must invert the rotation step
-        // to maintain a consistent visual clockwise rotation.
+        // to maintain a consistent visual rotation direction.
         const isFlipped = piece.isFlippedH !== piece.isFlippedV;
-        const rotationStep = isFlipped ? -90 : 90;
+        const rotationStep = direction === "cw"
+            ? (isFlipped ? -90 : 90)
+            : (isFlipped ? 90 : -90);
         const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
 
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
 
-    const handleRotateCCWPiece = useCallback((pieceId: PieceId) => {
-        const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece || piece.isLocked) {
-            return;
-        }
+    const handleRotatePiece = useCallback((pieceId: PieceId) => rotatePiece(pieceId, "cw"), [rotatePiece]);
+    const handleRotateCCWPiece = useCallback((pieceId: PieceId) => rotatePiece(pieceId, "ccw"), [rotatePiece]);
 
-        const newPieces = [...gameState.pieces];
-        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-
-        // When exactly one flip is active, we must invert the rotation step
-        // to maintain a consistent visual counter-clockwise rotation.
-        const isFlipped = piece.isFlippedH !== piece.isFlippedV;
-        const rotationStep = isFlipped ? 90 : -90;
-        const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
-
-        newPieces[pieceIndex] = { ...piece, rotation: newRotation };
-        pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
-    }, [gameState, pushState]);
-
-    const handleFlipHPiece = useCallback((pieceId: PieceId) => {
+    const flipPiece = useCallback((pieceId: PieceId, axis: "H" | "V") => {
         const piece = gameState.pieces.find(p => p.id === pieceId);
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
         }
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        newPieces[pieceIndex] = { ...piece, isFlippedH: !piece.isFlippedH };
-        pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_H", pieceId });
+        if (axis === "H") {
+            newPieces[pieceIndex] = { ...piece, isFlippedH: !piece.isFlippedH };
+            pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_H", pieceId });
+        }
+        else {
+            newPieces[pieceIndex] = { ...piece, isFlippedV: !piece.isFlippedV };
+            pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_V", pieceId });
+        }
     }, [gameState, pushState]);
 
-    const handleFlipVPiece = useCallback((pieceId: PieceId) => {
-        const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (gameState.isSolved || !piece || piece.isLocked) {
-            return;
-        }
-        const newPieces = [...gameState.pieces];
-        const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        newPieces[pieceIndex] = { ...piece, isFlippedV: !piece.isFlippedV };
-        pushState({ ...gameState, pieces: newPieces }, { type: "FLIP_PIECE_V", pieceId });
-    }, [gameState, pushState]);
+    const handleFlipHPiece = useCallback((pieceId: PieceId) => flipPiece(pieceId, "H"), [flipPiece]);
+    const handleFlipVPiece = useCallback((pieceId: PieceId) => flipPiece(pieceId, "V"), [flipPiece]);
 
     const handleGlobalDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -590,7 +574,10 @@ export function useGameController() {
         e.dataTransfer.dropEffect = "move";
     }, []);
 
-    const handlePlayAnother = useCallback((date: PuzzleDate) => {
+    const handlePlayAnother = useCallback((date: PuzzleDate | null) => {
+        if (!date) {
+            return;
+        }
         setIsPlayAnotherOpen(false);
         handleDateChange(date);
     }, [handleDateChange, setIsPlayAnotherOpen]);
