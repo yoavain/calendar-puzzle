@@ -7,7 +7,7 @@
 
 import type { Board, Piece, Position, PuzzleDate } from "./types";
 import { getTransformedShape, clearPieceFromBoard } from "./gameLogic";
-import { initializeBoard } from "../client/utils/initialize";
+import { initializeBoard } from "./initialize";
 
 /**
  * Rebuild game state from saved pieces.
