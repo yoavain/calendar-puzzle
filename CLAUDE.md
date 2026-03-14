@@ -77,7 +77,7 @@ calendar-puzzle/
 - **State management**: React context + `useGameHistory` hook (undo/redo)
 - **Components** (`components/`) - React UI components (including `PlayAnotherDialog.tsx`)
 - **Hooks** (`hooks/`) - Custom React hooks
-  - `useGameHistory.ts` - Undo/redo with immer
+  - `useGameHistory.ts` - Undo/redo with manual deep-clone (spread operators)
   - `useGameSession.ts` - Session persistence
   - `useLayout.ts` - Responsive layout detection
   - `useQueryParam.ts` - URL query parameter management
