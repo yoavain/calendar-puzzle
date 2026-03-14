@@ -85,6 +85,10 @@ export function useGameController() {
     // Generation counter to discard stale hint responses
     const hintLoadIdRef = useRef(0);
 
+    // Always-current ref used by async callbacks to avoid stale closures
+    const gameStateRef = useRef(gameState);
+    gameStateRef.current = gameState;
+
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
 
@@ -186,12 +190,11 @@ export function useGameController() {
 
     // === HANDLERS ===
 
-    const handleDateChange = useCallback(async (newDate: PuzzleDate) => {
-        clearSession(); // Clear saved session when changing date
+    // Shared initialization logic used by both handleDateChange and handleReset
+    const initializeForDate = useCallback((date: PuzzleDate) => {
         setIsSuccessMessageOpen(false);
-        // Create a new Date object from PuzzleDate for initialization
         // We use a fixed year (2024) since the puzzle only cares about month and day
-        const jsDate = new Date(2024, newDate.month, newDate.day);
+        const jsDate = new Date(2024, date.month, date.day);
         const newGameState = initializeGame(jsDate);
 
         // Immediately clear history with the new game state for instant feedback
@@ -199,56 +202,29 @@ export function useGameController() {
 
         // Load persistent hint if available
         const thisHintLoadId = ++hintLoadIdRef.current;
-        loadPersistentHint(newDate, newGameState.pieces).then(hintState => {
+        loadPersistentHint(date, newGameState.pieces).then(hintState => {
             if (hintLoadIdRef.current !== thisHintLoadId) {
                 return;
             }
             if (hintState) {
-                const stateWithHint = {
-                    ...newGameState,
-                    board: hintState.board,
-                    pieces: hintState.pieces
-                };
-                // Use updatePresent since we already cleared history for the date change
-                updatePresent(stateWithHint);
+                updatePresent({ ...newGameState, board: hintState.board, pieces: hintState.pieces });
             }
         }).catch(err => {
-            logToServer("error", "Game: Failed to handle persistent hint on date change", err, user?.name);
+            logToServer("error", "Game: Failed to load persistent hint", err, user?.name);
         });
 
         setSolverError(null);
     }, [clearHistory, loadPersistentHint, updatePresent, user?.name, setIsSuccessMessageOpen]);
 
-    const handleReset = useCallback(async () => {
+    const handleDateChange = useCallback((newDate: PuzzleDate) => {
+        clearSession(); // Clear saved session when changing date
+        initializeForDate(newDate);
+    }, [initializeForDate]);
+
+    const handleReset = useCallback(() => {
         debugLogger.log("ctrl:handleReset", { date: gameState.currentDate });
-        const currentDate = gameState.currentDate;
-        const jsDate = new Date(2024, currentDate.month, currentDate.day);
-        const newGameState = initializeGame(jsDate);
-        setIsSuccessMessageOpen(false);
-
-        // Immediately clear history
-        clearHistory(newGameState);
-
-        // Load persistent hint if available
-        const thisHintLoadId = ++hintLoadIdRef.current;
-        loadPersistentHint(currentDate, newGameState.pieces).then(hintState => {
-            if (hintLoadIdRef.current !== thisHintLoadId) {
-                return;
-            }
-            if (hintState) {
-                const stateWithHint = {
-                    ...newGameState,
-                    board: hintState.board,
-                    pieces: hintState.pieces
-                };
-                updatePresent(stateWithHint);
-            }
-        }).catch(err => {
-            logToServer("error", "Game: Failed to handle persistent hint on reset", err, user?.name);
-        });
-
-        setSolverError(null);
-    }, [gameState.currentDate, clearHistory, loadPersistentHint, updatePresent, user?.name, setIsSuccessMessageOpen]);
+        initializeForDate(gameState.currentDate);
+    }, [gameState.currentDate, initializeForDate]);
 
     const handlePieceSelect = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceSelect", { pieceId });
@@ -621,24 +597,32 @@ export function useGameController() {
 
     // === SUB-HOOKS (side effects only) ===
 
-    // Check for initial hint on mount
+    // Check for initial hint on mount / when user logs in / when date changes.
+    // gameStateRef is used inside the async callback so reads are always fresh,
+    // avoiding a stale-closure bug without adding gameState.pieces to the deps
+    // (which would re-run the effect on every piece placement).
     useEffect(() => {
         const checkInitialHint = async () => {
             const currentDate = gameState.currentDate;
-            if (!userLoading && user && isBoardEmpty) {
+            const currentPieces = gameStateRef.current.pieces;
+            const isEmpty = gameStateRef.current.pieces.every(p => p.position === null);
+            if (!userLoading && user && isEmpty) {
                 try {
                     const thisHintLoadId = ++hintLoadIdRef.current;
-                    const hintState = await loadPersistentHint(currentDate, gameState.pieces);
+                    const hintState = await loadPersistentHint(currentDate, currentPieces);
                     if (hintLoadIdRef.current !== thisHintLoadId) {
                         return;
                     }
+                    // Re-check emptiness after the async gap to avoid overwriting user moves
+                    if (!gameStateRef.current.pieces.every(p => p.position === null)) {
+                        return;
+                    }
                     if (hintState) {
-                        const stateWithHint = {
-                            ...gameState,
+                        clearHistory({
+                            ...gameStateRef.current,
                             board: hintState.board,
                             pieces: hintState.pieces
-                        };
-                        clearHistory(stateWithHint);
+                        });
                     }
                 }
                 catch (err) {
@@ -647,7 +631,7 @@ export function useGameController() {
             }
         };
         checkInitialHint();
-    }, [user, userLoading, gameState.currentDate]); // Run when user logs in or date is set
+    }, [user, userLoading, gameState.currentDate, loadPersistentHint, clearHistory]);
 
     useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate });
 
