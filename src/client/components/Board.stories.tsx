@@ -4,7 +4,7 @@ import { Board } from "./Board";
 import { makeMockBoard, makeMockPieces, STORY_DATE, JAN_1 } from "../storybook/mockData";
 import { updateBoardAndPieces } from "../../common/boardOperations";
 import { findSolution } from "../../common/puzzleSolver";
-import { initializeBoard, initializePieces } from "../utils/initialize";
+import { initializeBoard, initializePieces } from "../../common/initialize";
 
 const noop = () => {};
 

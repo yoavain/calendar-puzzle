@@ -30,6 +30,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `npm run deploy:production` | Build image & run Compose for prod. |
 | `npm run admin:add` | Add admin user. |
 | `npm run admin:remove` | Remove admin user. |
+| `npm run storybook` | Start Storybook dev server (port 6006). |
+| `npm run build-storybook` | Build static Storybook site. |
 
 **Running a single unit test**
 

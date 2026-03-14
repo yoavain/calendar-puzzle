@@ -67,8 +67,7 @@ src/
 │  │  └─ useQueryParam.ts      # URL query parameter management
 │  ├─ utils/                   # UI utilities
 │  │  ├─ dragHelpers.ts        # DOM-aware drag utilities
-│  │  ├─ pieceColors.ts        # UI color definitions
-│  │  └─ initialize.ts         # Re-exports from src/common/initialize.ts
+│  │  └─ pieceColors.ts        # UI color definitions
 │  └─ service/                 # API client
 │
 └─ server/                      # Backend (Fastify)

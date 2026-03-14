@@ -1,4 +1,4 @@
-import { initializeBoard, initializePieces } from "../../src/client/utils/initialize";
+import { initializeBoard, initializePieces } from "../../src/common/initialize";
 import type { PuzzleDate } from "../../src/common/types";
 import { MONTHS } from "../../src/common/consts";
 

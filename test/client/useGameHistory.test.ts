@@ -4,7 +4,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { useGameHistory } from "../../src/client/hooks/useGameHistory";
 import type { GameState, GameStateAction } from "../../src/common/types";
-import { initializeGame } from "../../src/client/utils/initialize";
+import { initializeGame } from "../../src/common/initialize";
 
 describe("useGameHistory", () => {
     let initialState: GameState;
