@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { useTheme } from "@mui/material/styles";
+import React, { useCallback } from "react";
 
 import { MobileBoard } from "../../components/MobileBoard";
 import { SuccessMessage } from "../../components/SuccessMessage";
@@ -11,12 +10,13 @@ import { ProgressBar } from "../../components/ProgressBar";
 
 import { useGameController } from "../common/useGameController";
 import { useDndAdapters } from "../common/useDndAdapters";
+import { useBoardScale } from "../common/useBoardScale";
 import { BetaBanner } from "../common/BetaBanner";
 import { MobileToolbar } from "../common/MobileToolbar";
 import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
 import { DebugPanel } from "../../components/DebugPanel";
-import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
+import { BoardScaleWrapper } from "../common/boardScale";
 import {
     LandscapeContainer,
     ToolbarColumn,
@@ -40,32 +40,11 @@ import {
  * Uses DndProvider for touch-compatible drag-and-drop.
  */
 export const LandscapeLayout: React.FC = () => {
-    const theme = useTheme();
     const game = useGameController();
     const { handleDndPieceDrop, handleDndPieceRemove, handleDndDragStart, handleDndDragEnd } = useDndAdapters(game);
-    const [boardScale, setBoardScale] = useState(1);
-
-    useEffect(() => {
-        const updateScale = () => {
-            const availableWidth = getAvailableBoardWidth(window.innerWidth);
-            const availableHeight = getAvailableBoardHeight(window.innerHeight);
-            const scale = calculateBoardScale(
-                availableWidth,
-                availableHeight,
-                theme.game.cellSize
-            );
-            setBoardScale(scale);
-        };
-
-        updateScale();
-        window.addEventListener("resize", updateScale);
-        window.addEventListener("orientationchange", updateScale);
-
-        return () => {
-            window.removeEventListener("resize", updateScale);
-            window.removeEventListener("orientationchange", updateScale);
-        };
-    }, [theme.game.cellSize]);
+    const getWidth = useCallback((w: number) => getAvailableBoardWidth(w), []);
+    const getHeight = useCallback((h: number) => getAvailableBoardHeight(h), []);
+    const boardScale = useBoardScale(getWidth, getHeight);
 
     const unplacedPieces = game.gameState.pieces.filter(piece => !piece.position);
 
