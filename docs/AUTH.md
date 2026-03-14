@@ -10,7 +10,7 @@ Authentication is used to gate access to hint and solution features. Authenticat
 - [x] Google OAuth sign-in
 - [x] Session-based authentication (secure cookies)
 - [x] Protected hint/solution API endpoints
-- [ ] Database persistence (future)
+- [x] Database persistence (users + puzzle stats in PostgreSQL)
 - [ ] Game state sync across devices (future)
 
 ---
@@ -71,7 +71,7 @@ Browser                     Fastify Server                 Google
    |                              |<-- User profile ----------|
    |<-- Set session cookie -------|                           |
    |                              |                           |
-   |-- GET /api/hint/:date ------>|                           |
+   |-- PUT /api/hint ------------>|                           |
    |   (with session cookie)      |                           |
    |<-- 200 OK (hint data) -------|                           |
 ```
@@ -105,11 +105,11 @@ Browser                     Fastify Server                 Google
 |--------|------|------|-------------|
 | GET | `/auth/google` | No | Initiates OAuth flow |
 | GET | `/auth/google/callback` | No | Handles OAuth callback |
-| GET | `/auth/user` | No | Returns current user or 401 |
+| GET | `/api/auth/me` | No | Returns current user or 401 |
 | POST | `/auth/logout` | No | Clears session |
-| GET | `/api/hint/:date` | Yes | Returns a hint (protected) |
+| PUT | `/api/hint` | Yes | Returns a hint (protected) |
 | GET | `/api/admin/solution/:date` | Yes (Admin) | Returns full solution (protected) |
-| GET | `/api/admin/userdata` | Yes (Admin) | Returns user activity statistics |
+| GET | `/api/hall-of-fame` | Yes | Returns user activity statistics |
 
 ---
 
@@ -182,11 +182,11 @@ volumes:
 
 - [ ] OAuth flow redirects to Google
 - [ ] Callback sets session and redirects to `/`
-- [ ] `GET /auth/user` returns user info when logged in
-- [ ] `GET /auth/user` returns 401 when not logged in
+- [ ] `GET /api/auth/me` returns user info when logged in
+- [ ] `GET /api/auth/me` returns 401 when not logged in
 - [ ] Hint/Solution buttons appear only when authenticated
-- [ ] `GET /api/hint/:date` returns 401 for anonymous users
-- [ ] `GET /api/solution/:date` returns 401 for anonymous users
+- [ ] `PUT /api/hint` returns 401 for anonymous users
+- [ ] `GET /api/admin/solution/:date` returns 401 for anonymous users
 - [ ] Logout clears session and hides buttons
 - [ ] Session persists across page refresh
 
@@ -196,15 +196,10 @@ volumes:
 
 ### Database Integration
 
-When ready to add database persistence:
-
-1. Add `users` table to track authenticated users
-2. Add `game_saves` table for cross-device sync
-3. Upsert user on OAuth callback
-4. Add `/api/game/save` and `/api/game/load` endpoints
+Database persistence is **implemented**: `users` and `userPuzzleStats` tables exist, migrations run via Drizzle ORM, and all stats routes read/write PostgreSQL. Cross-device real-time game-state sync remains a future item.
 
 ### Security Improvements
 
-- [ ] Rate limit `/auth/*` endpoints
-- [ ] Add CSRF protection
+- [x] Rate limit `/auth/*` endpoints
+- [x] CSRF protection (`/api/auth/csrf-token`)
 - [ ] Session expiration/rotation

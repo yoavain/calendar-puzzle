@@ -71,9 +71,9 @@ calendar-puzzle/
 
 - **Tech stack**: React 19 + Vite, Material‑UI, Emotion
 - **Layouts**: Three modes in `layouts/` directory (desktop, mobile-portrait, mobile-landscape)
-  - Desktop: `layouts/desktop/DesktopLayout.tsx` uses `Game.tsx` with HTML5 drag-and-drop
+  - Desktop: `layouts/desktop/DesktopLayout.tsx` uses `useGameController` (shared with mobile) + HTML5 drag-and-drop
   - Mobile: `layouts/mobile-portrait/`, `layouts/mobile-landscape/` use `@dnd-kit`
-  - Shared mobile: `layouts/common/` — `DndProvider.tsx`, `useGameController.ts`, `PieceCarousel.tsx`, `MobileToolbar.tsx`
+  - Shared: `layouts/common/` — `DndProvider.tsx`, `useGameController.ts`, `PieceCarousel.tsx`, `MobileToolbar.tsx`
 - **State management**: React context + `useGameHistory` hook (undo/redo)
 - **Components** (`components/`) - React UI components (including `PlayAnotherDialog.tsx`)
 - **Hooks** (`hooks/`) - Custom React hooks
@@ -92,8 +92,8 @@ calendar-puzzle/
 ### Drag-and-Drop Architecture
 
 **Two implementations:**
-- **Desktop**: `Game.tsx` uses HTML5 Drag and Drop API
-- **Mobile**: `layouts/common/DndProvider.tsx` uses `@dnd-kit` library for touch support; `layouts/common/useGameController.ts` holds shared mobile game logic
+- **Desktop**: `DesktopLayout.tsx` uses HTML5 Drag and Drop API
+- **Mobile**: `layouts/common/DndProvider.tsx` uses `@dnd-kit` library for touch support; `layouts/common/useGameController.ts` holds shared game logic (used by all layouts)
 
 **Shared pure utilities** (`src/common/utils/shapeHelpers.ts`):
 - `findFirstFilledCell()` - Find top-left filled cell in a shape
