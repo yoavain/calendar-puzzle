@@ -73,7 +73,7 @@ export const useGameHistory = (initialState: GameState) => {
 
             debugLogger.log("history:redo:result", { state: next });
             return {
-                past: [...prev.past, cloneGameState(prev.present)],
+                past: [...prev.past, cloneGameState(prev.present)].slice(-MAX_HISTORY),
                 present: cloneGameState(next),
                 future: newFuture
             };

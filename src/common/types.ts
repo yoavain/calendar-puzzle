@@ -49,7 +49,7 @@ export interface GameState {
     selectedPieceId: PieceId | null;
     currentDate: PuzzleDate;
     isSolved: boolean;
-    solutionRevealed?: boolean; // When true, puzzle was solved via solution button (not by user)
+    solutionRevealed: boolean; // When true, puzzle was solved via solution button (not by user)
 }
 
 export interface DragItem {
