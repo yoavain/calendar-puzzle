@@ -285,7 +285,8 @@ export const findSolution = (initialBoard: Board, initialPieces: Piece[], date: 
             pieces: finalPieces.sort((a, b) => a.id - b.id),
             selectedPieceId: null,
             currentDate: date,
-            isSolved: true
+            isSolved: true,
+            solutionRevealed: false
         };
 
     }

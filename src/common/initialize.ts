@@ -95,6 +95,7 @@ export const initializeGame = (date: Date = new Date()): GameState => {
         pieces: initializePieces(),
         selectedPieceId: null,
         currentDate: puzzleDate,
-        isSolved: false
+        isSolved: false,
+        solutionRevealed: false
     };
 };

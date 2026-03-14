@@ -77,7 +77,7 @@ export const PortraitLayout: React.FC = () => {
                                 pieces={game.gameState.pieces}
                                 onCellClick={game.handleCellClick}
                                 invalidDropCells={game.invalidDropCells}
-                                solutionRevealed={game.gameState.solutionRevealed ?? false}
+                                solutionRevealed={game.gameState.solutionRevealed}
                                 isSolved={game.gameState.isSolved ?? false}
                                 scale={boardScale}
                             />
