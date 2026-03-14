@@ -31,7 +31,7 @@ export default defineConfig({
         emptyOutDir: true,
         sourcemap: true,
         chunkSizeWarningLimit: 500,
-        rollupOptions: {
+        rolldownOptions: {
             output: {
                 manualChunks(id) {
                     // Extract package name from node_modules path, handling scoped packages (@scope/name)
