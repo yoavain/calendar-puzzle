@@ -37,6 +37,7 @@ src/
 ├─ common/                      # Pure game logic (NO DOM, NO React)
 │  ├─ boardOperations.ts       # Pure board state operations
 │  ├─ gameLogic.ts             # Core game rules and validation
+│  ├─ initialize.ts            # Board/piece/game initialisation
 │  ├─ pieceData.ts             # Piece shape definitions
 │  ├─ puzzleSolver.ts          # Puzzle solving algorithm
 │  ├─ types.ts                 # Type definitions
@@ -45,16 +46,15 @@ src/
 │
 ├─ client/                      # UI layer (React, DOM)
 │  ├─ components/              # React components
-│  │  ├─ Game.tsx              # Desktop layout (HTML5 DnD)
 │  │  ├─ Board.tsx             # Game board component
 │  │  ├─ Piece.tsx             # Piece component
 │  │  └─ ...
 │  ├─ layouts/                 # Layout-specific code
-│  │  ├─ desktop/              # Desktop layout
+│  │  ├─ desktop/              # Desktop layout (DesktopLayout.tsx — HTML5 DnD)
 │  │  ├─ mobile-portrait/      # Mobile portrait layout
 │  │  ├─ mobile-landscape/     # Mobile landscape layout
 │  │  └─ common/
-│  │     ├─ useGameController.ts  # Game state controller (mobile)
+│  │     ├─ useGameController.ts  # Game state controller (all layouts)
 │  │     └─ DndProvider.tsx       # @dnd-kit provider (mobile)
 │  ├─ hooks/                   # React hooks
 │  │  ├─ useGameHistory.ts     # Undo/redo functionality
@@ -62,7 +62,7 @@ src/
 │  ├─ utils/                   # UI utilities
 │  │  ├─ dragHelpers.ts        # DOM-aware drag utilities
 │  │  ├─ pieceColors.ts        # UI color definitions
-│  │  └─ initialize.ts         # Game initialization
+│  │  └─ initialize.ts         # Re-exports from src/common/initialize.ts
 │  └─ service/                 # API client
 │
 └─ server/                      # Backend (Fastify)
@@ -91,7 +91,7 @@ rebuildGameState(pieces, date, isSolved): GameState
 updateBoardAndPieces(piece, newPosition, currentBoard, currentPieces): { board, pieces }
 ```
 
-**Usage**: Both desktop (`Game.tsx`) and mobile (`useGameController.ts`) use these functions.
+**Usage**: All layouts (`DesktopLayout.tsx`, `PortraitLayout.tsx`, `LandscapeLayout.tsx`) use these functions via `useGameController.ts`.
 
 **Benefits**:
 - Eliminates ~60 lines of duplicate code
@@ -215,22 +215,21 @@ export function useGameHistory(initialState: GameState) {
 
 ## Dual Layout Architecture
 
-The app supports two different drag-and-drop implementations:
+The app supports two different drag-and-drop implementations. All layouts share `useGameController.ts` for game logic.
 
-### Desktop Layout (`Game.tsx`)
+### Desktop Layout (`DesktopLayout.tsx`)
 
 - Uses **HTML5 Drag and Drop API**
 - Simpler implementation
 - Proven, stable, no external dependencies
-- Directly implements game logic inline
 
 **Why keep it?** Desktop drag-and-drop works well with native HTML5 API. No need for heavy library.
 
-### Mobile Layouts (`useGameController.ts` + `DndProvider.tsx`)
+### Mobile Layouts (`DndProvider.tsx`)
 
 - Uses **@dnd-kit** library
 - Supports touch events with proper delays
-- Handles portrait and landscape orientations
+- Handles portrait (`PortraitLayout.tsx`) and landscape (`LandscapeLayout.tsx`) orientations
 - More complex but handles mobile edge cases
 
 **Why @dnd-kit?** Mobile drag-and-drop requires:
@@ -343,16 +342,8 @@ Users can touch transparent gaps in the piece grid (empty cells).
 
 ### Potential Refactorings (Optional)
 
-1. **Split `useGameController`** (High Risk)
-   - Extract modal state to `useGameModals`
-   - Extract server sync to `useServerSync`
-   - Extract session persistence to `useSessionPersistence`
-   - Extract keyboard shortcuts to `useKeyboardShortcuts`
-   - Would reduce from ~988 lines to ~200 lines
-
-2. **Unify Desktop and Mobile**
+1. **Unify Desktop and Mobile DnD**
    - Explore using @dnd-kit for desktop too
-   - Would eliminate `Game.tsx` duplication
    - Risk: desktop works perfectly now, why fix it?
 
 ### Benefits of Current Architecture
