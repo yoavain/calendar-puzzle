@@ -37,6 +37,7 @@ src/
 ├─ common/                      # Pure game logic (NO DOM, NO React)
 │  ├─ boardOperations.ts       # Pure board state operations
 │  ├─ consts.ts                # Game constants (board layout, months)
+│  ├─ dlx.d.ts                 # Type declarations for the DLX solver library
 │  ├─ gameLogic.ts             # Core game rules and validation
 │  ├─ initialize.ts            # Board/piece/game initialisation
 │  ├─ pieceData.ts             # Piece shape definitions
@@ -58,15 +59,24 @@ src/
 │  │  ├─ mobile-portrait/      # Mobile portrait layout
 │  │  ├─ mobile-landscape/     # Mobile landscape layout
 │  │  └─ common/
-│  │     ├─ useGameController.ts  # Game state controller (all layouts)
-│  │     └─ DndProvider.tsx       # @dnd-kit provider (mobile)
+│  │     ├─ useGameController.ts      # Game state controller (all layouts)
+│  │     ├─ DndProvider.tsx           # @dnd-kit provider (mobile)
+│  │     ├─ useDndAdapters.ts         # dnd-kit event adapter hooks
+│  │     ├─ useBoardScale.ts          # Board scale calculation
+│  │     ├─ useGameModals.ts          # Modal open/close state
+│  │     ├─ useServerSync.ts          # Server sync (stats, hints)
+│  │     ├─ useSessionPersistence.ts  # Session save/restore
+│  │     └─ useKeyboardShortcuts.ts   # Keyboard shortcut bindings
 │  ├─ hooks/                   # React hooks
 │  │  ├─ useGameHistory.ts     # Undo/redo functionality
 │  │  ├─ useGameSession.ts     # Session persistence
 │  │  ├─ useLayout.ts          # Responsive layout detection
 │  │  └─ useQueryParam.ts      # URL query parameter management
 │  ├─ utils/                   # UI utilities
+│  │  ├─ debugLogger.ts        # Circular-buffer debug logger
 │  │  ├─ dragHelpers.ts        # DOM-aware drag utilities
+│  │  ├─ encryption.ts         # Client-side payload encryption
+│  │  ├─ measureUtils.ts       # DOM measurement helpers
 │  │  └─ pieceColors.ts        # UI color definitions
 │  └─ service/                 # API client
 │
