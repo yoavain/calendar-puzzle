@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 
 import { MobileBoard } from "../../components/MobileBoard";
@@ -10,14 +10,13 @@ import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { ProgressBar } from "../../components/ProgressBar";
 
 import { useGameController } from "../common/useGameController";
+import { useDndAdapters } from "../common/useDndAdapters";
 import { BetaBanner } from "../common/BetaBanner";
 import { MobileToolbar } from "../common/MobileToolbar";
 import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
 import { DebugPanel } from "../../components/DebugPanel";
 import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
-import type { Position } from "../../../common/types";
-import type { PieceId } from "../../../common/pieceData";
 import {
     LandscapeContainer,
     ToolbarColumn,
@@ -43,6 +42,7 @@ import {
 export const LandscapeLayout: React.FC = () => {
     const theme = useTheme();
     const game = useGameController();
+    const { handleDndPieceDrop, handleDndPieceRemove, handleDndDragStart, handleDndDragEnd } = useDndAdapters(game);
     const [boardScale, setBoardScale] = useState(1);
 
     useEffect(() => {
@@ -68,22 +68,6 @@ export const LandscapeLayout: React.FC = () => {
     }, [theme.game.cellSize]);
 
     const unplacedPieces = game.gameState.pieces.filter(piece => !piece.position);
-
-    const handleDndPieceDrop = useCallback((position: Position, pieceId: PieceId) => {
-        game.handlePieceDrop(position, { pieceId });
-    }, [game]);
-
-    const handleDndPieceRemove = useCallback((pieceId: PieceId) => {
-        game.handlePieceReturnToPile(pieceId);
-    }, [game]);
-
-    const handleDndDragStart = useCallback((pieceId: number) => {
-        game.setDraggedPieceId(pieceId);
-    }, [game]);
-
-    const handleDndDragEnd = useCallback(() => {
-        game.setDraggedPieceId(null);
-    }, [game]);
 
     return (
         <DndProvider
