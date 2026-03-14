@@ -2,16 +2,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
-import { findLastUnsolvedDate } from "../../../common/streakUtils";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { initializeBoard, initializeGame } from "../../utils/initialize";
 import { useGameHistory } from "../../hooks/useGameHistory";
-import { getHint, getHintState, getSolution, recordCompletion, recordStart } from "../../service/puzzleService";
-import { clearSession, loadSession, saveSession } from "../../hooks/useGameSession";
+import { getHint, getHintState, getSolution } from "../../service/puzzleService";
+import { clearSession, loadSession } from "../../hooks/useGameSession";
 import { logToServer } from "../../service/logService";
 import { useUser } from "../../context/UserContext";
 import { debugLogger } from "../../utils/debugLogger";
+import { useGameModals } from "./useGameModals";
+import { useServerSync } from "./useServerSync";
+import { useSessionPersistence } from "./useSessionPersistence";
+import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {
@@ -47,23 +50,18 @@ const getInitialGameState = (): { state: GameState; date: PuzzleDate } => {
  */
 export function useGameController() {
     // Get user authentication state
-    const { 
-        user, 
-        loading: userLoading, 
-        addCompletedDate, 
+    const {
+        user,
+        loading: userLoading,
+        addCompletedDate,
         addPlayedDate,
         completedDates,
         playedDates
     } = useUser();
 
-    // Track which dates have been reported as started/completed in this session
-    const startedDatesRef = useRef<Set<string>>(new Set());
-    const completedDatesRef = useRef<Set<string>>(new Set());
-    const getDateKey = useCallback((date: PuzzleDate) => `${date.month}-${date.day}`, []);
-
     // Get initial state (from session or fresh game)
     const [initial] = useState(getInitialGameState);
-    
+
     const {
         gameState,
         pushState,
@@ -84,20 +82,6 @@ export function useGameController() {
     const [invalidDropCells, setInvalidDropCells] = useState<InvalidDropCell[]>([]);
     const invalidDropTimeoutRef = useRef<number | null>(null);
 
-    // State for modals
-    const [isStatsOpen, setIsStatsOpen] = useState(false);
-    const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-    const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
-    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-    const [isPlayAnotherOpen, setIsPlayAnotherOpen] = useState(false);
-    const [playAnotherDate, setPlayAnotherDate] = useState<PuzzleDate | null>(null);
-    const [playAnotherMode, setPlayAnotherMode] = useState<"just-solved" | "already-solved">("already-solved");
-
-    // Refs for play-another dialog flow control
-    const justSolvedRef = useRef(false);
-    const hasShownPlayAnotherRef = useRef(false);
-    const statsAutoOpenTimeoutRef = useRef<number | null>(null);
-
     // Generation counter to discard stale hint responses
     const hintLoadIdRef = useRef(0);
 
@@ -108,12 +92,22 @@ export function useGameController() {
         setDraggedPieceId(null);
     }, []);
 
+    // Modal state and play-another dialog flow
+    const {
+        justSolvedRef,
+        statsAutoOpenTimeoutRef,
+        setIsSuccessMessageOpen,
+        setIsStatsOpen,
+        setIsPlayAnotherOpen,
+        modals
+    } = useGameModals({ user, userLoading, completedDates, currentDate: gameState.currentDate });
+
     // Helper to load persistent hint from server
     const loadPersistentHint = useCallback(async (date: PuzzleDate, currentPieces: PieceType[]) => {
         if (!user) {
             return null;
         }
-        
+
         try {
             const hintPiece = await getHintState(date);
             if (hintPiece) {
@@ -199,10 +193,10 @@ export function useGameController() {
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, newDate.month, newDate.day);
         const newGameState = initializeGame(jsDate);
-        
+
         // Immediately clear history with the new game state for instant feedback
         clearHistory(newGameState);
-        
+
         // Load persistent hint if available
         const thisHintLoadId = ++hintLoadIdRef.current;
         loadPersistentHint(newDate, newGameState.pieces).then(hintState => {
@@ -221,9 +215,9 @@ export function useGameController() {
         }).catch(err => {
             logToServer("error", "Game: Failed to handle persistent hint on date change", err, user?.name);
         });
-        
+
         setSolverError(null);
-    }, [clearHistory, loadPersistentHint, updatePresent, user?.name]);
+    }, [clearHistory, loadPersistentHint, updatePresent, user?.name, setIsSuccessMessageOpen]);
 
     const handleReset = useCallback(async () => {
         debugLogger.log("ctrl:handleReset", { date: gameState.currentDate });
@@ -252,9 +246,9 @@ export function useGameController() {
         }).catch(err => {
             logToServer("error", "Game: Failed to handle persistent hint on reset", err, user?.name);
         });
-        
+
         setSolverError(null);
-    }, [gameState.currentDate, clearHistory, loadPersistentHint, updatePresent, user?.name]);
+    }, [gameState.currentDate, clearHistory, loadPersistentHint, updatePresent, user?.name, setIsSuccessMessageOpen]);
 
     const handlePieceSelect = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceSelect", { pieceId });
@@ -331,7 +325,7 @@ export function useGameController() {
             });
             return;
         }
-        
+
         const valid = isValidPlacement(gameState.board, piece, position, true);
         if (!valid) {
             // Trigger visual feedback for invalid drop
@@ -348,8 +342,8 @@ export function useGameController() {
 
         // Check if the puzzle is solved BEFORE creating the state
         const solvedDate = puzzleSolvedForDate(newPieces);
-        const solved = !!solvedDate && 
-                       solvedDate.month === gameState.currentDate.month && 
+        const solved = !!solvedDate &&
+                       solvedDate.month === gameState.currentDate.month &&
                        solvedDate.day === gameState.currentDate.day;
         if (solved) {
             justSolvedRef.current = true;
@@ -378,7 +372,7 @@ export function useGameController() {
             pieceId,
             position
         });
-    }, [gameState, updatePresent, triggerInvalidDropFeedback, pushState, user]);
+    }, [gameState, updatePresent, triggerInvalidDropFeedback, pushState, user, justSolvedRef, statsAutoOpenTimeoutRef, setIsSuccessMessageOpen, setIsStatsOpen]);
 
     const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceReturnToPile", { pieceId });
@@ -535,13 +529,13 @@ export function useGameController() {
         }
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        
+
         // When exactly one flip is active, we must invert the rotation step
         // to maintain a consistent visual clockwise rotation.
         const isFlipped = piece.isFlippedH !== piece.isFlippedV;
         const rotationStep = isFlipped ? -90 : 90;
         const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
-        
+
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
@@ -551,16 +545,16 @@ export function useGameController() {
         if (gameState.isSolved || !piece || piece.isLocked) {
             return;
         }
-        
+
         const newPieces = [...gameState.pieces];
         const pieceIndex = newPieces.findIndex(p => p.id === pieceId);
-        
+
         // When exactly one flip is active, we must invert the rotation step
         // to maintain a consistent visual counter-clockwise rotation.
         const isFlipped = piece.isFlippedH !== piece.isFlippedV;
         const rotationStep = isFlipped ? 90 : -90;
         const newRotation = ((piece.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
-        
+
         newPieces[pieceIndex] = { ...piece, rotation: newRotation };
         pushState({ ...gameState, pieces: newPieces }, { type: "ROTATE_PIECE", pieceId });
     }, [gameState, pushState]);
@@ -589,7 +583,7 @@ export function useGameController() {
 
     const handleGlobalDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
-        
+
         // Check if the drop target is the board or a cell within the board
         const boardElement = document.querySelector("[data-testid=\"board\"]");
         if (boardElement && boardElement.contains(e.target as Node)) {
@@ -618,101 +612,12 @@ export function useGameController() {
         e.dataTransfer.dropEffect = "move";
     }, []);
 
-    // Helper: compute and show the play-another dialog for a given solved date
-    const checkAndSuggestNextPuzzle = useCallback((solvedDate: PuzzleDate, mode: "just-solved" | "already-solved") => {
-        const suggested = findLastUnsolvedDate(
-            [...completedDates, solvedDate],
-            solvedDate
-        );
-        if (suggested) {
-            setPlayAnotherDate(suggested);
-            setPlayAnotherMode(mode);
-            setIsPlayAnotherOpen(true);
-        }
-    }, [completedDates]);
-
     const handlePlayAnother = useCallback((date: PuzzleDate) => {
         setIsPlayAnotherOpen(false);
         handleDateChange(date);
-    }, [handleDateChange]);
+    }, [handleDateChange, setIsPlayAnotherOpen]);
 
-    // Refs so the Escape branch always sees the latest values without adding them
-    // as deps to handleKeyDown (which would re-subscribe the global listener on every piece move).
-    const handleResetRef = useRef(handleReset);
-    handleResetRef.current = handleReset;
-    const isResetDisabledRef = useRef(isResetDisabled);
-    isResetDisabledRef.current = isResetDisabled;
-
-    // Keyboard shortcuts handler
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-            e.preventDefault();
-            if (e.shiftKey) {
-                if (canRedo) {
-                    redo();
-                }
-            }
-            else {
-                if (canUndo) {
-                    undo();
-                }
-            }
-        }
-        // Alternative: Ctrl+Y for redo (common on Windows)
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-            e.preventDefault();
-            if (canRedo) {
-                redo();
-            }
-        }
-        // Escape to reset — read via ref to avoid re-subscribing the listener on every piece move
-        if (e.key === "Escape" && !isResetDisabledRef.current) {
-            e.preventDefault();
-            handleResetRef.current();
-        }
-    }, [canUndo, canRedo, undo, redo]);
-
-    // === EFFECTS ===
-
-    // Sync progress with server when user logs in or state changes
-    useEffect(() => {
-        if (!user || userLoading) {
-            return;
-        }
-
-        const dateKey = getDateKey(gameState.currentDate);
-        const isStarted = gameState.pieces.some(p => p.position !== null);
-        const isSolved = gameState.isSolved;
-        const solutionRevealed = gameState.solutionRevealed;
-        const currentDate = gameState.currentDate;
-
-        // Sync start progress
-        if (isStarted && !startedDatesRef.current.has(dateKey)) {
-            const alreadyPlayed = playedDates.some(d => d.month === currentDate.month && d.day === currentDate.day);
-            if (!alreadyPlayed) {
-                recordStart(currentDate).then(success => {
-                    if (success) {
-                        addPlayedDate(currentDate);
-                    }
-                });
-            }
-            startedDatesRef.current.add(dateKey);
-        }
-
-        // Sync completion progress
-        // Only sync if solved by user (not revealed)
-        if (isSolved && !solutionRevealed && !completedDatesRef.current.has(dateKey)) {
-            const alreadyCompleted = completedDates.some(d => d.month === currentDate.month && d.day === currentDate.day);
-            if (!alreadyCompleted) {
-                recordCompletion(currentDate, gameState.pieces).then(success => {
-                    if (success) {
-                        addCompletedDate(currentDate);
-                    }
-                });
-            }
-            completedDatesRef.current.add(dateKey);
-        }
-    }, [user, userLoading, gameState.currentDate, gameState.pieces, gameState.isSolved, gameState.solutionRevealed, playedDates, completedDates, addPlayedDate, addCompletedDate, getDateKey]);
+    // === SUB-HOOKS (side effects only) ===
 
     // Check for initial hint on mount
     useEffect(() => {
@@ -742,57 +647,16 @@ export function useGameController() {
         checkInitialHint();
     }, [user, userLoading, gameState.currentDate]); // Run when user logs in or date is set
 
-    // Trigger 1: after both success and stats dialogs are closed following a solve, show "play another" dialog
-    useEffect(() => {
-        if (!isSuccessMessageOpen && !isStatsOpen && justSolvedRef.current && user) {
-            if (statsAutoOpenTimeoutRef.current !== null) {
-                window.clearTimeout(statsAutoOpenTimeoutRef.current);
-                statsAutoOpenTimeoutRef.current = null;
-            }
-            justSolvedRef.current = false;
-            checkAndSuggestNextPuzzle(gameState.currentDate, "just-solved");
-        }
-    }, [isSuccessMessageOpen, isStatsOpen, user, checkAndSuggestNextPuzzle, gameState.currentDate]);
+    useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate });
 
-    // Trigger 2+3: on page load or after login, suggest a puzzle if today is already solved
-    useEffect(() => {
-        if (!userLoading && user && !hasShownPlayAnotherRef.current) {
-            const today = toPuzzleDate(new Date());
-            const todayAlreadySolved = completedDates.some(
-                d => d.month === today.month && d.day === today.day
-            );
-            if (todayAlreadySolved) {
-                hasShownPlayAnotherRef.current = true;
-                checkAndSuggestNextPuzzle(today, "already-solved");
-            }
-        }
-    }, [userLoading, user, completedDates, checkAndSuggestNextPuzzle]);
+    useSessionPersistence({ gameState });
 
-    // Keyboard event listener
-    useEffect(() => {
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [handleKeyDown]);
+    useKeyboardShortcuts({ canUndo, canRedo, undo, redo, handleReset, isResetDisabled });
 
     // Update document title when date changes
     useEffect(() => {
         document.title = `Calendar Puzzle - ${formattedDate}`;
     }, [formattedDate]);
-
-    // Save session on state changes (skip if solution was revealed)
-    useEffect(() => {
-        // Don't save if solution was revealed via button
-        if (gameState.solutionRevealed) {
-            clearSession();
-            return;
-        }
-
-        saveSession({
-            date: gameState.currentDate,
-            pieces: gameState.pieces,
-            isSolved: gameState.isSolved
-        });
-    }, [gameState]);
 
     // Return all state and handlers
     return {
@@ -818,35 +682,7 @@ export function useGameController() {
         redo,
 
         // Modal state
-        modals: {
-            stats: {
-                isOpen: isStatsOpen,
-                open: () => setIsStatsOpen(true),
-                close: () => setIsStatsOpen(false)
-            },
-            issue: {
-                isOpen: isIssueModalOpen,
-                open: () => setIsIssueModalOpen(true),
-                close: () => setIsIssueModalOpen(false)
-            },
-            success: {
-                isOpen: isSuccessMessageOpen,
-                open: () => setIsSuccessMessageOpen(true),
-                close: () => setIsSuccessMessageOpen(false)
-            },
-            help: {
-                isOpen: isHelpModalOpen,
-                open: () => setIsHelpModalOpen(true),
-                close: () => setIsHelpModalOpen(false)
-            },
-            playAnother: {
-                isOpen: isPlayAnotherOpen,
-                suggestedDate: playAnotherDate,
-                mode: playAnotherMode,
-                open: () => setIsPlayAnotherOpen(true),
-                close: () => setIsPlayAnotherOpen(false)
-            }
-        },
+        modals,
 
         // Drag state
         setDraggedPieceId,
