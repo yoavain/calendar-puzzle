@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { DatePathParams, ErrorResponse, HintResponse, HintStateResponse } from "../../common/restTypes.js";
+import type { DatePathParams, ErrorResponse, HintRequest, HintResponse, HintStateResponse } from "../../common/restTypes.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { getHintPiece } from "../service/solverService.js";
 import { requireAuth } from "../auth/requireAuth.js";
@@ -10,14 +10,9 @@ import { and, eq } from "drizzle-orm";
 import type { SessionUser } from "../auth/passport.js";
 import { API_HINT, API_HINT_STATE } from "../../common/restPaths.js";
 
-interface HintRequestBody {
-    month: number;
-    day: number;
-}
-
 export const registerHintRoutes = (app: FastifyInstance): void => {
     // PUT /api/hint - Get a hint and record usage
-    app.put<{ Body: HintRequestBody; Reply: HintResponse | ErrorResponse }>(
+    app.put<{ Body: HintRequest; Reply: HintResponse | ErrorResponse }>(
         API_HINT,
         { 
             preHandler: requireAuth,
