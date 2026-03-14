@@ -11,7 +11,6 @@ import { ProgressBar } from "../../components/ProgressBar";
 import { useGameController } from "../common/useGameController";
 import { useDndAdapters } from "../common/useDndAdapters";
 import { useBoardScale } from "../common/useBoardScale";
-import { BetaBanner } from "../common/BetaBanner";
 import { MobileToolbar } from "../common/MobileToolbar";
 import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
@@ -65,7 +64,6 @@ export const LandscapeLayout: React.FC = () => {
                 <MainColumn>
                     <ContentRow>
                         <BoardColumn>
-                            <BetaBanner />
                             <ProgressArea>
                                 <ProgressBar {...game.calculateProgress()} />
                             </ProgressArea>
