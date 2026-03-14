@@ -155,6 +155,29 @@ See [docs/drag-drop-guidelines.md](docs/drag-drop-guidelines.md) for full detail
 - REST routes under `src/server/rest/`.
 - Solver worker `src/server/workers/puzzleSolverWorker.ts`.
 
+### Fastify Route Generics
+
+`app.get<RouteGenericInterface>(path, opts, handler)` accepts a generic that controls
+the TypeScript types of request data and the reply:
+
+```ts
+app.get<{
+    Params: { date: string };
+    Body: MyRequestType;
+    Querystring: { page: number };
+    Reply: MyResponseType | ErrorResponse;
+}>(...)
+```
+
+These shape what `request.params`, `request.body`, `request.query`, and `reply.send()`
+accept. Import types from `src/common/restTypes.ts`.
+
+**What generics do NOT affect:** hook slot types (`preValidation`, `preHandler`, etc.).
+Those are always `(...args) => void | Promise<unknown>` regardless of route generics.
+This is why `fastifyPassport.authenticate()` (returns `RouteHandlerMethod`) must be cast
+`as unknown as preValidationHookHandler` — Fastify v5.8.0 tightened hook slot types,
+and `@fastify/passport` hasn't updated its return type yet.
+
 ### Common (`src/common/`)
 
 **Pure game logic layer - NO DOM dependencies, NO React.**
