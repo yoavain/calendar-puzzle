@@ -48,7 +48,6 @@ export const rebuildGameState = (pieces: Piece[], date: PuzzleDate, isSolved: bo
         selectedPieceId: null,
         currentDate: date,
         isSolved,
-        isGameComplete: isSolved,
         solutionRevealed: false
     };
 };
