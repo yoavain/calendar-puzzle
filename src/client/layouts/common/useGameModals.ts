@@ -43,6 +43,13 @@ export function useGameModals({
         }
     }, [completedDates]);
 
+    // Clear the auto-open timer on unmount to avoid setState on an unmounted component
+    useEffect(() => () => {
+        if (statsAutoOpenTimeoutRef.current !== null) {
+            window.clearTimeout(statsAutoOpenTimeoutRef.current);
+        }
+    }, []);
+
     // Trigger 1: after both success and stats dialogs are closed following a solve, show "play another"
     useEffect(() => {
         if (!isSuccessMessageOpen && !isStatsOpen && justSolvedRef.current && user) {
