@@ -96,3 +96,18 @@ export interface LogRequest {
 export interface ErrorResponse {
     error: string;
 }
+
+// Used by logout, stats/start, stats/complete
+export interface SuccessResponse {
+    success: true;
+}
+
+// Used by GET /api/auth/public-key
+export interface PublicKeyResponse {
+    publicKey: string;
+}
+
+// Used by GET /api/auth/csrf-token
+export interface CsrfTokenResponse {
+    csrfToken: string;
+}

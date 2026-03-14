@@ -4,24 +4,15 @@ import { userPuzzleStats } from "../db/schema.js";
 import { isNull } from "drizzle-orm";
 import type { SessionUser } from "../auth/passport.js";
 import { requireAuth } from "../auth/requireAuth.js";
-import type { Piece } from "../../common/types.js";
 import { puzzleSolvedForDate } from "../../common/gameLogic.js";
 import { statsCompleteSchema, statsStartSchema } from "./schemas.js";
 import { submitInvalidSolutionReport } from "../service/issueSubmitter.js";
 import { API_STATS_COMPLETE, API_STATS_START } from "../../common/restPaths.js";
-
-interface StatsRequest {
-    month: number;
-    day: number;
-}
-
-interface CompleteRequest extends StatsRequest {
-    pieces: Piece[];
-}
+import type { CompletePuzzleRequest, ErrorResponse, StartPuzzleRequest, SuccessResponse } from "../../common/restTypes.js";
 
 export const registerStatsRoutes = (app: FastifyInstance): void => {
     // Record that a user started a puzzle
-    app.post<{ Body: StatsRequest }>(
+    app.post<{ Body: StartPuzzleRequest; Reply: SuccessResponse | ErrorResponse }>(
         API_STATS_START,
         { 
             preHandler: requireAuth,
@@ -60,7 +51,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
     );
 
     // Record that a user completed a puzzle (with server-side validation)
-    app.post<{ Body: CompleteRequest }>(
+    app.post<{ Body: CompletePuzzleRequest; Reply: SuccessResponse | ErrorResponse }>(
         API_STATS_COMPLETE,
         { 
             preHandler: requireAuth,
