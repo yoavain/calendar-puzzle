@@ -75,7 +75,7 @@ Design a relational schema to track users and their puzzle completion history.
 - Add unique constraint on `(user_id, puzzle_date)` to prevent duplicate completions.
 - Use `solution_state` to store the final board state for verification.
 
-### API Endpoints
+### Original API Design (Historical)
 
 > **Note:** The table below is the original design plan and is superseded by the implemented API.
 > See the API Endpoints table in [CLAUDE.md](../CLAUDE.md) for the current routes, methods, and auth requirements.

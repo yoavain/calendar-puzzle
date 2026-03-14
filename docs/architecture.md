@@ -36,10 +36,14 @@ The codebase follows a clear separation of concerns:
 src/
 ├─ common/                      # Pure game logic (NO DOM, NO React)
 │  ├─ boardOperations.ts       # Pure board state operations
+│  ├─ consts.ts                # Game constants (board layout, months)
 │  ├─ gameLogic.ts             # Core game rules and validation
 │  ├─ initialize.ts            # Board/piece/game initialisation
 │  ├─ pieceData.ts             # Piece shape definitions
 │  ├─ puzzleSolver.ts          # Puzzle solving algorithm
+│  ├─ restPaths.ts             # API route path constants
+│  ├─ restTypes.ts             # API request/response types
+│  ├─ streakUtils.ts           # Streak and history calculation
 │  ├─ types.ts                 # Type definitions
 │  └─ utils/
 │     └─ shapeHelpers.ts       # Pure shape analysis utilities
@@ -58,7 +62,9 @@ src/
 │  │     └─ DndProvider.tsx       # @dnd-kit provider (mobile)
 │  ├─ hooks/                   # React hooks
 │  │  ├─ useGameHistory.ts     # Undo/redo functionality
-│  │  └─ useGameSession.ts     # Session persistence
+│  │  ├─ useGameSession.ts     # Session persistence
+│  │  ├─ useLayout.ts          # Responsive layout detection
+│  │  └─ useQueryParam.ts      # URL query parameter management
 │  ├─ utils/                   # UI utilities
 │  │  ├─ dragHelpers.ts        # DOM-aware drag utilities
 │  │  ├─ pieceColors.ts        # UI color definitions
@@ -194,7 +200,7 @@ export const getPieceColor = (id: number): string => ...
 
 #### `hooks/useGameHistory.ts`
 
-Undo/redo functionality using immer:
+Undo/redo functionality using manual deep-cloning (spread operators):
 
 ```typescript
 export function useGameHistory(initialState: GameState) {
