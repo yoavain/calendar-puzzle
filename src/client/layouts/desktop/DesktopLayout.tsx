@@ -247,7 +247,12 @@ export const DesktopLayout: React.FC = () => {
                         <PlayAnotherDialog
                             isOpen={game.modals.playAnother.isOpen}
                             mode={game.modals.playAnother.mode}
-                            onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate!)}
+                            onAccept={() => {
+                                if (!game.modals.playAnother.suggestedDate) {
+                                    return;
+                                }
+                                game.handlePlayAnother(game.modals.playAnother.suggestedDate);
+                            }}
                             onDecline={game.modals.playAnother.close}
                         />
 

@@ -738,6 +738,13 @@ export function useGameController() {
         handleDateChange(date);
     }, [handleDateChange]);
 
+    // Refs so the Escape branch always sees the latest values without adding them
+    // as deps to handleKeyDown (which would re-subscribe the global listener on every piece move).
+    const handleResetRef = useRef(handleReset);
+    handleResetRef.current = handleReset;
+    const isResetDisabledRef = useRef(isResetDisabled);
+    isResetDisabledRef.current = isResetDisabled;
+
     // Keyboard shortcuts handler
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
@@ -760,12 +767,12 @@ export function useGameController() {
                 redo();
             }
         }
-        // Escape to reset
-        if (e.key === "Escape" && !isResetDisabled) {
+        // Escape to reset — read via ref to avoid re-subscribing the listener on every piece move
+        if (e.key === "Escape" && !isResetDisabledRef.current) {
             e.preventDefault();
-            handleReset();
+            handleResetRef.current();
         }
-    }, [canUndo, canRedo, undo, redo, isResetDisabled, handleReset]);
+    }, [canUndo, canRedo, undo, redo]);
 
     // === EFFECTS ===
 
