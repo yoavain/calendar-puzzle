@@ -84,11 +84,11 @@ calendar-puzzle/
   - `useLayout.ts` - Responsive layout detection
   - `useQueryParam.ts` - URL query parameter management
 - **Utils** (`utils/`) - UI utilities
+  - `debugLogger.ts` - Circular-buffer debug logger
   - `dragHelpers.ts` - DOM-aware drag utilities
-  - `pieceColors.ts` - UI color definitions
-  - `initialize.ts` - Game initialization
   - `encryption.ts` - Client-side payload encryption
   - `measureUtils.ts` - DOM measurement helpers
+  - `pieceColors.ts` - UI color definitions
 - **API client** (`service/`) - REST API calls (`puzzleService.ts`, `logService.ts`)
 
 ### Drag-and-Drop Architecture

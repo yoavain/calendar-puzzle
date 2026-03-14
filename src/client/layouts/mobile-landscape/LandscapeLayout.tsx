@@ -77,7 +77,7 @@ export const LandscapeLayout: React.FC = () => {
                                         onCellClick={game.handleCellClick}
                                         invalidDropCells={game.invalidDropCells}
                                         solutionRevealed={game.gameState.solutionRevealed}
-                                        isSolved={game.gameState.isSolved ?? false}
+                                        isSolved={game.gameState.isSolved}
                                         scale={boardScale}
                                     />
                                 </BoardScaleWrapper>
