@@ -4,7 +4,7 @@ import type { PieceId } from "../../../common/pieceData";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
-import { initializeBoard, initializeGame } from "../../utils/initialize";
+import { initializeBoard, initializeGame } from "../../../common/initialize";
 import { useGameHistory } from "../../hooks/useGameHistory";
 import { getHint, getHintState, getSolution } from "../../service/puzzleService";
 import { clearSession, loadSession } from "../../hooks/useGameSession";

@@ -2,7 +2,7 @@ import { getTransformedShape, puzzleSolvedForDate, isValidPlacement, clearPieceF
 import solution0101 from "./resources/01-01.json";
 import type { Board, Piece, PuzzleDate } from "../../src/common/types";
 import type { PieceId } from "../../src/common/pieceData";
-import { initializeBoard, initializePieces } from "../../src/client/utils/initialize";
+import { initializeBoard, initializePieces } from "../../src/common/initialize";
 import { TOTAL_PLAYABLE_CELLS } from "../../src/common/consts";
 
 describe("gameLogic", () => {

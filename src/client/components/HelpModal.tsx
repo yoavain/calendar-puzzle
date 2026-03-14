@@ -9,7 +9,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import { keyframes, styled } from "@mui/material/styles";
 import { Board as BoardComponent } from "./Board";
-import { initializeBoard } from "../utils/initialize";
+import { initializeBoard } from "../../common/initialize";
 import type { PieceId } from "../../common/pieceData";
 import { getPieceShape, PIECE_IDS } from "../../common/pieceData";
 import { getPieceColor } from "../utils/pieceColors";

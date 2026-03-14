@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { GamePage, type LayoutKind } from "./fixtures/gamePage";
 import { dragPieceToBoard } from "./helpers/dragHelpers";
 import { layoutFromProject, mockDate, mockApiRoutes, clearStorage } from "./helpers/testUtils";
-import { initializeBoard, initializePieces } from "../../src/client/utils/initialize";
+import { initializeBoard, initializePieces } from "../../src/common/initialize";
 import { findSolution } from "../../src/common/puzzleSolver";
 import { getTransformedShape } from "../../src/common/gameLogic";
 import { findFirstFilledCell } from "../../src/common/utils/shapeHelpers";
