@@ -271,7 +271,9 @@ export function useGameController() {
 
         const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
         if (!piece || piece.position) {
-            // Piece not found or already placed
+            // Piece not found, or it is already placed on the board.
+            // Tapping a board cell while a placed piece is selected is intentionally a no-op:
+            // the selection stays unchanged and the user must drag the piece to move it.
             return;
         }
 
