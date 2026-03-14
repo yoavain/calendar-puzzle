@@ -269,108 +269,6 @@ export function useGameController() {
         });
     }, [gameState, updatePresent]);
 
-    const handleRotate = useCallback(() => {
-        if (gameState.selectedPieceId === null || gameState.isSolved) {
-            return;
-        }
-
-        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
-        if (piece?.isLocked) {
-            return;
-        }
-
-        const newState = (() => {
-            const newPieces = [...gameState.pieces];
-            const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
-            const pieceToRotate = newPieces[pieceIndex];
-
-            // When exactly one flip is active, we must invert the rotation step
-            // to maintain a consistent visual clockwise rotation.
-            const isFlipped = pieceToRotate.isFlippedH !== pieceToRotate.isFlippedV;
-            const rotationStep = isFlipped ? -90 : 90;
-            const newRotation = ((pieceToRotate.rotation + rotationStep + 360) % 360) as 0 | 90 | 180 | 270;
-
-            newPieces[pieceIndex] = {
-                ...pieceToRotate,
-                rotation: newRotation
-            };
-
-            return {
-                ...gameState,
-                pieces: newPieces
-            };
-        })();
-
-        pushState(newState, {
-            type: "ROTATE_PIECE",
-            pieceId: gameState.selectedPieceId
-        });
-    }, [gameState, pushState]);
-
-    const handleFlipH = useCallback(() => {
-        if (gameState.selectedPieceId === null || gameState.isSolved) {
-            return;
-        }
-
-        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
-        if (piece?.isLocked) {
-            return;
-        }
-
-        const newState = (() => {
-            const newPieces = [...gameState.pieces];
-            const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
-            const pieceToFlip = newPieces[pieceIndex];
-
-            newPieces[pieceIndex] = {
-                ...pieceToFlip,
-                isFlippedH: !pieceToFlip.isFlippedH
-            };
-
-            return {
-                ...gameState,
-                pieces: newPieces
-            };
-        })();
-
-        pushState(newState, {
-            type: "FLIP_PIECE_H",
-            pieceId: gameState.selectedPieceId
-        });
-    }, [gameState, pushState]);
-
-    const handleFlipV = useCallback(() => {
-        if (gameState.selectedPieceId === null || gameState.isSolved) {
-            return;
-        }
-
-        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
-        if (piece?.isLocked) {
-            return;
-        }
-
-        const newState = (() => {
-            const newPieces = [...gameState.pieces];
-            const pieceIndex = newPieces.findIndex(p => p.id === gameState.selectedPieceId);
-            const pieceToFlip = newPieces[pieceIndex];
-
-            newPieces[pieceIndex] = {
-                ...pieceToFlip,
-                isFlippedV: !pieceToFlip.isFlippedV
-            };
-
-            return {
-                ...gameState,
-                pieces: newPieces
-            };
-        })();
-
-        pushState(newState, {
-            type: "FLIP_PIECE_V",
-            pieceId: gameState.selectedPieceId
-        });
-    }, [gameState, pushState]);
-
     const handleCellClick = useCallback((position: Position) => {
         // Tap-to-place: If a piece is selected, try to place it at this position
         if (!gameState.selectedPieceId || gameState.isSolved) {
@@ -959,9 +857,6 @@ export function useGameController() {
         handlePlayAnother,
         handleReset,
         handlePieceSelect,
-        handleRotate,
-        handleFlipH,
-        handleFlipV,
         handleCellClick,
         handlePieceDrop,
         handlePieceReturnToPile,
