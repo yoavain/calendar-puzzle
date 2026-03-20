@@ -129,7 +129,7 @@ const JS_RULES = {
     ],
 
     // Node plugin
-    "n/no-sync": "warn",
+    "n/no-sync": "off",
     "n/exports-style": ["error", "module.exports"],
     "n/no-unpublished-require": "off",
     "n/no-extraneous-import": "off",

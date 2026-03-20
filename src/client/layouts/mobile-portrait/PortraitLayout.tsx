@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useTheme } from "@mui/material/styles";
+import React, { useCallback } from "react";
 
 import { MobileBoard } from "../../components/MobileBoard";
-import { SuccessMessage } from "../../components/SuccessMessage";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
@@ -10,14 +8,13 @@ import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { ProgressBar } from "../../components/ProgressBar";
 
 import { useGameController } from "../common/useGameController";
-import { BetaBanner } from "../common/BetaBanner";
+import { useDndAdapters } from "../common/useDndAdapters";
+import { useBoardScale } from "../common/useBoardScale";
 import { MobileToolbar } from "../common/MobileToolbar";
 import { PieceCarousel } from "../common/PieceCarousel";
 import { DndProvider } from "../common/DndProvider";
 import { DebugPanel } from "../../components/DebugPanel";
-import { BoardScaleWrapper, calculateBoardScale } from "../common/boardScale";
-import type { Position } from "../../../common/types";
-import type { PieceId } from "../../../common/pieceData";
+import { BoardScaleWrapper } from "../common/boardScale";
 import {
     PortraitContainer,
     ContentArea,
@@ -38,55 +35,14 @@ import {
  * Uses DndProvider for touch-compatible drag-and-drop.
  */
 export const PortraitLayout: React.FC = () => {
-    const theme = useTheme();
     const game = useGameController();
-    const [boardScale, setBoardScale] = useState(1);
-
-    // Calculate board scale based on available space
-    useEffect(() => {
-        const updateScale = () => {
-            const availableWidth = window.innerWidth - 16; // Subtract padding
-            const availableHeight = getAvailableBoardHeight(window.innerHeight);
-            const scale = calculateBoardScale(
-                availableWidth,
-                availableHeight,
-                theme.game.cellSize
-            );
-            setBoardScale(scale);
-        };
-
-        updateScale();
-        window.addEventListener("resize", updateScale);
-        window.addEventListener("orientationchange", updateScale);
-
-        return () => {
-            window.removeEventListener("resize", updateScale);
-            window.removeEventListener("orientationchange", updateScale);
-        };
-    }, [theme.game.cellSize]);
+    const { handleDndPieceDrop, handleDndPieceRemove, handleDndDragStart, handleDndDragEnd } = useDndAdapters(game);
+    const getWidth = useCallback((w: number) => w - 16, []); // Subtract padding
+    const getHeight = useCallback((h: number) => getAvailableBoardHeight(h), []);
+    const boardScale = useBoardScale(getWidth, getHeight);
 
     // Get unplaced pieces for the carousel
     const unplacedPieces = game.gameState.pieces.filter(piece => !piece.position);
-
-    // Handle piece drop from @dnd-kit
-    const handleDndPieceDrop = useCallback((position: Position, pieceId: PieceId) => {
-        game.handlePieceDrop(position, { pieceId });
-    }, [game]);
-
-    // Handle piece removal (return to carousel)
-    const handleDndPieceRemove = useCallback((pieceId: PieceId) => {
-        game.handlePieceReturnToPile(pieceId);
-    }, [game]);
-
-    // Handle drag start
-    const handleDndDragStart = useCallback((pieceId: number) => {
-        game.setDraggedPieceId(pieceId);
-    }, [game]);
-
-    // Handle drag end
-    const handleDndDragEnd = useCallback(() => {
-        game.setDraggedPieceId(null);
-    }, [game]);
 
     return (
         <DndProvider
@@ -100,9 +56,6 @@ export const PortraitLayout: React.FC = () => {
             <PortraitContainer>
                 {/* Mobile Toolbar with Hamburger Menu */}
                 <MobileToolbar game={game} />
-
-                {/* Beta disclaimer - mobile layout only */}
-                <BetaBanner />
 
                 {/* Content Area - Progress + Board */}
                 <ContentArea>
@@ -119,8 +72,8 @@ export const PortraitLayout: React.FC = () => {
                                 pieces={game.gameState.pieces}
                                 onCellClick={game.handleCellClick}
                                 invalidDropCells={game.invalidDropCells}
-                                solutionRevealed={game.gameState.solutionRevealed ?? false}
-                                isSolved={game.gameState.isSolved ?? false}
+                                solutionRevealed={game.gameState.solutionRevealed}
+                                isSolved={game.gameState.isSolved}
                                 scale={boardScale}
                             />
                         </BoardScaleWrapper>
@@ -140,11 +93,7 @@ export const PortraitLayout: React.FC = () => {
                 />
 
                 {/* Modals */}
-                <SuccessMessage
-                    isVisible={game.modals.success.isOpen}
-                    onClose={game.modals.success.close}
-                />
-                <StatsModal 
+                <StatsModal
                     open={game.modals.stats.isOpen} 
                     onClose={game.modals.stats.close} 
                 />
@@ -159,7 +108,7 @@ export const PortraitLayout: React.FC = () => {
                 <PlayAnotherDialog
                     isOpen={game.modals.playAnother.isOpen}
                     mode={game.modals.playAnother.mode}
-                    onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate!)}
+                    onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate)}
                     onDecline={game.modals.playAnother.close}
                 />
                 <DebugPanel />

@@ -1,5 +1,5 @@
 import { rebuildGameState, updateBoardAndPieces } from "../../src/common/boardOperations";
-import { initializeBoard } from "../../src/client/utils/initialize";
+import { initializeBoard } from "../../src/common/initialize";
 import type { Piece, PuzzleDate } from "../../src/common/types";
 import { getPieceShape } from "../../src/common/pieceData";
 
@@ -24,7 +24,6 @@ describe("boardOperations", () => {
             expect(state.pieces).toEqual(pieces);
             expect(state.currentDate).toEqual(testDate);
             expect(state.isSolved).toBe(false);
-            expect(state.isGameComplete).toBe(false);
             expect(state.solutionRevealed).toBe(false);
             expect(state.selectedPieceId).toBe(null);
             expect(state.board).toBeDefined();
@@ -141,7 +140,6 @@ describe("boardOperations", () => {
             const state = rebuildGameState(pieces, testDate, true);
 
             expect(state.isSolved).toBe(true);
-            expect(state.isGameComplete).toBe(true);
         });
 
         it("should handle pieces that extend beyond board bounds gracefully", () => {

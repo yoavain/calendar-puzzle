@@ -2,7 +2,7 @@ import type { Board, Piece, PuzzleDate } from "../../src/common/types";
 import { toPuzzleDate } from "../../src/common/types";
 import { puzzleSolvedForDate } from "../../src/common/gameLogic";
 import { findSolution } from "../../src/common/puzzleSolver";
-import { initializeBoard, initializePieces } from "../../src/client/utils/initialize";
+import { initializeBoard, initializePieces } from "../../src/common/initialize";
 
 describe("puzzleSolver", () => {
     describe("findSolution", () => {

@@ -30,6 +30,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `npm run deploy:production` | Build image & run Compose for prod. |
 | `npm run admin:add` | Add admin user. |
 | `npm run admin:remove` | Remove admin user. |
+| `npm run storybook` | Start Storybook dev server (port 6006). |
+| `npm run build-storybook` | Build static Storybook site. |
 
 **Running a single unit test**
 
@@ -71,29 +73,29 @@ calendar-puzzle/
 
 - **Tech stack**: React 19 + Vite, Material‑UI, Emotion
 - **Layouts**: Three modes in `layouts/` directory (desktop, mobile-portrait, mobile-landscape)
-  - Desktop: `layouts/desktop/DesktopLayout.tsx` uses `Game.tsx` with HTML5 drag-and-drop
+  - Desktop: `layouts/desktop/DesktopLayout.tsx` uses `useGameController` (shared with mobile) + HTML5 drag-and-drop
   - Mobile: `layouts/mobile-portrait/`, `layouts/mobile-landscape/` use `@dnd-kit`
-  - Shared mobile: `layouts/common/` — `DndProvider.tsx`, `useGameController.ts`, `PieceCarousel.tsx`, `MobileToolbar.tsx`
+  - Shared: `layouts/common/` — `DndProvider.tsx`, `useGameController.ts`, `PieceCarousel.tsx`, `MobileToolbar.tsx`
 - **State management**: React context + `useGameHistory` hook (undo/redo)
 - **Components** (`components/`) - React UI components (including `PlayAnotherDialog.tsx`)
 - **Hooks** (`hooks/`) - Custom React hooks
-  - `useGameHistory.ts` - Undo/redo with immer
+  - `useGameHistory.ts` - Undo/redo with manual deep-clone (spread operators)
   - `useGameSession.ts` - Session persistence
   - `useLayout.ts` - Responsive layout detection
   - `useQueryParam.ts` - URL query parameter management
 - **Utils** (`utils/`) - UI utilities
+  - `debugLogger.ts` - Circular-buffer debug logger
   - `dragHelpers.ts` - DOM-aware drag utilities
-  - `pieceColors.ts` - UI color definitions
-  - `initialize.ts` - Game initialization
   - `encryption.ts` - Client-side payload encryption
   - `measureUtils.ts` - DOM measurement helpers
+  - `pieceColors.ts` - UI color definitions
 - **API client** (`service/`) - REST API calls (`puzzleService.ts`, `logService.ts`)
 
 ### Drag-and-Drop Architecture
 
 **Two implementations:**
-- **Desktop**: `Game.tsx` uses HTML5 Drag and Drop API
-- **Mobile**: `layouts/common/DndProvider.tsx` uses `@dnd-kit` library for touch support; `layouts/common/useGameController.ts` holds shared mobile game logic
+- **Desktop**: `DesktopLayout.tsx` uses HTML5 Drag and Drop API
+- **Mobile**: `layouts/common/DndProvider.tsx` uses `@dnd-kit` library for touch support; `layouts/common/useGameController.ts` holds shared game logic (used by all layouts)
 
 **Shared pure utilities** (`src/common/utils/shapeHelpers.ts`):
 - `findFirstFilledCell()` - Find top-left filled cell in a shape

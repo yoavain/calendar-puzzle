@@ -6,15 +6,16 @@ This document provides detailed design elaborations for the features and improve
 
 ## Architecture Overview
 
-The project will be restructured with four main directories under `src/`:
+> **Note:** This section describes the original plan. The project was implemented with three directories under `src/` — `client/`, `server/`, and `common/`. The planned `resources/` subdirectory was never created; static assets are served from `public/` instead. See [ARCHITECTURE.md](ARCHITECTURE.md) for the current layout.
+
+The project was restructured with three main directories under `src/`:
 
 ```
 calendar-puzzle/
 └── src/
     ├── client/      # React frontend
     ├── server/      # Fastify backend (serves client files)
-    ├── common/      # Shared types and validation logic
-    └── resources/   # Static assets (index.html, images, etc.)
+    └── common/      # Shared types and validation logic
 ```
 
 ### Data Flow
@@ -43,11 +44,10 @@ calendar-puzzle/
 
 Reorganize the existing `src/` folder into `client/`, `server/`, and `common/` subdirectories. The Fastify server will serve the client build and static files from `public/`.
 
-**Low-level design:**
-- Create `src/client/`, `src/server/`, `src/common/`, `src/resources/` directories.
-- Move current `src/` contents (components, hooks, utils, etc.) into `src/client/`.
-- Move `public/` contents (index.html, images, etc.) into `src/resources/`.
-- Configure Fastify to serve the built client app and static assets from `src/resources/`.
+**Low-level design (as implemented):**
+- Created `src/client/`, `src/server/`, `src/common/` directories.
+- Moved original `src/` contents (components, hooks, utils, etc.) into `src/client/`.
+- Static assets remain in `public/`; Fastify serves the built client app and static assets from `build/` and `public/`.
 - Configure TypeScript project references for shared code.
 - Update build scripts and CI/CD pipelines.
 
@@ -75,11 +75,12 @@ Design a relational schema to track users and their puzzle completion history.
 - Add unique constraint on `(user_id, puzzle_date)` to prevent duplicate completions.
 - Use `solution_state` to store the final board state for verification.
 
-### API Endpoints
+### Original API Design (Historical)
 
-RESTful API design for game functionality.
+> **Note:** The table below is the original design plan and is superseded by the implemented API.
+> See the API Endpoints table in [CLAUDE.md](../CLAUDE.md) for the current routes, methods, and auth requirements.
 
-**Low-level design:**
+**Original design (for historical reference):**
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
@@ -92,17 +93,11 @@ RESTful API design for game functionality.
 | `/api/solver` | POST | Yes | Get full solution for a date |
 | `/api/hint` | POST | Yes | Get a single valid move |
 
-**Request/Response examples:**
-
-```typescript
-// POST /api/results
-Request: { date: "2025-01-15", boardState: BoardState }
-Response: { success: true, completedAt: "2025-01-15T10:30:00Z" }
-
-// POST /api/hint
-Request: { date: "2025-01-15", currentState: BoardState }
-Response: { piece: PieceState, position: { row: 2, col: 3 } }
-```
+**Key differences from implementation:**
+- OAuth routes are `/auth/google` and `/auth/google/callback` (not `/api/auth/...`)
+- `/api/results` was split into `POST /api/stats/start` and `POST /api/stats/complete`
+- `/api/solver` became `GET /api/admin/solution/:date`
+- `/api/hint` uses `PUT`, not `POST`
 
 ### Solver and Hint APIs
 
@@ -281,35 +276,21 @@ Persist game state locally for all users (regardless of authentication) to preve
 
 **Storage key:** `calendar-puzzle-session`
 
-**Data structure:**
+**Implemented data structure** (see `src/client/hooks/useGameSession.ts`):
 ```typescript
 interface SessionData {
-  // Current game state
-  currentDate: string;           // ISO date string (YYYY-MM-DD)
-  boardState: BoardState;        // Placed pieces and their positions
-  
-  // Statistics tracking
-  playedDates: string[];         // Dates where user started playing
-  completedDates: string[];      // Dates where user completed the puzzle
+  date: PuzzleDate;    // { month: number; day: number }
+  pieces: Piece[];     // Full piece array with positions/transforms
+  isSolved: boolean;
 }
 ```
 
-**Behavior:**
-- **On page load:**
-  - Read session from localStorage
-  - If `currentDate` matches today's date, restore `boardState`
-  - If `currentDate` doesn't match, clear `boardState` but preserve statistics
-- **On board change:**
-  - Update `boardState` in session
-  - Debounce writes (e.g., 500ms) to avoid excessive storage operations
-- **On game start (first piece placed for a date):**
-  - Add current date to `playedDates` if not already present
-- **On puzzle completion:**
-  - Add current date to `completedDates` if not already present
+> **Note:** The original design included `playedDates` and `completedDates` arrays in localStorage. In the implemented version these are server-side only (stored in the `userPuzzleStats` PostgreSQL table for authenticated users). The session only stores the current day's board state.
 
-**Storage optimization (future):**
-- Consider binary encoding for date lists (e.g., bit flags per day of year)
-- Compress board state if storage becomes an issue
+**Behavior:**
+- **On page load:** Restore today's board state if session date matches today; otherwise start fresh.
+- **On board change:** Save the full piece array and solved flag.
+- **On solution revealed:** Clear the session (prevent restoring a revealed solution).
 
 ---
 

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { GamePage, type LayoutKind } from "./fixtures/gamePage";
 import { dragPieceToBoard } from "./helpers/dragHelpers";
 import { layoutFromProject, mockDate, mockApiRoutes, clearStorage } from "./helpers/testUtils";
-import { initializeBoard, initializePieces } from "../../src/client/utils/initialize";
+import { initializeBoard, initializePieces } from "../../src/common/initialize";
 import { findSolution } from "../../src/common/puzzleSolver";
 import { getTransformedShape } from "../../src/common/gameLogic";
 import { findFirstFilledCell } from "../../src/common/utils/shapeHelpers";
@@ -311,7 +311,8 @@ test.describe("Solve puzzle via UI", () => {
             placedPieceIds.push(pieceId);
         }
 
-        // 4. Assert "Puzzle Solved!" dialog appears
-        await expect(page.getByText("Puzzle Solved!")).toBeVisible({ timeout: 10_000 });
+        // 4. Assert puzzle is solved (progress bar reaches 100%)
+        await expect(page.getByRole("progressbar", { name: "Puzzle completion progress" }))
+            .toHaveAttribute("aria-valuenow", "100", { timeout: 10_000 });
     });
 });

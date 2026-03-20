@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import type { Board, GameState, GameStateAction } from "../../common/types";
 import { debugLogger } from "../utils/debugLogger";
 
-const MAX_HISTORY = 50; // Maximum number of undo steps
+const MAX_HISTORY = 100; // Maximum number of undo steps
 
 // Helper function to deep clone the game state
 const cloneGameState = (state: GameState): GameState => {
@@ -28,7 +28,7 @@ export const useGameHistory = (initialState: GameState) => {
     const pushState = useCallback((newState: GameState, action: GameStateAction) => {
         debugLogger.log("history:pushState", { action, state: newState });
         setHistory(prev => ({
-            past: [...prev.past, cloneGameState(prev.present)],
+            past: [...prev.past, cloneGameState(prev.present)].slice(-MAX_HISTORY),
             present: cloneGameState(newState),
             future: []
         }));
@@ -73,7 +73,7 @@ export const useGameHistory = (initialState: GameState) => {
 
             debugLogger.log("history:redo:result", { state: next });
             return {
-                past: [...prev.past, cloneGameState(prev.present)],
+                past: [...prev.past, cloneGameState(prev.present)].slice(-MAX_HISTORY),
                 present: cloneGameState(next),
                 future: newFuture
             };

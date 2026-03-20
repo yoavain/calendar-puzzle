@@ -12,7 +12,6 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### Visual Polish
 - [ ] Confetti animation on puzzle completion
-- [ ] Implement history pruning in `useGameHistory` (limit `MAX_HISTORY` steps)
 
 ---
 
@@ -38,7 +37,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] `POST /api/stats/complete` — Record when a user completes a puzzle (server-validated)
 - [x] `GET /api/auth/me` — Get current user and their statistics
 - [x] `GET /api/admin/solution/:date` — Return puzzle solution (admin only)
-- [x] `GET /api/admin/userdata` — Return user activity data (admin only)
+- [x] `GET /api/hall-of-fame` — Return user activity data (authenticated users)
 - [x] `GET /api/hint/:date` — Return a single valid move
 
 ### Session (Local Storage)
@@ -63,6 +62,7 @@ Persist game state locally for all users (regardless of authentication). See [SE
 - [x] Error handling and logging (Fastify logger enabled, structured error responses)
 
 ### UX/UI Improvements
+- [x] Implement history pruning in `useGameHistory` (limit `MAX_HISTORY` steps)
 - [x] Reset button next to undo/redo
 - [x] Calendar picker to play different dates
 - [x] Visual feedback for invalid moves (shake animation, red highlight)
