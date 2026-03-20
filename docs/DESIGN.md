@@ -6,15 +6,16 @@ This document provides detailed design elaborations for the features and improve
 
 ## Architecture Overview
 
-The project will be restructured with four main directories under `src/`:
+> **Note:** This section describes the original plan. The project was implemented with three directories under `src/` — `client/`, `server/`, and `common/`. The planned `resources/` subdirectory was never created; static assets are served from `public/` instead. See [ARCHITECTURE.md](ARCHITECTURE.md) for the current layout.
+
+The project was restructured with three main directories under `src/`:
 
 ```
 calendar-puzzle/
 └── src/
     ├── client/      # React frontend
     ├── server/      # Fastify backend (serves client files)
-    ├── common/      # Shared types and validation logic
-    └── resources/   # Static assets (index.html, images, etc.)
+    └── common/      # Shared types and validation logic
 ```
 
 ### Data Flow
@@ -43,11 +44,10 @@ calendar-puzzle/
 
 Reorganize the existing `src/` folder into `client/`, `server/`, and `common/` subdirectories. The Fastify server will serve the client build and static files from `public/`.
 
-**Low-level design:**
-- Create `src/client/`, `src/server/`, `src/common/`, `src/resources/` directories.
-- Move current `src/` contents (components, hooks, utils, etc.) into `src/client/`.
-- Move `public/` contents (index.html, images, etc.) into `src/resources/`.
-- Configure Fastify to serve the built client app and static assets from `src/resources/`.
+**Low-level design (as implemented):**
+- Created `src/client/`, `src/server/`, `src/common/` directories.
+- Moved original `src/` contents (components, hooks, utils, etc.) into `src/client/`.
+- Static assets remain in `public/`; Fastify serves the built client app and static assets from `build/` and `public/`.
 - Configure TypeScript project references for shared code.
 - Update build scripts and CI/CD pipelines.
 

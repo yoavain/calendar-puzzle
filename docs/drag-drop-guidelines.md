@@ -51,7 +51,7 @@ const rectForCells = visualRect ?? initialRect; // fall back to layout rect if i
 
 ### Key rule
 
-**Always use the PieceGrid's visual bounding rect (not the wrapper's layout rect) when calculating which cell the pointer is over, for any piece that has a CSS transform applied.**
+**Always use the PieceGrid's visual bounding rect (not the wrapper's layout rect) when calculating which cell the pointer is over.** `findVisualPieceRect` is called unconditionally — not only when a transform is applied — because the cost of the extra DOM query is negligible and conditional logic would be easy to get wrong when rotation/flip state changes mid-drag.
 
 ## 6. Empty cell snap-to-nearest
 
