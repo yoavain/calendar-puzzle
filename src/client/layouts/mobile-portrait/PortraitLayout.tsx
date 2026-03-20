@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 
 import { MobileBoard } from "../../components/MobileBoard";
-import { SuccessMessage } from "../../components/SuccessMessage";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
@@ -94,11 +93,7 @@ export const PortraitLayout: React.FC = () => {
                 />
 
                 {/* Modals */}
-                <SuccessMessage
-                    isVisible={game.modals.success.isOpen}
-                    onClose={game.modals.success.close}
-                />
-                <StatsModal 
+                <StatsModal
                     open={game.modals.stats.isOpen} 
                     onClose={game.modals.stats.close} 
                 />

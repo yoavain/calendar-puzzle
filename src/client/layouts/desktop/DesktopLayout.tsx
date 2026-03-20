@@ -17,7 +17,6 @@ import { Board as BoardComponent } from "../../components/Board";
 import { Piece } from "../../components/Piece";
 import { PieceControls } from "../../components/PieceControls";
 import ThemeToggle from "../../components/ThemeToggle";
-import { SuccessMessage } from "../../components/SuccessMessage";
 import { SolutionButton } from "../../components/SolutionButton";
 import { HintButton } from "../../components/HintButton";
 import { LoginButton } from "../../components/LoginButton";
@@ -224,12 +223,6 @@ export const DesktopLayout: React.FC = () => {
 
                         {/* Progress Bar */}
                         <ProgressBar {...game.calculateProgress()} />
-
-                        {/* Success Message Dialog */}
-                        <SuccessMessage 
-                            isVisible={game.modals.success.isOpen} 
-                            onClose={game.modals.success.close} 
-                        />
 
                         {/* Statistics Modal */}
                         <StatsModal open={game.modals.stats.isOpen} onClose={game.modals.stats.close} />

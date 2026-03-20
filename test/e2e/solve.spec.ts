@@ -311,7 +311,8 @@ test.describe("Solve puzzle via UI", () => {
             placedPieceIds.push(pieceId);
         }
 
-        // 4. Assert "Puzzle Solved!" dialog appears
-        await expect(page.getByText("Puzzle Solved!")).toBeVisible({ timeout: 10_000 });
+        // 4. Assert puzzle is solved (progress bar reaches 100%)
+        await expect(page.getByRole("progressbar", { name: "Puzzle completion progress" }))
+            .toHaveAttribute("aria-valuenow", "100", { timeout: 10_000 });
     });
 });
