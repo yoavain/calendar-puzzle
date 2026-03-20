@@ -5,8 +5,6 @@
  * These are shape-analysis functions with NO DOM dependencies.
  */
 
-import type { Piece as PieceType } from "../types";
-import { getTransformedShape } from "../gameLogic";
 
 /**
  * Find the first filled cell (top-left-most) in a piece's transformed shape.
@@ -27,17 +25,6 @@ export function findFirstFilledCell(shape: boolean[][]): { x: number; y: number 
         }
     }
     return { x: 0, y: 0 };
-}
-
-/**
- * Convenience wrapper: Find the first filled cell of a piece (accounting for transformations).
- *
- * @param piece - The piece with its current rotation/flip state
- * @returns Coordinates of the first filled cell in the transformed shape
- */
-export function findFirstFilledCellOfPiece(piece: PieceType): { x: number; y: number } {
-    const shape = getTransformedShape(piece);
-    return findFirstFilledCell(shape);
 }
 
 /**
