@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
-import type { PieceId } from "../../../common/pieceData";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
+import type { PieceId } from "../../../common/pieceData";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { initializeBoard, initializeGame } from "../../../common/initialize";
@@ -114,7 +114,6 @@ export function useGameController() {
     const {
         justSolvedRef,
         statsAutoOpenTimeoutRef,
-        setIsSuccessMessageOpen,
         setIsStatsOpen,
         setIsPlayAnotherOpen,
         modals
@@ -206,7 +205,6 @@ export function useGameController() {
 
     // Shared initialization logic used by both handleDateChange and handleReset
     const initializeForDate = useCallback((date: PuzzleDate) => {
-        setIsSuccessMessageOpen(false);
         // We use a fixed year (2024) since the puzzle only cares about month and day
         const jsDate = new Date(2024, date.month, date.day);
         const newGameState = initializeGame(jsDate);
@@ -228,7 +226,7 @@ export function useGameController() {
         });
 
         setSolverError(null);
-    }, [clearHistory, loadPersistentHint, updatePresent, user?.name, setIsSuccessMessageOpen]);
+    }, [clearHistory, loadPersistentHint, updatePresent, user?.name]);
 
     const handleDateChange = useCallback((newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
@@ -339,7 +337,6 @@ export function useGameController() {
                        solvedDate.day === gameState.currentDate.day;
         if (solved) {
             justSolvedRef.current = true;
-            setIsSuccessMessageOpen(true);
             fireConfetti();
             // Automatically show stats on completion after a short delay
             if (user) {
@@ -365,7 +362,7 @@ export function useGameController() {
             pieceId,
             position
         });
-    }, [gameState, updatePresent, triggerInvalidDropFeedback, pushState, user, justSolvedRef, statsAutoOpenTimeoutRef, setIsSuccessMessageOpen, setIsStatsOpen]);
+    }, [gameState, updatePresent, triggerInvalidDropFeedback, pushState, user, justSolvedRef, statsAutoOpenTimeoutRef, setIsStatsOpen]);
 
     const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceReturnToPile", { pieceId });

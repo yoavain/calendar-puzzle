@@ -20,7 +20,6 @@ export function useGameModals({
 }) {
     const [isStatsOpen, setIsStatsOpen] = useState(false);
     const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-    const [isSuccessMessageOpen, setIsSuccessMessageOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [isPlayAnotherOpen, setIsPlayAnotherOpen] = useState(false);
     const [playAnotherDate, setPlayAnotherDate] = useState<PuzzleDate | null>(null);
@@ -50,9 +49,9 @@ export function useGameModals({
         }
     }, []);
 
-    // Trigger 1: after both success and stats dialogs are closed following a solve, show "play another"
+    // Trigger 1: after stats dialog is closed following a solve, show "play another"
     useEffect(() => {
-        if (!isSuccessMessageOpen && !isStatsOpen && justSolvedRef.current && user) {
+        if (!isStatsOpen && justSolvedRef.current && user) {
             if (statsAutoOpenTimeoutRef.current !== null) {
                 window.clearTimeout(statsAutoOpenTimeoutRef.current);
                 statsAutoOpenTimeoutRef.current = null;
@@ -60,7 +59,7 @@ export function useGameModals({
             justSolvedRef.current = false;
             checkAndSuggestNextPuzzle(currentDate, "just-solved");
         }
-    }, [isSuccessMessageOpen, isStatsOpen, user, checkAndSuggestNextPuzzle, currentDate]);
+    }, [isStatsOpen, user, checkAndSuggestNextPuzzle, currentDate]);
 
     // Trigger 2+3: on page load or after login, suggest a puzzle if today is already solved
     useEffect(() => {
@@ -80,7 +79,6 @@ export function useGameModals({
         // Refs and setters needed by handlers in useGameController
         justSolvedRef,
         statsAutoOpenTimeoutRef,
-        setIsSuccessMessageOpen,
         setIsStatsOpen,
         setIsPlayAnotherOpen,
 
@@ -95,11 +93,6 @@ export function useGameModals({
                 isOpen: isIssueModalOpen,
                 open: () => setIsIssueModalOpen(true),
                 close: () => setIsIssueModalOpen(false)
-            },
-            success: {
-                isOpen: isSuccessMessageOpen,
-                open: () => setIsSuccessMessageOpen(true),
-                close: () => setIsSuccessMessageOpen(false)
             },
             help: {
                 isOpen: isHelpModalOpen,

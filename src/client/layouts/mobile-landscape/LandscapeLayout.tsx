@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 
 import { MobileBoard } from "../../components/MobileBoard";
-import { SuccessMessage } from "../../components/SuccessMessage";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
@@ -98,10 +97,6 @@ export const LandscapeLayout: React.FC = () => {
                     </ContentRow>
                 </MainColumn>
 
-                <SuccessMessage
-                    isVisible={game.modals.success.isOpen}
-                    onClose={game.modals.success.close}
-                />
                 <StatsModal
                     open={game.modals.stats.isOpen}
                     onClose={game.modals.stats.close}
