@@ -97,7 +97,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                 else {
                     // Automatically report a bug to GitHub if a solution fails server-side validation
                     try {
-                        const actualDateFound = puzzleSolvedForDate(pieces);
+                        const actualDateFound = solvedDate;
 
                         await submitInvalidSolutionReport(
                             pieces,

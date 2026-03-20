@@ -1,4 +1,5 @@
-import { findFirstFilledCell, findNearestFilledCell, findFirstFilledCellOfPiece } from "../../src/common/utils/shapeHelpers";
+import { findFirstFilledCell, findNearestFilledCell } from "../../src/common/utils/shapeHelpers";
+import { getTransformedShape } from "../../src/common/gameLogic";
 import type { Piece } from "../../src/common/types";
 
 describe("shapeHelpers", () => {
@@ -101,7 +102,7 @@ describe("shapeHelpers", () => {
         });
     });
 
-    describe("findFirstFilledCellOfPiece", () => {
+    describe("findFirstFilledCell (with transformed piece shape)", () => {
         const makePiece = (overrides: Partial<Piece> = {}): Piece => ({
             id: 1,
             position: null,
@@ -113,24 +114,24 @@ describe("shapeHelpers", () => {
 
         it("should return (0,0) for piece 1 at rotation 0", () => {
             // Piece 1 shape: [T,F], [T,F], [T,T], [T,F] - first filled is (0,0)
-            const result = findFirstFilledCellOfPiece(makePiece());
+            const result = findFirstFilledCell(getTransformedShape(makePiece()));
             expect(result).toEqual({ x: 0, y: 0 });
         });
 
         it("should return different result for different rotations", () => {
             // Piece 4 at rotation 0: [F,T], [F,T], [T,T], [T,F]
             // First filled cell is (1, 0)
-            const result0 = findFirstFilledCellOfPiece(makePiece({ id: 4, rotation: 0 }));
+            const result0 = findFirstFilledCell(getTransformedShape(makePiece({ id: 4, rotation: 0 })));
             expect(result0).toEqual({ x: 1, y: 0 });
 
             // Piece 4 at rotation 90 - shape changes, first filled cell changes
-            const result90 = findFirstFilledCellOfPiece(makePiece({ id: 4, rotation: 90 }));
+            const result90 = findFirstFilledCell(getTransformedShape(makePiece({ id: 4, rotation: 90 })));
             expect(result90).toEqual({ x: 0, y: 0 });
         });
 
-        it("should delegate to findFirstFilledCell correctly", () => {
+        it("should find first filled cell accounting for piece transformations", () => {
             // Piece 5: [F,T], [T,T], [T,T] - first filled is (1, 0)
-            const result = findFirstFilledCellOfPiece(makePiece({ id: 5 }));
+            const result = findFirstFilledCell(getTransformedShape(makePiece({ id: 5 })));
             expect(result).toEqual({ x: 1, y: 0 });
         });
     });

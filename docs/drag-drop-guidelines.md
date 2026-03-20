@@ -42,17 +42,16 @@ Piece rendering uses CSS `transform: rotate()` and `scaleX(-1)` / `scaleY(-1)` f
 
 ### Solution: `findVisualPieceRect`
 
-In `handleDragStart`, when a piece has a non-trivial CSS transform (`rotation !== 0 || isFlippedH || isFlippedV`), we query the DOM for the inner PieceGrid element (`display: grid`) and use its `getBoundingClientRect()` — which reflects the CSS transform — for `cellOffset` calculation:
+In `handleDragStart`, we always query the DOM for the inner PieceGrid element (`display: grid`) and use its `getBoundingClientRect()` — which reflects any CSS transform — for `cellOffset` calculation:
 
 ```typescript
-const hasTransform = piece.rotation !== 0 || piece.isFlippedH || piece.isFlippedV;
-const visualRect = hasTransform ? findVisualPieceRect(draggableNode) : null;
-const rectForCells = visualRect ?? initialRect; // fall back to layout rect
+const visualRect = findVisualPieceRect(draggableNode);
+const rectForCells = visualRect ?? initialRect; // fall back to layout rect if inner grid not found
 ```
 
 ### Key rule
 
-**Always use the PieceGrid's visual bounding rect (not the wrapper's layout rect) when calculating which cell the pointer is over, for any piece that has a CSS transform applied.**
+**Always use the PieceGrid's visual bounding rect (not the wrapper's layout rect) when calculating which cell the pointer is over.** `findVisualPieceRect` is called unconditionally — not only when a transform is applied — because the cost of the extra DOM query is negligible and conditional logic would be easy to get wrong when rotation/flip state changes mid-drag.
 
 ## 6. Empty cell snap-to-nearest
 

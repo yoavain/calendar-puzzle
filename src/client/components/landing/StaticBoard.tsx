@@ -1,5 +1,5 @@
 import React from "react";
-import { initializeBoard } from "../../utils/initialize";
+import { initializeBoard } from "../../../common/initialize";
 import { toPuzzleDate } from "../../../common/types";
 import { BoardContainer, BoardRow, BoardCell, StyledCellText } from "../Board.styled";
 

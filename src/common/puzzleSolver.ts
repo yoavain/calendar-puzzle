@@ -286,7 +286,7 @@ export const findSolution = (initialBoard: Board, initialPieces: Piece[], date: 
             selectedPieceId: null,
             currentDate: date,
             isSolved: true,
-            isGameComplete: true
+            solutionRevealed: false
         };
 
     }

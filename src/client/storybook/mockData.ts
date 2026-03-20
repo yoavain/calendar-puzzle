@@ -1,4 +1,4 @@
-import { initializeBoard, initializePieces } from "../utils/initialize";
+import { initializeBoard, initializePieces } from "../../common/initialize";
 import type { PuzzleDate } from "../../common/types";
 
 export const JAN_1: PuzzleDate = { month: 0, day: 1 };

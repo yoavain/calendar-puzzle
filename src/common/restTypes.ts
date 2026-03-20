@@ -66,8 +66,8 @@ export interface IssueResponse {
 }
 
 // ============================================
-// GET /api/admin/userdata
-// Returns user activity statistics for admin dashboard
+// GET /api/hall-of-fame
+// Returns user activity statistics (authenticated users, not admin-only)
 // ============================================
 export interface UserActivity {
     userId: string;
