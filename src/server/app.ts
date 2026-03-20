@@ -77,6 +77,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
                 imgSrc: ["'self'", "data:", "https://api.dicebear.com", "https://lh3.googleusercontent.com"], // data: for inline SVGs, dicebear/Google for avatars
                 fontSrc: ["'self'"],
                 connectSrc: ["'self'"],
+                workerSrc: ["'self'", "blob:"],
                 objectSrc: ["'none'"],
                 frameAncestors: ["'none'"],
                 baseUri: ["'self'"],

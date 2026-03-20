@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import confetti from "canvas-confetti";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
@@ -42,6 +43,19 @@ const getInitialGameState = (): { state: GameState; date: PuzzleDate } => {
         state: initializeGame(new Date()),
         date: today
     };
+};
+
+const fireConfetti = () => {
+    const count = 400;
+    const defaults = { origin: { y: 0.7 }, zIndex: 2000, scalar: 1.4 };
+    const fire = (particleRatio: number, opts: confetti.Options) => {
+        confetti({ ...defaults, ...opts, particleCount: Math.floor(count * particleRatio) })?.catch(() => {});
+    };
+    fire(0.25, { spread: 26, startVelocity: 55 });
+    fire(0.20, { spread: 60 });
+    fire(0.35, { spread: 100, decay: 0.91, scalar: 1.1 });
+    fire(0.10, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.6 });
+    fire(0.10, { spread: 120, startVelocity: 45 });
 };
 
 /**
@@ -326,6 +340,7 @@ export function useGameController() {
         if (solved) {
             justSolvedRef.current = true;
             setIsSuccessMessageOpen(true);
+            fireConfetti();
             // Automatically show stats on completion after a short delay
             if (user) {
                 statsAutoOpenTimeoutRef.current = window.setTimeout(() => {
