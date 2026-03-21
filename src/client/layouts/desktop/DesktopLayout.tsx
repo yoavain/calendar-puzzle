@@ -57,8 +57,6 @@ export const DesktopLayout: React.FC = () => {
     // Responsive scaling logic
     const [scale, setScale] = useState(1);
     const [isBelowMinHeight, setIsBelowMinHeight] = useState(false);
-    const [isShareOpen, setIsShareOpen] = useState(false);
-
     useEffect(() => {
         let isMounted = true;
 
@@ -157,7 +155,7 @@ export const DesktopLayout: React.FC = () => {
                                     <span>
                                         <Button
                                             variant="contained"
-                                            onClick={() => setIsShareOpen(true)}
+                                            onClick={game.modals.share.open}
                                             size="small"
                                             sx={{ minWidth: 40, px: 1 }}
                                             color="secondary"
@@ -234,7 +232,7 @@ export const DesktopLayout: React.FC = () => {
                         <HelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
 
                         {/* Share Modal */}
-                        <ShareDialog open={isShareOpen} onClose={() => setIsShareOpen(false)} />
+                        <ShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
 
                         {/* Play Another Dialog */}
                         <PlayAnotherDialog

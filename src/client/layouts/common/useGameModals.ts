@@ -21,6 +21,7 @@ export function useGameModals({
     const [isStatsOpen, setIsStatsOpen] = useState(false);
     const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+    const [isShareOpen, setIsShareOpen] = useState(false);
     const [isPlayAnotherOpen, setIsPlayAnotherOpen] = useState(false);
     const [playAnotherDate, setPlayAnotherDate] = useState<PuzzleDate | null>(null);
     const [playAnotherMode, setPlayAnotherMode] = useState<"just-solved" | "already-solved">("already-solved");
@@ -105,6 +106,11 @@ export function useGameModals({
                 mode: playAnotherMode,
                 open: () => setIsPlayAnotherOpen(true),
                 close: () => setIsPlayAnotherOpen(false)
+            },
+            share: {
+                isOpen: isShareOpen,
+                open: () => setIsShareOpen(true),
+                close: () => setIsShareOpen(false)
             }
         }
     };
