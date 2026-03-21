@@ -254,6 +254,8 @@ Ensure the color scheme is cohesive and works well in both light and dark modes.
 
 ### Confetti Animation on Puzzle Completion
 
+> **As implemented:** Confetti fires via `fireConfetti()` in `src/client/layouts/common/useGameController.ts` using `canvas-confetti`. The success modal was removed; confetti is the sole completion celebration (commit 461048e). **Known gap:** `prefers-reduced-motion` is not currently checked — the animation plays regardless of the user's motion preference.
+
 Celebrate the user's success with a satisfying confetti animation when they complete the puzzle. This provides positive reinforcement and makes the achievement feel rewarding.
 
 **Low-level design:**
@@ -334,6 +336,8 @@ function countCoveredCells(boardState: BoardState): number {
 ---
 
 ### Statistics
+
+> **As implemented:** Stats are stored server-side in the `userPuzzleStats` PostgreSQL table for authenticated users and fetched via `GET /api/auth/me`. `SuccessPopup.tsx` was never created; completion is celebrated with confetti and a deferred `StatsModal`. The localStorage-based design below is historical.
 
 Track and display game statistics for all users, stored in browser session (localStorage). This works independently of authentication.
 

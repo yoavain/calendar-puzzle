@@ -65,7 +65,7 @@ calendar-puzzle/
 └─ public/         # Static assets
 ```
 
-**See [docs/architecture.md](docs/architecture.md) for detailed architecture overview.**
+**See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture overview.**
 
 ### Frontend (`src/client/`)
 
