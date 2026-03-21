@@ -106,7 +106,7 @@ export const updateBoardAndPieces = (
                 rotation: piece.rotation,
                 isFlippedH: piece.isFlippedH,
                 isFlippedV: piece.isFlippedV,
-                isLocked: piece.isLocked
+                isLocked: piece.isLocked ?? false
             }
             : p
     );
