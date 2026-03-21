@@ -64,7 +64,6 @@ interface MobileToolbarProps {
 export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation = "horizontal" }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
-    const [isShareOpen, setIsShareOpen] = useState(false);
     const [debugEnabled, setDebugEnabled] = useState(debugLogger.isEnabled());
 
     const openDrawer = () => setIsDrawerOpen(true);
@@ -197,7 +196,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             fullWidth
                             variant="outlined"
                             startIcon={<ShareIcon />}
-                            onClick={() => handleAction(() => setIsShareOpen(true))}
+                            onClick={() => handleAction(game.modals.share.open)}
                             color="secondary"
                         >
                             Share
@@ -261,7 +260,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
             />
 
             {/* Share Modal */}
-            <ShareDialog open={isShareOpen} onClose={() => setIsShareOpen(false)} />
+            <ShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
         </>
     );
 };
