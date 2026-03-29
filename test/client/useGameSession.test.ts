@@ -36,7 +36,8 @@ describe("useGameSession", () => {
         position: null,
         rotation: 0,
         isFlippedH: false,
-        isFlippedV: false
+        isFlippedV: false,
+        isLocked: false
     });
 
     const makeSession = (): SessionData => ({
