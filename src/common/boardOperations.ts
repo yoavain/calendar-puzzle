@@ -44,7 +44,7 @@ export const rebuildGameState = (pieces: Piece[], date: PuzzleDate, isSolved: bo
 
     return {
         board,
-        pieces,
+        pieces: pieces.map((p) => ({ ...p, isLocked: p.isLocked ?? false })),
         selectedPieceId: null,
         currentDate: date,
         isSolved,
@@ -106,7 +106,7 @@ export const updateBoardAndPieces = (
                 rotation: piece.rotation,
                 isFlippedH: piece.isFlippedH,
                 isFlippedV: piece.isFlippedV,
-                isLocked: piece.isLocked
+                isLocked: piece.isLocked ?? false
             }
             : p
     );

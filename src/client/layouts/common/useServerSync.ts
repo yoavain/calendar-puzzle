@@ -43,7 +43,7 @@ export function useServerSync({
                     if (success) {
                         addPlayedDate(currentDate);
                     }
-                });
+                }).catch(() => {});
             }
             startedDatesRef.current.add(dateKey);
         }
@@ -56,7 +56,7 @@ export function useServerSync({
                     if (success) {
                         addCompletedDate(currentDate);
                     }
-                });
+                }).catch(() => {});
             }
             completedDatesRef.current.add(dateKey);
         }

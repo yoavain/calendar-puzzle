@@ -26,6 +26,9 @@ import {
 /** Minimum number of slides embla-carousel needs for loop mode to work properly. */
 const MIN_SLIDES_FOR_LOOP = 3;
 
+/** Shared sx for the four piece-control IconButtons (rotate CW/CCW, flip H/V). */
+const controlButtonSx = { border: 1, borderColor: "divider", bgcolor: "background.paper" } as const;
+
 /**
  * Embla `watchDrag` callback: yields touch gestures on the active carousel slide's
  * piece to dnd-kit, while still letting Embla handle swipes on adjacent slides and
@@ -403,11 +406,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                         size="large"
                                         onClick={() => onRotatePiece(piece.id)}
                                         aria-label="Rotate clockwise"
-                                        sx={{
-                                            border: 1,
-                                            borderColor: "divider",
-                                            bgcolor: "background.paper"
-                                        }}
+                                        sx={controlButtonSx}
                                     >
                                         <RotateRightIcon />
                                     </IconButton>
@@ -415,11 +414,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                         size="large"
                                         onClick={() => onRotateCCWPiece(piece.id)}
                                         aria-label="Rotate counter-clockwise"
-                                        sx={{
-                                            border: 1,
-                                            borderColor: "divider",
-                                            bgcolor: "background.paper"
-                                        }}
+                                        sx={controlButtonSx}
                                     >
                                         <RotateLeftIcon />
                                     </IconButton>
@@ -427,11 +422,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                         size="large"
                                         onClick={() => onFlipHPiece(piece.id)}
                                         aria-label="Flip horizontal"
-                                        sx={{
-                                            border: 1,
-                                            borderColor: "divider",
-                                            bgcolor: "background.paper"
-                                        }}
+                                        sx={controlButtonSx}
                                     >
                                         <FlipIcon />
                                     </IconButton>
@@ -439,12 +430,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                         size="large"
                                         onClick={() => onFlipVPiece(piece.id)}
                                         aria-label="Flip vertical"
-                                        sx={{
-                                            border: 1,
-                                            borderColor: "divider",
-                                            bgcolor: "background.paper",
-                                            transform: "rotate(90deg)"
-                                        }}
+                                        sx={{ ...controlButtonSx, transform: "rotate(90deg)" }}
                                     >
                                         <FlipIcon />
                                     </IconButton>

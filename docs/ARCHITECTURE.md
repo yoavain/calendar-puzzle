@@ -8,7 +8,7 @@ This document describes the high-level architecture of the Calendar Puzzle appli
 - [Directory Structure](#directory-structure)
 - [Common Layer (Pure Logic)](#common-layer-pure-logic)
 - [Client Layer (UI)](#client-layer-ui)
-- [Dual Layout Architecture](#dual-layout-architecture)
+- [Layout Architecture](#layout-architecture)
 - [Drag and Drop System](#drag-and-drop-system)
 
 ---
@@ -139,15 +139,12 @@ Pure shape analysis utilities:
 // Find top-left filled cell in a shape
 findFirstFilledCell(shape): { x, y }
 
-// Convenience wrapper for pieces
-findFirstFilledCellOfPiece(piece): { x, y }
-
 // Snap to nearest filled cell (for touch handling)
 findNearestFilledCell(shape, fromX, fromY): { x, y } | null
 ```
 
-**Why separate?** These functions were duplicated across 4 files. Consolidating them:
-- Reduces duplication (~40 lines)
+**Why separate?** These functions replaced duplicated logic across 4 files:
+- Reduced duplication (~40 lines)
 - Makes them testable
 - Centralizes shape analysis logic
 
@@ -228,9 +225,9 @@ export function useGameHistory(initialState: GameState) {
 
 ---
 
-## Dual Layout Architecture
+## Layout Architecture
 
-The app supports two different drag-and-drop implementations. All layouts share `useGameController.ts` for game logic.
+The app supports three layouts with two drag-and-drop implementations. All layouts share `useGameController.ts` for game logic.
 
 ### Desktop Layout (`DesktopLayout.tsx`)
 

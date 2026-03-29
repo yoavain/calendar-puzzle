@@ -11,7 +11,6 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [ ] High contrast mode
 
 ### Visual Polish
-- [ ] Confetti animation on puzzle completion
 
 ---
 
@@ -76,3 +75,4 @@ Persist game state locally for all users (regardless of authentication). See [SE
 - [x] Theme consistency (cohesive colors, smooth theme transitions)
 - [x] Help system (tutorial overlay, tooltips, help button) (partial: tooltips on controls)
 - [x] Game state feedback (highlight selected piece, distinguish placed/unplaced pieces)
+- [x] Confetti animation on puzzle completion — `fireConfetti()` in `useGameController.ts` (commit 461048e)
