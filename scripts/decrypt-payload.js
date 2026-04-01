@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
  */
 
 async function main() {
-    let input = "";
+    let input;
 
     // Read from command line argument
     if (process.argv[2]) {
