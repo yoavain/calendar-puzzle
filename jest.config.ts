@@ -6,12 +6,16 @@ const config: Config.InitialOptions = {
     roots: ["<rootDir>/test"],
     testMatch: ["**/*.test.ts"],
     transform: {
-        "^.+\\.tsx?$": "ts-jest"
+        "^.+\\.tsx?$": [
+            "ts-jest", {
+                tsconfig: "./tsconfig.jest.json"
+            }
+        ]
     },
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     moduleNameMapper: {
         // Strip .js extensions so ts-jest resolves TypeScript source files from ESM-style imports
-        "^(\\.{1,2}/.+)\\.js$": "$1",
+        "^(\\.{1,2}/.+)\\.js$": "$1"
     },
     verbose: true,
     collectCoverage: true,
@@ -31,4 +35,4 @@ const config: Config.InitialOptions = {
     }
 };
 
-export default config; 
+export default config;
