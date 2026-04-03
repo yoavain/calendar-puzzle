@@ -95,6 +95,7 @@ export function useGameController() {
     // State for invalid drop visual feedback
     const [invalidDropCells, setInvalidDropCells] = useState<InvalidDropCell[]>([]);
     const invalidDropTimeoutRef = useRef<number | null>(null);
+    const confettiTimeoutRef = useRef<number | null>(null);
 
     // Generation counter to discard stale hint responses
     const hintLoadIdRef = useRef(0);
@@ -337,7 +338,13 @@ export function useGameController() {
                        solvedDate.day === gameState.currentDate.day;
         if (solved) {
             justSolvedRef.current = true;
-            fireConfetti();
+            if (confettiTimeoutRef.current !== null) {
+                window.clearTimeout(confettiTimeoutRef.current);
+            }
+            confettiTimeoutRef.current = window.setTimeout(() => {
+                fireConfetti();
+                confettiTimeoutRef.current = null;
+            }, 400);
             // Automatically show stats on completion after a short delay
             if (user) {
                 statsAutoOpenTimeoutRef.current = window.setTimeout(() => {
@@ -633,6 +640,12 @@ export function useGameController() {
     }, [user, userLoading, gameState.currentDate, loadPersistentHint, clearHistory]);
 
     useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate });
+
+    useEffect(() => () => {
+        if (confettiTimeoutRef.current !== null) {
+            window.clearTimeout(confettiTimeoutRef.current);
+        }
+    }, []);
 
     useSessionPersistence({ gameState });
 
