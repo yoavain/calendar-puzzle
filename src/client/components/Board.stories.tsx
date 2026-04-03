@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { Board } from "./Board";
 import { makeMockBoard, makeMockPieces, STORY_DATE, JAN_1 } from "../storybook/mockData";
@@ -78,6 +78,39 @@ export const Solved: Story = {
             />
         );
     }
+};
+
+const SolvedCelebrationStory = () => {
+    const [isSolved, setIsSolved] = useState(false);
+    if (!solvedState) {
+        return <div>Solver failed to find a solution for Jan 1</div>;
+    }
+    const replay = () => {
+        setIsSolved(false);
+        window.setTimeout(() => setIsSolved(true), 0);
+    };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <Board
+                board={solvedState.board}
+                pieces={solvedState.pieces}
+                onCellClick={noop}
+                onPieceDrop={noop}
+                draggedPieceId={null}
+                onDragStart={noop}
+                onDragEnd={noop}
+                isSolved={isSolved}
+            />
+            <button onClick={replay} style={{ padding: "8px 20px", cursor: "pointer", fontSize: 14 }}>
+                {isSolved ? "Replay" : "Trigger win"}
+            </button>
+        </div>
+    );
+};
+
+export const SolvedCelebration: Story = {
+    name: "Solved — Win Celebration",
+    render: () => <SolvedCelebrationStory />
 };
 
 export const TodayDate: Story = {

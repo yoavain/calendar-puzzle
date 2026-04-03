@@ -9,6 +9,7 @@ import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
 import type { InvalidDropCell } from "../layouts/common/useGameController";
 import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
+import { WinCelebration } from "./WinCelebration";
 
 interface BoardProps {
     board: BoardType;
@@ -410,6 +411,7 @@ export const Board = React.memo<BoardProps>(({
             onKeyDown={handleBoardKeyDown}
             data-testid="board"
         >
+            <WinCelebration active={isSolved} />
             {board.map((row, y) => (
                 <BoardRow key={y}>
                     {row.map((cell, x) => {
@@ -447,6 +449,7 @@ export const Board = React.memo<BoardProps>(({
                         return (
                             <BoardCell
                                 key={`${x}-${y}`}
+                                style={{ "--reveal-delay": `${(x + y) * 25}ms` } as React.CSSProperties}
                                 isPlayable={cell.isPlayable}
                                 isHighlighted={cell.isHighlighted}
                                 isPieceCell={!!piece}
