@@ -7,7 +7,7 @@ describe("streakUtils", () => {
         beforeAll(() => {
             jest.useFakeTimers();
             // Setting "today" to Jan 23, 2026 (Friday) as per system prompt
-            jest.setSystemTime(new Date(2026, 0, 23));
+            jest.setSystemTime(new Date(2026, 0, 23).getTime());
         });
 
         afterAll(() => {
@@ -105,7 +105,7 @@ describe("streakUtils", () => {
 
         it("should handle circular current streak (Jan 2 to Dec 31)", () => {
             // Mock today to be Jan 2
-            jest.setSystemTime(new Date(2026, 0, 2));
+            jest.setSystemTime(new Date(2026, 0, 2).getTime());
             const history: PuzzleDate[] = [
                 { month: 0, day: 2 },
                 { month: 0, day: 1 },
@@ -115,7 +115,7 @@ describe("streakUtils", () => {
             const result = calculateStreaks(history);
             expect(result.current).toBe(4);
             // Reset to Jan 23 for other tests
-            jest.setSystemTime(new Date(2026, 0, 23));
+            jest.setSystemTime(new Date(2026, 0, 23).getTime());
         });
 
         it("should handle end of month transition (Jan 31 to Feb 1)", () => {
