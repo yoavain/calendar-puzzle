@@ -80,9 +80,8 @@ export const issueSchema = {
 
 export const logSchema = {
     type: "object",
-    required: ["user", "logLevel", "message"],
+    required: ["logLevel", "message"],
     properties: {
-        user: { type: "string" },
         logLevel: { type: "string", enum: ["error", "info"] },
         message: { type: "string", maxLength: 2000 },
         stack: { type: "string", maxLength: 5000 }

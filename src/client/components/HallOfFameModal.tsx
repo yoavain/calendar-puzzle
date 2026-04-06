@@ -122,10 +122,10 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                             </TableHead>
                             <TableBody>
                                 {sortedData.map((row, index) => {
-                                    const isCurrentUser = currentUser?.id === row.userId;
+                                    const isCurrentUser = row.isCurrentUser;
                                     const avatarUrl = isCurrentUser && currentUser?.avatarUrl
                                         ? currentUser.avatarUrl
-                                        : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(row.userId)}`;
+                                        : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(row.userKey)}`;
 
                                     const getRankIcon = (rankIndex: number) => {
                                         if (rankIndex === 0) {

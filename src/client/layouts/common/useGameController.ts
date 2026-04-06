@@ -156,7 +156,7 @@ export function useGameController() {
             }
         }
         catch (error) {
-            logToServer("error", "Game: Failed to load persistent hint", error, user?.name);
+            logToServer("error", "Game: Failed to load persistent hint", error);
         }
         return null;
     }, [user]);
@@ -222,7 +222,7 @@ export function useGameController() {
                 updatePresent({ ...newGameState, board: hintState.board, pieces: hintState.pieces });
             }
         }).catch(err => {
-            logToServer("error", "Game: Failed to load persistent hint", err, user?.name);
+            logToServer("error", "Game: Failed to load persistent hint", err);
         });
 
         setSolverError(null);
@@ -409,7 +409,7 @@ export function useGameController() {
             handlePieceReturnToPile(parsed.pieceId);
         }
         catch (err) {
-            logToServer("error", "Game: Failed to handle pile drop", err, user?.name);
+            logToServer("error", "Game: Failed to handle pile drop", err);
         }
     }, [handlePieceReturnToPile, user?.name]);
 
@@ -445,7 +445,7 @@ export function useGameController() {
         catch (error) {
             // Handle any errors
             const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-            logToServer("error", `Game: Solution failed: ${errorMessage}`, error, user?.name);
+            logToServer("error", `Game: Solution failed: ${errorMessage}`, error);
             setSolverError(errorMessage);
         }
         finally {
@@ -503,7 +503,7 @@ export function useGameController() {
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-            logToServer("error", `Game: Hint failed: ${errorMessage}`, error, user?.name);
+            logToServer("error", `Game: Hint failed: ${errorMessage}`, error);
             setSolverError(errorMessage);
         }
         finally {
@@ -625,7 +625,7 @@ export function useGameController() {
                     }
                 }
                 catch (err) {
-                    logToServer("error", "Game: Failed to load initial hint", err, user.name);
+                    logToServer("error", "Game: Failed to load initial hint", err);
                 }
             }
         };

@@ -12,12 +12,10 @@ import { API_LOG } from "../../common/restPaths.js";
 export const logToServer = (
     logLevel: "error" | "info",
     message: string,
-    error?: unknown,
-    user: string = "anonymous"
+    error?: unknown
 ): void => {
     try {
         const logRequest: LogRequest = {
-            user,
             logLevel,
             message,
             stack: error instanceof Error ? error.stack : undefined
