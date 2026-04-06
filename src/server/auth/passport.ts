@@ -57,7 +57,14 @@ export const setupPassport = () => {
     fastifyPassport.registerUserSerializer<SessionUser, SessionUser>(
         async (user) => user
     );
-    fastifyPassport.registerUserDeserializer<SessionUser, SessionUser>(
-        async (user) => user
+    fastifyPassport.registerUserDeserializer<SessionUser, SessionUser | null>(
+        async (user) => {
+            const [dbUser] = await db.select({ isAdmin: users.isAdmin })
+                .from(users).where(eq(users.id, user.id));
+            if (!dbUser) {
+                return null;
+            }
+            return { ...user, isAdmin: dbUser.isAdmin };
+        }
     );
 };
