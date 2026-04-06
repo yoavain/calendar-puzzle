@@ -46,7 +46,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     
                     // Fetch CSRF token separately after authenticated session is established
                     getCsrfToken().catch(err => {
-                        logToServer("error", "UserContext: Failed to fetch CSRF token", err, data.user?.id);
+                        logToServer("error", "UserContext: Failed to fetch CSRF token", err);
                     });
                 }
                 else {
@@ -100,7 +100,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
         catch (err) {
-            logToServer("error", "UserContext: Failed to get CSRF token for logout", err, user?.id);
+            logToServer("error", "UserContext: Failed to get CSRF token for logout", err);
         }
 
         try {
@@ -111,7 +111,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             });
         }
         catch (err) {
-            logToServer("error", "UserContext: Logout request failed", err, user?.id);
+            logToServer("error", "UserContext: Logout request failed", err);
         }
         setUser(null);
         setCompletedDates([]);

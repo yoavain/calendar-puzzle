@@ -70,7 +70,8 @@ export interface IssueResponse {
 // Returns user activity statistics (authenticated users, not admin-only)
 // ============================================
 export interface UserActivity {
-    userId: string;
+    userKey: string;
+    isCurrentUser: boolean;
     daysPlayed: number;
     daysSolved: number;
     daysPlayedWithHint: number;
@@ -86,7 +87,6 @@ export interface UserDataResponse {
 // Log client-side errors or info messages
 // ============================================
 export interface LogRequest {
-    user: string; // can be "anonymous"
     logLevel: "error" | "info";
     message: string;
     stack?: string;

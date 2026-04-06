@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { createHash } from "node:crypto";
 import { db } from "../db/connection.js";
 import { userPuzzleStats, users } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
@@ -8,6 +9,7 @@ import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
 import { API_ADMIN_SOLUTION, API_HALL_OF_FAME } from "../../common/restPaths.js";
 import type { DatePathParams, ErrorResponse, SolutionResponse, UserDataResponse } from "../../common/restTypes.js";
+import type { SessionUser } from "../auth/passport.js";
 
 export const registerAdminRoutes = (app: FastifyInstance): void => {
     // GET /api/admin/solution/:date - Get full puzzle solution for a date (Admin only)
@@ -64,6 +66,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
         },
         async (request, reply) => {
             try {
+                const requestingUserId = (request.user as SessionUser).id;
                 const stats = await db
                     .select({
                         userId: users.id,
@@ -77,7 +80,15 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
                     .groupBy(users.id)
                     .orderBy(users.id);
 
-                return reply.send({ users: stats });
+                const mapped = stats.map(({ userId, daysPlayed, daysSolved, daysPlayedWithHint, daysSolvedWithHint }) => ({
+                    userKey: createHash("sha256").update(userId).digest("hex").slice(0, 16),
+                    isCurrentUser: userId === requestingUserId,
+                    daysPlayed,
+                    daysSolved,
+                    daysPlayedWithHint,
+                    daysSolvedWithHint
+                }));
+                return reply.send({ users: mapped });
             }
             catch (error) {
                 request.log.error(error, "[AdminUserDataRoute] Failed to fetch user data");
