@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { PuzzleDate } from "../../common/types.js";
-import { clearCsrfToken, getCsrfToken } from "../service/puzzleService";
+import { clearCsrfToken, getCsrfToken } from "../service/csrfService";
 import { logToServer } from "../service/logService.js";
 import { API_AUTH_ME, AUTH_LOGOUT } from "../../common/restPaths.js";
 

@@ -13,8 +13,8 @@ import type {
 } from "../../common/restTypes";
 import { encryptPayload } from "../utils/encryption.js";
 import { logToServer } from "./logService.js";
+import { getCsrfToken, clearCsrfToken } from "./csrfService.js";
 import {
-    API_AUTH_CSRF_TOKEN,
     API_AUTH_PUBLIC_KEY,
     API_HALL_OF_FAME,
     API_HINT,
@@ -26,8 +26,6 @@ import {
 } from "../../common/restPaths.js";
 
 let cachedPublicKey: string | null = null;
-let cachedCsrfToken: string | null = null;
-let csrfTokenPromise: Promise<string | null> | null = null;
 
 /**
  * Custom fetch wrapper to handle 401s and other global concerns.
@@ -43,8 +41,7 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
 
     const headers = options.headers as Record<string, string> | undefined;
     if (response.status === 403 && headers?.["X-CSRF-Token"]) {
-        cachedCsrfToken = null;
-        csrfTokenPromise = null;
+        clearCsrfToken();
         const freshToken = await getCsrfToken();
         if (freshToken) {
             const retryHeaders = { ...headers, "X-CSRF-Token": freshToken };
@@ -80,47 +77,6 @@ const getPublicKey = async (): Promise<string | null> => {
         logToServer("error", "Failed to fetch public key", error);
     }
     return null;
-};
-
-/**
- * Fetches a CSRF token from the server.
- */
-export const getCsrfToken = async (): Promise<string | null> => {
-    if (cachedCsrfToken) {
-        return cachedCsrfToken;
-    }
-    if (csrfTokenPromise) {
-        return csrfTokenPromise;
-    }
-
-    csrfTokenPromise = (async () => {
-        try {
-            const response = await apiFetch(API_AUTH_CSRF_TOKEN, {
-                credentials: "include"
-            });
-            if (response.ok) {
-                const data = await response.json();
-                cachedCsrfToken = data.csrfToken;
-                return cachedCsrfToken;
-            }
-        }
-        catch (error) {
-            logToServer("error", "Failed to fetch CSRF token", error);
-        }
-        finally {
-            csrfTokenPromise = null;
-        }
-        return null;
-    })();
-
-    return csrfTokenPromise;
-};
-
-/**
- * Clears the cached CSRF token (useful after logout)
- */
-export const clearCsrfToken = (): void => {
-    cachedCsrfToken = null;
 };
 
 /**
