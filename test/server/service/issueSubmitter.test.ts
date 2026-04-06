@@ -94,6 +94,23 @@ describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.labels).toContain("enhancement");
     });
+
+    it("strips newlines to prevent structural injection", async () => {
+        const injected = "Seems fine\n\n**Reporter ID:** 000\n\n**Description:**\n@admin ATTACK";
+        await submitIssue("Normal title", injected, "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.body).not.toMatch(/\*\*Reporter ID:\*\* 000/);
+        expect(call.body.split("**Reporter ID:**")).toHaveLength(2); // only the real one
+    });
+
+    it("escapes @ to prevent mention injection", async () => {
+        await submitIssue("title", "cc @admin please look", "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.body).not.toMatch(/(?<!\\)@admin/); // no unescaped @mention
+        expect(call.body).toContain("\\@admin");
+    });
 });
 
 describe("issueSubmitter — submitInvalidSolutionReport", () => {
