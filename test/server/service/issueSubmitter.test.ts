@@ -1,0 +1,97 @@
+import { submitIssue } from "../../../src/server/service/issueSubmitter";
+import type { SessionUser } from "../../../src/server/auth/passport";
+
+// ---------------------------------------------------------------------------
+// Module mocks
+// ---------------------------------------------------------------------------
+
+// `var` is used intentionally: jest.mock factories are hoisted before imports,
+// so `let`/`const` would be in the TDZ when the factory runs. `var` is hoisted
+// and writable, so the assignment inside the factory succeeds.
+var mockIssuesCreate: jest.Mock;
+
+jest.mock("@octokit/rest", () => {
+    mockIssuesCreate = jest.fn().mockResolvedValue({});
+    return {
+        Octokit: jest.fn().mockImplementation(() => ({
+            issues: { create: mockIssuesCreate }
+        }))
+    };
+});
+
+// config uses import.meta.url — mock it to avoid ESM issues in Jest
+jest.mock("../../../src/server/config", () => ({
+    config: {
+        github: { token: "test-token", owner: "test-owner", repo: "test-repo" }
+    }
+}));
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const testUser: SessionUser = {
+    id: "user-42",
+    isAdmin: false,
+    email: "user@example.com",
+    name: "Test User"
+};
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockIssuesCreate.mockResolvedValue({});
+    });
+
+    it("passes clean strings through unchanged", async () => {
+        await submitIssue("Plain title", "Plain description", "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.title).toBe("Plain title");
+        expect(call.body).toContain("Plain description");
+    });
+
+    it("escapes markdown special characters in title", async () => {
+        await submitIssue("*bold* title [with link](url)", "clean description", "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.title).not.toMatch(/(?<!\\)\*/); // no unescaped *
+        expect(call.title).not.toMatch(/(?<!\\)\[/); // no unescaped [
+        expect(call.title).not.toMatch(/(?<!\\)\(/); // no unescaped (
+        expect(call.title).toContain("\\*bold\\*");
+    });
+
+    it("escapes markdown special characters in description", async () => {
+        await submitIssue("clean title", "`code block` and _italic_", "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.body).toContain("\\`code block\\`");
+        expect(call.body).toContain("\\_italic\\_");
+    });
+
+    it("escapes title and description independently", async () => {
+        await submitIssue("title with #header", "description with |pipe|", "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.title).toContain("\\#header");
+        expect(call.body).toContain("\\|pipe\\|");
+    });
+
+    it("includes user ID in the body unmodified", async () => {
+        await submitIssue("title", "description", "bug", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.body).toContain(testUser.id);
+    });
+
+    it("passes the issue type as a label", async () => {
+        await submitIssue("title", "description", "enhancement", testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.labels).toContain("enhancement");
+    });
+});

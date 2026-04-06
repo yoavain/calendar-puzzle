@@ -15,7 +15,6 @@ import StarIcon from "@mui/icons-material/Star";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import type { PuzzleDate } from "../../common/types";
 import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
-import { useQueryParam } from "../hooks/useQueryParam";
 import { useUser } from "../context/UserContext";
 
 interface DatePickerProps {
@@ -28,8 +27,7 @@ interface DatePickerProps {
 export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChange, fullWidth, sx }) => {
     const theme = useTheme();
     const { user, completedDates, playedDates } = useUser();
-    const hasValidCode = useQueryParam("code");
-    const isLoginRequired = !user && !hasValidCode;
+    const isLoginRequired = !user;
     
     const [isOpen, setIsOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
