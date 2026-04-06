@@ -50,9 +50,19 @@ const setupInsertChain = (
 // Tests
 // ---------------------------------------------------------------------------
 
+// Must match statsRest.ts so we can advance time past the cooldown
+const ISSUE_COOLDOWN_MS = 10 * 60 * 1000;
+
 describe("statsRest", () => {
     let unauthServer: FastifyInstance;
     let authServer: FastifyInstance;
+
+    // The module-level lastIssueSentAt Map in statsRest.ts persists across tests.
+    // To ensure each test starts with an expired cooldown, we advance the clock by
+    // ISSUE_COOLDOWN_MS + 1 on every beforeEach. The Map key is user.id, so any
+    // timestamp stored in a previous test will always be "too old" in the next one.
+    let currentTimeMs = new Date("2026-01-01T01:00:00Z").getTime();
+    let dateSpy: jest.SpyInstance;
 
     beforeAll(async () => {
         unauthServer = await buildTestServer(registerStatsRoutes);
@@ -65,10 +75,16 @@ describe("statsRest", () => {
     });
 
     beforeEach(() => {
+        currentTimeMs += ISSUE_COOLDOWN_MS + 1;
+        dateSpy = jest.spyOn(Date, "now").mockReturnValue(currentTimeMs);
         jest.clearAllMocks();
         setupInsertChain();
         mockPuzzleSolvedForDate.mockReturnValue({ month: 0, day: 1 });
         mockSubmitReport.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        dateSpy.mockRestore();
     });
 
     // -----------------------------------------------------------------------
@@ -194,6 +210,53 @@ describe("statsRest", () => {
             expect(res.statusCode).toBe(400);
             expect(res.json()).toMatchObject({ error: "Invalid solution" });
             expect(mockSubmitReport).toHaveBeenCalledTimes(1);
+        });
+
+        it("cooldown: second invalid submission from same user does not trigger another report", async () => {
+            mockPuzzleSolvedForDate.mockReturnValue(null);
+
+            // First invalid submission — cooldown starts
+            await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces }
+            });
+
+            // Second invalid submission within the cooldown window
+            await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces }
+            });
+
+            expect(mockSubmitReport).toHaveBeenCalledTimes(1);
+        });
+
+        it("cooldown expires: report fires again after 10 minutes", async () => {
+            mockPuzzleSolvedForDate.mockReturnValue(null);
+
+            // First invalid submission — starts cooldown
+            await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces }
+            });
+
+            // Advance past the cooldown window
+            dateSpy.mockReturnValue(currentTimeMs + ISSUE_COOLDOWN_MS + 1);
+
+            // Third invalid submission — cooldown has expired, report fires again
+            await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces }
+            });
+
+            expect(mockSubmitReport).toHaveBeenCalledTimes(2);
         });
 
         it("returns 500 when db.insert throws after a valid solution", async () => {

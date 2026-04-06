@@ -10,6 +10,9 @@ import { submitInvalidSolutionReport } from "../service/issueSubmitter.js";
 import { API_STATS_COMPLETE, API_STATS_START } from "../../common/restPaths.js";
 import type { CompletePuzzleRequest, ErrorResponse, StartPuzzleRequest, SuccessResponse } from "../../common/restTypes.js";
 
+const lastIssueSentAt = new Map<string, number>();
+const ISSUE_COOLDOWN_MS = 10 * 60 * 1000;
+
 export const registerStatsRoutes = (app: FastifyInstance): void => {
     // Record that a user started a puzzle
     app.post<{ Body: StartPuzzleRequest; Reply: SuccessResponse | ErrorResponse }>(
@@ -96,20 +99,26 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                 }
                 else {
                     // Automatically report a bug to GitHub if a solution fails server-side validation
-                    try {
-                        const actualDateFound = solvedDate;
+                    // Rate-limited per user to prevent GitHub API quota exhaustion
+                    const now = Date.now();
+                    const last = lastIssueSentAt.get(user.id) ?? 0;
+                    if (now - last > ISSUE_COOLDOWN_MS) {
+                        lastIssueSentAt.set(user.id, now);
+                        try {
+                            const actualDateFound = solvedDate;
 
-                        await submitInvalidSolutionReport(
-                            pieces,
-                            { month, day },
-                            actualDateFound,
-                            user
-                        );
+                            await submitInvalidSolutionReport(
+                                pieces,
+                                { month, day },
+                                actualDateFound,
+                                user
+                            );
 
-                        request.log.info({ userId: user.id, targetDate: `${month + 1}/${day}` }, "Automated bug report created for invalid solution");
-                    }
-                    catch (githubError) {
-                        request.log.error(githubError, "[StatsRoute] Failed to report bug to GitHub");
+                            request.log.info({ userId: user.id, targetDate: `${month + 1}/${day}` }, "Automated bug report created for invalid solution");
+                        }
+                        catch (githubError) {
+                            request.log.error(githubError, "[StatsRoute] Failed to report bug to GitHub");
+                        }
                     }
 
                     return reply.code(400).send({ error: "Invalid solution" });
