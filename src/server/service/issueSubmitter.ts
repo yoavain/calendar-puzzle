@@ -22,12 +22,18 @@ async function createGitHubIssue(title: string, body: string, labels: string[]) 
     });
 }
 
+function escapeMarkdown(text: string): string {
+    return text.replace(/[\\`*_{}[\]()#+\-.!|]/g, "\\$&");
+}
+
 /**
  * Submits a generic issue (bug report or feature request)
  */
 export async function submitIssue(title: string, description: string, type: IssueType, user: SessionUser) {
-    const body = `**Reporter ID:** ${user.id}\n\n**Description:**\n${description}`;
-    return await createGitHubIssue(title, body, [type]);
+    const safeTitle = escapeMarkdown(title);
+    const safeDescription = escapeMarkdown(description);
+    const body = `**Reporter ID:** ${user.id}\n\n**Description:**\n${safeDescription}`;
+    return await createGitHubIssue(safeTitle, body, [type]);
 }
 
 /**

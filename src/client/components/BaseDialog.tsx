@@ -4,6 +4,7 @@ import type { DialogProps } from "@mui/material/Dialog";
 
 export const BaseDialog: React.FC<DialogProps> = ({ children, PaperProps: callerPaperProps, ...props }) => (
     <Dialog
+        {...props}
         maxWidth="sm"
         fullWidth
         disableScrollLock
@@ -11,7 +12,6 @@ export const BaseDialog: React.FC<DialogProps> = ({ children, PaperProps: caller
             ...callerPaperProps,
             sx: { userSelect: "none", ...(callerPaperProps?.sx as object ?? {}) }
         }}
-        {...props}
     >
         {children}
     </Dialog>
