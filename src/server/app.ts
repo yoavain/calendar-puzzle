@@ -23,7 +23,7 @@ import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
 import type { EncryptedPayload } from "../common/types.js";
 import { config } from "./config.js";
-import { API_HEALTH, API_LOG } from "../common/restPaths.js";
+import { API_HEALTH } from "../common/restPaths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -214,8 +214,8 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             return;
         }
 
-        // Skip for health check and logging
-        if (request.url === API_HEALTH || request.url === API_LOG) {
+        // Skip for health check (GET, no auth, no side effects)
+        if (request.url === API_HEALTH) {
             return;
         }
 
