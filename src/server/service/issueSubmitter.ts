@@ -23,7 +23,9 @@ async function createGitHubIssue(title: string, body: string, labels: string[]) 
 }
 
 function escapeMarkdown(text: string): string {
-    return text.replace(/[\\`*_{}[\]()#+\-.!|]/g, "\\$&");
+    return text
+        .replace(/[\r\n]+/g, " ")
+        .replace(/[\\`*_{}[\]()#+\-.!|@]/g, "\\$&");
 }
 
 /**
