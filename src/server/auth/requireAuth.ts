@@ -1,4 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { eq } from "drizzle-orm";
+import { db } from "../db/connection.js";
+import { users } from "../db/schema.js";
 import type { SessionUser } from "./passport.js";
 
 export const requireAuth = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -14,7 +17,8 @@ export const requireAdmin = async (request: FastifyRequest, reply: FastifyReply)
     }
 
     const user = request.user as SessionUser;
-    if (!user.isAdmin) {
+    const [dbUser] = await db.select({ isAdmin: users.isAdmin }).from(users).where(eq(users.id, user.id));
+    if (!dbUser?.isAdmin) {
         return reply.code(403).send({ error: "Admin access required" });
     }
 };

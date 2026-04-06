@@ -31,7 +31,7 @@ const __dirname = path.dirname(__filename);
 export const buildApp = async (): Promise<FastifyInstance> => {
     const app = Fastify({
         logger: true,
-        trustProxy: true // Trust X-Forwarded-* headers from reverse proxies
+        trustProxy: 1 // Trust exactly 1 proxy hop (Cloudflare Tunnel/Docker → Fastify)
     });
 
     // Polyfill for Express compatibility (some passport strategies expect req.connection.encrypted)
@@ -107,10 +107,14 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         }
     });
 
-    // Register rate limiting
+    // Register rate limiting — key on user ID when authenticated, fall back to IP.
+    // hook: "preHandler" ensures passport has already deserialized the session so
+    // request.user is available; otherwise the keyGenerator always falls back to IP.
     await app.register(fastifyRateLimit, {
         max: 100,
-        timeWindow: "1 minute"
+        timeWindow: "1 minute",
+        hook: "preHandler",
+        keyGenerator: (request) => (request.user as { id?: string } | undefined)?.id ?? request.ip
     });
 
     // Register CSRF protection after secure session
