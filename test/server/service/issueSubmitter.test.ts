@@ -1,4 +1,4 @@
-import { submitIssue } from "../../../src/server/service/issueSubmitter";
+import { submitIssue, submitInvalidSolutionReport } from "../../../src/server/service/issueSubmitter";
 import type { SessionUser } from "../../../src/server/auth/passport";
 
 // ---------------------------------------------------------------------------
@@ -93,5 +93,34 @@ describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.labels).toContain("enhancement");
+    });
+});
+
+describe("issueSubmitter — submitInvalidSolutionReport", () => {
+    const piece = { id: 1 as const, position: { x: 0, y: 0 }, isFlippedH: false, isFlippedV: false, rotation: 0 as const };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockIssuesCreate.mockResolvedValue({});
+    });
+
+    it("creates an issue with the correct title and labels", async () => {
+        await submitInvalidSolutionReport([piece], { month: 0, day: 1 }, null, testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.title).toContain("1/1");
+        expect(call.labels).toContain("bug");
+        expect(call.labels).toContain("automated-report");
+    });
+
+    it("strips extra properties from pieces in the issue body", async () => {
+        // Cast to any to simulate extra fields surviving a future schema relaxation
+        const pieceWithExtra = { ...piece, injected: "```\n## INJECTED\n```json" } as any;
+
+        await submitInvalidSolutionReport([pieceWithExtra], { month: 0, day: 1 }, null, testUser);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.body).not.toContain("injected");
+        expect(call.body).not.toContain("INJECTED");
     });
 });

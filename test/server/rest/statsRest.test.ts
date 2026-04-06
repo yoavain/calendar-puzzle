@@ -290,5 +290,26 @@ describe("statsRest", () => {
 
             expect(res.statusCode).toBe(400);
         });
+
+        it("strips extra piece properties before passing to submitInvalidSolutionReport", async () => {
+            // Fastify's AJV strips extra fields (additionalProperties: false) rather than
+            // rejecting. Verify the property never reaches the issue submitter.
+            mockPuzzleSolvedForDate.mockReturnValue(null);
+            const piecesWithExtra = makeEightPieces().map((p, i) =>
+                i === 0 ? { ...p, injected: "```\n## INJECTED\n```json" } : p
+            );
+
+            const res = await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces: piecesWithExtra }
+            });
+
+            expect(res.statusCode).toBe(400); // invalid solution
+            expect(mockSubmitReport).toHaveBeenCalledTimes(1);
+            const submittedPieces: any[] = mockSubmitReport.mock.calls[0][0];
+            expect(submittedPieces[0]).not.toHaveProperty("injected");
+        });
     });
 });
