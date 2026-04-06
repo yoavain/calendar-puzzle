@@ -53,6 +53,32 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         (request as unknown as { connection: unknown }).connection = connection;
     });
 
+    // Encrypted-request IP rate limiter — fires before body parsing and RSA decryption.
+    // Prevents unauthenticated CPU exhaustion via x-encrypted flooding.
+    // Uses request.ip (real client IP via trustProxy: 1) since request.user is not yet set.
+    const encRateMap = new Map<string, { count: number; resetAt: number }>();
+    const ENC_RATE_MAX = 20;
+    const ENC_RATE_WINDOW_MS = 60_000;
+
+    app.addHook("onRequest", async (request, reply) => {
+        if (request.headers["x-encrypted"] !== "true") {
+            return;
+        }
+
+        const ip = request.ip;
+        const now = Date.now();
+        let entry = encRateMap.get(ip);
+
+        if (!entry || now > entry.resetAt) {
+            entry = { count: 0, resetAt: now + ENC_RATE_WINDOW_MS };
+            encRateMap.set(ip, entry);
+        }
+
+        if (++entry.count > ENC_RATE_MAX) {
+            return reply.code(429).send({ error: "Too Many Requests" });
+        }
+    });
+
     // Global decryption hook
     app.addHook("preValidation", async (request, reply) => {
         if (request.headers["x-encrypted"] === "true" && request.body) {

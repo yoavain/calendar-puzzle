@@ -202,4 +202,5 @@ Database persistence is **implemented**: `users` and `userPuzzleStats` tables ex
 
 - [x] Rate limit `/auth/*` endpoints
 - [x] CSRF protection (`/api/auth/csrf-token`)
+- [x] IP-only rate limiter for encrypted requests (`onRequest`, before decryption) — see [ARCHITECTURE.md](./ARCHITECTURE.md#server-request-lifecycle)
 - [ ] Session expiration/rotation
