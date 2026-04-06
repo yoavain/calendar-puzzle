@@ -225,6 +225,65 @@ export function useGameHistory(initialState: GameState) {
 
 ---
 
+## Backend (Server)
+
+The server layer uses **Fastify 5** with plugins: helmet, CSRF, passport, rate-limit, session, and static file serving.
+
+### Server Request Lifecycle
+
+Each inbound HTTP request passes through Fastify hooks in a fixed order. The diagram below shows how the two rate limiters and the security middleware stack:
+
+```mermaid
+flowchart TD
+    REQ([HTTP Request])
+    REQ --> ON
+
+    subgraph ON["onRequest"]
+        POLY[Connection polyfill\nexisting]
+        POLY --> RL1
+
+        RL1{{"⛔ Rate Limiter 1\nhook: onRequest\nkey: request.ip\nmax: 20 / min\nonly when x-encrypted: true"}}
+    end
+
+    RL1 -- "x-encrypted != true → skip" --> PP
+    RL1 -- "within limit" --> PP
+    RL1 -- "over limit" --> E429A([429 Too Many Requests])
+
+    PP[preParsing — body parsed]
+    PP --> PV
+
+    subgraph PV["preValidation (in registration order)"]
+        DEC["Decryption hook\nRSA-OAEP + AES-GCM\nreplaces request.body"]
+        DEC -- "fail" --> E400([400 Bad Request])
+        DEC -- "success / no header" --> PASS
+        PASS["Passport session restoration\nrequest.user set"]
+        PASS --> CSRF["CSRF validation\nskip GET/HEAD/OPTIONS"]
+        CSRF -- "invalid" --> E403([403 Forbidden])
+    end
+
+    CSRF -- "valid" --> SCHEMA
+
+    SCHEMA["Schema Validation\nruns on decrypted body"]
+    SCHEMA --> PH
+
+    subgraph PH["preHandler"]
+        RL2{{"⛔ Rate Limiter 2\nhook: preHandler\nkey: user.id ?? request.ip\nmax: 100 / min\napplies to all requests"}}
+    end
+
+    RL2 -- "within limit" --> HAND
+    RL2 -- "over limit" --> E429B([429 Too Many Requests])
+
+    HAND[Route Handler]
+    HAND --> RES([HTTP Response])
+```
+
+**Why two rate limiters?**
+
+- **Rate Limiter 1** (`onRequest`, IP-keyed) guards the decryption path. Without it, an attacker can trigger unlimited RSA private-key operations by sending many requests with `x-encrypted: true` — the global decryption hook fires at `preValidation`, before the user-keyed limiter runs. Limiter 1 only activates when that header is present.
+- **Rate Limiter 2** (`preHandler`, user/IP-keyed) applies to all requests. It runs at `preHandler` because `request.user` (populated by passport's session deserialization) is only guaranteed to be set by that point.
+
+---
+
 ## Layout Architecture
 
 The app supports three layouts with two drag-and-drop implementations. All layouts share `useGameController.ts` for game logic.
