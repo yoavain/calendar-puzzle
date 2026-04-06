@@ -40,10 +40,16 @@ export async function submitIssue(title: string, description: string, type: Issu
  * Specifically reports an invalid solution submitted by a user
  */
 export async function submitInvalidSolutionReport(pieces: Piece[], expectedDate: PuzzleDate, actualDate: PuzzleDate | null, user: SessionUser) {
-    const actualDateStr = actualDate 
-        ? `${actualDate.month + 1}/${actualDate.day}` 
+    const actualDateStr = actualDate
+        ? `${actualDate.month + 1}/${actualDate.day}`
         : "None/Invalid";
-        
+
+    // Project to known fields only — prevents any extra properties that slipped past
+    // schema validation from being embedded verbatim in the GitHub issue body.
+    const safePieces = pieces.map(({ id, position, isFlippedH, isFlippedV, rotation, isLocked }) => ({
+        id, position, isFlippedH, isFlippedV, rotation, isLocked
+    }));
+
     const title = `Bug: Invalid solution submitted for ${expectedDate.month + 1}/${expectedDate.day}`;
     const description = `
 **User ID:** ${user.id}
@@ -52,7 +58,7 @@ export async function submitInvalidSolutionReport(pieces: Piece[], expectedDate:
 
 **Submission Data:**
 \`\`\`json
-${JSON.stringify({ month: expectedDate.month, day: expectedDate.day, pieces }, null, 2)}
+${JSON.stringify({ month: expectedDate.month, day: expectedDate.day, pieces: safePieces }, null, 2)}
 \`\`\`
     `;
 

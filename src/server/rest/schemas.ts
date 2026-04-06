@@ -4,6 +4,7 @@
 
 export const dateParamSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["date"],
     properties: {
         date: {
@@ -16,6 +17,7 @@ export const dateParamSchema = {
 
 export const positionSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["x", "y"],
     properties: {
         x: { type: "integer" },
@@ -25,6 +27,7 @@ export const positionSchema = {
 
 export const pieceSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["id", "isFlippedH", "isFlippedV", "rotation"],
     properties: {
         id: { type: "integer" },
@@ -36,7 +39,7 @@ export const pieceSchema = {
         },
         isFlippedH: { type: "boolean" },
         isFlippedV: { type: "boolean" },
-        rotation: { 
+        rotation: {
             type: "integer",
             enum: [0, 90, 180, 270]
         },
@@ -46,6 +49,7 @@ export const pieceSchema = {
 
 export const statsStartSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["month", "day"],
     properties: {
         month: { type: "integer", minimum: 0, maximum: 11 },
@@ -55,6 +59,7 @@ export const statsStartSchema = {
 
 export const statsCompleteSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["month", "day", "pieces"],
     properties: {
         month: { type: "integer", minimum: 0, maximum: 11 },
@@ -70,6 +75,7 @@ export const statsCompleteSchema = {
 
 export const issueSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["title", "description", "type"],
     properties: {
         title: { type: "string", minLength: 1, maxLength: 200 },
@@ -80,6 +86,7 @@ export const issueSchema = {
 
 export const logSchema = {
     type: "object",
+    additionalProperties: false,
     required: ["logLevel", "message"],
     properties: {
         logLevel: { type: "string", enum: ["error", "info"] },
