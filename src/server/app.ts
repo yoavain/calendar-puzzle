@@ -199,11 +199,14 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             return reply.code(404).send({ error: "Not found" });
         }
 
-        // Block source maps for non-local hostnames
+        // Block source maps unless the request arrived on a loopback interface.
+        // Uses socket.localAddress (server-side, not client-controlled) to prevent
+        // Host header spoofing bypasses.
         if (requestedPath.endsWith(".map")) {
-            const allowedHosts = ["localhost", "127.0.0.1", "[::1]"];
-            if (!allowedHosts.includes(request.hostname)) {
-                app.log.warn(`Source map access blocked for host: ${request.hostname}`);
+            const localAddress = request.socket.localAddress ?? "";
+            const allowedAddresses = ["127.0.0.1", "::1", "::ffff:127.0.0.1"];
+            if (!allowedAddresses.includes(localAddress)) {
+                app.log.warn(`Source map access blocked for address: ${localAddress}`);
                 return reply.code(403).send({ error: "Forbidden: Source maps are not allowed" });
             }
         }
