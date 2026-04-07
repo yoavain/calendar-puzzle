@@ -23,19 +23,20 @@ export const registerLogRoutes = (app: FastifyInstance): void => {
         },
         async (request, reply) => {
             const { logLevel, message, stack } = request.body;
+            const sanitize = (s: string | undefined) => s?.replace(/[\r\n]+/g, " ");
 
             const logData = {
                 clientUser: (request.user as SessionUser).id,
-                stack,
-                userAgent: request.headers["user-agent"],
+                stack: sanitize(stack),
+                userAgent: sanitize(request.headers["user-agent"] as string | undefined),
                 ip: request.ip
             };
 
             if (logLevel === "error") {
-                request.log.error(logData, `[ClientError] ${message}`);
+                request.log.error(logData, `[ClientError] ${sanitize(message)}`);
             }
             else {
-                request.log.info(logData, `[ClientInfo] ${message}`);
+                request.log.info(logData, `[ClientInfo] ${sanitize(message)}`);
             }
 
             return reply.send({ success: true });
