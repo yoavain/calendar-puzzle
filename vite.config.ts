@@ -29,7 +29,7 @@ export default defineConfig({
     build: {
         outDir: "../build",
         emptyOutDir: true,
-        sourcemap: true,
+        sourcemap: process.env.NODE_ENV !== "production",
         chunkSizeWarningLimit: 500,
         rolldownOptions: {
             output: {
