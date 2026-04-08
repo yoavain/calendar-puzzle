@@ -97,6 +97,8 @@ npm start
 
 ### Docker
 
+> **Local deployment only.** This is a personal project. Docker images are built and run on the same host machine and are never pushed to any registry. Both "Dev" and "Production" environments are local Docker Compose stacks.
+
 ```bash
 # Build and run with Docker Compose
 npm run deploy:production

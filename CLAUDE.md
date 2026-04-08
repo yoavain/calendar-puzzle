@@ -244,6 +244,8 @@ See `docs/DESIGN.md` for detailed schema information.
 
 ## Environments
 
+> **Local-only project.** Both environments run on the same host machine via Docker Compose. Docker images are built locally and never pushed to any registry. Secrets baked into image layers are only accessible to the host operator and do not represent a distribution risk.
+
 There are two separate deployed environments, each with its own DNS:
 
 | Environment | Deploy command |
