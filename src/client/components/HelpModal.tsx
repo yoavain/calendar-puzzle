@@ -155,11 +155,13 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
         <BaseDialog
             open={open}
             onClose={onClose}
-            PaperProps={{
-                sx: {
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden"
+            slotProps={{
+                paper: {
+                    sx: {
+                        display: "flex",
+                        flexDirection: "column",
+                        overflow: "hidden"
+                    }
                 }
             }}
         >

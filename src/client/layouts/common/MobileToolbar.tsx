@@ -12,7 +12,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlined";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ShareIcon from "@mui/icons-material/Share";
