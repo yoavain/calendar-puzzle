@@ -72,8 +72,8 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
         <BaseDialog
             open={open}
             onClose={handleClose}
-            PaperProps={{
-                sx: { overflowX: "hidden" }
+            slotProps={{
+                paper: { sx: { overflowX: "hidden" } }
             }}
         >
             <DialogTitle>Submit bug / Request Feature</DialogTitle>
@@ -121,7 +121,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                         disabled={loading || success}
                         placeholder="Please provide details..."
                         variant="outlined"
-                        inputProps={{ maxLength: 1000 }}
+                        slotProps={{ htmlInput: { maxLength: 1000 } }}
                         helperText={`${description.length}/1000`}
                         sx={{ "& .MuiInputBase-root": { userSelect: "text" } }}
                     />

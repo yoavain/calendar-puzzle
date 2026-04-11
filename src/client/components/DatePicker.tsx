@@ -124,10 +124,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 onClose={handleClose}
                 maxWidth="xs"
                 fullWidth
-                PaperProps={{
-                    sx: { 
-                        borderRadius: 2,
-                        userSelect: "none"
+                slotProps={{
+                    paper: {
+                        sx: {
+                            borderRadius: 2,
+                            userSelect: "none"
+                        }
                     }
                 }}
             >

@@ -9,7 +9,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BugReportIcon from "@mui/icons-material/BugReport";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutlined";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import ShareIcon from "@mui/icons-material/Share";
 
@@ -91,17 +91,15 @@ export const DesktopLayout: React.FC = () => {
                         sx={{ py: 2 }}
                     >
                         {/* Top Bar */}
-                        <Stack 
-                            direction="row" 
-                            justifyContent="space-between" 
-                            alignItems="center" 
-                            sx={{ mb: 2 }}
+                        <Stack
+                            direction="row"
+                            sx={{ mb: 2, justifyContent: "space-between", alignItems: "center" }}
                         >
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                                 <ThemeToggle />
                                 {!game.userLoading && (game.user ? <UserMenu /> : <LoginButton />)}
                             </Stack>
-                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                            <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
                                 {game.solverError && (
                                     <Alert severity="error" sx={{ py: 0 }}>
                                         {game.solverError}

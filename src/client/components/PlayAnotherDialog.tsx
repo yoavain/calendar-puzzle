@@ -24,7 +24,7 @@ export const PlayAnotherDialog: React.FC<PlayAnotherDialogProps> = ({
         <BaseDialog
             open={isOpen}
             onClose={onDecline}
-            TransitionComponent={Zoom}
+            slots={{ transition: Zoom }}
             transitionDuration={300}
         >
             <DialogTitle sx={{ fontWeight: "bold" }}>Great work! 🎉</DialogTitle>

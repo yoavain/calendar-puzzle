@@ -45,8 +45,8 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
             <BaseDialog
                 open={open}
                 onClose={onClose}
-                PaperProps={{
-                    sx: { borderRadius: 2, minWidth: 420 }
+                slotProps={{
+                    paper: { sx: { borderRadius: 2, minWidth: 420 } }
                 }}
             >
                 <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
@@ -67,7 +67,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                 <DialogContent>
                     <Stack direction="row" sx={{ mt: 1 }}>
                         {/* Copy Link */}
-                        <Stack alignItems="center" spacing={1} sx={{ flex: 1 }}>
+                        <Stack spacing={1} sx={{ flex: 1, alignItems: "center" }}>
                             <Button
                                 variant="outlined"
                                 onClick={handleCopy}
@@ -81,7 +81,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                         </Stack>
 
                         {/* QR Code */}
-                        <Stack alignItems="center" spacing={1} sx={{ flex: 1 }}>
+                        <Stack spacing={1} sx={{ flex: 1, alignItems: "center" }}>
                             <Tooltip title="Click to enlarge" arrow>
                                 <Box
                                     component="img"

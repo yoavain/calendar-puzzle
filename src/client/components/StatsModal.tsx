@@ -47,8 +47,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
         <BaseDialog
             open={open}
             onClose={onClose}
-            PaperProps={{
-                sx: { borderRadius: 2 }
+            slotProps={{
+                paper: { sx: { borderRadius: 2 } }
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
