@@ -83,10 +83,12 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
             onClose={onClose}
             maxWidth="md"
             fullWidth
-            PaperProps={{
-                sx: { 
-                    borderRadius: 2,
-                    userSelect: "none"
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: 2,
+                        userSelect: "none"
+                    }
                 }
             }}
         >
