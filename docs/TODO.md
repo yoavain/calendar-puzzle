@@ -10,8 +10,6 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ### Accessibility
 - [ ] High contrast mode
 
-### Visual Polish
-
 ---
 
 ## Archived (Completed)
@@ -37,7 +35,8 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 - [x] `GET /api/auth/me` — Get current user and their statistics
 - [x] `GET /api/admin/solution/:date` — Return puzzle solution (admin only)
 - [x] `GET /api/hall-of-fame` — Return user activity data (authenticated users)
-- [x] `GET /api/hint/:date` — Return a single valid move
+- [x] `PUT /api/hint` — Get a hint and record its usage
+- [x] `GET /api/hint/:date/state` — Check whether a hint was used for a given date
 
 ### Session (Local Storage)
 Persist game state locally for all users (regardless of authentication). See [SESSION.md](SESSION.md) for details.

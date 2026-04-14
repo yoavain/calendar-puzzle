@@ -59,21 +59,25 @@ This file is in `.gitignore`. Each environment needs its own `secret-key` file.
 
 ## Architecture
 
-```
-Browser                     Fastify Server                 Google
-   |                              |                           |
-   |-- GET /auth/google --------->|                           |
-   |                              |-- Redirect to Google ---->|
-   |<-------- Google consent screen --------------------------|
-   |                              |                           |
-   |-- GET /auth/google/callback?code=xyz ------------------->|
-   |                              |<-- Exchange code -------->|
-   |                              |<-- User profile ----------|
-   |<-- Set session cookie -------|                           |
-   |                              |                           |
-   |-- PUT /api/hint ------------>|                           |
-   |   (with session cookie)      |                           |
-   |<-- 200 OK (hint data) -------|                           |
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Server as Fastify Server
+    participant Google
+
+    Browser->>Server: GET /auth/google
+    Server-->>Browser: 302 Redirect to Google
+    Browser->>Google: OAuth consent screen
+    Google-->>Browser: Redirect to /auth/google/callback?code=xyz
+    Browser->>Server: GET /auth/google/callback?code=xyz
+    Server->>Google: Exchange code for tokens
+    Google-->>Server: User profile (id, name, avatarUrl)
+    Server-->>Browser: Set session cookie, redirect to /
+
+    Note over Browser,Server: Subsequent authenticated requests
+
+    Browser->>Server: PUT /api/hint (with session cookie)
+    Server-->>Browser: 200 OK (hint data)
 ```
 
 ---
@@ -105,10 +109,13 @@ Browser                     Fastify Server                 Google
 |--------|------|------|-------------|
 | GET | `/auth/google` | No | Initiates OAuth flow |
 | GET | `/auth/google/callback` | No | Handles OAuth callback |
-| GET | `/api/auth/me` | No | Returns current user or 401 |
 | POST | `/auth/logout` | No | Clears session |
-| PUT | `/api/hint` | Yes | Returns a hint (protected) |
-| GET | `/api/admin/solution/:date` | Yes (Admin) | Returns full solution (protected) |
+| GET | `/api/auth/me` | No | Returns current user info and history, or 401 |
+| GET | `/api/auth/csrf-token` | No | Get CSRF token for mutation requests |
+| GET | `/api/auth/public-key` | Yes | Get server RSA public key for payload encryption |
+| PUT | `/api/hint` | Yes | Get a hint and record its usage |
+| GET | `/api/hint/:date/state` | Yes | Check whether a hint was used for a given date |
+| GET | `/api/admin/solution/:date` | Admin | Returns full solution |
 | GET | `/api/hall-of-fame` | Yes | Returns user activity statistics |
 
 ---
@@ -189,6 +196,23 @@ volumes:
 - [ ] `GET /api/admin/solution/:date` returns 401 for anonymous users
 - [ ] Logout clears session and hides buttons
 - [ ] Session persists across page refresh
+
+---
+
+## Privacy / PII Design
+
+Google OAuth provides the user's name, avatar URL, and email. Only the stable **Google ID** is persisted to the database — all other PII stays in the session.
+
+```mermaid
+flowchart LR
+    Google["Google OAuth\n(id, name, avatarUrl)"] --> Passport["passport.ts"]
+    Passport -->|"id only"| DB[("Database\nusers table")]
+    Passport -->|"id + initials + avatarUrl"| Session["Session Data"]
+    Session -->|"id + initials + avatarUrl"| Frontend["Frontend UI\n(UserMenu, avatar)"]
+    Frontend -->|"id (for identicon)"| Admin["Admin Dashboard"]
+```
+
+**Rationale:** Storing only the Google ID means the database holds no personal data. If the database were compromised, no PII would be exposed. Avatar and display name are re-fetched from the session on every authenticated request and never written to disk.
 
 ---
 

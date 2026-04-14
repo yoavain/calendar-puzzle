@@ -42,6 +42,7 @@ Stores user information from Google OAuth.
 ### user_puzzle_stats
 Tracks user progress and statistics for individual puzzles.
 - `user_id`: Reference to the user.
-- `month`: Part of the puzzle date.
-- `day`: Part of the puzzle date.
+- `month`: Part of the puzzle date (0-indexed: 0 = January).
+- `day`: Part of the puzzle date (1–31).
+- **Primary key**: Composite `(user_id, month, day)` — one row per user per date.
 
