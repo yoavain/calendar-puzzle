@@ -2,6 +2,28 @@
 
 The calendar puzzle uses a custom drag-and-drop implementation based on the **@dnd-kit** library. The goal is to make the finger (or mouse pointer) the single source of truth for positioning a piece. This section explains the user experience, how the anchor is determined, and how the preview shadow is calculated.
 
+## Drag-Start Decision Flow
+
+```mermaid
+flowchart TD
+    A([Pointer / touch down on piece]) --> B[Query inner PieceGrid element\nfindVisualPieceRect]
+    B --> C{Visual rect found?}
+    C -- No --> D[Fall back to layout rect]
+    C -- Yes --> E[Use visual rect]
+    D --> F
+    E --> F[Compute cellOffset\nfrom pointer coords]
+    F --> G{Shape at cellOffset\nhas a filled cell?}
+    G -- Yes --> H[Set anchor = cellOffset]
+    G -- No --> I[findNearestFilledCell\nManhattan distance]
+    I --> J{Nearest cell\nfound?}
+    J -- No --> K([Cancel drag])
+    J -- Yes --> L[Set anchor = nearest cell]
+    H --> M([Start drag with anchor])
+    L --> M
+```
+
+---
+
 ## 1. Anchor cell
 * Drag can only start from a *filled* cell of a placed piece.
 * The cell that the user touches becomes the **anchor** cell (`cellOffset` in the code).

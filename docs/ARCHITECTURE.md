@@ -21,6 +21,22 @@ The codebase follows a clear separation of concerns:
 2. **UI Layer** (`src/client/`) - React components, DOM interactions, presentation logic
 3. **Backend** (`src/server/`) - Fastify server, database, authentication
 
+```mermaid
+flowchart TD
+    Browser["Browser\n(React SPA)"]
+    Server["Fastify Server\n(src/server/)"]
+    Common["Common Layer\n(src/common/)"]
+    Worker["Solver Worker\n(Worker Thread)"]
+    DB[(PostgreSQL)]
+
+    Browser -- "REST API + session cookie" --> Server
+    Server -- "imports types & game logic" --> Common
+    Browser -- "imports types & game logic" --> Common
+    Server -- "spawns" --> Worker
+    Worker -- "imports" --> Common
+    Server -- "Drizzle ORM" --> DB
+```
+
 ### Why This Separation?
 
 - **Testability**: Pure functions are easy to test in isolation
@@ -53,25 +69,50 @@ src/
 │  ├─ components/              # React components
 │  │  ├─ Board.tsx             # Game board component
 │  │  ├─ Piece.tsx             # Piece component
-│  │  └─ ...
+│  │  ├─ DraggablePiece.tsx    # dnd-kit draggable wrapper
+│  │  ├─ PieceControls.tsx     # Rotate/flip controls
+│  │  ├─ ProgressBar.tsx       # Board coverage progress bar
+│  │  ├─ DatePicker.tsx        # Date navigation picker
+│  │  ├─ StatsModal.tsx        # Statistics modal
+│  │  ├─ HallOfFameModal.tsx   # Hall of fame modal
+│  │  ├─ HelpModal.tsx         # Help/rules modal
+│  │  ├─ IssueModal.tsx        # Bug report modal
+│  │  ├─ LoginButton.tsx       # Google sign-in button
+│  │  ├─ UserMenu.tsx          # User avatar + logout menu
+│  │  ├─ HintButton.tsx        # Request hint (auth-gated)
+│  │  ├─ SolutionButton.tsx    # Reveal solution (auth-gated)
+│  │  └─ DebugPanel.tsx        # Debug overlay (?debug=1)
 │  ├─ layouts/                 # Layout-specific code
-│  │  ├─ desktop/              # Desktop layout (DesktopLayout.tsx — HTML5 DnD)
-│  │  ├─ mobile-portrait/      # Mobile portrait layout
-│  │  ├─ mobile-landscape/     # Mobile landscape layout
+│  │  ├─ LayoutRoot.tsx        # Selects layout based on device
+│  │  ├─ LayoutContext.tsx     # Provides layout info to children
+│  │  ├─ types.ts              # LayoutType and LayoutConfig types
+│  │  ├─ desktop/
+│  │  │  └─ DesktopLayout.tsx  # HTML5 DnD layout
+│  │  ├─ mobile-portrait/
+│  │  │  └─ PortraitLayout.tsx # Portrait layout
+│  │  ├─ mobile-landscape/
+│  │  │  └─ LandscapeLayout.tsx # Landscape layout
 │  │  └─ common/
 │  │     ├─ useGameController.ts      # Game state controller (all layouts)
 │  │     ├─ DndProvider.tsx           # @dnd-kit provider (mobile)
 │  │     ├─ useDndAdapters.ts         # dnd-kit event adapter hooks
-│  │     ├─ useBoardScale.ts          # Board scale calculation
+│  │     ├─ PieceCarousel.tsx         # Embla-based piece carousel (mobile)
+│  │     ├─ MobileToolbar.tsx         # Shared mobile toolbar
+│  │     ├─ boardScale.ts             # Board scale calculation logic
+│  │     ├─ useBoardScale.ts          # Board scale hook (resize-aware)
 │  │     ├─ useGameModals.ts          # Modal open/close state
 │  │     ├─ useServerSync.ts          # Server sync (stats, hints)
 │  │     ├─ useSessionPersistence.ts  # Session save/restore
 │  │     └─ useKeyboardShortcuts.ts   # Keyboard shortcut bindings
+│  ├─ context/
+│  │  └─ UserContext.tsx       # Auth state (useUser hook)
 │  ├─ hooks/                   # React hooks
 │  │  ├─ useGameHistory.ts     # Undo/redo functionality
 │  │  ├─ useGameSession.ts     # Session persistence
 │  │  ├─ useLayout.ts          # Responsive layout detection
 │  │  └─ useQueryParam.ts      # URL query parameter management
+│  ├─ pages/
+│  │  └─ LandingPage.tsx       # Marketing/landing page
 │  ├─ utils/                   # UI utilities
 │  │  ├─ debugLogger.ts        # Circular-buffer debug logger
 │  │  ├─ dragHelpers.ts        # DOM-aware drag utilities
@@ -79,11 +120,19 @@ src/
 │  │  ├─ measureUtils.ts       # DOM measurement helpers
 │  │  └─ pieceColors.ts        # UI color definitions
 │  └─ service/                 # API client
+│     ├─ puzzleService.ts      # Game API calls
+│     ├─ logService.ts         # Client-side log submission
+│     └─ csrfService.ts        # CSRF token management
 │
 └─ server/                      # Backend (Fastify)
-   ├─ rest/                    # REST endpoints
-   ├─ workers/                 # Worker threads (solver)
-   └─ db/                      # Database schema
+   ├─ app.ts                   # Server setup, plugins, middleware
+   ├─ config.ts                # Startup config validation
+   ├─ auth/                    # Passport OAuth + requireAuth middleware
+   ├─ rest/                    # REST route handlers + JSON schemas
+   ├─ service/                 # Business logic (solver, issue submitter)
+   ├─ utils/                   # Server utilities (encryption, resource cache)
+   ├─ workers/                 # Worker threads (DLX solver)
+   └─ db/                      # Drizzle schema, migrations, repositories
 ```
 
 ---
@@ -382,30 +431,57 @@ Users can touch transparent gaps in the piece grid (empty cells).
 
 ## Testing Strategy
 
-### Unit Tests
+### Unit Tests — Common Layer
 
-- **Common layer**: Pure functions are unit-tested in isolation
-  - `test/common/boardOperations.test.ts` - Board operations
-  - `test/common/gameLogic.test.ts` - Game rules
-  - `test/common/puzzleSolver.test.ts` - Solver algorithm
+Pure functions tested in isolation (no DOM, no React):
 
-- **Coverage**: `boardOperations.ts` has 100% test coverage
+| File | What it covers |
+|---|---|
+| `test/common/boardOperations.test.ts` | Board state mutations |
+| `test/common/gameLogic.test.ts` | Core rules, validation, transformations |
+| `test/common/puzzleSolver.test.ts` | DLX solver algorithm |
+| `test/common/pieceData.test.ts` | Piece shape definitions |
+| `test/common/shapeHelpers.test.ts` | `findFirstFilledCell`, `findNearestFilledCell` |
+| `test/common/streakUtils.test.ts` | Streak and history calculations |
+| `test/common/types.test.ts` | Type guard utilities |
 
-### Integration Tests
+### Unit Tests — Client Layer
 
-- **Client layer**: React components tested with React Testing Library
-  - `test/client/dragDrop.test.ts` - Drag-and-drop logic
+React hooks and components tested with Jest + Testing Library:
+
+| File | What it covers |
+|---|---|
+| `test/client/dragDrop.test.ts` | Drag-and-drop logic |
+| `test/client/initialize.test.ts` | Game initialization |
+| `test/client/useGameHistory.test.ts` | Undo/redo hook |
+| `test/client/useGameSession.test.ts` | Session persistence hook |
+
+### Unit Tests — Server Layer
+
+Server routes and services tested with Fastify's inject API:
+
+| File | What it covers |
+|---|---|
+| `test/server/rest/authRest.test.ts` | Auth endpoints |
+| `test/server/rest/hintRest.test.ts` | Hint endpoint |
+| `test/server/rest/statsRest.test.ts` | Stats endpoints |
+| `test/server/auth/requireAuth.test.ts` | Auth middleware |
+| `test/server/dateUtils.test.ts` | Date parsing utilities |
+| `test/server/service/issueSubmitter.test.ts` | Issue submission service |
 
 ### E2E Tests
 
-- **Full app**: Playwright tests for all layouts
-  - `test/e2e/drag-drop.spec.ts` - Drag-and-drop scenarios
-  - `test/e2e/drag-stale-rect.spec.ts` - Edge cases with rotated pieces
+Playwright tests covering all three layouts:
 
-- Tests run on:
-  - Desktop layout
-  - Mobile portrait layout
-  - Mobile landscape layout
+| File | What it covers |
+|---|---|
+| `test/e2e/drag-drop.spec.ts` | Happy path and failing path drag-and-drop |
+| `test/e2e/drag-stale-rect.spec.ts` | Rotated piece and empty-cell snap regressions |
+| `test/e2e/solve.spec.ts` | Full puzzle solve flow |
+
+Tests run across three Playwright projects: `desktop`, `mobile-portrait`, `mobile-landscape`.
+
+See [`docs/e2e-drag-drop-tests.md`](./e2e-drag-drop-tests.md) for detailed E2E test documentation.
 
 ---
 
