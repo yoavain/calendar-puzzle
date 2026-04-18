@@ -165,13 +165,13 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
                 }
             }}
         >
-            <DialogTitle sx={{ fontSize: "1.5rem", fontWeight: "bold", pb: 1 }}>How to Play</DialogTitle>
+            <DialogTitle sx={{ typography: "h5", fontWeight: "bold", pb: 1 }}>How to Play</DialogTitle>
             <DialogContent sx={{ pb: 4, overflow: "hidden" }}>
                 <Stack spacing={3} sx={{ mt: 1 }}>
                     <Typography variant="h6" sx={{ lineHeight: 1.4 }}>
                         The goal is to cover all cells on the board except for the current month and day.
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" component="div" sx={{ fontSize: "1.1rem" }}>
+                    <Typography variant="subtitle1" color="text.secondary" component="div">
                         <Box component="span" sx={{ display: "block", mb: 1 }}>• Drag and drop pieces onto the board.</Box>
                         <Box component="span" sx={{ display: "block", mb: 1 }}>• Rotate and flip pieces using the controls.</Box>
                         <Box component="span" sx={{ display: "block" }}>• Every day has at least one solution!</Box>
