@@ -81,12 +81,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
             className={className}
         >
             <LightModeIcon
-                sx={{
+                sx={(theme) => ({
                     color: isDark ? "text.disabled" : "warning.main",
-                    fontSize: 20,
+                    fontSize: theme.game.fontSize.lg,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(0.9)" : "scale(1.1)"
-                }}
+                })}
             />
             <FormControlLabel
                 control={
@@ -99,12 +99,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
                 sx={{ margin: 0, gap: 0, "& .MuiFormControlLabel-label": { margin: 0 } }}
             />
             <DarkModeIcon
-                sx={{
+                sx={(theme) => ({
                     color: isDark ? "primary.main" : "text.disabled",
-                    fontSize: 20,
+                    fontSize: theme.game.fontSize.lg,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(1.1)" : "scale(0.9)"
-                }}
+                })}
             />
         </Box>
     );

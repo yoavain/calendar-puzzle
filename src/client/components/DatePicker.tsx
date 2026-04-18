@@ -156,21 +156,21 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                         size="small"
                                         variant={index === selectedMonth ? "contained" : "outlined"}
                                         onClick={() => handleMonthChange(index)}
-                                        sx={{ 
+                                        sx={{
                                             minWidth: 0,
                                             px: 1,
-                                            fontSize: "0.75rem",
+                                            fontSize: theme.game.fontSize.xs,
                                             position: "relative",
                                             overflow: "hidden" // Ensure star doesn't spill out
                                         }}
                                     >
                                         {monthName}
                                         {isMonthFullyCompleted && (
-                                            <StarIcon sx={{ 
-                                                position: "absolute", 
-                                                top: 0, 
-                                                right: 0, 
-                                                fontSize: "0.8rem",
+                                            <StarIcon sx={{
+                                                position: "absolute",
+                                                top: 0,
+                                                right: 0,
+                                                fontSize: theme.game.fontSize.xs,
                                                 color: index === selectedMonth ? "white" : theme.game.starColor,
                                                 filter: index === selectedMonth ? "none" : "drop-shadow(0px 0px 2px rgba(0,0,0,0.5))"
                                             }} />
@@ -207,7 +207,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                         minWidth: 0,
                                         aspectRatio: "1",
                                         p: 0,
-                                        fontSize: "0.875rem",
+                                        fontSize: theme.game.fontSize.sm,
                                         position: "relative",
                                         bgcolor: isSelected ? "primary.main" : "action.hover",
                                         "&:hover": {

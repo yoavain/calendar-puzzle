@@ -29,7 +29,7 @@ export const StyledLinearProgress = styled(LinearProgress, {
     }
 }));
 
-export const ProgressLabel = styled(Box)({
+export const ProgressLabel = styled(Box)(({ theme }) => ({
     position: "absolute",
     top: 0,
     left: 0,
@@ -38,7 +38,7 @@ export const ProgressLabel = styled(Box)({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "0.75rem",
+    fontSize: theme.game.fontSize.xs,
     fontWeight: "bold",
     color: "#fff",
     textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
@@ -47,4 +47,4 @@ export const ProgressLabel = styled(Box)({
     WebkitUserSelect: "none",
     MozUserSelect: "none",
     msUserSelect: "none"
-});
+}));
