@@ -148,7 +148,7 @@ export const BoardCell = styled("div", {
     // Piece cell styling
     ...(isPieceCell && {
         backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
-        color: "#ffffff",
+        color: theme.game.colors.onPieceText,
         border: 0,
         outline: "none",
         cursor: isSolved ? "default" : (isLocked ? "not-allowed" : "move"),

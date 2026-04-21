@@ -38,12 +38,12 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
             },
             "& + .MuiSwitch-track": {
                 opacity: 1,
-                backgroundColor: theme.palette.mode === "dark" ? "#8796A5" : "#aab4be"
+                backgroundColor: theme.game.colors.switch.track
             }
         }
     },
     "& .MuiSwitch-thumb": {
-        backgroundColor: theme.palette.mode === "dark" ? "#003892" : "#ffc107",
+        backgroundColor: theme.game.colors.switch.thumb,
         width: 32,
         height: 32,
         transition: "background-color 0.3s ease",
@@ -61,7 +61,7 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
     },
     "& .MuiSwitch-track": {
         opacity: 1,
-        backgroundColor: theme.palette.mode === "dark" ? "#8796A5" : "#aab4be",
+        backgroundColor: theme.game.colors.switch.track,
         borderRadius: theme.game.radius.pill,
         transition: "background-color 0.3s ease"
     }

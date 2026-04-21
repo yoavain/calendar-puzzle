@@ -94,24 +94,24 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                             sx={(theme) => ({
                                 height: 25,
                                 borderRadius: `${theme.game.radius.pill}px`,
-                                backgroundColor: theme.palette.mode === "dark" ? "#333" : "#e0e0e0",
+                                backgroundColor: theme.game.colors.progress.track,
                                 "& .MuiLinearProgress-bar": {
                                     borderRadius: `${theme.game.radius.pill}px`
                                 }
                             })}
                         />
-                        <Box sx={{ 
-                            position: "absolute", 
-                            top: 0, 
-                            left: 0, 
-                            right: 0, 
-                            bottom: 0, 
-                            display: "flex", 
-                            alignItems: "center", 
+                        <Box sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: "flex",
+                            alignItems: "center",
                             justifyContent: "center",
                             pointerEvents: "none"
                         }}>
-                            <Typography variant="caption" sx={{ fontWeight: "bold", color: "#fff", textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" }}>
+                            <Typography variant="caption" sx={(theme) => ({ fontWeight: "bold", color: theme.palette.primary.contrastText })}>
                                 {completedDates.length} / {TOTAL_DATES}
                             </Typography>
                         </Box>

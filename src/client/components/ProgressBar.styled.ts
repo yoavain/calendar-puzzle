@@ -20,7 +20,7 @@ export const StyledLinearProgress = styled(LinearProgress, {
     height: 25,
     borderRadius: theme.game.radius.pill,
     [`&.${linearProgressClasses.colorPrimary}`]: {
-        backgroundColor: theme.palette.mode === "dark" ? "#333" : "#e0e0e0"
+        backgroundColor: theme.game.colors.progress.track
     },
     [`& .${linearProgressClasses.bar}`]: {
         borderRadius: theme.game.radius.pill,
@@ -29,7 +29,13 @@ export const StyledLinearProgress = styled(LinearProgress, {
     }
 }));
 
-export const ProgressLabel = styled(Box)(({ theme }) => ({
+export interface ProgressLabelProps {
+    labelColor: string;
+}
+
+export const ProgressLabel = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "labelColor"
+})<ProgressLabelProps>(({ theme, labelColor }) => ({
     position: "absolute",
     top: 0,
     left: 0,
@@ -40,8 +46,7 @@ export const ProgressLabel = styled(Box)(({ theme }) => ({
     justifyContent: "center",
     fontSize: theme.game.fontSize.xs,
     fontWeight: "bold",
-    color: "#fff",
-    textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
+    color: labelColor,
     pointerEvents: "none",
     userSelect: "none",
     WebkitUserSelect: "none",

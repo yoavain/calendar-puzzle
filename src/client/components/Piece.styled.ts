@@ -138,7 +138,7 @@ export const PieceCell = styled("div", {
         // Filled cell styling - use box-shadow to fill gaps during transforms
         ...(isFilled && {
             backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
-            color: "#ffffff",
+            color: theme.game.colors.onPieceText,
             // Prevent sub-pixel gaps by extending color with box-shadow
             boxShadow: `inset 0 0 0 1px ${pieceId ? getPieceColor(pieceId) : getPieceColor(1)}`,
             backgroundImage: PIECE_CELL_GRADIENT
