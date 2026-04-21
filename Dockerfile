@@ -24,6 +24,9 @@ COPY --chown=node:node build /usr/app/build/
 COPY --chown=node:node secret-key private-key.pem public-key.pem /usr/app/
 COPY --chown=node:node src/server/db/migrations /usr/app/src/server/db/migrations/
 
+# Disaster Recovery Plan
+# COPY --chown=node:node scripts/db-utils.js /usr/app/scripts/db-utils.js
+
 # Expose port
 EXPOSE 3001
 
