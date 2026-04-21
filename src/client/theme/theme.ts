@@ -22,6 +22,28 @@ interface GameRadiusTokens {
     board: number;
 }
 
+// Game-level color tokens that don't belong to the MUI palette: progress-bar
+// thresholds, medal ranks, on-piece text, and the theme-switch pill.
+interface GameColorTokens {
+    progress: {
+        track: string;
+        low: string;
+        medium: string;
+        high: string;
+        complete: string;
+    };
+    medal: {
+        gold: string;
+        silver: string;
+        bronze: string;
+    };
+    onPieceText: string;
+    switch: {
+        track: string;
+        thumb: string;
+    };
+}
+
 declare module "@mui/material/styles" {
     interface Theme {
         game: {
@@ -45,6 +67,7 @@ declare module "@mui/material/styles" {
             extensionColor: string;
             fontSize: GameFontSizeTokens;
             radius: GameRadiusTokens;
+            colors: GameColorTokens;
         };
     }
     interface ThemeOptions {
@@ -69,6 +92,7 @@ declare module "@mui/material/styles" {
             extensionColor?: string;
             fontSize?: GameFontSizeTokens;
             radius?: GameRadiusTokens;
+            colors?: GameColorTokens;
         };
     }
 }
@@ -92,6 +116,48 @@ const gameRadiusTokens: GameRadiusTokens = {
     board: 22
 };
 
+// Progress-bar threshold + medal + on-piece colors are theme-invariant: they
+// communicate status/rank and should read the same in both modes. The switch
+// pill inverts between modes so the moon/sun affordance stays legible.
+const sharedGameColorTokens = {
+    progress: {
+        low: "#dc3545",
+        medium: "#f59e0b",
+        high: "#84cc16",
+        complete: "#22c55e"
+    },
+    medal: {
+        gold: "#FFD700",
+        silver: "#C0C0C0",
+        bronze: "#CD7F32"
+    },
+    onPieceText: "#ffffff"
+};
+
+const lightGameColorTokens: GameColorTokens = {
+    ...sharedGameColorTokens,
+    progress: {
+        track: "#e0e0e0",
+        ...sharedGameColorTokens.progress
+    },
+    switch: {
+        track: "#aab4be",
+        thumb: "#ffc107"
+    }
+};
+
+const darkGameColorTokens: GameColorTokens = {
+    ...sharedGameColorTokens,
+    progress: {
+        track: "#333333",
+        ...sharedGameColorTokens.progress
+    },
+    switch: {
+        track: "#8796A5",
+        thumb: "#003892"
+    }
+};
+
 // Light theme game tokens
 const lightGameTokens = {
     cellSize: 50,
@@ -113,7 +179,8 @@ const lightGameTokens = {
     starColor: "#ffb74d",
     extensionColor: "#7c3aed",
     fontSize: gameFontSizeTokens,
-    radius: gameRadiusTokens
+    radius: gameRadiusTokens,
+    colors: lightGameColorTokens
 };
 
 // Dark theme game tokens
@@ -137,7 +204,8 @@ const darkGameTokens = {
     starColor: "#ffb74d",
     extensionColor: "#7c3aed",
     fontSize: gameFontSizeTokens,
-    radius: gameRadiusTokens
+    radius: gameRadiusTokens,
+    colors: darkGameColorTokens
 };
 
 // Light theme palette (matching existing CSS variables)
