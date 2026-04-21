@@ -46,7 +46,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                 open={open}
                 onClose={onClose}
                 slotProps={{
-                    paper: { sx: { borderRadius: 2, minWidth: 420 } }
+                    paper: { sx: (theme) => ({ borderRadius: `${theme.game.radius.md}px`, minWidth: 420 }) }
                 }}
             >
                 <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>

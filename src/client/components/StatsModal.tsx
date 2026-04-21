@@ -48,7 +48,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
             open={open}
             onClose={onClose}
             slotProps={{
-                paper: { sx: { borderRadius: 2 } }
+                paper: { sx: (theme) => ({ borderRadius: `${theme.game.radius.md}px` }) }
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
@@ -87,18 +87,18 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                         OVERALL PROGRESS
                     </Typography>
                     <Box sx={{ position: "relative" }}>
-                        <LinearProgress 
-                            variant="determinate" 
-                            value={(completedDates.length / TOTAL_DATES) * 100} 
+                        <LinearProgress
+                            variant="determinate"
+                            value={(completedDates.length / TOTAL_DATES) * 100}
                             aria-label="Overall completion progress"
-                            sx={{ 
-                                height: 25, 
-                                borderRadius: 12,
-                                backgroundColor: (theme) => (theme.palette.mode === "dark" ? "#333" : "#e0e0e0"),
+                            sx={(theme) => ({
+                                height: 25,
+                                borderRadius: `${theme.game.radius.pill}px`,
+                                backgroundColor: theme.palette.mode === "dark" ? "#333" : "#e0e0e0",
                                 "& .MuiLinearProgress-bar": {
-                                    borderRadius: 12
+                                    borderRadius: `${theme.game.radius.pill}px`
                                 }
-                            }}
+                            })}
                         />
                         <Box sx={{ 
                             position: "absolute", 

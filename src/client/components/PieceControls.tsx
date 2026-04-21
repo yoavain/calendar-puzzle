@@ -21,17 +21,17 @@ export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, o
             direction="row" 
             spacing={0.5}
             className="piece-controls"
-            sx={{
+            sx={(theme) => ({
                 position: "absolute",
                 bottom: 10,
                 left: "50%",
                 transform: "translateX(-50%)",
                 bgcolor: "background.paper",
-                borderRadius: 1,
+                borderRadius: `${theme.game.radius.sm}px`,
                 p: 0.5,
                 boxShadow: 1,
                 zIndex: 10
-            }}
+            })}
         >
             <Tooltip title="Rotate clockwise" arrow>
                 <IconButton 

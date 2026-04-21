@@ -62,7 +62,7 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
     "& .MuiSwitch-track": {
         opacity: 1,
         backgroundColor: theme.palette.mode === "dark" ? "#8796A5" : "#aab4be",
-        borderRadius: 20 / 2,
+        borderRadius: theme.game.radius.pill,
         transition: "background-color 0.3s ease"
     }
 }));

@@ -61,8 +61,8 @@ const boardExtrusion = Array.from({ length: BOARD_DEPTH }, (_, i) => {
     return `${n}px ${n}px 0 #${hex}${hex}${hex}`;
 }).join(", ");
 
-export const BoardDepth = styled("div")({
+export const BoardDepth = styled("div")(({ theme }) => ({
     position: "relative",
-    borderRadius: 22,
+    borderRadius: theme.game.radius.board,
     boxShadow: `${boardExtrusion}, 0 30px 60px rgba(0,0,0,0.7), 0 60px 100px rgba(0,0,0,0.5)`
-});
+}));

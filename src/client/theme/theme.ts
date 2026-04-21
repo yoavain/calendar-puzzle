@@ -11,6 +11,17 @@ interface GameFontSizeTokens {
     xl: string;
 }
 
+// Game-level border-radius tokens (pixels). `board` is a deliberate one-off
+// carried over from the original visual design — the playing surface uses a
+// larger radius than the rest of the UI to read as a physical object.
+interface GameRadiusTokens {
+    sm: number;
+    md: number;
+    lg: number;
+    pill: number;
+    board: number;
+}
+
 declare module "@mui/material/styles" {
     interface Theme {
         game: {
@@ -33,6 +44,7 @@ declare module "@mui/material/styles" {
             starColor: string;
             extensionColor: string;
             fontSize: GameFontSizeTokens;
+            radius: GameRadiusTokens;
         };
     }
     interface ThemeOptions {
@@ -56,6 +68,7 @@ declare module "@mui/material/styles" {
             starColor?: string;
             extensionColor?: string;
             fontSize?: GameFontSizeTokens;
+            radius?: GameRadiusTokens;
         };
     }
 }
@@ -67,6 +80,16 @@ const gameFontSizeTokens: GameFontSizeTokens = {
     md: "1rem", // 16px
     lg: "1.25rem", // 20px
     xl: "1.5rem" // 24px
+};
+
+// Game-level border-radius tokens. `board` is intentionally distinct: the
+// playing surface and the landing-page 3D slab use the same larger radius.
+const gameRadiusTokens: GameRadiusTokens = {
+    sm: 4,
+    md: 8,
+    lg: 16,
+    pill: 999,
+    board: 22
 };
 
 // Light theme game tokens
@@ -89,7 +112,8 @@ const lightGameTokens = {
     backgroundTertiary: "#eee",
     starColor: "#ffb74d",
     extensionColor: "#7c3aed",
-    fontSize: gameFontSizeTokens
+    fontSize: gameFontSizeTokens,
+    radius: gameRadiusTokens
 };
 
 // Dark theme game tokens
@@ -112,7 +136,8 @@ const darkGameTokens = {
     backgroundTertiary: "#333333",
     starColor: "#ffb74d",
     extensionColor: "#7c3aed",
-    fontSize: gameFontSizeTokens
+    fontSize: gameFontSizeTokens,
+    radius: gameRadiusTokens
 };
 
 // Light theme palette (matching existing CSS variables)
@@ -205,7 +230,7 @@ const sharedOptions: ThemeOptions = {
         overline: { fontSize: gameFontSizeTokens.xs, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", lineHeight: 2 }
     },
     shape: {
-        borderRadius: 4
+        borderRadius: gameRadiusTokens.sm
     },
     components: {
         MuiButton: {
@@ -228,7 +253,7 @@ const sharedOptions: ThemeOptions = {
         MuiIconButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 4
+                    borderRadius: gameRadiusTokens.sm
                 }
             }
         }
