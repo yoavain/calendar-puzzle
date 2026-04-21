@@ -126,10 +126,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 fullWidth
                 slotProps={{
                     paper: {
-                        sx: {
-                            borderRadius: 2,
+                        sx: (theme) => ({
+                            borderRadius: `${theme.game.radius.md}px`,
                             userSelect: "none"
-                        }
+                        })
                     }
                 }}
             >

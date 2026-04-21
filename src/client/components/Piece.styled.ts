@@ -35,7 +35,7 @@ export const PieceWrapper = styled(Box, {
     width: isPlaced ? "auto" : "100%",
     height: isPlaced ? "auto" : `calc(100% - ${theme.game.cellSizePx})`,
     minHeight: isPlaced ? "auto" : `calc(${theme.game.cellSizePx} * 4)`,
-    borderRadius: 4,
+    borderRadius: theme.game.radius.sm,
 
     // Placed state
     ...(isPlaced && {
@@ -89,7 +89,7 @@ export const PieceGrid = styled("div", {
         padding: 0,
         transform: transformStyle,
         transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.25s ease",
-        borderRadius: 2,
+        borderRadius: theme.game.radius.sm,
         // Prevent sub-pixel gaps between cells during transforms
         backfaceVisibility: "hidden",
         // Default shadow for depth perception

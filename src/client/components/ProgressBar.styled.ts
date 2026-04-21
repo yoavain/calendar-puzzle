@@ -18,12 +18,12 @@ export const StyledLinearProgress = styled(LinearProgress, {
     shouldForwardProp: (prop) => prop !== "progressColor"
 })<StyledLinearProgressProps>(({ theme, progressColor }) => ({
     height: 25,
-    borderRadius: 12,
+    borderRadius: theme.game.radius.pill,
     [`&.${linearProgressClasses.colorPrimary}`]: {
         backgroundColor: theme.palette.mode === "dark" ? "#333" : "#e0e0e0"
     },
     [`& .${linearProgressClasses.bar}`]: {
-        borderRadius: 10,
+        borderRadius: theme.game.radius.pill,
         backgroundColor: progressColor,
         transition: "transform 0.3s ease, background-color 0.3s ease"
     }

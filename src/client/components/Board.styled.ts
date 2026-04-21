@@ -24,7 +24,7 @@ export const BoardContainer = styled("div")(({ theme }) => ({
     backgroundColor: theme.game.backgroundTertiary,
     padding: theme.game.cellSizePx,
     border: `4px solid ${theme.game.boardBorderColor}`,
-    borderRadius: 22,
+    borderRadius: theme.game.radius.board,
     boxShadow: "0 4px 16px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08)",
     boxSizing: "content-box",
     width: `calc(${theme.game.cellSizePx} * 7)`,
