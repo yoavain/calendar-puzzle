@@ -6,8 +6,7 @@ export const ProgressContainer = styled(Box)(({ theme }) => ({
     width: theme.game.cellSize * 7 + theme.game.cellSize * 2 + 8, // Match board width (cells + padding + border)
     marginLeft: "auto",
     marginRight: "auto",
-    marginBottom: theme.spacing(2),
-    position: "relative"
+    marginBottom: theme.spacing(2)
 }));
 
 export interface StyledLinearProgressProps {
