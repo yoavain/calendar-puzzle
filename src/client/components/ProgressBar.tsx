@@ -1,7 +1,8 @@
 import React from "react";
 import { useTheme } from "@mui/material/styles";
 import type { Theme } from "@mui/material/styles";
-import { ProgressContainer, ProgressLabel, StyledLinearProgress } from "./ProgressBar.styled";
+import { ProgressContainer } from "./ProgressBar.styled";
+import { ProgressBarWithLabel } from "./ProgressBarWithLabel";
 
 interface ProgressBarProps {
     covered: number;
@@ -26,19 +27,15 @@ const getProgressColor = (percentage: number, theme: Theme): string => {
 export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage }) => {
     const theme = useTheme();
     const progressColor = getProgressColor(percentage, theme);
-    const labelColor = theme.palette.getContrastText(progressColor);
 
     return (
         <ProgressContainer>
-            <StyledLinearProgress
-                variant="determinate"
+            <ProgressBarWithLabel
                 value={percentage}
-                progressColor={progressColor}
-                aria-label="Puzzle completion progress"
+                label={`${Math.round(percentage)}%`}
+                color={progressColor}
+                ariaLabel="Puzzle completion progress"
             />
-            <ProgressLabel labelColor={labelColor}>
-                {Math.round(percentage)}%
-            </ProgressLabel>
         </ProgressContainer>
     );
 };
