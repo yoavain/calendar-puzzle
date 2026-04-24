@@ -301,6 +301,16 @@ const sharedOptions: ThemeOptions = {
         borderRadius: gameRadiusTokens.sm
     },
     components: {
+        MuiButtonBase: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    "&:focus-visible": {
+                        outline: `2px solid ${theme.palette.primary.main}`,
+                        outlineOffset: 2
+                    }
+                })
+            }
+        },
         MuiButton: {
             styleOverrides: {
                 root: {
@@ -323,6 +333,19 @@ const sharedOptions: ThemeOptions = {
                 root: {
                     borderRadius: gameRadiusTokens.sm
                 }
+            }
+        },
+        // MUI Switch renders its hit target via MuiButtonBase. The default
+        // ThemeSwitch overrides translate the thumb, which pushes the focus
+        // ring off-center; clip the ring to the visible switchBase so it
+        // reads as a highlight around the thumb instead of empty space.
+        MuiSwitch: {
+            styleOverrides: {
+                switchBase: ({ theme }) => ({
+                    "&.Mui-focusVisible .MuiSwitch-thumb": {
+                        boxShadow: `0 0 0 2px ${theme.palette.primary.main}`
+                    }
+                })
             }
         }
     }

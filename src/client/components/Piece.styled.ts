@@ -42,7 +42,7 @@ export const PieceWrapper = styled(Box, {
         cursor: "move",
         opacity: 1,
         animation: `${pieceDropIn} 0.35s cubic-bezier(0.4,0,0.2,1)`,
-        
+
         "&:hover": {
             opacity: 1,
             boxShadow: `0 0 5px ${theme.palette.primary.main}`
@@ -60,7 +60,13 @@ export const PieceWrapper = styled(Box, {
         "&:active": {
             cursor: "grabbing"
         }
-    })
+    }),
+
+    // Keyboard focus ring (for pool pieces made focusable via tabIndex)
+    "&:focus-visible": {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: 2
+    }
 }));
 
 // Piece grid props

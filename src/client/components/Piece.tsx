@@ -15,9 +15,18 @@ interface PieceProps {
     onDragEnd?: () => void;
     /** Optional override for cell size in px (e.g. to match scaled board in carousel). */
     cellSizePx?: string;
+    /**
+     * When true, the piece wrapper is focusable via Tab and activatable with
+     * Enter/Space. Enables keyboard-driven selection of pool pieces for the
+     * tap-to-place flow. Disabled by default because DraggablePiece (mobile)
+     * provides its own tabIndex/role via dnd-kit attributes.
+     */
+    keyboardSelectable?: boolean;
+    /** Whether this piece is currently selected (for aria-pressed). */
+    isSelected?: boolean;
 }
 
-export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDragEnd, cellSizePx }) => {
+export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDragEnd, cellSizePx, keyboardSelectable = false, isSelected = false }) => {
     const theme = useTheme();
     
     // Track cumulative rotation to ensure smooth clockwise animation
@@ -148,6 +157,21 @@ export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDra
         setTimeout(() => document.body.removeChild(dragPreview), 0);
     };
 
+    const keyboardProps = keyboardSelectable && !piece.position
+        ? {
+            tabIndex: 0,
+            role: "button" as const,
+            "aria-label": `Piece ${piece.id}${isSelected ? " (selected)" : ""}`,
+            "aria-pressed": isSelected,
+            onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onClick();
+                }
+            }
+        }
+        : {};
+
     return (
         <PieceWrapper
             isPlaced={!!piece.position}
@@ -157,6 +181,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDra
             onDragEnd={() => onDragEnd?.()}
             data-piece-id={piece.id}
             data-testid={`piece-${piece.id}`}
+            {...keyboardProps}
         >
             <PieceGrid
                 columns={baseWidth}
