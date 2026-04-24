@@ -57,28 +57,31 @@ export interface BoardCellProps {
     pieceId?: number;
     solutionRevealed?: boolean;
     isSolved?: boolean;
+    /** Renders a keyboard-focus outline when the keyboard cursor is on this cell. */
+    isKeyboardCursor?: boolean;
 }
 
 // Board cell
 export const BoardCell = styled("div", {
     shouldForwardProp: (prop) => ![
-        "isPlayable", 
-        "isHighlighted", 
-        "isPieceCell", 
-        "isHidden", 
-        "isStyled", 
-        "isLocked", 
-        "isInvalidDrop", 
-        "isDragOver", 
-        "pieceId", 
-        "solutionRevealed", 
-        "isSolved"
+        "isPlayable",
+        "isHighlighted",
+        "isPieceCell",
+        "isHidden",
+        "isStyled",
+        "isLocked",
+        "isInvalidDrop",
+        "isDragOver",
+        "pieceId",
+        "solutionRevealed",
+        "isSolved",
+        "isKeyboardCursor"
     ].includes(prop as string)
-})<BoardCellProps>(({ 
-    theme, 
-    isPlayable, 
-    isHighlighted, 
-    isPieceCell, 
+})<BoardCellProps>(({
+    theme,
+    isPlayable,
+    isHighlighted,
+    isPieceCell,
     isHidden,
     isStyled,
     isLocked,
@@ -86,7 +89,8 @@ export const BoardCell = styled("div", {
     isDragOver,
     pieceId,
     solutionRevealed,
-    isSolved
+    isSolved,
+    isKeyboardCursor
 }) => ({
     width: theme.game.cellSizePx,
     height: theme.game.cellSizePx,
@@ -135,11 +139,18 @@ export const BoardCell = styled("div", {
         position: "relative" as const
     }),
 
-    // Playable cell hover (only when not a piece cell)
+    // Playable cell hover / keyboard focus (only when not a piece cell)
     ...(!isPieceCell && isPlayable && !isSolved && {
-        "&:hover, &:focus": {
+        "&:hover": {
             backgroundColor: `${theme.palette.primary.main}1F`, // ~12% opacity
             boxShadow: `0 0 0 2px ${theme.palette.primary.main}`,
+            zIndex: 2,
+            position: "relative" as const
+        },
+        "&:focus-visible": {
+            backgroundColor: `${theme.palette.primary.main}1F`,
+            outline: `2px solid ${theme.palette.primary.main}`,
+            outlineOffset: -2,
             zIndex: 2,
             position: "relative" as const
         }
@@ -160,10 +171,16 @@ export const BoardCell = styled("div", {
         backgroundImage: PIECE_CELL_GRADIENT,
         // Apply opacity for hinted pieces (30% faded) or solution revealed (15% faded)
         opacity: isLocked ? theme.game.hintedOpacity : (solutionRevealed ? theme.game.solutionRevealedOpacity : 1),
-        
+
         ...(!isSolved && {
             "&:hover": {
                 filter: isLocked ? "none" : "brightness(1.08)"
+            },
+            "&:focus-visible": {
+                outline: `2px solid ${theme.palette.primary.main}`,
+                outlineOffset: -2,
+                zIndex: 2,
+                position: "relative" as const
             }
         })
     }),
@@ -174,6 +191,14 @@ export const BoardCell = styled("div", {
         boxShadow: `inset 0 0 0 2px ${theme.game.invalidDropBorderColor} !important`,
         animation: `${invalidDropShake} 0.5s ease-in-out`,
         zIndex: 10,
+        position: "relative" as const
+    }),
+
+    // Keyboard cursor outline (keyboard-drag anchor)
+    ...(isKeyboardCursor && !isHidden && {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: -2,
+        zIndex: 4,
         position: "relative" as const
     })
 }));

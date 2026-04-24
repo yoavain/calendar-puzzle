@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import { isDragItem } from "../../common/types";
 import type { Board as BoardType, DragItem, GameState, Piece as PieceType, Position } from "../../common/types";
@@ -21,12 +21,19 @@ interface BoardProps {
     draggedPieceId: number | null;
     onDragStart: (pieceId: number) => void;
     onDragEnd: () => void;
+    /**
+     * The currently-selected pool piece. When set, the board becomes a
+     * keyboard-navigable grid: arrow keys move a cursor across playable
+     * cells and Enter/Space places the piece at the cursor.
+     */
+    selectedPieceId?: number | null;
 }
 
 export const Board = React.memo<BoardProps>(({
     board, pieces, onCellClick, onPieceDrop,
     invalidDropCells = [], solutionRevealed = false, isSolved = false,
-    draggedPieceId, onDragStart, onDragEnd
+    draggedPieceId, onDragStart, onDragEnd,
+    selectedPieceId = null
 }) => {
     const theme = useTheme();
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
@@ -36,6 +43,110 @@ export const Board = React.memo<BoardProps>(({
     const anchorRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
     // Tracks whether the current drag originated from the board (vs carousel)
     const dragFromBoardRef = useRef(false);
+
+    // Keyboard cursor for the keyboard-drag fallback. Only visible while the
+    // board has keyboard focus AND a pool piece is selected.
+    const [keyboardCursor, setKeyboardCursor] = useState<Position | null>(null);
+    const [isBoardFocused, setIsBoardFocused] = useState(false);
+
+    const selectedPoolPiece = pieces.find(p => p.id === selectedPieceId && p.position === null);
+    const isKeyboardDragReady = !!selectedPoolPiece && !isSolved;
+
+    // Reset the cursor when keyboard-drag becomes unavailable so the ring
+    // never lingers after the piece is placed or deselected.
+    useEffect(() => {
+        if (!isKeyboardDragReady) {
+            setKeyboardCursor(null);
+        }
+    }, [isKeyboardDragReady]);
+
+    const firstPlayableCell = useCallback((): Position | null => {
+        for (let y = 0; y < board.length; y++) {
+            for (let x = 0; x < board[y].length; x++) {
+                if (board[y][x].isPlayable) {
+                    return { x, y };
+                }
+            }
+        }
+        return null;
+    }, [board]);
+
+    const moveCursor = useCallback((dx: number, dy: number) => {
+        setKeyboardCursor(prev => {
+            const start = prev ?? firstPlayableCell();
+            if (!start) {
+                return null;
+            }
+            const maxY = board.length;
+            const maxX = board[0]?.length ?? 0;
+            let { x, y } = start;
+            // Walk in the requested direction until we land on a playable cell,
+            // or fall off the board (in which case stay put).
+            for (let i = 0; i < Math.max(maxX, maxY); i++) {
+                x += dx;
+                y += dy;
+                if (y < 0 || y >= maxY || x < 0 || x >= maxX) {
+                    return start;
+                }
+                if (board[y][x].isPlayable) {
+                    return { x, y };
+                }
+            }
+            return start;
+        });
+    }, [board, firstPlayableCell]);
+
+    const handleBoardFocus = useCallback(() => {
+        setIsBoardFocused(true);
+        setKeyboardCursor(prev => prev ?? firstPlayableCell());
+    }, [firstPlayableCell]);
+
+    const handleBoardBlur = useCallback(() => {
+        setIsBoardFocused(false);
+    }, []);
+
+    const handleBoardKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!isKeyboardDragReady) {
+            return;
+        }
+        switch (e.key) {
+            case "ArrowLeft":
+                e.preventDefault();
+                moveCursor(-1, 0);
+                break;
+            case "ArrowRight":
+                e.preventDefault();
+                moveCursor(1, 0);
+                break;
+            case "ArrowUp":
+                e.preventDefault();
+                moveCursor(0, -1);
+                break;
+            case "ArrowDown":
+                e.preventDefault();
+                moveCursor(0, 1);
+                break;
+            case "Enter":
+            case " ": {
+                e.preventDefault();
+                const cursor = keyboardCursor ?? firstPlayableCell();
+                if (cursor && selectedPoolPiece) {
+                    // The cursor represents where the piece's first filled cell
+                    // lands. Translate that into a top-left bounding-box position
+                    // for the placement logic, matching how drag-and-drop anchors
+                    // work (see handleDrop above).
+                    const anchor = findFirstFilledCell(getTransformedShape(selectedPoolPiece));
+                    onCellClick({
+                        x: cursor.x - anchor.x,
+                        y: cursor.y - anchor.y
+                    });
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }, [isKeyboardDragReady, keyboardCursor, firstPlayableCell, selectedPoolPiece, moveCursor, onCellClick]);
 
     const handleDragEnd = () => {
         dragFromBoardRef.current = false;
@@ -169,6 +280,21 @@ export const Board = React.memo<BoardProps>(({
             shape[relativeY][relativeX];
     }, [dragOverCell, draggedPieceId, pieces]);
 
+    // Function to check if a cell would be occupied by the keyboard-drag preview.
+    // The cursor represents where the selected piece's first filled cell will land.
+    const isKeyboardPreviewCell = useCallback((x: number, y: number): boolean => {
+        if (!isBoardFocused || !keyboardCursor || !selectedPoolPiece) {
+            return false;
+        }
+        const shape = getTransformedShape(selectedPoolPiece);
+        const anchor = findFirstFilledCell(shape);
+        const relativeX = x - (keyboardCursor.x - anchor.x);
+        const relativeY = y - (keyboardCursor.y - anchor.y);
+        return relativeY >= 0 && relativeY < shape.length &&
+            relativeX >= 0 && relativeX < shape[0].length &&
+            shape[relativeY][relativeX];
+    }, [isBoardFocused, keyboardCursor, selectedPoolPiece]);
+
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>, piece: PieceType) => {
         if (!piece.position) {
             e.preventDefault();
@@ -266,7 +392,7 @@ export const Board = React.memo<BoardProps>(({
     };
 
     return (
-        <BoardContainer 
+        <BoardContainer
             onDragLeave={handleDragLeave}
             onDrop={handleBoardAreaDrop}
             onDragOver={(e) => {
@@ -276,6 +402,12 @@ export const Board = React.memo<BoardProps>(({
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
             }}
+            tabIndex={isKeyboardDragReady ? 0 : -1}
+            role={isKeyboardDragReady ? "grid" : undefined}
+            aria-label={isKeyboardDragReady ? "Puzzle board. Arrow keys to move, Enter to place piece." : undefined}
+            onFocus={handleBoardFocus}
+            onBlur={handleBoardBlur}
+            onKeyDown={handleBoardKeyDown}
             data-testid="board"
         >
             {board.map((row, y) => (
@@ -301,7 +433,14 @@ export const Board = React.memo<BoardProps>(({
                         const isInvalid = isInvalidDropCell(x, y);
 
                         // Check if this cell is part of the drag preview
-                        const isPreview = isDragPreviewCell(x, y);
+                        // (mouse/touch drag OR keyboard-drag cursor)
+                        const isPreview = isDragPreviewCell(x, y) || isKeyboardPreviewCell(x, y);
+
+                        // Outline the single anchor cell under the keyboard cursor
+                        const isCursor = isBoardFocused
+                            && keyboardCursor?.x === x
+                            && keyboardCursor?.y === y
+                            && isKeyboardDragReady;
 
                         const isDraggable = !!piece && !isLocked && !isSolved;
 
@@ -316,6 +455,7 @@ export const Board = React.memo<BoardProps>(({
                                 isLocked={isLocked}
                                 isInvalidDrop={isInvalid}
                                 isDragOver={isPreview}
+                                isKeyboardCursor={isCursor}
                                 pieceId={piece?.id}
                                 solutionRevealed={solutionRevealed}
                                 isSolved={isSolved}
