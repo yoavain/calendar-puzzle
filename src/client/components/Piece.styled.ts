@@ -35,14 +35,14 @@ export const PieceWrapper = styled(Box, {
     width: isPlaced ? "auto" : "100%",
     height: isPlaced ? "auto" : `calc(100% - ${theme.game.cellSizePx})`,
     minHeight: isPlaced ? "auto" : `calc(${theme.game.cellSizePx} * 4)`,
-    borderRadius: 4,
+    borderRadius: theme.game.radius.sm,
 
     // Placed state
     ...(isPlaced && {
         cursor: "move",
         opacity: 1,
         animation: `${pieceDropIn} 0.35s cubic-bezier(0.4,0,0.2,1)`,
-        
+
         "&:hover": {
             opacity: 1,
             boxShadow: `0 0 5px ${theme.palette.primary.main}`
@@ -60,7 +60,13 @@ export const PieceWrapper = styled(Box, {
         "&:active": {
             cursor: "grabbing"
         }
-    })
+    }),
+
+    // Keyboard focus ring (for pool pieces made focusable via tabIndex)
+    "&:focus-visible": {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: 2
+    }
 }));
 
 // Piece grid props
@@ -89,7 +95,7 @@ export const PieceGrid = styled("div", {
         padding: 0,
         transform: transformStyle,
         transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.25s ease",
-        borderRadius: 2,
+        borderRadius: theme.game.radius.sm,
         // Prevent sub-pixel gaps between cells during transforms
         backfaceVisibility: "hidden",
         // Default shadow for depth perception
@@ -138,7 +144,7 @@ export const PieceCell = styled("div", {
         // Filled cell styling - use box-shadow to fill gaps during transforms
         ...(isFilled && {
             backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
-            color: "#ffffff",
+            color: theme.game.colors.onPieceText,
             // Prevent sub-pixel gaps by extending color with box-shadow
             boxShadow: `inset 0 0 0 1px ${pieceId ? getPieceColor(pieceId) : getPieceColor(1)}`,
             backgroundImage: PIECE_CELL_GRADIENT

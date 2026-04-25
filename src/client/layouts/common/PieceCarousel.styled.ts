@@ -168,9 +168,16 @@ export const IndicatorDot = styled(Box)<{ isActive?: boolean }>(({ theme, isActi
     width: 8,
     height: 8,
     borderRadius: "50%",
-    backgroundColor: isActive 
-        ? theme.palette.primary.main 
+    backgroundColor: isActive
+        ? theme.palette.primary.main
         : theme.palette.action.disabled,
-    transition: "background-color 0.2s ease",
-    cursor: "pointer"
+    transition: "background-color 0.2s ease, transform 0.15s ease",
+    cursor: "pointer",
+    "&:hover": {
+        transform: "scale(1.2)"
+    },
+    "&:focus-visible": {
+        outline: `2px solid ${theme.palette.primary.main}`,
+        outlineOffset: 2
+    }
 }));

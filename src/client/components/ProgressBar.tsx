@@ -1,5 +1,8 @@
 import React from "react";
-import { ProgressContainer, ProgressLabel, StyledLinearProgress } from "./ProgressBar.styled";
+import { useTheme } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
+import { ProgressContainer } from "./ProgressBar.styled";
+import { ProgressBarWithLabel } from "./ProgressBarWithLabel";
 
 interface ProgressBarProps {
     covered: number;
@@ -7,36 +10,32 @@ interface ProgressBarProps {
     percentage: number;
 }
 
-/**
- * Get progress bar color based on percentage
- */
-const getProgressColor = (percentage: number): string => {
+const getProgressColor = (percentage: number, theme: Theme): string => {
+    const { progress } = theme.game.colors;
     if (percentage >= 100) {
-        return "#22c55e";
-    } // Green - Completed
+        return progress.complete;
+    }
     if (percentage >= 67) {
-        return "#84cc16";
-    } // Yellow-Green - High
+        return progress.high;
+    }
     if (percentage >= 34) {
-        return "#f59e0b";
-    } // Orange/Amber - Medium
-    return "#dc3545"; // Red - Low
+        return progress.medium;
+    }
+    return progress.low;
 };
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({ percentage }) => {
-    const progressColor = getProgressColor(percentage);
-    
+    const theme = useTheme();
+    const progressColor = getProgressColor(percentage, theme);
+
     return (
         <ProgressContainer>
-            <StyledLinearProgress 
-                variant="determinate" 
-                value={percentage} 
-                progressColor={progressColor}
-                aria-label="Puzzle completion progress"
+            <ProgressBarWithLabel
+                value={percentage}
+                label={`${Math.round(percentage)}%`}
+                color={progressColor}
+                ariaLabel="Puzzle completion progress"
             />
-            <ProgressLabel>
-                {Math.round(percentage)}%
-            </ProgressLabel>
         </ProgressContainer>
     );
 };

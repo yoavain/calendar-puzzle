@@ -38,12 +38,12 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
             },
             "& + .MuiSwitch-track": {
                 opacity: 1,
-                backgroundColor: theme.palette.mode === "dark" ? "#8796A5" : "#aab4be"
+                backgroundColor: theme.game.colors.switch.track
             }
         }
     },
     "& .MuiSwitch-thumb": {
-        backgroundColor: theme.palette.mode === "dark" ? "#003892" : "#ffc107",
+        backgroundColor: theme.game.colors.switch.thumb,
         width: 32,
         height: 32,
         transition: "background-color 0.3s ease",
@@ -61,8 +61,8 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
     },
     "& .MuiSwitch-track": {
         opacity: 1,
-        backgroundColor: theme.palette.mode === "dark" ? "#8796A5" : "#aab4be",
-        borderRadius: 20 / 2,
+        backgroundColor: theme.game.colors.switch.track,
+        borderRadius: theme.game.radius.pill,
         transition: "background-color 0.3s ease"
     }
 }));
@@ -81,12 +81,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
             className={className}
         >
             <LightModeIcon
-                sx={{
+                sx={(theme) => ({
                     color: isDark ? "text.disabled" : "warning.main",
-                    fontSize: 20,
+                    fontSize: theme.game.fontSize.lg,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(0.9)" : "scale(1.1)"
-                }}
+                })}
             />
             <FormControlLabel
                 control={
@@ -99,12 +99,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
                 sx={{ margin: 0, gap: 0, "& .MuiFormControlLabel-label": { margin: 0 } }}
             />
             <DarkModeIcon
-                sx={{
+                sx={(theme) => ({
                     color: isDark ? "primary.main" : "text.disabled",
-                    fontSize: 20,
+                    fontSize: theme.game.fontSize.lg,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(1.1)" : "scale(0.9)"
-                }}
+                })}
             />
         </Box>
     );

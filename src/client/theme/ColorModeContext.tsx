@@ -6,9 +6,11 @@ import GlobalStyles from "@mui/material/GlobalStyles";
 import type { ThemeMode } from "./theme";
 import { darkTheme, lightTheme } from "./theme";
 
-// Global styles for smooth theme transitions
+// Smooth theme cross-fade — scoped to surfaces whose colors change on theme swap.
+// Descendant text/border/fill cascade via inheritance, so a wider `*` rule isn't
+// needed and would add unwanted fades on hover transitions.
 const themeTransitionStyles = {
-    "*, *::before, *::after": {
+    "body, .MuiPaper-root, [data-theme-transition]": {
         transition: "background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, fill 0.25s ease, stroke 0.25s ease"
     }
 };
