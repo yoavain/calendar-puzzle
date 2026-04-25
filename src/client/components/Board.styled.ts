@@ -1,4 +1,4 @@
-import { styled } from "@mui/material/styles";
+import { alpha, styled } from "@mui/material/styles";
 import { keyframes } from "@emotion/react";
 import { getPieceColor, PIECE_CELL_GRADIENT } from "../utils/pieceColors";
 
@@ -130,8 +130,8 @@ export const BoardCell = styled("div", {
 
     // Drag over feedback - enhanced visual cue for valid drop zones
     ...(isDragOver && {
-        backgroundColor: `${theme.palette.primary.main}26`, // 15% opacity for stronger highlight
-        boxShadow: `inset 0 0 12px ${theme.palette.primary.main}40, 0 0 8px ${theme.palette.primary.main}30`,
+        backgroundColor: alpha(theme.palette.primary.main, 0.15),
+        boxShadow: `inset 0 0 12px ${alpha(theme.palette.primary.main, 0.25)}, 0 0 8px ${alpha(theme.palette.primary.main, 0.19)}`,
         outline: `2px solid ${theme.palette.primary.main}`,
         outlineOffset: -2,
         transform: "scale(1.02)",
@@ -142,13 +142,13 @@ export const BoardCell = styled("div", {
     // Playable cell hover / keyboard focus (only when not a piece cell)
     ...(!isPieceCell && isPlayable && !isSolved && {
         "&:hover": {
-            backgroundColor: `${theme.palette.primary.main}1F`, // ~12% opacity
+            backgroundColor: alpha(theme.palette.primary.main, 0.12),
             boxShadow: `0 0 0 2px ${theme.palette.primary.main}`,
             zIndex: 2,
             position: "relative" as const
         },
         "&:focus-visible": {
-            backgroundColor: `${theme.palette.primary.main}1F`,
+            backgroundColor: alpha(theme.palette.primary.main, 0.12),
             outline: `2px solid ${theme.palette.primary.main}`,
             outlineOffset: -2,
             zIndex: 2,
