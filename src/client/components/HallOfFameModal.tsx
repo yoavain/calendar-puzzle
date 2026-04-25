@@ -85,10 +85,10 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
             fullWidth
             slotProps={{
                 paper: {
-                    sx: {
-                        borderRadius: 2,
+                    sx: (theme) => ({
+                        borderRadius: `${theme.game.radius.md}px`,
                         userSelect: "none"
-                    }
+                    })
                 }
             }}
         >
@@ -131,14 +131,14 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
 
                                     const getRankIcon = (rankIndex: number) => {
                                         if (rankIndex === 0) {
-                                            return <MilitaryTechIcon sx={{ color: "#FFD700" }} />;
-                                        } // Gold
+                                            return <MilitaryTechIcon sx={(theme) => ({ color: theme.game.colors.medal.gold })} />;
+                                        }
                                         if (rankIndex === 1) {
-                                            return <MilitaryTechIcon sx={{ color: "#C0C0C0" }} />;
-                                        } // Silver
+                                            return <MilitaryTechIcon sx={(theme) => ({ color: theme.game.colors.medal.silver })} />;
+                                        }
                                         if (rankIndex === 2) {
-                                            return <MilitaryTechIcon sx={{ color: "#CD7F32" }} />;
-                                        } // Bronze
+                                            return <MilitaryTechIcon sx={(theme) => ({ color: theme.game.colors.medal.bronze })} />;
+                                        }
                                         return null;
                                     };
 

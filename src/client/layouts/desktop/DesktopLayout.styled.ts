@@ -12,8 +12,6 @@ export const MIN_HEIGHT = 800;
 const PIECES_CONTAINER_GAP_MULTIPLIER = 2; // Increased from 1 for better spacing in responsive layout
 const PIECES_CONTAINER_MIN_HEIGHT = 600; // Minimum height for the pieces grid container
 const PIECES_CONTAINER_MAX_WIDTH = 1080; // Maximum width for the pieces grid container
-const PIECES_CONTAINER_BORDER_RADIUS = 8; // Border radius for rounded corners
-const PIECE_POOL_BORDER_RADIUS = 8; // Border radius for piece pool items
 
 /**
  * Main wrapper for the entire app.
@@ -77,7 +75,7 @@ export const PiecesContainer = styled(Box)(({ theme }) => ({
     marginTop: theme.spacing(2),
     padding: theme.spacing(2),
     backgroundColor: theme.palette.background.paper,
-    borderRadius: PIECES_CONTAINER_BORDER_RADIUS,
+    borderRadius: theme.game.radius.md,
     justifyItems: "center",
     maxWidth: PIECES_CONTAINER_MAX_WIDTH,
     marginLeft: "auto",
@@ -107,7 +105,7 @@ export const PiecePoolWrapper = styled(Box)(({ theme }) => ({
     position: "relative",
     padding: theme.spacing(1),
     backgroundColor: theme.palette.background.default,
-    borderRadius: PIECE_POOL_BORDER_RADIUS,
+    borderRadius: theme.game.radius.md,
     width: `calc(${theme.game.cellSizePx} * 5)`,
     height: `calc(${theme.game.cellSizePx} * 6)`,
     display: "flex",

@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import LinearProgress from "@mui/material/LinearProgress";
+import { ProgressBarWithLabel } from "./ProgressBarWithLabel";
 import { useUser } from "../context/UserContext.js";
 import { calculateStreaks } from "../../common/streakUtils.js";
 
@@ -48,7 +48,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
             open={open}
             onClose={onClose}
             slotProps={{
-                paper: { sx: { borderRadius: 2 } }
+                paper: { sx: (theme) => ({ borderRadius: `${theme.game.radius.md}px` }) }
             }}
         >
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
@@ -86,36 +86,11 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                     <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1, textAlign: "center" }}>
                         OVERALL PROGRESS
                     </Typography>
-                    <Box sx={{ position: "relative" }}>
-                        <LinearProgress 
-                            variant="determinate" 
-                            value={(completedDates.length / TOTAL_DATES) * 100} 
-                            aria-label="Overall completion progress"
-                            sx={{ 
-                                height: 25, 
-                                borderRadius: 12,
-                                backgroundColor: (theme) => (theme.palette.mode === "dark" ? "#333" : "#e0e0e0"),
-                                "& .MuiLinearProgress-bar": {
-                                    borderRadius: 12
-                                }
-                            }}
-                        />
-                        <Box sx={{ 
-                            position: "absolute", 
-                            top: 0, 
-                            left: 0, 
-                            right: 0, 
-                            bottom: 0, 
-                            display: "flex", 
-                            alignItems: "center", 
-                            justifyContent: "center",
-                            pointerEvents: "none"
-                        }}>
-                            <Typography variant="caption" sx={{ fontWeight: "bold", color: "#fff", textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)" }}>
-                                {completedDates.length} / {TOTAL_DATES}
-                            </Typography>
-                        </Box>
-                    </Box>
+                    <ProgressBarWithLabel
+                        value={(completedDates.length / TOTAL_DATES) * 100}
+                        label={`${completedDates.length} / ${TOTAL_DATES}`}
+                        ariaLabel="Overall completion progress"
+                    />
                 </Box>
             </DialogContent>
             <DialogActions sx={{ justifyContent: "center", pb: 2 }}>

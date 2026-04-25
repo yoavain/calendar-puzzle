@@ -6,8 +6,7 @@ export const ProgressContainer = styled(Box)(({ theme }) => ({
     width: theme.game.cellSize * 7 + theme.game.cellSize * 2 + 8, // Match board width (cells + padding + border)
     marginLeft: "auto",
     marginRight: "auto",
-    marginBottom: theme.spacing(2),
-    position: "relative"
+    marginBottom: theme.spacing(2)
 }));
 
 export interface StyledLinearProgressProps {
@@ -18,18 +17,24 @@ export const StyledLinearProgress = styled(LinearProgress, {
     shouldForwardProp: (prop) => prop !== "progressColor"
 })<StyledLinearProgressProps>(({ theme, progressColor }) => ({
     height: 25,
-    borderRadius: 12,
+    borderRadius: theme.game.radius.pill,
     [`&.${linearProgressClasses.colorPrimary}`]: {
-        backgroundColor: theme.palette.mode === "dark" ? "#333" : "#e0e0e0"
+        backgroundColor: theme.game.colors.progress.track
     },
     [`& .${linearProgressClasses.bar}`]: {
-        borderRadius: 10,
+        borderRadius: theme.game.radius.pill,
         backgroundColor: progressColor,
         transition: "transform 0.3s ease, background-color 0.3s ease"
     }
 }));
 
-export const ProgressLabel = styled(Box)({
+export interface ProgressLabelProps {
+    labelColor: string;
+}
+
+export const ProgressLabel = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "labelColor"
+})<ProgressLabelProps>(({ theme, labelColor }) => ({
     position: "absolute",
     top: 0,
     left: 0,
@@ -38,13 +43,12 @@ export const ProgressLabel = styled(Box)({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "0.75rem",
+    fontSize: theme.game.fontSize.xs,
     fontWeight: "bold",
-    color: "#fff",
-    textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
+    color: labelColor,
     pointerEvents: "none",
     userSelect: "none",
     WebkitUserSelect: "none",
     MozUserSelect: "none",
     msUserSelect: "none"
-});
+}));

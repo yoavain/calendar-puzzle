@@ -3,6 +3,47 @@ import { createTheme } from "@mui/material/styles";
 
 // Extend MUI theme interface with custom game tokens
 // Note: Piece colors are now in src/common/pieceData.ts
+interface GameFontSizeTokens {
+    xs: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+}
+
+// Game-level border-radius tokens (pixels). `board` is a deliberate one-off
+// carried over from the original visual design — the playing surface uses a
+// larger radius than the rest of the UI to read as a physical object.
+interface GameRadiusTokens {
+    sm: number;
+    md: number;
+    lg: number;
+    pill: number;
+    board: number;
+}
+
+// Game-level color tokens that don't belong to the MUI palette: progress-bar
+// thresholds, medal ranks, on-piece text, and the theme-switch pill.
+interface GameColorTokens {
+    progress: {
+        track: string;
+        low: string;
+        medium: string;
+        high: string;
+        complete: string;
+    };
+    medal: {
+        gold: string;
+        silver: string;
+        bronze: string;
+    };
+    onPieceText: string;
+    switch: {
+        track: string;
+        thumb: string;
+    };
+}
+
 declare module "@mui/material/styles" {
     interface Theme {
         game: {
@@ -24,6 +65,9 @@ declare module "@mui/material/styles" {
             backgroundTertiary: string;
             starColor: string;
             extensionColor: string;
+            fontSize: GameFontSizeTokens;
+            radius: GameRadiusTokens;
+            colors: GameColorTokens;
         };
     }
     interface ThemeOptions {
@@ -46,9 +90,73 @@ declare module "@mui/material/styles" {
             backgroundTertiary?: string;
             starColor?: string;
             extensionColor?: string;
+            fontSize?: GameFontSizeTokens;
+            radius?: GameRadiusTokens;
+            colors?: GameColorTokens;
         };
     }
 }
+
+// Game-level font-size tokens (4px step scale around a 16px root)
+const gameFontSizeTokens: GameFontSizeTokens = {
+    xs: "0.75rem", // 12px
+    sm: "0.875rem", // 14px
+    md: "1rem", // 16px
+    lg: "1.25rem", // 20px
+    xl: "1.5rem" // 24px
+};
+
+// Game-level border-radius tokens. `board` is intentionally distinct: the
+// playing surface and the landing-page 3D slab use the same larger radius.
+const gameRadiusTokens: GameRadiusTokens = {
+    sm: 4,
+    md: 8,
+    lg: 16,
+    pill: 999,
+    board: 22
+};
+
+// Progress-bar threshold + medal + on-piece colors are theme-invariant: they
+// communicate status/rank and should read the same in both modes. The switch
+// pill inverts between modes so the moon/sun affordance stays legible.
+const sharedGameColorTokens = {
+    progress: {
+        low: "#dc3545",
+        medium: "#f59e0b",
+        high: "#84cc16",
+        complete: "#22c55e"
+    },
+    medal: {
+        gold: "#FFD700",
+        silver: "#C0C0C0",
+        bronze: "#CD7F32"
+    },
+    onPieceText: "#ffffff"
+};
+
+const lightGameColorTokens: GameColorTokens = {
+    ...sharedGameColorTokens,
+    progress: {
+        track: "#e0e0e0",
+        ...sharedGameColorTokens.progress
+    },
+    switch: {
+        track: "#aab4be",
+        thumb: "#ffc107"
+    }
+};
+
+const darkGameColorTokens: GameColorTokens = {
+    ...sharedGameColorTokens,
+    progress: {
+        track: "#333333",
+        ...sharedGameColorTokens.progress
+    },
+    switch: {
+        track: "#8796A5",
+        thumb: "#003892"
+    }
+};
 
 // Light theme game tokens
 const lightGameTokens = {
@@ -69,7 +177,10 @@ const lightGameTokens = {
     invalidDropBorderColor: "#dc3545",
     backgroundTertiary: "#eee",
     starColor: "#ffb74d",
-    extensionColor: "#7c3aed"
+    extensionColor: "#7c3aed",
+    fontSize: gameFontSizeTokens,
+    radius: gameRadiusTokens,
+    colors: lightGameColorTokens
 };
 
 // Dark theme game tokens
@@ -91,7 +202,10 @@ const darkGameTokens = {
     invalidDropBorderColor: "#ff5252",
     backgroundTertiary: "#333333",
     starColor: "#ffb74d",
-    extensionColor: "#7c3aed"
+    extensionColor: "#7c3aed",
+    fontSize: gameFontSizeTokens,
+    radius: gameRadiusTokens,
+    colors: darkGameColorTokens
 };
 
 // Light theme palette (matching existing CSS variables)
@@ -168,12 +282,35 @@ const sharedOptions: ThemeOptions = {
             "\"Open Sans\"",
             "\"Helvetica Neue\"",
             "sans-serif"
-        ].join(",")
+        ].join(","),
+        h1: { fontSize: "3rem", fontWeight: 600, lineHeight: 1.2 },
+        h2: { fontSize: "2.5rem", fontWeight: 600, lineHeight: 1.2 },
+        h3: { fontSize: "2rem", fontWeight: 600, lineHeight: 1.25 },
+        h4: { fontSize: "1.75rem", fontWeight: 600, lineHeight: 1.3 },
+        h5: { fontSize: gameFontSizeTokens.xl, fontWeight: 600, lineHeight: 1.35 },
+        h6: { fontSize: gameFontSizeTokens.lg, fontWeight: 600, lineHeight: 1.5 },
+        subtitle1: { fontSize: gameFontSizeTokens.md, fontWeight: 500, lineHeight: 1.5 },
+        subtitle2: { fontSize: gameFontSizeTokens.sm, fontWeight: 500, lineHeight: 1.5 },
+        body1: { fontSize: gameFontSizeTokens.md, fontWeight: 400, lineHeight: 1.5 },
+        body2: { fontSize: gameFontSizeTokens.sm, fontWeight: 400, lineHeight: 1.5 },
+        caption: { fontSize: gameFontSizeTokens.xs, fontWeight: 400, lineHeight: 1.5 },
+        button: { fontSize: gameFontSizeTokens.sm, fontWeight: 500, lineHeight: 1.5 },
+        overline: { fontSize: gameFontSizeTokens.xs, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", lineHeight: 2 }
     },
     shape: {
-        borderRadius: 4
+        borderRadius: gameRadiusTokens.sm
     },
     components: {
+        MuiButtonBase: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    "&:focus-visible": {
+                        outline: `2px solid ${theme.palette.primary.main}`,
+                        outlineOffset: 2
+                    }
+                })
+            }
+        },
         MuiButton: {
             styleOverrides: {
                 root: {
@@ -194,8 +331,21 @@ const sharedOptions: ThemeOptions = {
         MuiIconButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 4
+                    borderRadius: gameRadiusTokens.sm
                 }
+            }
+        },
+        // MUI Switch renders its hit target via MuiButtonBase. The default
+        // ThemeSwitch overrides translate the thumb, which pushes the focus
+        // ring off-center; clip the ring to the visible switchBase so it
+        // reads as a highlight around the thumb instead of empty space.
+        MuiSwitch: {
+            styleOverrides: {
+                switchBase: ({ theme }) => ({
+                    "&.Mui-focusVisible .MuiSwitch-thumb": {
+                        boxShadow: `0 0 0 2px ${theme.palette.primary.main}`
+                    }
+                })
             }
         }
     }

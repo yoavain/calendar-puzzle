@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTheme } from "@mui/material/styles";
 import { debugLogger } from "../utils/debugLogger";
 import { useUser } from "../context/UserContext";
 
@@ -11,6 +12,7 @@ import { useUser } from "../context/UserContext";
  * - "Clear" button to reset the buffer
  */
 export const DebugPanel: React.FC = () => {
+    const theme = useTheme();
     const { user } = useUser();
     const [enabled, setEnabled] = useState(debugLogger.isEnabled());
     const [count, setCount] = useState(0);
@@ -50,7 +52,7 @@ export const DebugPanel: React.FC = () => {
                 padding: "6px 10px",
                 background: "rgba(0,0,0,0.75)",
                 color: "#fff",
-                borderRadius: 6,
+                borderRadius: theme.game.radius.md,
                 fontSize: 12,
                 fontFamily: "monospace",
                 pointerEvents: "auto",
@@ -67,7 +69,7 @@ export const DebugPanel: React.FC = () => {
                         background: "#1976d2",
                         color: "#fff",
                         border: "none",
-                        borderRadius: 4,
+                        borderRadius: theme.game.radius.sm,
                         fontSize: 12
                     }}
                 >
@@ -83,7 +85,7 @@ export const DebugPanel: React.FC = () => {
                         background: "#555",
                         color: "#fff",
                         border: "none",
-                        borderRadius: 4,
+                        borderRadius: theme.game.radius.sm,
                         fontSize: 12
                     }}
                 >

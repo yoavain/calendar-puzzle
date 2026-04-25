@@ -636,7 +636,38 @@ export function useGameController() {
 
     useSessionPersistence({ gameState });
 
-    useKeyboardShortcuts({ canUndo, canRedo, undo, redo, handleReset, isResetDisabled });
+    // Only accept keyboard shortcuts that target a pool piece — placed pieces
+    // can't be rotated/flipped in place, and Esc-clear applies only to a
+    // pending selection.
+    const selectablePieceId = (() => {
+        if (gameState.selectedPieceId == null) {
+            return null;
+        }
+        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
+        return piece && !piece.position && !piece.isLocked ? piece.id : null;
+    })();
+
+    const handleClearSelection = useCallback(() => {
+        if (gameState.selectedPieceId == null) {
+            return;
+        }
+        updatePresent({ ...gameState, selectedPieceId: null });
+    }, [gameState, updatePresent]);
+
+    useKeyboardShortcuts({
+        canUndo,
+        canRedo,
+        undo,
+        redo,
+        handleReset,
+        isResetDisabled,
+        selectablePieceId,
+        onRotateCW: handleRotatePiece,
+        onRotateCCW: handleRotateCCWPiece,
+        onFlipH: handleFlipHPiece,
+        onFlipV: handleFlipVPiece,
+        onClearSelection: handleClearSelection
+    });
 
     // Update document title when date changes
     useEffect(() => {

@@ -91,6 +91,13 @@ calendar-puzzle/
   - `pieceColors.ts` - UI color definitions
 - **API client** (`service/`) - REST API calls (`puzzleService.ts`, `logService.ts`)
 
+### Styling Convention
+
+- **Sibling `Component.styled.ts` for non-trivial styling.** Any component whose styling exceeds roughly 20 lines (combined `styled()` declarations, `keyframes`, and inline `sx` literals) must move that styling into a sibling `Component.styled.ts` file. The `.tsx` keeps JSX + behavior; the `.styled.ts` exports the styled primitives.
+- For components below the threshold, inline `styled()` / `sx` is fine — but if the same `sx` block is repeated more than twice, extract a styled component regardless of file size.
+- `keyframes` always belong in the sibling `.styled.ts` (never inline in `.tsx`).
+- Prefer theme tokens (`theme.game.radius.*`, `theme.spacing()`, `theme.palette.*`) over raw px / hex values inside `.styled.ts` files.
+
 ### Drag-and-Drop Architecture
 
 **Two implementations:**
