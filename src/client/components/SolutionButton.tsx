@@ -4,6 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 import type { SxProps, Theme } from "@mui/material/styles";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { useUser } from "../context/UserContext";
+import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 
 interface SolutionButtonProps {
     onSolve: () => void;
@@ -26,14 +27,16 @@ export const SolutionButton: React.FC<SolutionButtonProps> = ({
         return null;
     }
 
+    const isActuallyDisabled = disabled || isLoading;
+
     return (
         <Tooltip title="Show solution" arrow>
-            <span>
+            <TooltipDisabledWrapper disabled={isActuallyDisabled}>
                 <Button
                     variant="contained"
                     color="success"
                     onClick={onSolve}
-                    disabled={disabled || isLoading}
+                    disabled={isActuallyDisabled}
                     loading={isLoading}
                     loadingPosition="start"
                     startIcon={<AutoFixHighIcon />}
@@ -43,7 +46,7 @@ export const SolutionButton: React.FC<SolutionButtonProps> = ({
                 >
                     {isLoading ? "Solving..." : "Solution"}
                 </Button>
-            </span>
+            </TooltipDisabledWrapper>
         </Tooltip>
     );
 };

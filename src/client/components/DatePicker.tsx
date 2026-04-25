@@ -16,6 +16,7 @@ import ExtensionIcon from "@mui/icons-material/Extension";
 import type { PuzzleDate } from "../../common/types";
 import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
 import { useUser } from "../context/UserContext";
+import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 
 interface DatePickerProps {
     currentDate: PuzzleDate;
@@ -116,7 +117,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
     return (
         <>
             <Tooltip title={isLoginRequired ? "Sign-in to select a different date" : "Change date"} arrow>
-                <span>{button}</span>
+                <TooltipDisabledWrapper disabled={isLoginRequired}>{button}</TooltipDisabledWrapper>
             </Tooltip>
 
             <Dialog 
