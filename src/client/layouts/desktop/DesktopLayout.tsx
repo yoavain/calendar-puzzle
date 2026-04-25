@@ -28,6 +28,7 @@ import { ProgressBar } from "../../components/ProgressBar";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { ShareDialog } from "../../components/ShareDialog";
+import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
 
 import { useGameController } from "../common/useGameController";
 import {
@@ -107,7 +108,7 @@ export const DesktopLayout: React.FC = () => {
                                 )}
                                 <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} />
                                 <Tooltip title="How to play" arrow>
-                                    <span>
+                                    <TooltipDisabledWrapper>
                                         <Button
                                             variant="contained"
                                             onClick={game.modals.help.open}
@@ -118,10 +119,10 @@ export const DesktopLayout: React.FC = () => {
                                         >
                                             <HelpOutlineIcon />
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                                 <Tooltip title={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
-                                    <span>
+                                    <TooltipDisabledWrapper disabled={!game.user}>
                                         <Button
                                             variant="contained"
                                             onClick={game.modals.issue.open}
@@ -133,10 +134,10 @@ export const DesktopLayout: React.FC = () => {
                                         >
                                             <BugReportIcon />
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                                 <Tooltip title={!game.user ? "Sign-in to see statistics" : "Statistics"} arrow>
-                                    <span>
+                                    <TooltipDisabledWrapper disabled={!game.user}>
                                         <Button
                                             variant="contained"
                                             onClick={game.modals.stats.open}
@@ -147,10 +148,10 @@ export const DesktopLayout: React.FC = () => {
                                         >
                                             <BarChartIcon />
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                                 <Tooltip title="Share" arrow>
-                                    <span>
+                                    <TooltipDisabledWrapper>
                                         <Button
                                             variant="contained"
                                             onClick={game.modals.share.open}
@@ -161,39 +162,39 @@ export const DesktopLayout: React.FC = () => {
                                         >
                                             <ShareIcon />
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                                 <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} />
                                 <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} />
                                 <Tooltip title="Ctrl+Z" arrow>
-                                    <span>
-                                        <Button 
+                                    <TooltipDisabledWrapper disabled={!game.canUndo || game.gameState.isSolved}>
+                                        <Button
                                             variant="contained"
-                                            onClick={game.undo} 
+                                            onClick={game.undo}
                                             disabled={!game.canUndo || game.gameState.isSolved}
                                             size="small"
                                             startIcon={<UndoIcon />}
                                         >
                                         Undo
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                                 <Tooltip title="Ctrl+Y or Ctrl+Shift+Z" arrow>
-                                    <span>
-                                        <Button 
+                                    <TooltipDisabledWrapper disabled={!game.canRedo || game.gameState.isSolved}>
+                                        <Button
                                             variant="contained"
-                                            onClick={game.redo} 
+                                            onClick={game.redo}
                                             disabled={!game.canRedo || game.gameState.isSolved}
                                             size="small"
                                             startIcon={<RedoIcon />}
                                         >
                                         Redo
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                                 <Tooltip title="Esc" arrow>
-                                    <span>
-                                        <Button 
+                                    <TooltipDisabledWrapper disabled={game.isResetDisabled}>
+                                        <Button
                                             variant="outlined"
                                             onClick={game.handleReset}
                                             disabled={game.isResetDisabled}
@@ -203,7 +204,7 @@ export const DesktopLayout: React.FC = () => {
                                         >
                                         Reset
                                         </Button>
-                                    </span>
+                                    </TooltipDisabledWrapper>
                                 </Tooltip>
                             </Stack>
                         </Stack>

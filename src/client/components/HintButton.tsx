@@ -4,6 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 import type { SxProps, Theme } from "@mui/material/styles";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import { useUser } from "../context/UserContext";
+import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 
 interface HintButtonProps {
     onHint: () => void;
@@ -38,7 +39,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, isLoading = fals
 
     return (
         <Tooltip title={isLoginRequired ? "Sign-in to see hint" : "Get a hint"} arrow>
-            <span>{button}</span>
+            <TooltipDisabledWrapper disabled={isActuallyDisabled}>{button}</TooltipDisabledWrapper>
         </Tooltip>
     );
 };
