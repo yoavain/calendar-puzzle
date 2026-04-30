@@ -42,11 +42,11 @@ export const ToolbarContainer = styled(Box, {
  */
 export const ToolbarLeft = styled(Box, {
     shouldForwardProp: (prop) => prop !== "orientation"
-})<{ orientation?: ToolbarOrientation }>(({ orientation }) => ({
+})<{ orientation?: ToolbarOrientation }>(({ theme, orientation }) => ({
     display: "flex",
     flexDirection: orientation === "vertical" ? "column" : "row",
     alignItems: "center",
-    gap: 4
+    gap: theme.spacing(0.5)
 }));
 
 /**
@@ -55,12 +55,12 @@ export const ToolbarLeft = styled(Box, {
  */
 export const ToolbarCenter = styled(Box, {
     shouldForwardProp: (prop) => prop !== "orientation"
-})<{ orientation?: ToolbarOrientation }>(({ orientation }) => ({
+})<{ orientation?: ToolbarOrientation }>(({ theme, orientation }) => ({
     display: "flex",
     flexDirection: orientation === "vertical" ? "column" : "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
+    gap: theme.spacing(0.25),
     ...(orientation === "vertical" ? {} : { flex: 1 })
 }));
 
@@ -70,11 +70,11 @@ export const ToolbarCenter = styled(Box, {
  */
 export const ToolbarRight = styled(Box, {
     shouldForwardProp: (prop) => prop !== "orientation"
-})<{ orientation?: ToolbarOrientation }>(({ orientation }) => ({
+})<{ orientation?: ToolbarOrientation }>(({ theme, orientation }) => ({
     display: "flex",
     flexDirection: orientation === "vertical" ? "column" : "row",
     alignItems: "center",
-    gap: 4
+    gap: theme.spacing(0.5)
 }));
 
 /**

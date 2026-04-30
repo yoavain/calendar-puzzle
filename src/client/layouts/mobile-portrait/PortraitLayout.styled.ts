@@ -50,20 +50,23 @@ export const BoardArea = styled(Box)({
 /**
  * Progress bar container.
  */
-export const ProgressArea = styled(Box)({
+export const ProgressArea = styled(Box)(({ theme }) => ({
     flexShrink: 0,
-    padding: "0 4px"
-});
+    padding: theme.spacing(0, 0.5)
+}));
 
 /** Approximate height of the Beta disclaimer banner (dense Alert). */
 const BETA_BANNER_HEIGHT = 36;
+
+/** Height reserved for the progress bar row (matches ProgressBar visual height). */
+const PROGRESS_BAR_HEIGHT = 32;
+
+/** Vertical breathing room (matches theme.spacing(1) = 8px on ContentArea). */
+const VERTICAL_GUTTER = 8;
 
 /**
  * Get available height for the board area.
  */
 export function getAvailableBoardHeight(viewportHeight: number): number {
-    // Subtract toolbar, carousel, progress bar, beta banner, and padding
-    const progressBarHeight = 32;
-    const padding = 8;
-    return viewportHeight - MOBILE_TOOLBAR_HEIGHT - CAROUSEL_HEIGHT - progressBarHeight - BETA_BANNER_HEIGHT - padding;
+    return viewportHeight - MOBILE_TOOLBAR_HEIGHT - CAROUSEL_HEIGHT - PROGRESS_BAR_HEIGHT - BETA_BANNER_HEIGHT - VERTICAL_GUTTER;
 }

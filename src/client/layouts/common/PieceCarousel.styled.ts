@@ -85,7 +85,7 @@ export type SlideState = "active" | "adjacent" | "hidden";
  * Horizontal: 70% viewport width. Vertical: 70% viewport height.
  */
 export const CarouselSlide = styled(Box)<{ slideState: SlideState; axis?: CarouselAxis }>(
-    ({ slideState, axis }) => ({
+    ({ theme, slideState, axis }) => ({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -95,18 +95,13 @@ export const CarouselSlide = styled(Box)<{ slideState: SlideState; axis?: Carous
                 flex: "0 0 70%",
                 minHeight: 0,
                 width: "100%",
-                paddingTop: 8,
-                paddingBottom: 8,
-                paddingLeft: 8,
-                paddingRight: 8
+                padding: theme.spacing(1)
             }
             : {
                 flex: "0 0 70%",
                 minWidth: 0,
                 height: "100%",
-                paddingLeft: 8,
-                paddingRight: 8,
-                paddingTop: 8
+                padding: theme.spacing(1, 1, 0)
             }),
         opacity: slideState === "active" ? 1 : slideState === "adjacent" ? 0.4 : 0,
         transform: slideState === "active" ? "scale(1)" : "scale(0.85)",
@@ -151,14 +146,14 @@ export const ControlsWrapper = styled(Box)(({ theme }) => ({
  * Indicator dots showing current position in carousel.
  * Horizontal: row below viewport. Vertical: column to the right of viewport.
  */
-export const IndicatorContainer = styled(Box)<{ axis?: CarouselAxis }>(({ axis }) => ({
+export const IndicatorContainer = styled(Box)<{ axis?: CarouselAxis }>(({ theme, axis }) => ({
     display: "flex",
     flexDirection: axis === "y" ? "column" : "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: theme.spacing(0.75),
     flexShrink: 0,
-    ...(axis === "y" ? { paddingLeft: 8 } : { paddingBottom: 8 })
+    ...(axis === "y" ? { paddingLeft: theme.spacing(1) } : { paddingBottom: theme.spacing(1) })
 }));
 
 /**
