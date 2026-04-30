@@ -5,6 +5,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
+import type { Theme } from "@mui/material/styles";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -43,14 +44,16 @@ import {
     MIN_HEIGHT
 } from "./DesktopLayout.styled";
 
+const toolbarButtonSx = (theme: Theme) => ({ minHeight: theme.game.toolbarButtonHeight });
+
 /**
  * Desktop layout component.
- * 
+ *
  * Renders the game with:
  * - Top toolbar with all controls
  * - Board in the center
  * - 4x2 pieces grid below the board
- * 
+ *
  * Uses viewport-based scaling to fit different screen sizes.
  */
 export const DesktopLayout: React.FC = () => {
@@ -107,7 +110,7 @@ export const DesktopLayout: React.FC = () => {
                                         {game.solverError}
                                     </Alert>
                                 )}
-                                <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} />
+                                <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} sx={toolbarButtonSx} />
                                 <ToolbarIconButton
                                     tooltip="How to play"
                                     onClick={game.modals.help.open}
@@ -137,8 +140,8 @@ export const DesktopLayout: React.FC = () => {
                                     ariaLabel="Share"
                                     color="secondary"
                                 />
-                                <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} />
-                                <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} />
+                                <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} sx={toolbarButtonSx} />
+                                <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} sx={toolbarButtonSx} />
                                 <Tooltip title="Ctrl+Z" arrow>
                                     <TooltipDisabledWrapper disabled={!game.canUndo || game.gameState.isSolved}>
                                         <Button
@@ -147,6 +150,7 @@ export const DesktopLayout: React.FC = () => {
                                             disabled={!game.canUndo || game.gameState.isSolved}
                                             size="small"
                                             startIcon={<UndoIcon />}
+                                            sx={toolbarButtonSx}
                                         >
                                         Undo
                                         </Button>
@@ -160,6 +164,7 @@ export const DesktopLayout: React.FC = () => {
                                             disabled={!game.canRedo || game.gameState.isSolved}
                                             size="small"
                                             startIcon={<RedoIcon />}
+                                            sx={toolbarButtonSx}
                                         >
                                         Redo
                                         </Button>
@@ -174,6 +179,7 @@ export const DesktopLayout: React.FC = () => {
                                             size="small"
                                             startIcon={<RestartAltIcon />}
                                             color="warning"
+                                            sx={toolbarButtonSx}
                                         >
                                         Reset
                                         </Button>
