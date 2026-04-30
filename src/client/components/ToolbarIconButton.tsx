@@ -32,7 +32,7 @@ export const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
                 variant="contained"
                 onClick={onClick}
                 size="small"
-                sx={{ minWidth: 40, px: 1 }}
+                sx={(theme) => ({ minWidth: 40, px: 1, minHeight: theme.game.toolbarButtonHeight })}
                 color={color}
                 disabled={disabled}
                 aria-label={ariaLabel}
