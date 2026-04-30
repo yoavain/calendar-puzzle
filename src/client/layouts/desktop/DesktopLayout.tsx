@@ -29,6 +29,7 @@ import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { ShareDialog } from "../../components/ShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
+import { ToolbarIconButton } from "../../components/ToolbarIconButton";
 
 import { useGameController } from "../common/useGameController";
 import {
@@ -107,63 +108,35 @@ export const DesktopLayout: React.FC = () => {
                                     </Alert>
                                 )}
                                 <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} />
-                                <Tooltip title="How to play" arrow>
-                                    <TooltipDisabledWrapper>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.help.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            color="secondary"
-                                            aria-label="How to play"
-                                        >
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <Tooltip title={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
-                                    <TooltipDisabledWrapper disabled={!game.user}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.issue.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            disabled={!game.user}
-                                            color="info"
-                                            aria-label="Submit bug or request feature"
-                                        >
-                                            <BugReportIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <Tooltip title={!game.user ? "Sign-in to see statistics" : "Statistics"} arrow>
-                                    <TooltipDisabledWrapper disabled={!game.user}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.stats.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            disabled={!game.user}
-                                            aria-label="Statistics"
-                                        >
-                                            <BarChartIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <Tooltip title="Share" arrow>
-                                    <TooltipDisabledWrapper>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.share.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            color="secondary"
-                                            aria-label="Share"
-                                        >
-                                            <ShareIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
+                                <ToolbarIconButton
+                                    tooltip="How to play"
+                                    onClick={game.modals.help.open}
+                                    icon={<HelpOutlineIcon />}
+                                    ariaLabel="How to play"
+                                    color="secondary"
+                                />
+                                <ToolbarIconButton
+                                    tooltip={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"}
+                                    onClick={game.modals.issue.open}
+                                    icon={<BugReportIcon />}
+                                    ariaLabel="Submit bug or request feature"
+                                    disabled={!game.user}
+                                    color="info"
+                                />
+                                <ToolbarIconButton
+                                    tooltip={!game.user ? "Sign-in to see statistics" : "Statistics"}
+                                    onClick={game.modals.stats.open}
+                                    icon={<BarChartIcon />}
+                                    ariaLabel="Statistics"
+                                    disabled={!game.user}
+                                />
+                                <ToolbarIconButton
+                                    tooltip="Share"
+                                    onClick={game.modals.share.open}
+                                    icon={<ShareIcon />}
+                                    ariaLabel="Share"
+                                    color="secondary"
+                                />
                                 <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} />
                                 <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} />
                                 <Tooltip title="Ctrl+Z" arrow>
