@@ -108,9 +108,8 @@ src/
 │  │  └─ UserContext.tsx       # Auth state (useUser hook)
 │  ├─ hooks/                   # React hooks
 │  │  ├─ useGameHistory.ts     # Undo/redo functionality
-│  │  ├─ useGameSession.ts     # Session persistence
-│  │  ├─ useLayout.ts          # Responsive layout detection
-│  │  └─ useQueryParam.ts      # URL query parameter management
+│  │  ├─ useGameSession.ts     # Session persistence helpers (load/save/clear)
+│  │  └─ useLayout.ts          # Responsive layout detection
 │  ├─ pages/
 │  │  └─ LandingPage.tsx       # Marketing/landing page
 │  ├─ utils/                   # UI utilities

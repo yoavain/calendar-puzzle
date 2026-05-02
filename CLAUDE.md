@@ -80,16 +80,15 @@ calendar-puzzle/
 - **Components** (`components/`) - React UI components (including `PlayAnotherDialog.tsx`)
 - **Hooks** (`hooks/`) - Custom React hooks
   - `useGameHistory.ts` - Undo/redo with manual deep-clone (spread operators)
-  - `useGameSession.ts` - Session persistence
+  - `useGameSession.ts` - Session persistence helpers (load/save/clear)
   - `useLayout.ts` - Responsive layout detection
-  - `useQueryParam.ts` - URL query parameter management
 - **Utils** (`utils/`) - UI utilities
   - `debugLogger.ts` - Circular-buffer debug logger
   - `dragHelpers.ts` - DOM-aware drag utilities
   - `encryption.ts` - Client-side payload encryption
   - `measureUtils.ts` - DOM measurement helpers
   - `pieceColors.ts` - UI color definitions
-- **API client** (`service/`) - REST API calls (`puzzleService.ts`, `logService.ts`)
+- **API client** (`service/`) - REST API calls (`puzzleService.ts`, `logService.ts`, `csrfService.ts`)
 
 ### Styling Convention
 
