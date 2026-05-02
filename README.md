@@ -173,6 +173,7 @@ npm run deploy:dev
 | [DB_SCHEMA.md](docs/DB_SCHEMA.md) | Database tables and relationships |
 | [SESSION.md](docs/SESSION.md) | Local storage session persistence (board state across reloads) |
 | [drag-drop-guidelines.md](docs/drag-drop-guidelines.md) | Drag-and-drop implementation: anchor cell, visual rect, empty-cell snap |
+| [e2e-drag-drop-tests.md](docs/e2e-drag-drop-tests.md) | Deterministic E2E drag-and-drop test suite (happy path + failing path) |
 | [TODO.md](docs/TODO.md) | Open items and completed feature history |
 | [DESIGN.md](docs/DESIGN.md) | Historical design elaborations for implemented features |
 
