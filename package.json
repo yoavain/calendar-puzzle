@@ -50,7 +50,7 @@
         "drizzle-dbml-generator": "0.10.0",
         "drizzle-kit": "0.31.10",
         "embla-carousel-react": "8.6.0",
-        "esbuild": "0.27.7",
+        "esbuild": "0.28.0",
         "eslint": "9.39.4",
         "eslint-import-resolver-typescript": "4.4.4",
         "eslint-plugin-barrel-files": "3.0.1",
