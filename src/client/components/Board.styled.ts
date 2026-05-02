@@ -198,6 +198,7 @@ export const BoardCell = styled("div", {
         backgroundColor: `${theme.game.invalidDropColor} !important`,
         boxShadow: `inset 0 0 0 2px ${theme.game.invalidDropBorderColor} !important`,
         animation: `${invalidDropShake} 0.5s ease-in-out`,
+        animationDelay: 0,
         zIndex: 10,
         position: "relative" as const
     }),
