@@ -3,6 +3,11 @@ import { keyframes } from "@emotion/react";
 import { getPieceColor, PIECE_CELL_GRADIENT } from "../utils/pieceColors";
 
 // Animations
+export const revealCellAnim = keyframes`
+    from { opacity: 0; }
+    to   { opacity: 1; }
+`;
+
 export const invalidDropShake = keyframes`
     0%, 100% {
         transform: translateX(0);
@@ -17,6 +22,7 @@ export const invalidDropShake = keyframes`
 
 // Board container
 export const BoardContainer = styled("div")(({ theme }) => ({
+    position: "relative",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
@@ -105,6 +111,8 @@ export const BoardCell = styled("div", {
     margin: 0,
     padding: 0,
     boxSizing: "border-box",
+    animation: `${revealCellAnim} 0.3s ease-out backwards`,
+    animationDelay: "var(--reveal-delay, 0ms)",
     transition: "background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.15s ease, transform 0.15s ease",
 
     // Hidden cell
@@ -190,6 +198,7 @@ export const BoardCell = styled("div", {
         backgroundColor: `${theme.game.invalidDropColor} !important`,
         boxShadow: `inset 0 0 0 2px ${theme.game.invalidDropBorderColor} !important`,
         animation: `${invalidDropShake} 0.5s ease-in-out`,
+        animationDelay: "0s",
         zIndex: 10,
         position: "relative" as const
     }),

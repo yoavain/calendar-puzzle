@@ -5,6 +5,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
+import type { Theme } from "@mui/material/styles";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -29,6 +30,7 @@ import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { ShareDialog } from "../../components/ShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
+import { ToolbarIconButton } from "../../components/ToolbarIconButton";
 
 import { useGameController } from "../common/useGameController";
 import {
@@ -42,14 +44,16 @@ import {
     MIN_HEIGHT
 } from "./DesktopLayout.styled";
 
+const toolbarButtonSx = (theme: Theme) => ({ minHeight: theme.game.toolbarButtonHeight });
+
 /**
  * Desktop layout component.
- * 
+ *
  * Renders the game with:
  * - Top toolbar with all controls
  * - Board in the center
  * - 4x2 pieces grid below the board
- * 
+ *
  * Uses viewport-based scaling to fit different screen sizes.
  */
 export const DesktopLayout: React.FC = () => {
@@ -106,66 +110,38 @@ export const DesktopLayout: React.FC = () => {
                                         {game.solverError}
                                     </Alert>
                                 )}
-                                <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} />
-                                <Tooltip title="How to play" arrow>
-                                    <TooltipDisabledWrapper>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.help.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            color="secondary"
-                                            aria-label="How to play"
-                                        >
-                                            <HelpOutlineIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <Tooltip title={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"} arrow>
-                                    <TooltipDisabledWrapper disabled={!game.user}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.issue.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            disabled={!game.user}
-                                            color="info"
-                                            aria-label="Submit bug or request feature"
-                                        >
-                                            <BugReportIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <Tooltip title={!game.user ? "Sign-in to see statistics" : "Statistics"} arrow>
-                                    <TooltipDisabledWrapper disabled={!game.user}>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.stats.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            disabled={!game.user}
-                                            aria-label="Statistics"
-                                        >
-                                            <BarChartIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <Tooltip title="Share" arrow>
-                                    <TooltipDisabledWrapper>
-                                        <Button
-                                            variant="contained"
-                                            onClick={game.modals.share.open}
-                                            size="small"
-                                            sx={{ minWidth: 40, px: 1 }}
-                                            color="secondary"
-                                            aria-label="Share"
-                                        >
-                                            <ShareIcon />
-                                        </Button>
-                                    </TooltipDisabledWrapper>
-                                </Tooltip>
-                                <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} />
-                                <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} />
+                                <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} sx={toolbarButtonSx} />
+                                <ToolbarIconButton
+                                    tooltip="How to play"
+                                    onClick={game.modals.help.open}
+                                    icon={<HelpOutlineIcon />}
+                                    ariaLabel="How to play"
+                                    color="secondary"
+                                />
+                                <ToolbarIconButton
+                                    tooltip={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"}
+                                    onClick={game.modals.issue.open}
+                                    icon={<BugReportIcon />}
+                                    ariaLabel="Submit bug or request feature"
+                                    disabled={!game.user}
+                                    color="info"
+                                />
+                                <ToolbarIconButton
+                                    tooltip={!game.user ? "Sign-in to see statistics" : "Statistics"}
+                                    onClick={game.modals.stats.open}
+                                    icon={<BarChartIcon />}
+                                    ariaLabel="Statistics"
+                                    disabled={!game.user}
+                                />
+                                <ToolbarIconButton
+                                    tooltip="Share"
+                                    onClick={game.modals.share.open}
+                                    icon={<ShareIcon />}
+                                    ariaLabel="Share"
+                                    color="secondary"
+                                />
+                                <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} sx={toolbarButtonSx} />
+                                <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} sx={toolbarButtonSx} />
                                 <Tooltip title="Ctrl+Z" arrow>
                                     <TooltipDisabledWrapper disabled={!game.canUndo || game.gameState.isSolved}>
                                         <Button
@@ -174,6 +150,7 @@ export const DesktopLayout: React.FC = () => {
                                             disabled={!game.canUndo || game.gameState.isSolved}
                                             size="small"
                                             startIcon={<UndoIcon />}
+                                            sx={toolbarButtonSx}
                                         >
                                         Undo
                                         </Button>
@@ -187,6 +164,7 @@ export const DesktopLayout: React.FC = () => {
                                             disabled={!game.canRedo || game.gameState.isSolved}
                                             size="small"
                                             startIcon={<RedoIcon />}
+                                            sx={toolbarButtonSx}
                                         >
                                         Redo
                                         </Button>
@@ -201,6 +179,7 @@ export const DesktopLayout: React.FC = () => {
                                             size="small"
                                             startIcon={<RestartAltIcon />}
                                             color="warning"
+                                            sx={toolbarButtonSx}
                                         >
                                         Reset
                                         </Button>

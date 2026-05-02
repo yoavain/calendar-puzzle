@@ -65,6 +65,7 @@ declare module "@mui/material/styles" {
             backgroundTertiary: string;
             starColor: string;
             extensionColor: string;
+            toolbarButtonHeight: number;
             fontSize: GameFontSizeTokens;
             radius: GameRadiusTokens;
             colors: GameColorTokens;
@@ -90,6 +91,7 @@ declare module "@mui/material/styles" {
             backgroundTertiary?: string;
             starColor?: string;
             extensionColor?: string;
+            toolbarButtonHeight?: number;
             fontSize?: GameFontSizeTokens;
             radius?: GameRadiusTokens;
             colors?: GameColorTokens;
@@ -115,6 +117,11 @@ const gameRadiusTokens: GameRadiusTokens = {
     pill: 999,
     board: 22
 };
+
+// Shared height (px) for buttons in the desktop top toolbar. Aligns text
+// buttons (Solution, Date, Hint, Undo/Redo/Reset) with icon-only buttons so
+// they share a single visual baseline.
+const toolbarButtonHeight = 32;
 
 // Progress-bar threshold + medal + on-piece colors are theme-invariant: they
 // communicate status/rank and should read the same in both modes. The switch
@@ -178,6 +185,7 @@ const lightGameTokens = {
     backgroundTertiary: "#eee",
     starColor: "#ffb74d",
     extensionColor: "#7c3aed",
+    toolbarButtonHeight,
     fontSize: gameFontSizeTokens,
     radius: gameRadiusTokens,
     colors: lightGameColorTokens
@@ -203,6 +211,7 @@ const darkGameTokens = {
     backgroundTertiary: "#333333",
     starColor: "#ffb74d",
     extensionColor: "#7c3aed",
+    toolbarButtonHeight,
     fontSize: gameFontSizeTokens,
     radius: gameRadiusTokens,
     colors: darkGameColorTokens
