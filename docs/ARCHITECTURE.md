@@ -81,7 +81,7 @@ src/
 │  │  ├─ UserMenu.tsx          # User avatar + logout menu
 │  │  ├─ HintButton.tsx        # Request hint (auth-gated)
 │  │  ├─ SolutionButton.tsx    # Reveal solution (auth-gated)
-│  │  └─ DebugPanel.tsx        # Debug overlay (?debug=1)
+│  │  └─ DebugPanel.tsx        # Debug overlay (admin "Debug Logging" toggle)
 │  ├─ layouts/                 # Layout-specific code
 │  │  ├─ LayoutRoot.tsx        # Selects layout based on device
 │  │  ├─ LayoutContext.tsx     # Provides layout info to children
@@ -206,7 +206,7 @@ export const PIECE_DATA: Record<PieceId, PieceData> = {
   // ... 8 pieces total
 }
 
-export const getPieceShape = (id: number): boolean[][] => ...
+export const getPieceShape = (id: PieceId): boolean[][] => ...
 ```
 
 **Note**: Colors were moved to `client/utils/pieceColors.ts` (presentation layer).
