@@ -1,5 +1,5 @@
 import type { Board, Piece, Position, PuzzleDate } from "./types";
-import { DAYS_IN_MONTH, DAYS_LAYOUT, TOTAL_PLAYABLE_CELLS } from "./consts";
+import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_IN_MONTH, DAYS_LAYOUT, isCellPlayable, TOTAL_PLAYABLE_CELLS } from "./consts";
 import { getPieceShape } from "./pieceData";
 
 /**
@@ -132,9 +132,9 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
         return null;
     }
 
-    // 2. Create occupancy grid (7x7) and check for overlaps/out-of-bounds
-    const occupied = Array(7).fill(null).map(() => Array(7).fill(false));
-    
+    // 2. Create occupancy grid and check for overlaps/out-of-bounds
+    const occupied = Array(BOARD_HEIGHT).fill(null).map(() => Array(BOARD_WIDTH).fill(false));
+
     for (const piece of pieces) {
         if (!piece.position) {
             return null;
@@ -146,19 +146,7 @@ export const puzzleSolvedForDate = (pieces: Piece[]): PuzzleDate | null => {
                     const by = piece.position.y + dy;
                     const bx = piece.position.x + dx;
 
-                    // Out of bounds or non-playable cells
-                    if (by < 0 || by >= 7 || bx < 0 || bx >= 7) {
-                        return null;
-                    }
-
-                    // Check if cell is playable
-                    const isPlayable = (
-                        (by < 2 && bx < 6) || // Months
-                        (by >= 2 && by <= 5 && bx < 7) || // Days 1-28
-                        (by === 6 && bx < 3) // Days 29-31
-                    );
-
-                    if (!isPlayable || occupied[by][bx]) {
+                    if (!isCellPlayable(bx, by) || occupied[by][bx]) {
                         return null;
                     }
 
