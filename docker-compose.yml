@@ -26,7 +26,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=puzzle
     volumes:
-      - calendar_puzzle_postgres_data:/var/lib/postgresql/data
+      - calendar_puzzle_postgres_data:/var/lib/postgresql
     restart: unless-stopped
 
 volumes:

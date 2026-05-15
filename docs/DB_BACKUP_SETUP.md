@@ -155,7 +155,3 @@ pg_dump may have failed. Check:
 - Is the database running?
 - Is the container still healthy?
 - Try the backup manually and check for stderr output
-
-## Next Steps
-
-If you decide to execute **Stage 2** (the postgres volume migration) later, refer to the plan at `docs/plan/2026-05-15 - Daily DB Backup and Restore.md`.
