@@ -159,7 +159,8 @@ const JS_RULES = {
                 "Storage",
                 "stream.Readable.fromWeb",
                 "URL.createObjectURL",
-                "URL.revokeObjectURL"
+                "URL.revokeObjectURL",
+                "util.parseArgs"
             ]
         }
     ],
