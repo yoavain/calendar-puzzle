@@ -53,9 +53,11 @@ Reorganize the existing `src/` folder into `client/`, `server/`, and `common/` s
 
 ### User Authentication
 
+> **Note:** This subsection captures the original plan. The implementation diverged — see [AUTH.md](AUTH.md) for the authoritative description. Key differences: only Google is supported (no GitHub); `@fastify/passport` + `passport-google-oauth20` is used (not `@fastify/oauth2`); `@fastify/secure-session` is used (not `@fastify/session`); routes are `/auth/google`, `/auth/google/callback`, `/auth/logout` (not `/api/auth/login/:provider` etc.).
+
 Implement OAuth-based authentication using trusted providers (Google, GitHub). No username/password authentication to reduce security burden.
 
-**Low-level design:**
+**Original low-level design:**
 - Use `@fastify/oauth2` plugin for OAuth flows.
 - Support Google and GitHub as initial providers.
 - Store user sessions using `@fastify/session` with secure cookie settings.
@@ -65,9 +67,11 @@ Implement OAuth-based authentication using trusted providers (Google, GitHub). N
 
 ### Database Schema
 
+> **Note:** This subsection captures the original plan. The implemented schema differs — see [DB_SCHEMA.md](DB_SCHEMA.md) for the authoritative description. Key differences: the user-progress table is `user_puzzle_stats` (not `users_results`) with composite PK `(user_id, month, day)` and columns `first_started_at`, `first_completed_at`, `hint_used` — no `solution_state` JSONB. No PII (email, display name) is stored in the `users` table; only the Google ID and an `is_admin` flag.
+
 Design a relational schema to track users and their puzzle completion history.
 
-**Low-level design:**
+**Original low-level design:**
 - Use PostgreSQL as the database.
 - Tables:
   - `users`: `id` (UUID), `provider`, `provider_id`, `email`, `display_name`, `created_at`, `updated_at`
@@ -101,9 +105,11 @@ Design a relational schema to track users and their puzzle completion history.
 
 ### Solver and Hint APIs
 
+> **As implemented:** `puzzleSolver.ts` lives in `src/common/` (pure DLX algorithm, no DOM/Node deps). It is invoked server-side only from a worker thread at `src/server/workers/puzzleSolverWorker.ts`, orchestrated by `src/server/service/solverService.ts`. The solver endpoint is `GET /api/admin/solution/:date` (admin-only). The hint endpoint is `PUT /api/hint`.
+
 Move the puzzle solver to the server and expose it through authenticated endpoints.
 
-**Low-level design:**
+**Original low-level design:**
 - Move `puzzleSolver.ts` to `server/src/services/`.
 - Keep solver logic unchanged but run it server-side only.
 - Solver endpoint returns the complete solution.
@@ -115,9 +121,11 @@ Move the puzzle solver to the server and expose it through authenticated endpoin
 
 ### Error Handling and Logging
 
+> **As implemented:** Fastify's built-in `pino` logger is enabled (`logger: true` in `src/server/app.ts`). Routes return structured `{ error: string }` responses with appropriate HTTP codes. `@fastify/sensible` is **not** installed; standard `reply.code(...).send({ error })` is used directly. No custom domain error classes have been created.
+
 Implement consistent error handling and structured logging.
 
-**Low-level design:**
+**Original low-level design:**
 - Use `@fastify/sensible` for standardized HTTP errors.
 - Create custom error classes for domain-specific errors (e.g., `PuzzleNotSolvableError`).
 - Use `pino` (built into Fastify) for structured JSON logging.
@@ -304,7 +312,7 @@ Display real-time progress during gameplay to give users a sense of how close th
 
 **Progress calculation:**
 ```typescript
-const TOTAL_CELLS = 12 + 31 - 2;  // 41 playable cells (months + days - 2 blocked)
+const TOTAL_CELLS = 12 + 31 - 2;  // 41 playable cells (12 months + 31 days - 2 highlighted)
 
 function calculateProgress(boardState: BoardState): number {
   const coveredCells = countCoveredCells(boardState);

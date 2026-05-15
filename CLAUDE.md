@@ -151,9 +151,9 @@ See [docs/drag-drop-guidelines.md](docs/drag-drop-guidelines.md) for full detail
 - `src/client/components/DraggablePiece.tsx` — `draggableId` prop for dnd-kit ID override
 - `src/client/layouts/common/DndProvider.tsx` — dnd-kit sensor configuration, `activatorEvent.target` lookup
 - `src/client/utils/debugLogger.ts` — circular-buffer debug logger
-- `src/client/components/DebugPanel.tsx` — floating overlay (activate with `?debug=1` or admin toggle); dumps logs to `logs/`
+- `src/client/components/DebugPanel.tsx` — floating overlay (activate via the admin "Debug Logging" toggle in the hamburger menu; state persisted in `localStorage` key `puzzle:debugEnabled`); dumps logs to a downloaded JSON file
 
-**Debugging:** Enable `?debug=1`, reproduce the failed drag, press "Dump Log". Look for a `dnd:dragStart` with 0 `dnd:dragMove` events followed by `dnd:dragEnd` with no `ctrl:handlePieceDrop`. Also check for `carousel:autoReInit` events — each should be followed by a `carousel:reInit` (from `doExplicitReInit`) a few ms later.
+**Debugging:** Enable debug logging via the admin "Debug Logging" toggle in the hamburger menu, reproduce the failed drag, press "Dump Log". Look for a `dnd:dragStart` with 0 `dnd:dragMove` events followed by `dnd:dragEnd` with no `ctrl:handlePieceDrop`. Also check for `carousel:autoReInit` events — each should be followed by a `carousel:reInit` (from `doExplicitReInit`) a few ms later.
 
 ### Backend (`src/server/`)
 

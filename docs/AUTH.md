@@ -110,7 +110,7 @@ sequenceDiagram
 | GET | `/auth/google` | No | Initiates OAuth flow |
 | GET | `/auth/google/callback` | No | Handles OAuth callback |
 | POST | `/auth/logout` | No | Clears session |
-| GET | `/api/auth/me` | No | Returns current user info and history, or 401 |
+| GET | `/api/auth/me` | No | Returns current user info and history if logged in; otherwise `{ user: null, completedDates: [], playedDates: [] }` |
 | GET | `/api/auth/csrf-token` | No | Get CSRF token for mutation requests |
 | GET | `/api/auth/public-key` | Yes | Get server RSA public key for payload encryption |
 | PUT | `/api/hint` | Yes | Get a hint and record its usage |
@@ -126,7 +126,7 @@ sequenceDiagram
 
 The server and OAuth strategy are configured to correctly handle reverse proxies (Cloudflare, nginx, etc.):
 
-1. **Fastify**: `trustProxy: true` - trusts `X-Forwarded-*` headers for IP detection
+1. **Fastify**: `trustProxy: 1` - trusts exactly one proxy hop (Cloudflare Tunnel/Docker → Fastify) for `X-Forwarded-*` headers used in IP detection
 2. **GoogleStrategy**: `proxy: true` - uses `X-Forwarded-Proto` header for protocol detection when building the callback URL
 
 This ensures:
@@ -140,8 +140,10 @@ This ensures:
 ```typescript
 cookie: {
     path: '/',
-    httpOnly: true,  // Prevents XSS attacks
-    secure: process.env.NODE_ENV === 'production'  // HTTPS only in prod
+    httpOnly: true,                                    // Prevents XSS attacks
+    secure: config.server.nodeEnv === 'production',    // HTTPS only in prod
+    sameSite: 'lax',                                   // CSRF mitigation
+    maxAge: 7 * 24 * 60 * 60                           // 7 days (seconds)
 }
 ```
 
@@ -190,7 +192,7 @@ volumes:
 - [ ] OAuth flow redirects to Google
 - [ ] Callback sets session and redirects to `/`
 - [ ] `GET /api/auth/me` returns user info when logged in
-- [ ] `GET /api/auth/me` returns 401 when not logged in
+- [ ] `GET /api/auth/me` returns `{ user: null, completedDates: [], playedDates: [] }` when not logged in
 - [ ] Hint/Solution buttons appear only when authenticated
 - [ ] `PUT /api/hint` returns 401 for anonymous users
 - [ ] `GET /api/admin/solution/:date` returns 401 for anonymous users
@@ -201,18 +203,18 @@ volumes:
 
 ## Privacy / PII Design
 
-Google OAuth provides the user's name, avatar URL, and email. Only the stable **Google ID** is persisted to the database — all other PII stays in the session.
+Google OAuth provides the user's name, avatar URL, and email. Only the stable **Google ID** (plus an `is_admin` flag) is persisted to the database — all PII stays in the session cookie.
 
 ```mermaid
 flowchart LR
-    Google["Google OAuth\n(id, name, avatarUrl)"] --> Passport["passport.ts"]
+    Google["Google OAuth\n(id, name, avatarUrl, email)"] --> Passport["passport.ts"]
     Passport -->|"id only"| DB[("Database\nusers table")]
-    Passport -->|"id + initials + avatarUrl"| Session["Session Data"]
-    Session -->|"id + initials + avatarUrl"| Frontend["Frontend UI\n(UserMenu, avatar)"]
-    Frontend -->|"id (for identicon)"| Admin["Admin Dashboard"]
+    Passport -->|"id + email + name + avatarUrl + isAdmin"| Session["Session Cookie\n(@fastify/secure-session)"]
+    Session -->|"id + email + name + avatarUrl + isAdmin"| Frontend["Frontend UI\n(UserMenu, avatar)"]
+    Frontend -->|"derives initials from name"| Avatar["Avatar Initials"]
 ```
 
-**Rationale:** Storing only the Google ID means the database holds no personal data. If the database were compromised, no PII would be exposed. Avatar and display name are re-fetched from the session on every authenticated request and never written to disk.
+**Rationale:** Storing only the Google ID means the database holds no personal data. If the database were compromised, no PII would be exposed. The session payload (which includes email, name, avatar URL) lives inside the encrypted `@fastify/secure-session` cookie carried by the browser — never written to a server-side disk store. The frontend derives the avatar initials from `name` client-side (`UserMenu.tsx`).
 
 ---
 
@@ -227,4 +229,5 @@ Database persistence is **implemented**: `users` and `userPuzzleStats` tables ex
 - [x] Rate limit `/auth/*` endpoints
 - [x] CSRF protection (`/api/auth/csrf-token`)
 - [x] IP-only rate limiter for encrypted requests (`onRequest`, before decryption) — see [ARCHITECTURE.md](./ARCHITECTURE.md#server-request-lifecycle)
-- [ ] Session expiration/rotation
+- [x] Session expiration (7-day `maxAge` on session cookie)
+- [ ] Session rotation
