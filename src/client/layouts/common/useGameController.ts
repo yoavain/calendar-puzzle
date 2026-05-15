@@ -227,7 +227,7 @@ export function useGameController() {
         });
 
         setSolverError(null);
-    }, [clearHistory, loadPersistentHint, updatePresent, user?.name]);
+    }, [clearHistory, loadPersistentHint, updatePresent]);
 
     const handleDateChange = useCallback((newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
@@ -418,7 +418,7 @@ export function useGameController() {
         catch (err) {
             logToServer("error", "Game: Failed to handle pile drop", err);
         }
-    }, [handlePieceReturnToPile, user?.name]);
+    }, [handlePieceReturnToPile]);
 
     const handleSolve = useCallback(async () => {
         debugLogger.log("ctrl:handleSolve", { date: gameState.currentDate });
@@ -458,7 +458,7 @@ export function useGameController() {
         finally {
             setIsLoading(false);
         }
-    }, [gameState, isLoading, clearHistory, user?.name]);
+    }, [gameState, isLoading, clearHistory]);
 
     const handleHint = useCallback(async () => {
         debugLogger.log("ctrl:handleHint", { date: gameState.currentDate });
@@ -516,7 +516,7 @@ export function useGameController() {
         finally {
             setIsHintLoading(false);
         }
-    }, [gameState, isHintLoading, isBoardEmpty, clearHistory, user?.name]);
+    }, [gameState, isHintLoading, isBoardEmpty, clearHistory]);
 
     // Per-piece control handlers
     const rotatePiece = useCallback((pieceId: PieceId, direction: "cw" | "ccw") => {
@@ -644,6 +644,9 @@ export function useGameController() {
     useEffect(() => () => {
         if (confettiTimeoutRef.current !== null) {
             window.clearTimeout(confettiTimeoutRef.current);
+        }
+        if (invalidDropTimeoutRef.current !== null) {
+            window.clearTimeout(invalidDropTimeoutRef.current);
         }
     }, []);
 
