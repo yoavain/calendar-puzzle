@@ -19,4 +19,9 @@ export const DAYS_LAYOUT = [
 /** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
 export const TOTAL_PLAYABLE_CELLS = 41;
 
+/** Width of the puzzle board (number of columns). */
+export const BOARD_WIDTH = 7;
+/** Height of the puzzle board (number of rows). */
+export const BOARD_HEIGHT = 7;
+
 export const SHARE_URL = "https://calendar-puzzle.yoavain.org";

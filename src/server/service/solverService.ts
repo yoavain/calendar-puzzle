@@ -49,13 +49,15 @@ const solveWithWorker = async (month: number, day: number): Promise<Piece[]> => 
     const workerPath = await getWorkerPath();
     return new Promise((resolve, reject) => {
         // For .ts files, we need to use tsx's ESM loader
-        const workerOptions = workerPath.endsWith(".ts") 
+        const workerOptions = workerPath.endsWith(".ts")
             ? { execArgv: ["--import", "tsx/esm"] }
             : {};
-        
+
         const worker = new Worker(workerPath, workerOptions);
+        let settled = false;
 
         worker.on("message", (response: SolverResponse) => {
+            settled = true;
             worker.terminate();
             if (response.success && response.pieces) {
                 resolve(response.pieces);
@@ -66,12 +68,14 @@ const solveWithWorker = async (month: number, day: number): Promise<Piece[]> => 
         });
 
         worker.on("error", (error) => {
+            settled = true;
             worker.terminate();
             reject(error);
         });
 
         worker.on("exit", (code) => {
-            if (code !== 0) {
+            if (!settled && code !== 0) {
+                settled = true;
                 reject(new Error(`Worker stopped with exit code ${code}`));
             }
         });

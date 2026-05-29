@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "node:fs/promises";
+import type { FastifyBaseLogger } from "fastify";
 
 export interface CachedFile {
     content: Buffer;
@@ -8,17 +9,21 @@ export interface CachedFile {
 
 const staticCache = new Map<string, CachedFile>();
 
-export const getMimeType = (extension: string): string => {
+export const getMimeType = (extension: string): string | null => {
     switch (extension) {
         case ".html": return "text/html";
         case ".ico": return "image/x-icon";
         case ".png": return "image/png";
         case ".svg": return "image/svg+xml";
+        case ".webp": return "image/webp";
         case ".js": return "application/javascript";
         case ".css": return "text/css";
+        case ".json": return "application/json";
         case ".map": return "application/json";
+        case ".woff": return "font/woff";
+        case ".woff2": return "font/woff2";
         default:
-            throw new Error(`Unsupported file type: ${extension}`);
+            return null;
     }
 };
 
@@ -26,7 +31,7 @@ export const getMimeType = (extension: string): string => {
  * Gets a file from cache or loads it from disk and caches it.
  * Returns the CachedFile or null if the file does not exist or is a directory.
  */
-export const getCachedFile = async (basePath: string, relativePath: string): Promise<CachedFile | null> => {
+export const getCachedFile = async (basePath: string, relativePath: string, log?: FastifyBaseLogger): Promise<CachedFile | null> => {
     const normalizedPath = relativePath.replace(/\\/g, "/");
     const cached = staticCache.get(normalizedPath);
     if (cached) {
@@ -34,7 +39,7 @@ export const getCachedFile = async (basePath: string, relativePath: string): Pro
     }
 
     const fullPath = path.resolve(basePath, normalizedPath);
-    
+
     // Safety check: ensure the resolved path is within the base directory
     if (!fullPath.startsWith(basePath + path.sep) && fullPath !== basePath) {
         return null;
@@ -48,6 +53,10 @@ export const getCachedFile = async (basePath: string, relativePath: string): Pro
 
         const extension = path.extname(fullPath).toLowerCase();
         const contentType = getMimeType(extension);
+        if (contentType === null) {
+            log?.warn({ extension, path: normalizedPath }, "Unsupported file type — refusing to serve");
+            return null;
+        }
         const content = await fs.readFile(fullPath);
         const cachedFile = { content, contentType };
         staticCache.set(normalizedPath, cachedFile);
