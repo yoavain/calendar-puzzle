@@ -1,5 +1,6 @@
 import type { Board, Piece, Position, PuzzleDate } from "./types";
-import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_IN_MONTH, DAYS_LAYOUT, isCellPlayable, TOTAL_PLAYABLE_CELLS } from "./consts";
+import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_IN_MONTH, DAYS_LAYOUT, TOTAL_PLAYABLE_CELLS } from "./consts";
+import { isCellPlayable } from "./boardGeometry";
 import { getPieceShape } from "./pieceData";
 
 /**
