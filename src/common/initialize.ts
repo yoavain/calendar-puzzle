@@ -1,11 +1,12 @@
 import type { Board, GameState, Piece, PuzzleDate } from "./types";
 import { toPuzzleDate } from "./types";
-import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_LAYOUT, isCellPlayable, MONTHS } from "./consts";
+import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_LAYOUT, MONTHS } from "./consts";
+import { isCellPlayable } from "./boardGeometry";
 import { PIECE_IDS } from "./pieceData";
 
 /**
  * Initialize the game board with month and day cells.
- * Playable region is derived from `isCellPlayable` (single source of truth in consts.ts).
+ * Playable region is derived from `isCellPlayable` (single source of truth in boardGeometry.ts).
  */
 export const initializeBoard = (puzzleDate: PuzzleDate): Board => {
     const board: Board = Array.from({ length: BOARD_HEIGHT }, (_, y) =>
