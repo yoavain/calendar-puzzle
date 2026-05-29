@@ -218,7 +218,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
             return reply.code(403).send({ error: "Forbidden" });
         }
 
-        const file = await getCachedFile(clientBuildPath, requestedPath);
+        const file = await getCachedFile(clientBuildPath, requestedPath, request.log);
         if (file) {
             // Static assets have content hashes in filenames, safe to cache long-term
             return reply
