@@ -15,7 +15,7 @@
         "drizzle-orm": "0.45.2",
         "fastify": "5.8.5",
         "passport-google-oauth20": "2.0.0",
-        "pg": "8.20.0"
+        "pg": "8.21.0"
     },
     "devDependencies": {
         "@dnd-kit/core": "6.3.1",
@@ -28,7 +28,7 @@
         "@mui/icons-material": "9.0.1",
         "@mui/material": "9.0.1",
         "@playwright/test": "1.60.0",
-        "@storybook/react-vite": "10.4.0",
+        "@storybook/react-vite": "10.4.1",
         "@testing-library/dom": "10.4.1",
         "@testing-library/jest-dom": "6.9.1",
         "@testing-library/react": "16.3.2",
@@ -38,10 +38,10 @@
         "@types/node": "24.12.4",
         "@types/passport-google-oauth20": "2.0.17",
         "@types/pg": "8.20.0",
-        "@types/react": "19.2.14",
+        "@types/react": "19.2.15",
         "@types/react-dom": "19.2.3",
-        "@typescript-eslint/eslint-plugin": "8.59.3",
-        "@typescript-eslint/parser": "8.59.3",
+        "@typescript-eslint/eslint-plugin": "8.59.4",
+        "@typescript-eslint/parser": "8.59.4",
         "@vitejs/plugin-react": "6.0.2",
         "canvas-confetti": "1.9.4",
         "concurrently": "9.2.1",
@@ -71,13 +71,13 @@
         "react-router-dom": "7.15.1",
         "rimraf": "6.1.3",
         "rollup-plugin-visualizer": "7.0.1",
-        "storybook": "10.4.0",
-        "ts-jest": "29.4.9",
+        "storybook": "10.4.1",
+        "ts-jest": "29.4.11",
         "ts-node": "10.9.2",
-        "tsx": "4.22.0",
+        "tsx": "4.22.3",
         "typescript": "6.0.3",
-        "typescript-eslint": "8.59.3",
-        "vite": "8.0.13"
+        "typescript-eslint": "8.59.4",
+        "vite": "8.0.14"
     },
     "scripts": {
         "db:generate": "drizzle-kit generate",
