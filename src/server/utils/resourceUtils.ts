@@ -19,6 +19,7 @@ export const getMimeType = (extension: string): string | null => {
         case ".js": return "application/javascript";
         case ".css": return "text/css";
         case ".json": return "application/json";
+        case ".webmanifest": return "application/manifest+json";
         case ".map": return "application/json";
         case ".woff": return "font/woff";
         case ".woff2": return "font/woff2";

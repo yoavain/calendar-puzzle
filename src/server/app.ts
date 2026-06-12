@@ -172,23 +172,27 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     app.get("/", serveIndexHtml);
     app.get("/poster", serveIndexHtml);
 
-    // Serve favicon
-    app.get("/favicon.ico", async (request, reply) => {
-        const file = await getCachedFile(clientBuildPath, "favicon.ico");
-        if (file) {
-            return reply.type(file.contentType).send(file.content);
-        }
-        return reply.code(404).send({ error: "Not found" });
-    });
-
-    // Serve poster
-    app.get("/poster.png", async (request, reply) => {
-        const file = await getCachedFile(clientBuildPath, "poster.png");
-        if (file) {
-            return reply.type(file.contentType).send(file.content);
-        }
-        return reply.code(404).send({ error: "Not found" });
-    });
+    // Root-level static assets (favicons, web manifest, poster) — allowlist only,
+    // everything else at the root falls through to the 404 handler
+    const rootStaticFiles = [
+        "favicon.ico",
+        "favicon-16x16.png",
+        "favicon-32x32.png",
+        "apple-touch-icon.png",
+        "android-chrome-192x192.png",
+        "android-chrome-512x512.png",
+        "site.webmanifest",
+        "poster.png"
+    ];
+    for (const fileName of rootStaticFiles) {
+        app.get(`/${fileName}`, async (request, reply) => {
+            const file = await getCachedFile(clientBuildPath, fileName);
+            if (file) {
+                return reply.type(file.contentType).send(file.content);
+            }
+            return reply.code(404).send({ error: "Not found" });
+        });
+    }
 
     // Serve static client files from /client/* with path traversal protection
     app.get("/client/*", async (request, reply) => {
