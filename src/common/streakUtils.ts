@@ -1,4 +1,5 @@
 import type { PuzzleDate } from "./types.js";
+import { TOTAL_DATES } from "./consts.js";
 
 /**
  * Helper to check if two day-of-year values are consecutive in a year-independent calendar.
@@ -106,6 +107,30 @@ export const findLastUnsolvedDate = (
         checkDay = getPrevDay(checkDay);
     }
     return null;
+};
+
+/**
+ * True when every one of the 366 calendar dates has been completed.
+ * Duplicates in the input do not inflate the count.
+ */
+export const hasCompletedAllDates = (completedDates: PuzzleDate[]): boolean =>
+    new Set(completedDates.map(getDayOfYear)).size >= TOTAL_DATES;
+
+/**
+ * Picks a uniformly random puzzle date, optionally skipping one.
+ * Used once a player has solved everything and there is no "next" date to
+ * suggest — any date is as good as any other, so we just pick one.
+ */
+export const getRandomPuzzleDate = (exclude?: PuzzleDate): PuzzleDate => {
+    const excludedDay = exclude ? getDayOfYear(exclude) : null;
+    const candidates = excludedDay === null ? TOTAL_DATES : TOTAL_DATES - 1;
+    let day = Math.floor(Math.random() * candidates) + 1;
+    // Shifting past the excluded day keeps the distribution uniform without
+    // building and filtering a 366-entry array.
+    if (excludedDay !== null && day >= excludedDay) {
+        day++;
+    }
+    return dayOfYearToPuzzleDate(day);
 };
 
 export const calculateStreaks = (history: PuzzleDate[]) => {

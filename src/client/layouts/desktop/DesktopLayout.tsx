@@ -28,6 +28,7 @@ import { IssueModal } from "../../components/IssueModal";
 import { ProgressBar } from "../../components/ProgressBar";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
+import { YearCompleteDialog } from "../../components/YearCompleteDialog";
 import { ShareDialog } from "../../components/ShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
 import { ToolbarIconButton } from "../../components/ToolbarIconButton";
@@ -218,6 +219,13 @@ export const DesktopLayout: React.FC = () => {
                             mode={game.modals.playAnother.mode}
                             onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate)}
                             onDecline={game.modals.playAnother.close}
+                        />
+
+                        {/* Year Complete Dialog */}
+                        <YearCompleteDialog
+                            isOpen={game.modals.yearComplete.isOpen}
+                            onPlayRandom={game.handlePlayRandomDate}
+                            onClose={game.modals.yearComplete.close}
                         />
 
                         {/* Game Area */}

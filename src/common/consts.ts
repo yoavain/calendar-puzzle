@@ -19,6 +19,9 @@ export const DAYS_LAYOUT = [
 /** Total playable cells that need to be covered (41 = 12 months + 31 days - 2 highlighted) */
 export const TOTAL_PLAYABLE_CELLS = 41;
 
+/** Total number of distinct puzzle dates (sum of DAYS_IN_MONTH, Feb counted as 29). */
+export const TOTAL_DATES = 366;
+
 /** Width of the puzzle board (number of columns). */
 export const BOARD_WIDTH = 7;
 /** Height of the puzzle board (number of rows). */

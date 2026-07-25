@@ -1,5 +1,24 @@
-import { calculateStreaks, getDayOfYear, isConsecutive, findLastUnsolvedDate } from "../../src/common/streakUtils";
+import {
+    calculateStreaks,
+    getDayOfYear,
+    getRandomPuzzleDate,
+    hasCompletedAllDates,
+    isConsecutive,
+    findLastUnsolvedDate
+} from "../../src/common/streakUtils";
+import { DAYS_IN_MONTH, TOTAL_DATES } from "../../src/common/consts";
 import type { PuzzleDate } from "../../src/common/types";
+
+/** Every date on the calendar, Jan 1 -> Dec 31. */
+const allDates = (): PuzzleDate[] => {
+    const dates: PuzzleDate[] = [];
+    for (let month = 0; month < DAYS_IN_MONTH.length; month++) {
+        for (let day = 1; day <= DAYS_IN_MONTH[month]; day++) {
+            dates.push({ month, day });
+        }
+    }
+    return dates;
+};
 
 describe("streakUtils", () => {
     describe("calculateStreaks", () => {
@@ -263,6 +282,85 @@ describe("streakUtils", () => {
 
         it("should return false for reversed order", () => {
             expect(isConsecutive(1, 2)).toBe(false);
+        });
+    });
+
+    describe("hasCompletedAllDates", () => {
+        it("should return false for an empty history", () => {
+            expect(hasCompletedAllDates([])).toBe(false);
+        });
+
+        it("should return true when every date is present", () => {
+            expect(hasCompletedAllDates(allDates())).toBe(true);
+        });
+
+        it("should return false when one date is missing", () => {
+            const oneShort = allDates().filter(d => !(d.month === 1 && d.day === 29));
+            expect(oneShort).toHaveLength(TOTAL_DATES - 1);
+            expect(hasCompletedAllDates(oneShort)).toBe(false);
+        });
+
+        it("should not let duplicates inflate the count", () => {
+            const withDupes = allDates().slice(0, TOTAL_DATES - 1);
+            expect(hasCompletedAllDates([...withDupes, ...withDupes])).toBe(false);
+        });
+    });
+
+    describe("getRandomPuzzleDate", () => {
+        it("should always return a valid calendar date", () => {
+            for (let i = 0; i < 500; i++) {
+                const date = getRandomPuzzleDate();
+                expect(date.month).toBeGreaterThanOrEqual(0);
+                expect(date.month).toBeLessThan(DAYS_IN_MONTH.length);
+                expect(date.day).toBeGreaterThanOrEqual(1);
+                expect(date.day).toBeLessThanOrEqual(DAYS_IN_MONTH[date.month]);
+            }
+        });
+
+        it("should never return the excluded date", () => {
+            const exclude: PuzzleDate = { month: 6, day: 25 };
+            for (let i = 0; i < 1000; i++) {
+                const date = getRandomPuzzleDate(exclude);
+                expect(getDayOfYear(date)).not.toBe(getDayOfYear(exclude));
+            }
+        });
+
+        it("should be able to reach every day of the year", () => {
+            const seen = new Set<number>();
+            // Deterministic sweep across the whole [0, 1) range Math.random covers.
+            const spy = jest.spyOn(Math, "random");
+            for (let i = 0; i < TOTAL_DATES; i++) {
+                // Mid-bucket, so float rounding can't land on a neighbour.
+                spy.mockReturnValue((i + 0.5) / TOTAL_DATES);
+                seen.add(getDayOfYear(getRandomPuzzleDate()));
+            }
+            spy.mockRestore();
+            expect(seen.size).toBe(TOTAL_DATES);
+        });
+
+        it("should still cover every remaining day when one is excluded", () => {
+            const exclude: PuzzleDate = { month: 0, day: 1 }; // day 1
+            const seen = new Set<number>();
+            const spy = jest.spyOn(Math, "random");
+            for (let i = 0; i < TOTAL_DATES - 1; i++) {
+                spy.mockReturnValue((i + 0.5) / (TOTAL_DATES - 1));
+                seen.add(getDayOfYear(getRandomPuzzleDate(exclude)));
+            }
+            spy.mockRestore();
+            expect(seen.size).toBe(TOTAL_DATES - 1);
+            expect(seen.has(1)).toBe(false);
+        });
+    });
+
+    describe("findLastUnsolvedDate at full completion", () => {
+        it("should return null once every date is solved", () => {
+            expect(findLastUnsolvedDate(allDates(), { month: 6, day: 25 })).toBeNull();
+        });
+
+        it("should still find the single remaining gap", () => {
+            const oneShort = allDates().filter(d => !(d.month === 3 && d.day === 12));
+            expect(findLastUnsolvedDate(oneShort, { month: 6, day: 25 }))
+                .toEqual({ month: 3, day: 12 });
         });
     });
 });
