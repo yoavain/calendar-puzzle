@@ -143,8 +143,10 @@ const JS_RULES = {
         "error",
         {
             "ignores": [
+                "Blob",
                 "crypto",
                 "CustomEvent",
+                "DOMException",
                 "fetch",
                 "File",
                 "FormData",

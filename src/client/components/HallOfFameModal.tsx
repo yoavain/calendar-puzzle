@@ -13,14 +13,18 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { getUserActivity } from "../service/puzzleService.js";
 import { logToServer } from "../service/logService.js";
 import { useUser } from "../context/UserContext.js";
+import { TOTAL_DATES } from "../../common/consts.js";
 import type { UserActivity } from "../../common/restTypes.js";
+import { CompletionBadge } from "./CompletionBadge";
+
+/** Matches the avatar beside it, so the two columns read as one pair. */
+const COMPLETION_BADGE_SIZE = 32;
 
 interface HallOfFameModalProps {
     open: boolean;
@@ -129,23 +133,15 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                                         ? currentUser.avatarUrl
                                         : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(row.userKey)}`;
 
-                                    const getRankIcon = (rankIndex: number) => {
-                                        if (rankIndex === 0) {
-                                            return <MilitaryTechIcon sx={(theme) => ({ color: theme.game.colors.medal.gold })} />;
-                                        }
-                                        if (rankIndex === 1) {
-                                            return <MilitaryTechIcon sx={(theme) => ({ color: theme.game.colors.medal.silver })} />;
-                                        }
-                                        if (rankIndex === 2) {
-                                            return <MilitaryTechIcon sx={(theme) => ({ color: theme.game.colors.medal.bronze })} />;
-                                        }
-                                        return null;
-                                    };
-
                                     return (
                                         <TableRow key={index} hover selected={isCurrentUser}>
                                             <TableCell align="center">
-                                                {getRankIcon(index)}
+                                                {row.daysSolved >= TOTAL_DATES && (
+                                                    <CompletionBadge
+                                                        size={COMPLETION_BADGE_SIZE}
+                                                        title="Solved every date"
+                                                    />
+                                                )}
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Avatar 
