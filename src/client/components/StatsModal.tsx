@@ -12,13 +12,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import { ProgressBarWithLabel } from "./ProgressBarWithLabel";
 import { useUser } from "../context/UserContext.js";
 import { calculateStreaks } from "../../common/streakUtils.js";
+import { TOTAL_DATES } from "../../common/consts.js";
 
 interface StatsModalProps {
     open: boolean;
     onClose: () => void;
 }
-
-const TOTAL_DATES = 366;
 
 interface StatItemProps {
     value: string | number;

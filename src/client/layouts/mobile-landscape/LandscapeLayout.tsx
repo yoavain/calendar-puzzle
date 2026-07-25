@@ -5,6 +5,7 @@ import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
+import { YearCompleteDialog } from "../../components/YearCompleteDialog";
 import { ProgressBar } from "../../components/ProgressBar";
 
 import { useGameController } from "../common/useGameController";
@@ -114,6 +115,11 @@ export const LandscapeLayout: React.FC = () => {
                     mode={game.modals.playAnother.mode}
                     onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate)}
                     onDecline={game.modals.playAnother.close}
+                />
+                <YearCompleteDialog
+                    isOpen={game.modals.yearComplete.isOpen}
+                    onPlayRandom={game.handlePlayRandomDate}
+                    onClose={game.modals.yearComplete.close}
                 />
                 <DebugPanel />
             </LandscapeContainer>

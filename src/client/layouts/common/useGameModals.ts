@@ -25,6 +25,7 @@ export function useGameModals({
     const [isPlayAnotherOpen, setIsPlayAnotherOpen] = useState(false);
     const [playAnotherDate, setPlayAnotherDate] = useState<PuzzleDate | null>(null);
     const [playAnotherMode, setPlayAnotherMode] = useState<"just-solved" | "already-solved">("already-solved");
+    const [isYearCompleteOpen, setIsYearCompleteOpen] = useState(false);
 
     // Refs for play-another dialog flow control
     const justSolvedRef = useRef(false);
@@ -40,6 +41,12 @@ export function useGameModals({
             setPlayAnotherDate(suggested);
             setPlayAnotherMode(mode);
             setIsPlayAnotherOpen(true);
+        }
+        else {
+            // Nothing left to suggest — every date is solved. The year-complete
+            // screen replaces the play-another prompt from here on, in both
+            // modes, and is deliberately not remembered between visits.
+            setIsYearCompleteOpen(true);
         }
     }, [completedDates]);
 
@@ -82,6 +89,7 @@ export function useGameModals({
         statsAutoOpenTimeoutRef,
         setIsStatsOpen,
         setIsPlayAnotherOpen,
+        setIsYearCompleteOpen,
 
         // Structured modal state consumed by layouts
         modals: {
@@ -111,6 +119,11 @@ export function useGameModals({
                 isOpen: isShareOpen,
                 open: () => setIsShareOpen(true),
                 close: () => setIsShareOpen(false)
+            },
+            yearComplete: {
+                isOpen: isYearCompleteOpen,
+                open: () => setIsYearCompleteOpen(true),
+                close: () => setIsYearCompleteOpen(false)
             }
         }
     };

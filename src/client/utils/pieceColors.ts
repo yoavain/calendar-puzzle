@@ -5,6 +5,7 @@
  * the game logic. Colors belong in the client layer, not in common.
  */
 
+import { lighten } from "@mui/material/styles";
 import type { PieceId } from "../../common/pieceData";
 
 /**
@@ -30,6 +31,16 @@ export const PIECE_COLORS: Record<PieceId, string> = {
  */
 export const getPieceColor = (id: number): string =>
     PIECE_COLORS[id as PieceId];
+
+/**
+ * Colour for a month's row in the year mosaic, banded through the piece
+ * palette. Lifted slightly so the darker pieces still read against the dark
+ * background the mosaic is always drawn on.
+ *
+ * @param monthIndex - Month index (0-11)
+ */
+export const getMosaicColor = (monthIndex: number): string =>
+    lighten(PIECE_COLORS[((monthIndex % 8) + 1) as PieceId], 0.12);
 
 /**
  * Subtle diagonal gradient applied to filled piece cells to give a slight

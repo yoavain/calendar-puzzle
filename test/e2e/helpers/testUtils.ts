@@ -53,16 +53,29 @@ export async function mockDate(page: Page, fakeDate: Date) {
 
 // ─── API route mocking ───────────────────────────────────────
 
+export interface MockApiOptions {
+    /**
+     * Body to return from `/api/auth/me` as a signed-in session, e.g.
+     * `{ user, completedDates, playedDates }`. Omit to stay logged out.
+     */
+    authMe?: unknown;
+}
+
 /**
  * Mock all /api/* routes so the app doesn't hit the real backend.
  * Returns sensible defaults for auth, CSRF, logging, etc.
  */
-export async function mockApiRoutes(page: Page) {
+export async function mockApiRoutes(page: Page, options: MockApiOptions = {}) {
     await page.route("**/api/**", async (route) => {
         const url = route.request().url();
         if (url.includes("/api/auth/me")) {
-            // Not logged in
-            await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Unauthorized" }) });
+            if (options.authMe) {
+                await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(options.authMe) });
+            }
+            else {
+                // Not logged in
+                await route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "Unauthorized" }) });
+            }
         }
         else if (url.includes("/api/auth/csrf-token")) {
             await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ csrfToken: "mock-csrf" }) });
