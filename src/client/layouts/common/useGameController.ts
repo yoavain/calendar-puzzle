@@ -6,6 +6,7 @@ import type { PieceId } from "../../../common/pieceData";
 import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { initializeBoard, initializeGame } from "../../../common/initialize";
+import { getRandomPuzzleDate } from "../../../common/streakUtils";
 import { useGameHistory } from "../../hooks/useGameHistory";
 import { getHint, getHintState, getSolution } from "../../service/puzzleService";
 import { clearSession, loadSession } from "../../hooks/useGameSession";
@@ -117,6 +118,7 @@ export function useGameController() {
         statsAutoOpenTimeoutRef,
         setIsStatsOpen,
         setIsPlayAnotherOpen,
+        setIsYearCompleteOpen,
         modals
     } = useGameModals({ user, userLoading, completedDates, currentDate: gameState.currentDate });
 
@@ -601,6 +603,13 @@ export function useGameController() {
         handleDateChange(date);
     }, [handleDateChange, setIsPlayAnotherOpen]);
 
+    // Offered once every date is solved: there is no "next" puzzle to suggest,
+    // so any date other than the current one will do.
+    const handlePlayRandomDate = useCallback(() => {
+        setIsYearCompleteOpen(false);
+        handleDateChange(getRandomPuzzleDate(gameState.currentDate));
+    }, [handleDateChange, setIsYearCompleteOpen, gameState.currentDate]);
+
     // === SUB-HOOKS (side effects only) ===
 
     // Check for initial hint on mount / when user logs in / when date changes.
@@ -723,6 +732,7 @@ export function useGameController() {
         // Game handlers
         handleDateChange,
         handlePlayAnother,
+        handlePlayRandomDate,
         handleReset,
         handlePieceSelect,
         handleCellClick,
