@@ -12,6 +12,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ShareIcon from "@mui/icons-material/Share";
 import { BaseDialog } from "./BaseDialog";
 import { CompletionBadge } from "./CompletionBadge";
+import { useUser } from "../context/UserContext";
 import { DAYS_IN_MONTH, MONTHS, TOTAL_DATES } from "../../common/consts";
 import { getMosaicColor } from "../utils/pieceColors";
 import { prefersReducedMotion } from "../utils/motion";
@@ -72,8 +73,15 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
     onClose
 }) => {
     const theme = useTheme();
+    const { user } = useUser();
     const [confirmation, setConfirmation] = useState<"saved" | "shared" | null>(null);
     const [exportError, setExportError] = useState(false);
+
+    // `name` is optional on User (session PII only) and holds a full name, so
+    // the greeting takes the first word and falls back to a bare
+    // "Congratulations!", which stands on its own as a first line.
+    const firstName = user?.name?.trim().split(/\s+/)[0];
+    const greeting = firstName ? `Congratulations, ${firstName}!` : "Congratulations!";
 
     const days = useMemo(buildMosaicDays, []);
     const animate = !prefersReducedMotion();
@@ -163,7 +171,9 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
                     <Box sx={{ textAlign: "center" }}>
                         <CompletionCount>{`${TOTAL_DATES} / ${TOTAL_DATES}`}</CompletionCount>
                         <CompletionTitle id="year-complete-title" sx={{ mt: 1 }}>
-                            Every date on the calendar
+                            {greeting}
+                            <br />
+                            Every date on the calendar.
                         </CompletionTitle>
                         {exportError && (
                             <Typography variant="body2" role="alert" sx={{ mt: 1, color: "error.main" }}>

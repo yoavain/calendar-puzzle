@@ -1,6 +1,7 @@
 import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { YearCompleteDialog } from "./YearCompleteDialog";
+import { MOCK_USER_REGULAR } from "../storybook/MockUserProvider";
 
 const meta: Meta<typeof YearCompleteDialog> = {
     title: "Dialogs/YearCompleteDialog",
@@ -10,6 +11,11 @@ const meta: Meta<typeof YearCompleteDialog> = {
 export default meta;
 
 type Story = StoryObj<typeof YearCompleteDialog>;
+
+/** The greeting reads the signed-in user's name, so stories vary it. */
+const userNamed = (name?: string) => ({
+    userContext: { user: { ...MOCK_USER_REGULAR, name } }
+});
 
 /**
  * Forces the reduced-motion media query on for the duration of a story, so the
@@ -33,6 +39,31 @@ const forceReducedMotion = () => {
  * then the badge lands.
  */
 export const Default: Story = {
+    parameters: userNamed("Yoav Vainrich"),
+    render: () => (
+        <YearCompleteDialog
+            isOpen={true}
+            onPlayRandom={() => {}}
+            onClose={() => {}}
+        />
+    )
+};
+
+/** Worst case for the greeting line — a long first name pushes it to wrap. */
+export const LongFirstName: Story = {
+    parameters: userNamed("Bartholomew Featherstonehaugh"),
+    render: () => (
+        <YearCompleteDialog
+            isOpen={true}
+            onPlayRandom={() => {}}
+            onClose={() => {}}
+        />
+    )
+};
+
+/** `name` is optional on User, so the greeting has to stand without one. */
+export const NoName: Story = {
+    parameters: userNamed(undefined),
     render: () => (
         <YearCompleteDialog
             isOpen={true}
