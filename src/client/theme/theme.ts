@@ -349,6 +349,12 @@ const sharedOptions: ThemeOptions = {
                 root: {
                     borderRadius: gameRadiusTokens.sm
                 }
+            },
+            defaultProps: {
+                // Same redundant focus-ripple pulse as MuiButton above. No
+                // autoFocus here, but tabbing to an icon button is enough to
+                // start it, so leaving this out would hum for keyboard users.
+                disableFocusRipple: true
             }
         },
         // MUI Switch renders its hit target via MuiButtonBase. The default
