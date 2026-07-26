@@ -334,7 +334,14 @@ const sharedOptions: ThemeOptions = {
                 }
             },
             defaultProps: {
-                disableElevation: true
+                disableElevation: true,
+                // MuiButtonBase above already draws a :focus-visible outline.
+                // MUI's focus ripple stacks a 2.5s infinite scale loop on top of
+                // it, which reads as a slow "hum" on the autoFocus'd buttons in
+                // YearCompleteDialog and PlayAnotherDialog for as long as they
+                // hold focus. Only the focus ripple is dropped — press ripples
+                // still fire.
+                disableFocusRipple: true
             }
         },
         MuiIconButton: {
