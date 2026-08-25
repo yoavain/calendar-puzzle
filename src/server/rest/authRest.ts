@@ -1,4 +1,4 @@
-import type { FastifyInstance, preValidationHookHandler } from "fastify";
+import type { FastifyInstance } from "fastify";
 import fastifyPassport from "@fastify/passport";
 import type { SessionUser } from "../auth/passport.js";
 import { db } from "../db/connection.js";
@@ -22,7 +22,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     app.get(AUTH_GOOGLE, {
         preValidation: fastifyPassport.authenticate("google", {
             scope: ["profile", "email"]
-        }) as unknown as preValidationHookHandler
+        })
     }, async () => {
         // This handler is never called - passport redirects to Google
     });
@@ -31,7 +31,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     app.get(AUTH_GOOGLE_CALLBACK, {
         preValidation: fastifyPassport.authenticate("google", {
             failureRedirect: "/?error=auth_failed"
-        }) as unknown as preValidationHookHandler
+        })
     }, async (request, reply) => {
         // Authentication successful, redirect to home
         return reply.redirect("/");
