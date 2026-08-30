@@ -45,7 +45,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
                 timeWindow: "1 minute"
             }
         }
-    }, async (request, reply) => {
+    }, async (request) => {
         if (request.user) {
             const user = request.user as SessionUser;
 
@@ -94,7 +94,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     });
 
     // Logout
-    app.post<{ Reply: SuccessResponse }>(AUTH_LOGOUT, async (request, reply) => {
+    app.post<{ Reply: SuccessResponse }>(AUTH_LOGOUT, async (request) => {
         await request.logout();
         return { success: true };
     });

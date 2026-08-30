@@ -67,11 +67,11 @@ async function mobileDrag(page: Page, from: Locator, to: Locator): Promise<void>
     for (let i = 1; i <= steps; i++) {  
         const x = src.x + ((dst.x - src.x) * i) / steps;
         const y = src.y + ((dst.y - src.y) * i) / steps;
-        await cdp.send("Input.dispatchTouchEvent", { // eslint-disable-line no-await-in-loop
+        await cdp.send("Input.dispatchTouchEvent", {
             type: "touchMove",
             touchPoints: [{ x, y }]
         });
-        await page.waitForTimeout(20); // eslint-disable-line no-await-in-loop
+        await page.waitForTimeout(20);
     }
 
     // Small pause so @dnd-kit processes the final position
@@ -126,7 +126,7 @@ async function desktopDragWithPause(
     for (let i = 1; i <= steps; i++) {  
         const x = src.x + ((dst.x - src.x) * i) / steps;
         const y = src.y + ((dst.y - src.y) * i) / steps;
-        await page.evaluate(({ cx, cy }) => { // eslint-disable-line no-await-in-loop
+        await page.evaluate(({ cx, cy }) => {
             const el = document.elementFromPoint(cx, cy);
             if (el) {
                 const dt = (window as any).__pw_dt as DataTransfer;
@@ -136,7 +136,7 @@ async function desktopDragWithPause(
                 }));
             }
         }, { cx: x, cy: y });
-        await page.waitForTimeout(30); // eslint-disable-line no-await-in-loop
+        await page.waitForTimeout(30);
     }
 
     // Pause at the target so the hover preview settles (React re-render)
@@ -198,11 +198,11 @@ async function mobileDragWithPause(
     for (let i = 1; i <= steps; i++) {  
         const x = src.x + ((dst.x - src.x) * i) / steps;
         const y = src.y + ((dst.y - src.y) * i) / steps;
-        await cdp.send("Input.dispatchTouchEvent", { // eslint-disable-line no-await-in-loop
+        await cdp.send("Input.dispatchTouchEvent", {
             type: "touchMove",
             touchPoints: [{ x, y }]
         });
-        await page.waitForTimeout(20); // eslint-disable-line no-await-in-loop
+        await page.waitForTimeout(20);
     }
 
     // Pause for @dnd-kit to process final position and React to re-render

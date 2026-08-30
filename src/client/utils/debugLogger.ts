@@ -53,7 +53,6 @@ export const debugLogger = {
     },
 
     download: (): void => {
-        // eslint-disable-next-line n/no-unsupported-features/node-builtins
         const blob = new Blob([JSON.stringify(buffer, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");

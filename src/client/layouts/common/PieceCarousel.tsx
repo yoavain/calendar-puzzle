@@ -387,7 +387,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         <CarouselContainer axis={axis}>
             <CarouselViewport ref={emblaRef} axis={axis} aria-roledescription="carousel">
                 <CarouselTrack axis={axis} role="list">
-                    {slides.map(({ piece, realIndex }, index) => {
+                    {slides.map(({ piece }, index) => {
                         const slideState = getSlideState(index, activeIndex, slidesInView);
                         const isActive = index === activeIndex;
                         return (

@@ -14,7 +14,7 @@ export const buildTestServer = async (
 
     if (user) {
         app.addHook("preHandler", async (request) => {
-            (request as any).user = user; // eslint-disable-line @typescript-eslint/no-explicit-any
+            (request as any).user = user;
         });
     }
 

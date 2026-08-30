@@ -14,7 +14,7 @@ interface PieceControlsProps {
     onFlipV: () => void;
 }
 
-export const PieceControls: React.FC<PieceControlsProps> = ({ piece, onRotate, onRotateCCW, onFlipH, onFlipV }) => {
+export const PieceControls: React.FC<PieceControlsProps> = ({ onRotate, onRotateCCW, onFlipH, onFlipV }) => {
     return (
         <PieceControlsContainer
             direction="row"

@@ -21,6 +21,10 @@ export const setupPassport = () => {
         clientSecret: config.google.clientSecret as string,
         callbackURL: AUTH_GOOGLE_CALLBACK, // Relative path - resolved from request host
         proxy: true // Trust X-Forwarded-Proto header from reverse proxies
+        // Passport declares the verify callback as returning void, but an async
+        // callback is the documented pattern. Every path below calls done(), so
+        // this promise cannot reject.
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
     }, async (_accessToken, _refreshToken, profile, done) => {
         try {
             const pii = {

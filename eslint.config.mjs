@@ -422,6 +422,31 @@ export const OVERRIDES = [
                 { name: "sessionStorage", message: "src/common/ is DOM-free. Put storage access in src/client/." }
             ]
         }
+    },
+    {
+        // TypeScript already validates props at compile time, and the rule cannot
+        // read prop types through a React.memo<Props>() generic - every report in
+        // Board.tsx is a false positive. The rule stays on for plain .jsx files.
+        files: TS_FILES,
+        rules: {
+            "react/prop-types": "off"
+        }
+    },
+    {
+        // Playwright steps are sequential by nature: each await depends on the page
+        // state that the previous step produced. Parallel execution would be wrong.
+        files: ["**/test/e2e/**/*"],
+        rules: {
+            "no-await-in-loop": "off"
+        }
+    },
+    {
+        // Every assertion in this file lives in the `solvesFor` helper. The rule
+        // cannot follow a call into a helper, so it must be told the name.
+        files: ["**/test/common/puzzleSolver.test.ts"],
+        rules: {
+            "jest/expect-expect": ["warn", { "assertFunctionNames": ["expect", "solvesFor"] }]
+        }
     }
 ];
 
