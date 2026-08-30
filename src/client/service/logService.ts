@@ -41,7 +41,7 @@ export const logToServer = (
             catch {
                 // Fail silently to avoid infinite loops or console noise
             }
-        })();
+        })().catch(() => {});
     }
     catch {
         // Fail silently to avoid infinite loops if logging itself fails

@@ -645,7 +645,7 @@ export function useGameController() {
                 }
             }
         };
-        checkInitialHint();
+        checkInitialHint().catch(() => {});
     }, [user, userLoading, gameState.currentDate, loadPersistentHint, clearHistory]);
 
     useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate });

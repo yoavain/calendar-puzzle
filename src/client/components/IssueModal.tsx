@@ -132,7 +132,9 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                     Cancel
                 </Button>
                 <Button
-                    onClick={handleSubmit}
+                    onClick={() => {
+                        handleSubmit().catch(() => {});
+                    }}
                     variant="contained"
                     disabled={!title.trim() || loading || success}
                     startIcon={loading && <CircularProgress size={20} color="inherit" />}

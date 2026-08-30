@@ -20,8 +20,6 @@ async function generateDocs() {
     let mermaid = "```mermaid\nerDiagram\n";
     let tableDetails = "## Tables\n\n";
 
-    const relationships: string[] = [];
-
     for (const table of tables) {
         if (!table) {
             continue;

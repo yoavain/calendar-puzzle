@@ -1,5 +1,4 @@
 import { PIECE_DATA, PIECE_IDS, getPieceShape } from "../../src/common/pieceData";
-import type { PieceId } from "../../src/common/pieceData";
 
 describe("pieceData", () => {
     it("should define all 8 piece IDs", () => {

@@ -208,14 +208,18 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                     {/* Solver Section */}
                     <DrawerSection>
                         <SolutionButton
-                            onSolve={() => handleAction(game.handleSolve)}
+                            onSolve={() => handleAction(() => {
+                                game.handleSolve().catch(() => {});
+                            })}
                             isLoading={game.isLoading}
                             disabled={game.gameState.isSolved}
                             fullWidth
                             sx={drawerButtonSx}
                         />
                         <HintButton
-                            onHint={() => handleAction(game.handleHint)}
+                            onHint={() => handleAction(() => {
+                                game.handleHint().catch(() => {});
+                            })}
                             isLoading={game.isHintLoading}
                             disabled={!game.isBoardEmpty || game.gameState.isSolved}
                             fullWidth
