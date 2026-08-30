@@ -49,7 +49,7 @@ async function main() {
     try {
         data = JSON.parse(input);
     }
-    catch (e) {
+    catch {
         console.error("Error: Input is not valid JSON.");
         process.exit(1);
     }

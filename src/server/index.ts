@@ -24,4 +24,4 @@ const start = async () => {
     }
 };
 
-start();
+start().catch(() => process.exit(1));

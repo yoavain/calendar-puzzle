@@ -111,7 +111,11 @@ export const UserMenu: React.FC = () => {
                         {user.email}
                     </MenuItem>
                 )}
-                <MenuItem onClick={handleLogout}>
+                <MenuItem
+                    onClick={() => {
+                        handleLogout().catch(() => {});
+                    }}
+                >
                     Logout
                 </MenuItem>
             </Menu>
