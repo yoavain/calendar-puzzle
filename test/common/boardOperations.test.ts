@@ -1,7 +1,6 @@
 import { rebuildGameState, updateBoardAndPieces } from "../../src/common/boardOperations";
 import { initializeBoard } from "../../src/common/initialize";
 import type { Piece, PuzzleDate } from "../../src/common/types";
-import { getPieceShape } from "../../src/common/pieceData";
 
 describe("boardOperations", () => {
     const testDate: PuzzleDate = { month: 0, day: 1 }; // January 1st

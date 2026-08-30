@@ -111,7 +111,14 @@ export const DesktopLayout: React.FC = () => {
                                         {game.solverError}
                                     </Alert>
                                 )}
-                                <SolutionButton onSolve={game.handleSolve} isLoading={game.isLoading} disabled={game.gameState.isSolved} sx={toolbarButtonSx} />
+                                <SolutionButton
+                                    onSolve={() => {
+                                        game.handleSolve().catch(() => {});
+                                    }}
+                                    isLoading={game.isLoading}
+                                    disabled={game.gameState.isSolved}
+                                    sx={toolbarButtonSx}
+                                />
                                 <ToolbarIconButton
                                     tooltip="How to play"
                                     onClick={game.modals.help.open}
@@ -142,7 +149,14 @@ export const DesktopLayout: React.FC = () => {
                                     color="secondary"
                                 />
                                 <DatePicker currentDate={game.gameState.currentDate} onDateChange={game.handleDateChange} sx={toolbarButtonSx} />
-                                <HintButton onHint={game.handleHint} isLoading={game.isHintLoading} disabled={!game.isBoardEmpty || game.gameState.isSolved} sx={toolbarButtonSx} />
+                                <HintButton
+                                    onHint={() => {
+                                        game.handleHint().catch(() => {});
+                                    }}
+                                    isLoading={game.isHintLoading}
+                                    disabled={!game.isBoardEmpty || game.gameState.isSolved}
+                                    sx={toolbarButtonSx}
+                                />
                                 <Tooltip title="Ctrl+Z" arrow>
                                     <TooltipDisabledWrapper disabled={!game.canUndo || game.gameState.isSolved}>
                                         <Button

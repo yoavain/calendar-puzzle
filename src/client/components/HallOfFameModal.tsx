@@ -64,7 +64,7 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
 
     useEffect(() => {
         if (open) {
-            fetchData();
+            fetchData().catch(() => {});
         }
     }, [open, fetchData]);
 

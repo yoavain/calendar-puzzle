@@ -42,4 +42,4 @@ const manageAdmin = async () => {
     }
 };
 
-manageAdmin();
+manageAdmin().catch(() => process.exit(1));

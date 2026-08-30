@@ -67,14 +67,10 @@ describe("drag-drop anchor behaviour", () => {
             const shape = getTransformedShape(piece);
             // Piece 1 shape has both filled and possibly empty cells; find a filled one
             let hasFilled = false;
-            let hasEmpty = false;
             for (let y = 0; y < shape.length; y++) {
                 for (let x = 0; x < shape[y].length; x++) {
                     if (shape[y][x]) {
                         hasFilled = true;
-                    }
-                    else {
-                        hasEmpty = true;
                     }
                 }
             }

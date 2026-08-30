@@ -127,7 +127,7 @@ export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDra
             background-color: transparent;
         `;
 
-        transformedShape.forEach((row, y) => {
+        transformedShape.forEach((row) => {
             const rowDiv = document.createElement("div");
             rowDiv.style.cssText = "display: flex; gap: 0;";
             row.forEach((cell) => {

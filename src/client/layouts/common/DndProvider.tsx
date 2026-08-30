@@ -400,7 +400,6 @@ export const DndProvider: React.FC<DndProviderProps> = ({
         
         if (pieceData?.type === "piece") {
             const pieceId = pieceData.pieceId as PieceId;
-            const piece = pieceData.piece as PieceType;
             const fromBoard = pieceData.fromBoard as boolean | undefined;
             
             if (over) {

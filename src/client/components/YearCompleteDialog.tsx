@@ -185,7 +185,9 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
             </DialogContent>
             <DialogActions sx={{ justifyContent: "center", flexWrap: "wrap", gap: 1, pb: 2 }}>
                 <Button
-                    onClick={handleSave}
+                    onClick={() => {
+                        handleSave().catch(() => {});
+                    }}
                     color="inherit"
                     variant="outlined"
                     startIcon={confirmation === "saved" ? <CheckIcon /> : <DownloadIcon />}
@@ -193,7 +195,9 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
                     {confirmation === "saved" ? "Saved!" : "Save as image"}
                 </Button>
                 <Button
-                    onClick={handleShare}
+                    onClick={() => {
+                        handleShare().catch(() => {});
+                    }}
                     color="inherit"
                     variant="outlined"
                     startIcon={

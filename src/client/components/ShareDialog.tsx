@@ -35,7 +35,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
     }, [open]);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(SHARE_URL);
+        navigator.clipboard.writeText(SHARE_URL).catch(() => {});
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };

@@ -76,7 +76,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     useEffect(() => {
-        fetchUser();
+        fetchUser().catch(() => {});
     }, [fetchUser]);
 
     useEffect(() => {

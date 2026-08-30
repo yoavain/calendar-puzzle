@@ -58,7 +58,7 @@ const solveWithWorker = async (month: number, day: number): Promise<Piece[]> => 
 
         worker.on("message", (response: SolverResponse) => {
             settled = true;
-            worker.terminate();
+            worker.terminate().catch(() => {});
             if (response.success && response.pieces) {
                 resolve(response.pieces);
             }
@@ -69,7 +69,7 @@ const solveWithWorker = async (month: number, day: number): Promise<Piece[]> => 
 
         worker.on("error", (error) => {
             settled = true;
-            worker.terminate();
+            worker.terminate().catch(() => {});
             reject(error);
         });
 
