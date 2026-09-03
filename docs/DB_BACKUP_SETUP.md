@@ -7,8 +7,8 @@ This document explains how to finalize the setup of the daily database backup sy
 - `scripts/db-backup.js` — Backup utility
 - `scripts/db-restore.js` — Restore utility with Y/N confirmation gate
 - `package.json` — Four new npm scripts:
-  - `backup:dev`, `backup:production`
-  - `restore:dev`, `restore:production`
+  - `backup:dev:docker`, `backup:production:docker`
+  - `restore:dev:docker`, `restore:production:docker`
 
 ## Step 1: Configure `.env`
 
@@ -27,7 +27,7 @@ Verify both scripts work before setting up the schedule:
 ### Backup test (dev)
 
 ```bash
-npm run backup:dev
+npm run backup:dev:docker
 ```
 
 Expected output:
@@ -45,7 +45,7 @@ A file at `C:\Backups\calendar-puzzle\2026-05-15-dev.sql` should exist with SQL 
 After backing up, make a test change to the dev database (add a row via the app), then restore:
 
 ```bash
-npm run restore:dev -- --date 2026-05-15
+npm run restore:dev:docker -- --date 2026-05-15
 ```
 
 You should see:
@@ -64,7 +64,7 @@ Run the PowerShell commands below as Administrator. Open PowerShell as Administr
 # Create the dev backup task (daily at 3:00 AM)
 $action  = New-ScheduledTaskAction `
     -Execute "cmd.exe" `
-    -Argument "/c npm run backup:dev" `
+    -Argument "/c npm run backup:dev:docker" `
     -WorkingDirectory "C:\Dev\_MISC\calendar-puzzle"
 $trigger = New-ScheduledTaskTrigger -Daily -At 3:00am
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries
@@ -75,7 +75,7 @@ Register-ScheduledTask -TaskName "CalendarPuzzle-Backup-Dev" `
 # Create the production backup task (daily at 3:15 AM, offset so they don't compete)
 $action  = New-ScheduledTaskAction `
     -Execute "cmd.exe" `
-    -Argument "/c npm run backup:production" `
+    -Argument "/c npm run backup:production:docker" `
     -WorkingDirectory "C:\Dev\_MISC\calendar-puzzle"
 $trigger = New-ScheduledTaskTrigger -Daily -At 3:15am
 Register-ScheduledTask -TaskName "CalendarPuzzle-Backup-Production" `
@@ -108,8 +108,8 @@ The scheduled tasks **will not work if Docker Desktop is not running** when they
 Restores are **always manual and interactive** — there is no schedule for them. To restore from a backup:
 
 ```bash
-npm run restore:dev -- --date 2026-05-15
-npm run restore:production -- --date 2026-05-15
+npm run restore:dev:docker -- --date 2026-05-15
+npm run restore:production:docker -- --date 2026-05-15
 ```
 
 The script will prompt for Y/N confirmation. This is intentional — restores are destructive and require deliberate action.
@@ -139,7 +139,7 @@ del C:\Backups\calendar-puzzle\2026-04-15-dev.sql
 ### Task shows "Did not complete" in Task Scheduler
 
 1. Check that Docker Desktop is running
-2. Manually run `npm run backup:dev` and check the output
+2. Manually run `npm run backup:dev:docker` and check the output
 3. Check the backup directory for the file
 
 ### "Error: container not found" or "Error spawning docker"
@@ -147,7 +147,7 @@ del C:\Backups\calendar-puzzle\2026-04-15-dev.sql
 The docker container may not exist or Docker Desktop may not be running. Verify:
 - Docker Desktop is running
 - Run `docker ps` and confirm containers exist
-- Run `npm run backup:dev` manually to see the error
+- Run `npm run backup:dev:docker` manually to see the error
 
 ### "Error: backup file is empty"
 

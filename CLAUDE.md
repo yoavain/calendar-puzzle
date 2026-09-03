@@ -23,8 +23,8 @@ There are two separate deployed environments, each with its own DNS:
 
 | Environment | Deploy command |
 |---|---|
-| **Dev** | `npm run deploy:dev` |
-| **Production** | `npm run deploy:production` |
+| **Dev** | `npm run deploy:dev:docker` |
+| **Production** | `npm run deploy:production:docker` |
 
 **Every change must be deployed to Dev first and manually tested before being promoted to Production.**
 Deploy to Production only after Dev validation.
