@@ -23,6 +23,13 @@ export const config = {
         owner: process.env.GITHUB_OWNER,
         repo: process.env.GITHUB_REPO
     },
+    hallOfFame: {
+        // HMAC key for pseudonymizing user IDs in the public Hall of Fame response.
+        // Must be a persisted, per-environment secret (generated once, never regenerated
+        // at runtime) — same discipline as `secret-key`. Regenerating it reshuffles
+        // every user's public userKey/avatar.
+        pepper: process.env.HALL_OF_FAME_PEPPER
+    },
     paths: {
         root: projectRoot,
         publicKey: path.resolve(projectRoot, "public-key.pem"),
@@ -37,7 +44,8 @@ export const validateConfig = () => {
         { key: "DATABASE_URL", value: config.database.url },
         { key: "GITHUB_TOKEN", value: config.github.token },
         { key: "GITHUB_OWNER", value: config.github.owner },
-        { key: "GITHUB_REPO", value: config.github.repo }
+        { key: "GITHUB_REPO", value: config.github.repo },
+        { key: "HALL_OF_FAME_PEPPER", value: config.hallOfFame.pepper }
     ];
 
     const missing = required.filter(item => !item.value);
