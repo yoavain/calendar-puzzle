@@ -21,6 +21,7 @@ import { registerLogRoutes } from "./rest/logRest.js";
 import { setupPassport } from "./auth/passport.js";
 import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
+import { rateLimitKey } from "./utils/rateLimitKey.js";
 import type { EncryptedPayload } from "../common/types.js";
 import { config } from "./config.js";
 import { API_HEALTH } from "../common/restPaths.js";
@@ -31,7 +32,7 @@ const __dirname = path.dirname(__filename);
 export const buildApp = async (): Promise<FastifyInstance> => {
     const app = Fastify({
         logger: true,
-        trustProxy: 1 // Trust exactly 1 proxy hop (Cloudflare Tunnel/Docker → Fastify)
+        trustProxy: config.server.trustProxy
     });
 
     // Polyfill for Express compatibility (some passport strategies expect req.connection.encrypted)
@@ -49,29 +50,61 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
         // Polyfill both the Node.js request and the Fastify request object
         // Some strategies look at request.raw.connection, others at request.connection
-        (rawReq as any).connection = connection;
+        //
+        // Define an own property instead of assigning. IncomingMessage.prototype
+        // defines `connection` as an accessor, and its setter writes `this.socket`.
+        // A plain assignment therefore replaces the real socket, which drops
+        // remotePort and the socket reference for the rest of the request.
+        Object.defineProperty(rawReq, "connection", {
+            value: connection,
+            configurable: true,
+            enumerable: false,
+            writable: true
+        });
         (request as unknown as { connection: unknown }).connection = connection;
     });
 
     // Encrypted-request IP rate limiter — fires before body parsing and RSA decryption.
     // Prevents unauthenticated CPU exhaustion via x-encrypted flooding.
-    // Uses request.ip (real client IP via trustProxy: 1) since request.user is not yet set.
+    // Keys on rateLimitKey(request.ip) since request.user is not yet set.
+    // request.ip is the real client IP via config.server.trustProxy.
     const encRateMap = new Map<string, { count: number; resetAt: number }>();
     const ENC_RATE_MAX = 20;
     const ENC_RATE_WINDOW_MS = 60_000;
+    let encRateLastSweep = Date.now();
+
+    // Removes expired entries. An entry is otherwise deleted only when the same key
+    // returns, so the map grows for every address that never comes back. An IPv6
+    // client can present a new address per request, which makes that growth unbounded.
+    const sweepEncRateMap = (now: number) => {
+        if (now - encRateLastSweep < ENC_RATE_WINDOW_MS) {
+            return;
+        }
+
+        encRateLastSweep = now;
+
+        for (const [key, entry] of encRateMap) {
+            if (now > entry.resetAt) {
+                encRateMap.delete(key);
+            }
+        }
+    };
 
     app.addHook("onRequest", async (request, reply) => {
         if (request.headers["x-encrypted"] !== "true") {
             return;
         }
 
-        const ip = request.ip;
+        const key = rateLimitKey(request.ip);
         const now = Date.now();
-        let entry = encRateMap.get(ip);
+
+        sweepEncRateMap(now);
+
+        let entry = encRateMap.get(key);
 
         if (!entry || now > entry.resetAt) {
             entry = { count: 0, resetAt: now + ENC_RATE_WINDOW_MS };
-            encRateMap.set(ip, entry);
+            encRateMap.set(key, entry);
         }
 
         if (++entry.count > ENC_RATE_MAX) {
@@ -140,7 +173,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         max: 100,
         timeWindow: "1 minute",
         hook: "preHandler",
-        keyGenerator: (request) => (request.user as { id?: string } | undefined)?.id ?? request.ip
+        keyGenerator: (request) => (request.user as { id?: string } | undefined)?.id ?? rateLimitKey(request.ip)
     });
 
     // Register CSRF protection after secure session
