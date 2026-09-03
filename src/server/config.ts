@@ -9,7 +9,15 @@ export const config = {
     server: {
         port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3001,
         host: process.env.HOST || "0.0.0.0",
-        nodeEnv: process.env.NODE_ENV || "development"
+        nodeEnv: process.env.NODE_ENV || "development",
+        // Which peer addresses may set X-Forwarded-*. Comma-separated CIDRs, or the
+        // @fastify/proxy-addr presets: loopback, linklocal, uniquelocal.
+        // The default covers a proxy on the same host (127.0.0.1) and a proxy on a
+        // private network or a Docker bridge (10/8, 172.16/12, 192.168/16).
+        // Set TRUST_PROXY to narrow this to the real proxy address in a deployment.
+        // A hop count is not valid here. Fastify 5.12.1 removed that form, because it
+        // cannot validate the immediate peer. See GHSA-3m5p-2c4r-xxw2.
+        trustProxy: process.env.TRUST_PROXY || "loopback, uniquelocal"
     },
     google: {
         clientId: process.env.GOOGLE_CLIENT_ID,
