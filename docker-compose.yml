@@ -7,6 +7,9 @@ services:
     environment:
       - TZ=Asia/Jerusalem
       - NODE_ENV=production
+      # Optional. Leave unset to trust loopback and private ranges. That default
+      # covers both tunnels, on the Docker host and on the Proxmox guest.
+      - TRUST_PROXY=${TRUST_PROXY:-}
       - DATABASE_URL=postgresql://puzzle:${POSTGRES_PASSWORD}@postgres:5432/puzzle
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
