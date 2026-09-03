@@ -13,6 +13,7 @@ services:
       - GITHUB_OWNER=${GITHUB_OWNER}
       - GITHUB_REPO=${GITHUB_REPO}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - HALL_OF_FAME_PEPPER=${HALL_OF_FAME_PEPPER}
     volumes:
       - ./secret-key:/usr/app/secret-key:ro
     depends_on:
