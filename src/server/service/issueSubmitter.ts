@@ -1,7 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import { config } from "../config.js";
 import type { Piece, PuzzleDate } from "../../common/types.js";
-import type { SessionUser } from "../auth/passport.js";
 
 const octokit = new Octokit({
     auth: config.github.token
@@ -29,19 +28,21 @@ function escapeMarkdown(text: string): string {
 }
 
 /**
- * Submits a generic issue (bug report or feature request)
+ * Submits a generic issue (bug report or feature request).
+ * No reporter identifier is included — issues are public once the repo is public,
+ * and the per-user rate limit / cooldown already runs server-side on the raw ID.
  */
-export async function submitIssue(title: string, description: string, type: IssueType, user: SessionUser) {
+export async function submitIssue(title: string, description: string, type: IssueType) {
     const safeTitle = escapeMarkdown(title);
     const safeDescription = escapeMarkdown(description);
-    const body = `**Reporter ID:** ${user.id}\n\n**Description:**\n${safeDescription}`;
+    const body = `**Description:**\n${safeDescription}`;
     return await createGitHubIssue(safeTitle, body, [type]);
 }
 
 /**
  * Specifically reports an invalid solution submitted by a user
  */
-export async function submitInvalidSolutionReport(pieces: Piece[], expectedDate: PuzzleDate, actualDate: PuzzleDate | null, user: SessionUser) {
+export async function submitInvalidSolutionReport(pieces: Piece[], expectedDate: PuzzleDate, actualDate: PuzzleDate | null) {
     const actualDateStr = actualDate
         ? `${actualDate.month + 1}/${actualDate.day}`
         : "None/Invalid";
@@ -54,7 +55,6 @@ export async function submitInvalidSolutionReport(pieces: Piece[], expectedDate:
 
     const title = `Bug: Invalid solution submitted for ${expectedDate.month + 1}/${expectedDate.day}`;
     const description = `
-**User ID:** ${user.id}
 **Target Date:** ${expectedDate.month + 1}/${expectedDate.day}
 **Actual Date Found by Server:** ${actualDateStr}
 
