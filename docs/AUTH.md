@@ -55,6 +55,29 @@ node -e "require('fs').writeFileSync('secret-key', require('crypto').randomBytes
 
 This file is in `.gitignore`. Each environment needs its own `secret-key` file.
 
+### 4. Generate Hall of Fame Pepper
+
+`GET /api/hall-of-fame` returns a pseudonymous `userKey` per user instead of the raw
+Google ID, computed as `HMAC-SHA256(googleId, HALL_OF_FAME_PEPPER)`. This is an HMAC
+rather than a bare hash so the mapping can't be recomputed by anyone outside the
+server — the hashing algorithm is public (it's in this open-source repo), but the
+pepper is not.
+
+Generate a random value and add it to `.env`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+```env
+HALL_OF_FAME_PEPPER=<paste generated value here>
+```
+
+**Each environment needs its own pepper**, generated independently — same principle
+as `secret-key`. Generate it once and never regenerate it in place: changing the
+pepper reshuffles every user's public `userKey` (and therefore their leaderboard
+avatar) on the next deploy.
+
 ---
 
 ## Architecture
@@ -215,6 +238,10 @@ flowchart LR
 ```
 
 **Rationale:** Storing only the Google ID means the database holds no personal data. If the database were compromised, no PII would be exposed. The session payload (which includes email, name, avatar URL) lives inside the encrypted `@fastify/secure-session` cookie carried by the browser — never written to a server-side disk store. The frontend derives the avatar initials from `name` client-side (`UserMenu.tsx`).
+
+**Surfaces visible to other users or the public:**
+- `GET /api/hall-of-fame` never returns the raw Google ID — it returns `userKey`, an `HMAC-SHA256(googleId, HALL_OF_FAME_PEPPER)` computed per request (see [Setup](#4-generate-hall-of-fame-pepper)). No column stores this; it's derived at query time.
+- GitHub issues created via `/api/issue` or the automated invalid-solution reporter (`issueSubmitter.ts`) carry no reporter/user identifier of any kind — this repo's issue tracker is public once the repo is public, so nothing traceable to a Google account is included.
 
 ---
 

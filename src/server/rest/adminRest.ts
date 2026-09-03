@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { createHash } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { db } from "../db/connection.js";
 import { userPuzzleStats, users } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
@@ -7,6 +7,7 @@ import { requireAdmin, requireAuth } from "../auth/requireAuth.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
+import { config } from "../config.js";
 import { API_ADMIN_SOLUTION, API_HALL_OF_FAME } from "../../common/restPaths.js";
 import type { DatePathParams, ErrorResponse, SolutionResponse, UserDataResponse } from "../../common/restTypes.js";
 import type { SessionUser } from "../auth/passport.js";
@@ -81,7 +82,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
                     .orderBy(users.id);
 
                 const mapped = stats.map(({ userId, daysPlayed, daysSolved, daysPlayedWithHint, daysSolvedWithHint }) => ({
-                    userKey: createHash("sha256").update(userId).digest("hex").slice(0, 16),
+                    userKey: createHmac("sha256", config.hallOfFame.pepper as string).update(userId).digest("hex").slice(0, 16),
                     isCurrentUser: userId === requestingUserId,
                     daysPlayed,
                     daysSolved,
