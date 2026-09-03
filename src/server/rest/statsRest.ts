@@ -110,8 +110,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                             await submitInvalidSolutionReport(
                                 pieces,
                                 { month, day },
-                                actualDateFound,
-                                user
+                                actualDateFound
                             );
 
                             request.log.info({ userId: user.id, targetDate: `${month + 1}/${day}` }, "Automated bug report created for invalid solution");
