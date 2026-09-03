@@ -48,7 +48,7 @@ describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
     });
 
     it("passes clean strings through unchanged", async () => {
-        await submitIssue("Plain title", "Plain description", "bug", testUser);
+        await submitIssue("Plain title", "Plain description", "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.title).toBe("Plain title");
@@ -56,7 +56,7 @@ describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
     });
 
     it("escapes markdown special characters in title", async () => {
-        await submitIssue("*bold* title [with link](url)", "clean description", "bug", testUser);
+        await submitIssue("*bold* title [with link](url)", "clean description", "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.title).not.toMatch(/(?<!\\)\*/); // no unescaped *
@@ -66,7 +66,7 @@ describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
     });
 
     it("escapes markdown special characters in description", async () => {
-        await submitIssue("clean title", "`code block` and _italic_", "bug", testUser);
+        await submitIssue("clean title", "`code block` and _italic_", "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.body).toContain("\\`code block\\`");
@@ -74,38 +74,39 @@ describe("issueSubmitter — escapeMarkdown via submitIssue", () => {
     });
 
     it("escapes title and description independently", async () => {
-        await submitIssue("title with #header", "description with |pipe|", "bug", testUser);
+        await submitIssue("title with #header", "description with |pipe|", "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.title).toContain("\\#header");
         expect(call.body).toContain("\\|pipe\\|");
     });
 
-    it("includes user ID in the body unmodified", async () => {
-        await submitIssue("title", "description", "bug", testUser);
+    it("never includes a reporter identifier in the body", async () => {
+        await submitIssue("title", "description", "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
-        expect(call.body).toContain(testUser.id);
+        expect(call.body).not.toContain(testUser.id);
+        expect(call.body).not.toMatch(/reporter/i);
     });
 
     it("passes the issue type as a label", async () => {
-        await submitIssue("title", "description", "enhancement", testUser);
+        await submitIssue("title", "description", "enhancement");
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.labels).toContain("enhancement");
     });
 
     it("strips newlines to prevent structural injection", async () => {
-        const injected = "Seems fine\n\n**Reporter ID:** 000\n\n**Description:**\n@admin ATTACK";
-        await submitIssue("Normal title", injected, "bug", testUser);
+        const injected = "Seems fine\n\n**Description:** fake second section\n\n@admin ATTACK";
+        await submitIssue("Normal title", injected, "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
-        expect(call.body).not.toMatch(/\*\*Reporter ID:\*\* 000/);
-        expect(call.body.split("**Reporter ID:**")).toHaveLength(2); // only the real one
+        expect(call.body).not.toMatch(/\*\*Description:\*\* fake second section/);
+        expect(call.body.split("**Description:**")).toHaveLength(2); // only the real one
     });
 
     it("escapes @ to prevent mention injection", async () => {
-        await submitIssue("title", "cc @admin please look", "bug", testUser);
+        await submitIssue("title", "cc @admin please look", "bug");
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.body).not.toMatch(/(?<!\\)@admin/); // no unescaped @mention
@@ -122,7 +123,7 @@ describe("issueSubmitter — submitInvalidSolutionReport", () => {
     });
 
     it("creates an issue with the correct title and labels", async () => {
-        await submitInvalidSolutionReport([piece], { month: 0, day: 1 }, null, testUser);
+        await submitInvalidSolutionReport([piece], { month: 0, day: 1 }, null);
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.title).toContain("1/1");
@@ -130,11 +131,19 @@ describe("issueSubmitter — submitInvalidSolutionReport", () => {
         expect(call.labels).toContain("automated-report");
     });
 
+    it("never includes a user identifier in the body", async () => {
+        await submitInvalidSolutionReport([piece], { month: 0, day: 1 }, null);
+
+        const call = mockIssuesCreate.mock.calls[0][0];
+        expect(call.body).not.toContain(testUser.id);
+        expect(call.body).not.toMatch(/user id/i);
+    });
+
     it("strips extra properties from pieces in the issue body", async () => {
         // Cast to any to simulate extra fields surviving a future schema relaxation
         const pieceWithExtra = { ...piece, injected: "```\n## INJECTED\n```json" } as any;
 
-        await submitInvalidSolutionReport([pieceWithExtra], { month: 0, day: 1 }, null, testUser);
+        await submitInvalidSolutionReport([pieceWithExtra], { month: 0, day: 1 }, null);
 
         const call = mockIssuesCreate.mock.calls[0][0];
         expect(call.body).not.toContain("injected");
