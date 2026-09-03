@@ -2,7 +2,6 @@ import type { FastifyInstance } from "fastify";
 import type { ErrorResponse, IssueRequest, IssueResponse } from "../../common/restTypes.js";
 import { requireAuth } from "../auth/requireAuth.js";
 import { issueSchema } from "./schemas.js";
-import type { SessionUser } from "../auth/passport.js";
 import { submitIssue } from "../service/issueSubmitter.js";
 import { API_ISSUE } from "../../common/restPaths.js";
 
@@ -24,14 +23,12 @@ export const registerIssueRoutes = (app: FastifyInstance): void => {
         },
         async (request, reply) => {
             const { title, description, type } = request.body;
-            const user = request.user as SessionUser;
 
             try {
                 const response = await submitIssue(
                     title,
                     description,
-                    type,
-                    user
+                    type
                 );
 
                 request.log.info({ issueUrl: response.data.html_url }, "GitHub issue created successfully");
