@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, statSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
+import { describeTarget, dumpCommand, ENVIRONMENTS, TARGETS } from "./db-target.mjs";
 
 const getEnvVar = (name) => {
     const value = process.env[name];
@@ -23,8 +24,9 @@ const formatDate = () => {
 };
 
 const printUsageAndExit = () => {
-    console.error("Usage: node --env-file=.env scripts/db-backup.js --env <dev|production>");
-    console.error("  --env <dev|production>  Target environment");
+    console.error("Usage: node --env-file=.env scripts/db-backup.js --env <dev|production> [--target <docker|proxmox>]");
+    console.error("  --env <dev|production>      Target environment");
+    console.error("  --target <docker|proxmox>   Where the database runs (default: docker)");
     process.exit(1);
 };
 
@@ -33,7 +35,8 @@ const main = async () => {
     try {
         ({ values } = parseArgs({
             options: {
-                env: { type: "string", short: "e" }
+                env: { type: "string", short: "e" },
+                target: { type: "string", short: "t", default: "docker" }
             },
             strict: true
         }));
@@ -44,18 +47,23 @@ const main = async () => {
     }
 
     const env = values.env;
-    if (!env || !["dev", "production"].includes(env)) {
+    if (!env || !ENVIRONMENTS.includes(env)) {
+        printUsageAndExit();
+    }
+
+    const target = values.target;
+    if (!TARGETS.includes(target)) {
+        console.error(`Error: --target must be one of ${TARGETS.join(", ")}`);
         printUsageAndExit();
     }
 
     const backupDir = getEnvVar("CALENDAR_PUZZLE_DB_BACKUP_PATH");
     const date = formatDate();
-    const containerName = `calendar-puzzle-${env}-postgres-1`;
     const filename = `${date}-${env}.sql`;
     const filepath = join(backupDir, filename);
 
     console.log(`[${date}] Backing up ${env} database...`);
-    console.log(`  Container: ${containerName}`);
+    console.log(`  Source:    ${describeTarget(target, env)}`);
     console.log(`  Output:    ${filepath}`);
 
     try {
@@ -69,57 +77,77 @@ const main = async () => {
         process.exit(1);
     }
 
-    const pg_dump = spawn("docker", ["exec", containerName, "pg_dump", "-U", "puzzle", "puzzle"], {
+    const { command, args } = dumpCommand(target, env);
+    const pg_dump = spawn(command, args, {
         stdio: ["inherit", "pipe", "pipe"]
     });
 
     const writeStream = createWriteStream(filepath);
     const startTime = Date.now();
 
+    pg_dump.stderr.on("data", (data) => {
+        console.error(`[pg_dump stderr] ${data}`);
+    });
+
+    // Wait for both the child to exit and the file to flush. The stream finishes
+    // before the child closes, so a listener attached inside "close" never fires.
+    const exited = new Promise((resolve, reject) => {
+        pg_dump.on("close", resolve);
+        pg_dump.on("error", (err) => reject(new Error(`spawning pg_dump: ${err.message}`)));
+    });
+    const flushed = new Promise((resolve, reject) => {
+        writeStream.on("finish", resolve);
+        writeStream.on("error", (err) => reject(new Error(`writing ${filepath}: ${err.message}`)));
+    });
+
     pg_dump.stdout.pipe(writeStream);
 
-    return new Promise((resolve) => {
-        pg_dump.on("close", (code) => {
-            const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+    const discardFile = () => {
+        if (!existsSync(filepath)) {
+            return;
+        }
+        try {
+            unlinkSync(filepath);
+        }
+        catch {
+            // ignored
+        }
+    };
 
-            if (code !== 0) {
-                console.error(`Error: pg_dump exited with code ${code}`);
-                if (existsSync(filepath)) {
-                    try {
-                        unlinkSync(filepath);
-                    }
-                    catch {
-                        // ignored
-                    }
-                }
-                process.exit(1);
-            }
+    let code;
+    try {
+        [code] = await Promise.all([exited, flushed]);
+    }
+    catch (err) {
+        console.error(`Error: ${err.message}`);
+        discardFile();
+        process.exit(1);
+    }
 
-            writeStream.on("finish", () => {
-                const stat = statSync(filepath);
-                if (stat.size === 0) {
-                    console.error("Error: backup file is empty");
-                    unlinkSync(filepath);
-                    process.exit(1);
-                }
-                const sizeKB = (stat.size / 1024).toFixed(1);
-                console.log(`✓ Backup complete (${sizeKB} KB, ${elapsed}s)`);
-                resolve();
-            });
-        });
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
 
-        pg_dump.on("error", (err) => {
-            console.error(`Error spawning pg_dump: ${err.message}`);
-            process.exit(1);
-        });
+    if (code !== 0) {
+        console.error(`Error: pg_dump exited with code ${code}`);
+        discardFile();
+        process.exit(1);
+    }
 
-        pg_dump.stderr.on("data", (data) => {
-            console.error(`[pg_dump stderr] ${data}`);
-        });
-    });
+    if (statSync(filepath).size === 0) {
+        console.error("Error: backup file is empty");
+        discardFile();
+        process.exit(1);
+    }
+
+    const sizeKB = (statSync(filepath).size / 1024).toFixed(1);
+    console.log(`✓ Backup complete (${sizeKB} KB, ${elapsed}s)`);
 };
 
 main().catch((err) => {
-    console.error("Unexpected error:", err);
+    if (err.isConfigError) {
+        console.error(`\n${err.message}\n`);
+    }
+    else {
+        console.error("Unexpected error:", err);
+    }
     process.exit(1);
 });

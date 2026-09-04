@@ -1,0 +1,60 @@
+# Calendar Puzzle service unit for the Proxmox LXC deployment.
+#
+# Install to /etc/systemd/system/calendar-puzzle.service on the container, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now calendar-puzzle
+#
+# THIS FILE AND THE Dockerfile DESCRIBE THE SAME RUNTIME. A change to one needs a
+# change to the other. The Dockerfile sets TZ, NODE_ENV and TOKENS_BASE_FOLDER as
+# image layers; here those values come from /etc/calendar-puzzle/env instead.
+
+[Unit]
+Description=Calendar Puzzle
+Documentation=https://github.com/yoavain/calendar-puzzle
+# The app runs migrations at boot and then connects, so Postgres must be up first.
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=calendar-puzzle
+Group=calendar-puzzle
+
+# src/server/db/migrate.ts resolves the migrations folder relative to the working
+# directory, so this must be the application root. A deploy that changes it fails
+# at boot, not at build.
+WorkingDirectory=/opt/calendar-puzzle
+
+# Every runtime variable lives here, mode 0640, root:calendar-puzzle. Never put a
+# variable in this unit file: unit files are world readable and their contents show
+# up in `systemctl show`.
+EnvironmentFile=/etc/calendar-puzzle/env
+
+# Absolute path on purpose. /opt/node/bin reaches PATH through /etc/profile.d, which
+# systemd does not source.
+ExecStart=/opt/node/bin/node dist/server/index.js
+
+Restart=on-failure
+RestartSec=5s
+
+# Hardening. The service needs to write logs and nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+ReadWritePaths=/opt/calendar-puzzle/ext
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=calendar-puzzle
+
+[Install]
+WantedBy=multi-user.target

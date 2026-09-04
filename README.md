@@ -104,9 +104,8 @@ calendar-puzzle/
 | Script | Description |
 | :--- | :--- |
 | `npm run build:image` | Run full test suite, build, and create Docker image |
-| `npm run deploy:dev` | Build image and start Docker Compose stack for dev |
-| `npm run deploy:dev:quick` | Deploy to dev without running tests |
-| `npm run deploy:production` | Build image and start Docker Compose stack for production |
+| `npm run deploy:dev:docker` | Build image and start Docker Compose stack for dev |
+| `npm run deploy:production:docker` | Build image and start Docker Compose stack for production |
 
 ### Admin
 
@@ -158,10 +157,10 @@ npm start
 
 ```bash
 # Build image and start production stack
-npm run deploy:production
+npm run deploy:production:docker
 
 # Build image and start dev stack (different port)
-npm run deploy:dev
+npm run deploy:dev:docker
 ```
 
 ## Documentation
