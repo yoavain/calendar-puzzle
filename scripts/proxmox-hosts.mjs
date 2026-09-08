@@ -36,6 +36,21 @@ export const proxmoxHost = (env) => {
     return value;
 };
 
+/**
+ * Public address of each environment, as the outside world reaches it.
+ *
+ * These are hard coded, unlike the LXC addresses above. A private address
+ * describes one person's network, but the public name is part of the running
+ * service, and `SHARE_URL` in `src/common/consts.ts` already carries one.
+ */
+const PUBLIC_URLS = {
+    dev: "https://calendar-puzzle-dev.yoavain.org",
+    production: "https://calendar-puzzle.yoavain.org"
+};
+
+/** Health endpoint to test end to end, through DNS, TLS and the tunnel. */
+export const publicHealthUrl = (env) => `${PUBLIC_URLS[env]}/api/health`;
+
 /** Unprivileged account used for deploys, backups and restores. */
 export const deployUser = () => process.env.CALENDAR_PUZZLE_DEPLOY_USER || "deploy";
 

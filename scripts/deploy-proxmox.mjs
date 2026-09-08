@@ -23,6 +23,7 @@ import {
     SERVICE_NAME,
     SERVICE_PORT,
     proxmoxHost,
+    publicHealthUrl,
     sshDestination,
     sshOptions
 } from "./proxmox-hosts.mjs";
@@ -203,11 +204,15 @@ const main = async () => {
 
         console.log(`\n✓ Deployed ${env} to ${target}`);
         console.log(`  Origin: http://${proxmoxHost(env)}:${SERVICE_PORT}`);
-        console.log("  Test the origin FROM THE TUNNEL CONTAINER before changing any ingress:");
-        console.log(
-            "    pct exec 182 -- curl -sS -o /dev/null -w '%{http_code}\\n' " +
-            `http://${proxmoxHost(env)}:${SERVICE_PORT}/api/health`
-        );
+        // The origin answered the health check above, so testing it again from
+        // inside the network proves nothing new. What is still untested is the
+        // path the players take: DNS, TLS and the tunnel in front of this LXC.
+        console.log("  Test it end to end:");
+        console.log(`    ${publicHealthUrl(env)}`);
+        console.log(`    curl -sS -o /dev/null -w '%{http_code}\\n' ${publicHealthUrl(env)}`);
+        if (env === "dev") {
+            console.log("\n  Dev must pass before production. Then run: npm run deploy:production:proxmox");
+        }
     }
     finally {
         rmSync(stagingDir, { recursive: true, force: true });
