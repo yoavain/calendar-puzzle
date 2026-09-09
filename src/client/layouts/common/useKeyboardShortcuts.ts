@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import type { PieceId } from "../../../common/pieceData";
+
+const isEditableTarget = (target: EventTarget | null): boolean => {
+    if (!(target instanceof HTMLElement)) {
+        return false;
+    }
+    const tag = target.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
+};
 
 /**
  * Registers global keyboard shortcuts:
@@ -9,8 +17,9 @@ import type { PieceId } from "../../../common/pieceData";
  * - R / Shift+R: rotate the selected pool piece CW / CCW
  * - F / Shift+F: flip the selected pool piece horizontally / vertically
  *
- * Non-primitive values are read via refs so that the listener is not
- * re-subscribed on every piece placement.
+ * The handler is a useEffectEvent, so it always sees the latest props while
+ * staying non-reactive. The listener subscribes once and is never re-subscribed
+ * on a piece placement.
  */
 export function useKeyboardShortcuts({
     canUndo,
@@ -44,32 +53,7 @@ export function useKeyboardShortcuts({
     onFlipV?: (pieceId: PieceId) => void;
     onClearSelection?: () => void;
 }) {
-    const handleResetRef = useRef(handleReset);
-    handleResetRef.current = handleReset;
-    const isResetDisabledRef = useRef(isResetDisabled);
-    isResetDisabledRef.current = isResetDisabled;
-    const selectablePieceIdRef = useRef(selectablePieceId);
-    selectablePieceIdRef.current = selectablePieceId;
-    const onRotateCWRef = useRef(onRotateCW);
-    onRotateCWRef.current = onRotateCW;
-    const onRotateCCWRef = useRef(onRotateCCW);
-    onRotateCCWRef.current = onRotateCCW;
-    const onFlipHRef = useRef(onFlipH);
-    onFlipHRef.current = onFlipH;
-    const onFlipVRef = useRef(onFlipV);
-    onFlipVRef.current = onFlipV;
-    const onClearSelectionRef = useRef(onClearSelection);
-    onClearSelectionRef.current = onClearSelection;
-
-    const isEditableTarget = (target: EventTarget | null): boolean => {
-        if (!(target instanceof HTMLElement)) {
-            return false;
-        }
-        const tag = target.tagName;
-        return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
-    };
-
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
             e.preventDefault();
             if (e.shiftKey) {
@@ -94,14 +78,14 @@ export function useKeyboardShortcuts({
         }
         // Escape: clear selection first, else reset
         if (e.key === "Escape") {
-            if (selectablePieceIdRef.current !== null && selectablePieceIdRef.current !== undefined) {
+            if (selectablePieceId !== null && selectablePieceId !== undefined) {
                 e.preventDefault();
-                onClearSelectionRef.current?.();
+                onClearSelection?.();
                 return;
             }
-            if (!isResetDisabledRef.current) {
+            if (!isResetDisabled) {
                 e.preventDefault();
-                handleResetRef.current();
+                handleReset();
             }
             return;
         }
@@ -110,7 +94,7 @@ export function useKeyboardShortcuts({
         if (e.ctrlKey || e.metaKey || e.altKey || isEditableTarget(e.target)) {
             return;
         }
-        const selectedId = selectablePieceIdRef.current;
+        const selectedId = selectablePieceId;
         if (selectedId === null || selectedId === undefined) {
             return;
         }
@@ -118,26 +102,29 @@ export function useKeyboardShortcuts({
         if (key === "r") {
             e.preventDefault();
             if (e.shiftKey) {
-                onRotateCCWRef.current?.(selectedId);
+                onRotateCCW?.(selectedId);
             }
             else {
-                onRotateCWRef.current?.(selectedId);
+                onRotateCW?.(selectedId);
             }
             return;
         }
         if (key === "f") {
             e.preventDefault();
             if (e.shiftKey) {
-                onFlipVRef.current?.(selectedId);
+                onFlipV?.(selectedId);
             }
             else {
-                onFlipHRef.current?.(selectedId);
+                onFlipH?.(selectedId);
             }
         }
-    }, [canUndo, canRedo, undo, redo]);
+    });
 
     useEffect(() => {
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [handleKeyDown]);
+        // The effect event is called from inside the Effect rather than handed to
+        // the DOM directly, and it never changes identity, so this subscribes once.
+        const onKeyDown = (e: KeyboardEvent) => handleKeyDown(e);
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
 }

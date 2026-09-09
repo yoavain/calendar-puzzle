@@ -40,6 +40,13 @@ import {
     DrawerButton
 } from "./MobileToolbar.styled";
 
+// Shared sx for child components (DatePicker, SolutionButton, HintButton) in the drawer
+const drawerButtonSx = {
+    justifyContent: "flex-start",
+    pl: 3,
+    gap: 1.5
+};
+
 interface MobileToolbarProps {
     game: GameController;
     /** Layout direction: horizontal (default) for portrait top bar, vertical for landscape left strip. */
@@ -64,7 +71,7 @@ interface MobileToolbarProps {
 export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation = "horizontal" }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
-    const [debugEnabled, setDebugEnabled] = useState(debugLogger.isEnabled());
+    const [debugEnabled, setDebugEnabled] = useState(() => debugLogger.isEnabled());
 
     const openDrawer = () => setIsDrawerOpen(true);
     const closeDrawer = () => setIsDrawerOpen(false);
@@ -73,13 +80,6 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
     const handleAction = (action: () => void) => {
         action();
         closeDrawer();
-    };
-
-    // Shared sx for child components (DatePicker, SolutionButton, HintButton) in the drawer
-    const drawerButtonSx = {
-        justifyContent: "flex-start",
-        pl: 3,
-        gap: 1.5
     };
 
     return (
@@ -154,7 +154,10 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             fullWidth
                             variant="outlined"
                             startIcon={<EmojiEventsIcon />}
-                            onClick={() => handleAction(() => setIsHallOfFameOpen(true))}
+                            onClick={() => {
+                                setIsHallOfFameOpen(true);
+                                closeDrawer();
+                            }}
                         >
                             Hall of Fame
                         </DrawerButton>

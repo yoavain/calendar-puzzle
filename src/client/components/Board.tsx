@@ -30,9 +30,13 @@ interface BoardProps {
     selectedPieceId?: number | null;
 }
 
+// A `= []` default builds a new array on every render, which defeats the
+// React.memo above and re-runs any hook that lists the prop as a dependency.
+const NO_INVALID_DROP_CELLS: InvalidDropCell[] = [];
+
 export const Board = React.memo<BoardProps>(({
     board, pieces, onCellClick, onPieceDrop,
-    invalidDropCells = [], solutionRevealed = false, isSolved = false,
+    invalidDropCells = NO_INVALID_DROP_CELLS, solutionRevealed = false, isSolved = false,
     draggedPieceId, onDragStart, onDragEnd,
     selectedPieceId = null
 }) => {

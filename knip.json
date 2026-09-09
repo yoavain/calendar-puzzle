@@ -1,0 +1,20 @@
+{
+    "$schema": "https://unpkg.com/knip@5/schema.json",
+    "entry": [
+        "src/client/index.tsx",
+        "src/server/index.ts",
+        "src/server/workers/puzzleSolverWorker.ts",
+        "scripts/*.{ts,js,mjs}",
+        "src/**/*.stories.{ts,tsx}",
+        ".storybook/*.{ts,tsx}",
+        "test/**/*.{test,spec}.{ts,tsx}",
+        "test/e2e/fixtures/*.ts",
+        "test/e2e/helpers/*.ts",
+        "*.config.{ts,js,mjs}"
+    ],
+    "project": [
+        "src/**/*.{ts,tsx}",
+        "scripts/**/*.{ts,js,mjs}",
+        "test/**/*.{ts,tsx}"
+    ]
+}

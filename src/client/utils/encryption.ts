@@ -32,27 +32,28 @@ export const encryptPayload = async (payload: unknown, publicKeyPem: string): Pr
     const encoder = new TextEncoder();
     const encodedPayload = encoder.encode(JSON.stringify(payload));
 
-    // 1. Import the RSA public key
-    const publicKey = await window.crypto.subtle.importKey(
-        "spki",
-        pemToArrayBuffer(publicKeyPem),
-        {
-            name: "RSA-OAEP",
-            hash: "SHA-256"
-        },
-        false,
-        ["encrypt"]
-    );
-
-    // 2. Generate a random AES-256 key
-    const aesKey = await window.crypto.subtle.generateKey(
-        {
-            name: "AES-GCM",
-            length: 256
-        },
-        true,
-        ["encrypt"]
-    );
+    // 1. Import the RSA public key, and 2. generate a random AES-256 key.
+    // Neither uses the other's result, so they run together.
+    const [publicKey, aesKey] = await Promise.all([
+        window.crypto.subtle.importKey(
+            "spki",
+            pemToArrayBuffer(publicKeyPem),
+            {
+                name: "RSA-OAEP",
+                hash: "SHA-256"
+            },
+            false,
+            ["encrypt"]
+        ),
+        window.crypto.subtle.generateKey(
+            {
+                name: "AES-GCM",
+                length: 256
+            },
+            true,
+            ["encrypt"]
+        )
+    ]);
 
     // 3. Export the AES key to encrypt it with RSA
     const exportedAesKey = await window.crypto.subtle.exportKey("raw", aesKey);

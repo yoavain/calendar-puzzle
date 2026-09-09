@@ -82,11 +82,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             mode,
             effectiveMode,
             toggleColorMode: () => {
-                setModeState(() => {
-                    const newMode = effectiveMode === "light" ? "dark" : "light";
-                    localStorage.setItem("theme", newMode);
-                    return newMode;
-                });
+                // Compute and persist outside the setter. React may call an updater
+                // more than once, which would repeat the write.
+                const newMode = effectiveMode === "light" ? "dark" : "light";
+                localStorage.setItem("theme", newMode);
+                setModeState(newMode);
             },
             setMode: (newMode: ThemeMode) => {
                 localStorage.setItem("theme", newMode);

@@ -14,7 +14,7 @@ import { useUser } from "../context/UserContext";
 export const DebugPanel: React.FC = () => {
     const theme = useTheme();
     const { user } = useUser();
-    const [enabled, setEnabled] = useState(debugLogger.isEnabled());
+    const [enabled, setEnabled] = useState(() => debugLogger.isEnabled());
     const [count, setCount] = useState(0);
 
     // React to enable/disable events from the admin toggle

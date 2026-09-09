@@ -127,14 +127,14 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {sortedData.map((row, index) => {
+                                {sortedData.map((row) => {
                                     const isCurrentUser = row.isCurrentUser;
                                     const avatarUrl = isCurrentUser && currentUser?.avatarUrl
                                         ? currentUser.avatarUrl
                                         : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(row.userKey)}`;
 
                                     return (
-                                        <TableRow key={index} hover selected={isCurrentUser}>
+                                        <TableRow key={row.userKey} hover selected={isCurrentUser}>
                                             <TableCell align="center">
                                                 {row.daysSolved >= TOTAL_DATES && (
                                                     <CompletionBadge

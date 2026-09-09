@@ -18,6 +18,13 @@ import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
 import { useUser } from "../context/UserContext";
 import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 
+// Format date as DD/MM
+const formatDate = (date: PuzzleDate): string => {
+    const day = String(date.day).padStart(2, "0");
+    const month = String(date.month + 1).padStart(2, "0");
+    return `${day}/${month}`;
+};
+
 interface DatePickerProps {
     currentDate: PuzzleDate;
     onDateChange: (date: PuzzleDate) => void;
@@ -46,13 +53,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
 
     const isCurrentDateCompleted = isDateCompleted(currentDate.month, currentDate.day);
     const isCurrentDatePlayed = isDatePlayed(currentDate.month, currentDate.day);
-
-    // Format date as DD/MM
-    const formatDate = (date: PuzzleDate): string => {
-        const day = String(date.day).padStart(2, "0");
-        const month = String(date.month + 1).padStart(2, "0");
-        return `${day}/${month}`;
-    };
 
     const handleOpen = () => {
         setSelectedMonth(currentDate.month);
