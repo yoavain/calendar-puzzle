@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
@@ -101,9 +101,10 @@ export function useGameController() {
     // Generation counter to discard stale hint responses
     const hintLoadIdRef = useRef(0);
 
-    // Always-current ref used by async callbacks to avoid stale closures
-    const gameStateRef = useRef(gameState);
-    gameStateRef.current = gameState;
+    // Always-current read used by async callbacks to avoid stale closures.
+    // A useEffectEvent getter is re-read at each call site, so a read placed
+    // after an await still sees the latest committed state.
+    const getGameState = useEffectEvent(() => gameState);
 
     // State for tracking dragged piece for preview
     const [draggedPieceId, setDraggedPieceId] = useState<number | null>(null);
@@ -613,14 +614,14 @@ export function useGameController() {
     // === SUB-HOOKS (side effects only) ===
 
     // Check for initial hint on mount / when user logs in / when date changes.
-    // gameStateRef is used inside the async callback so reads are always fresh,
+    // getGameState is used inside the async callback so reads are always fresh,
     // avoiding a stale-closure bug without adding gameState.pieces to the deps
     // (which would re-run the effect on every piece placement).
     useEffect(() => {
         const checkInitialHint = async () => {
             const currentDate = gameState.currentDate;
-            const currentPieces = gameStateRef.current.pieces;
-            const isEmpty = gameStateRef.current.pieces.every(p => p.position === null);
+            const currentPieces = getGameState().pieces;
+            const isEmpty = currentPieces.every(p => p.position === null);
             if (!userLoading && user && isEmpty) {
                 try {
                     const thisHintLoadId = ++hintLoadIdRef.current;
@@ -629,12 +630,12 @@ export function useGameController() {
                         return;
                     }
                     // Re-check emptiness after the async gap to avoid overwriting user moves
-                    if (!gameStateRef.current.pieces.every(p => p.position === null)) {
+                    if (!getGameState().pieces.every(p => p.position === null)) {
                         return;
                     }
                     if (hintState) {
                         clearHistory({
-                            ...gameStateRef.current,
+                            ...getGameState(),
                             board: hintState.board,
                             pieces: hintState.pieces
                         });

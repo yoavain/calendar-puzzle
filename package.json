@@ -124,7 +124,7 @@
         "graphify:build": "graphify extract . --code-only",
         "graphify:update": "graphify update . && graphify label . --backend claude-cli",
         "graphify:report": "graphify cluster-only . --no-label",
-        "doctor": "npx react-doctor@latest"
+        "doctor": "react-doctor"
     },
     "keywords": [],
     "author": "",
