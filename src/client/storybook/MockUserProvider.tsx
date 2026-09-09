@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import type { ReactNode } from "react";
 import { UserContext } from "../context/UserContext";
 import type { User } from "../context/UserContext";
@@ -19,6 +19,10 @@ export const MOCK_USER_ADMIN: User = {
     name: "Admin User"
 };
 
+// Shared empty defaults. A `= []` default builds a new array on every render,
+// which would change the memoized context value each time.
+const NO_DATES: PuzzleDate[] = [];
+
 interface Props {
     children: ReactNode;
     user?: User | null;
@@ -30,11 +34,11 @@ interface Props {
 export const MockUserProvider = ({
     children,
     user = null,
-    completedDates = [],
-    playedDates = [],
+    completedDates = NO_DATES,
+    playedDates = NO_DATES,
     loading = false
-}: Props) => (
-    <UserContext.Provider value={{
+}: Props) => {
+    const value = useMemo(() => ({
         user,
         completedDates,
         playedDates,
@@ -43,7 +47,11 @@ export const MockUserProvider = ({
         refreshUser: async () => {},
         addCompletedDate: () => {},
         addPlayedDate: () => {}
-    }}>
-        {children}
-    </UserContext.Provider>
-);
+    }), [user, completedDates, playedDates, loading]);
+
+    return (
+        <UserContext.Provider value={value}>
+            {children}
+        </UserContext.Provider>
+    );
+};

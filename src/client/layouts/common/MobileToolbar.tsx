@@ -154,7 +154,10 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             fullWidth
                             variant="outlined"
                             startIcon={<EmojiEventsIcon />}
-                            onClick={() => handleAction(() => setIsHallOfFameOpen(true))}
+                            onClick={() => {
+                                setIsHallOfFameOpen(true);
+                                closeDrawer();
+                            }}
                         >
                             Hall of Fame
                         </DrawerButton>

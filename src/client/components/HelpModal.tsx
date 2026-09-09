@@ -45,15 +45,17 @@ const SimplePiece: React.FC<{ pieceId: PieceId }> = ({ pieceId }) => {
     );
 };
 
+// January 1st board. Module scope keeps the identity stable, so the useMemo below
+// can list it as a dependency.
+const BOARD_DATE = { month: 0, day: 1 };
+
 interface HelpModalProps {
     open: boolean;
     onClose: () => void;
 }
 
 export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
-    // January 1st board
-    const boardDate = { month: 0, day: 1 };
-    const board = useMemo(() => initializeBoard(boardDate), []);
+    const board = useMemo(() => initializeBoard(BOARD_DATE), []);
     
     // Pick a random piece ID when the modal opens
     const [randomPieceId, setRandomPieceId] = useState<PieceId>(1);

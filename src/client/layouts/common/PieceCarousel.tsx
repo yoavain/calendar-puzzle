@@ -202,6 +202,32 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     const isScrollingRef = useRef(false);
     // Flag to distinguish our explicit reInits from Embla's auto-reInits
     const isExplicitReInitRef = useRef(false);
+    // Handles of the deferred callbacks below. Every one of them touches emblaApi
+    // or component state, so an unmount between schedule and fire would run them
+    // against a torn-down carousel. The unmount cleanup cancels whatever is left.
+    const pendingTimeoutsRef = useRef<Set<number>>(new Set());
+
+    // setTimeout that forgets its own handle once it fires. Identity is stable, so
+    // callers can list it in a dependency array without re-subscribing.
+    const scheduleTimeout = useCallback((callback: () => void, delayMs: number) => {
+        const handle = window.setTimeout(() => {
+            pendingTimeoutsRef.current.delete(handle);
+            callback();
+        }, delayMs);
+        pendingTimeoutsRef.current.add(handle);
+    }, []);
+
+    useEffect(() => {
+        // The ref object never changes identity, so this Set is the same one the
+        // cleanup needs to drain.
+        const pendingTimeouts = pendingTimeoutsRef.current;
+        return () => {
+            for (const handle of pendingTimeouts) {
+                window.clearTimeout(handle);
+            }
+            pendingTimeouts.clear();
+        };
+    }, []);
 
     // Keep slidesInView in sync during scroll animations
     const updateSlidesInView = useCallback(() => {
@@ -228,7 +254,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     // scrollTo(selectedScrollSnap(), true) physically re-centers the logical snap
     // slide, making the DOM node and selectedScrollSnap consistent again.
     const doExplicitReInit = useCallback((reason: string, prevCount: number, currentCount: number) => {
-        setTimeout(() => {
+        scheduleTimeout(() => {
             if (!emblaApi) {
                 return;
             }
@@ -240,7 +266,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                 isExplicitReInitRef.current = false;
             });
         }, 0);
-    }, [emblaApi]);
+    }, [emblaApi, scheduleTimeout]);
 
     // Update active index when carousel scrolls (user interaction)
     const onSelect = useCallback(() => {
@@ -305,7 +331,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         // If pieces count increased significantly (like a reset), reinitialize
         if (currentCount > prevCount + 1) {
             doExplicitReInit("count-jump", prevCount, currentCount);
-            setTimeout(() => {
+            scheduleTimeout(() => {
                 isScrollingRef.current = true;
                 emblaApi.scrollTo(0, true);
                 setActiveIndex(0);
@@ -341,7 +367,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         else if (currentCount !== prevCount) {
             doExplicitReInit("slide-count-change", prevCount, currentCount);
         }
-    }, [emblaApi, pieces, onPieceSelect, doExplicitReInit]);
+    }, [emblaApi, pieces, onPieceSelect, doExplicitReInit, scheduleTimeout]);
 
     // Scroll to selected piece when selection changes externally
     useEffect(() => {
@@ -358,12 +384,12 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                 emblaApi.scrollTo(slideIndex);
                 setActiveIndex(slideIndex);
                 // Reset flag after scroll animation would complete
-                setTimeout(() => {
+                scheduleTimeout(() => {
                     isScrollingRef.current = false;
                 }, 300);
             }
         }
-    }, [emblaApi, selectedPieceId, pieces, slides, activeRealIndex]);
+    }, [emblaApi, selectedPieceId, pieces, slides, activeRealIndex, scheduleTimeout]);
 
     // Handle indicator dot click - scroll to first slide matching that real index
     const scrollToIndex = useCallback((realIndex: number) => {
@@ -389,9 +415,8 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                 <CarouselTrack axis={axis} role="list">
                     {slides.map(({ piece }, index) => {
                         const slideState = getSlideState(index, activeIndex, slidesInView);
-                        const isActive = index === activeIndex;
                         return (
-                            <CarouselSlide key={`${piece.id}-${index}`} slideState={slideState} axis={axis} role="listitem" aria-selected={isActive}>
+                            <CarouselSlide key={`${piece.id}-${index}`} slideState={slideState} axis={axis} role="listitem">
                                 <PieceWrapper>
                                     <DraggablePiece
                                         piece={piece}
