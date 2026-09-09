@@ -225,39 +225,3 @@ export const StyledCellText = styled("span")({
     justifyContent: "center",
     transition: "color 0.2s ease"
 });
-
-// Drag preview container
-export const DragPreviewContainer = styled("div")({
-    position: "fixed",
-    pointerEvents: "none",
-    zIndex: 1000,
-    display: "grid",
-    gap: 0,
-    backgroundColor: "transparent"
-});
-
-// Preview row
-export const PreviewRow = styled("div")({
-    display: "flex",
-    gap: 0
-});
-
-// Preview cell props
-export interface PreviewCellProps {
-    isFilled?: boolean;
-    pieceId?: number;
-}
-
-// Preview cell
-export const PreviewCell = styled("div")<PreviewCellProps>(({ theme, isFilled, pieceId }) => ({
-    width: theme.game.cellSizePx,
-    height: theme.game.cellSizePx,
-    border: "none",
-    visibility: isFilled ? "visible" : "hidden",
-
-    ...(isFilled && {
-        backgroundColor: pieceId ? getPieceColor(pieceId) : getPieceColor(1),
-        // Subtle gradient for depth perception in drag preview
-        backgroundImage: PIECE_CELL_GRADIENT
-    })
-}));

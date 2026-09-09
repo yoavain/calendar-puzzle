@@ -27,7 +27,7 @@ describe("gameLogic", () => {
         });
 
         it("should return null if pieces overlap", () => {
-            const pieces = JSON.parse(JSON.stringify(solution0101.pieces)) as Piece[];
+            const pieces = structuredClone(solution0101.pieces) as Piece[];
             // Move piece 2 to overlap with piece 1
             pieces[1].position = { ...pieces[0].position! };
             const result = puzzleSolvedForDate(pieces);
@@ -35,7 +35,7 @@ describe("gameLogic", () => {
         });
 
         it("should return null if a piece is out of bounds", () => {
-            const pieces = JSON.parse(JSON.stringify(solution0101.pieces)) as Piece[];
+            const pieces = structuredClone(solution0101.pieces) as Piece[];
             pieces[0].position = { x: 10, y: 10 };
             const result = puzzleSolvedForDate(pieces);
             expect(result).toBeNull();
@@ -46,7 +46,7 @@ describe("gameLogic", () => {
             // but we can trust the logic for counting uncovered cells.
             // Let's just mock a case where we have a valid 01/01 solution 
             // but we move one piece to uncover another month.
-            const pieces = JSON.parse(JSON.stringify(solution0101.pieces)) as Piece[];
+            const pieces = structuredClone(solution0101.pieces) as Piece[];
             // Piece 5 is at 0,0 (rotated/flipped), covering Jan (0,0) and some others.
             // If we move it, Jan will be uncovered. If another month was already uncovered...
             // Actually, in a 8-piece solution, exactly 2 cells are uncovered.

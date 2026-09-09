@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "private": true,
     "type": "module",
+    "engines": {
+        "node": ">=24",
+        "npm": ">=11"
+    },
     "dependencies": {
         "@fastify/csrf-protection": "8.0.1",
         "@fastify/helmet": "13.1.1",
@@ -51,7 +55,6 @@
         "concurrently": "10.0.5",
         "copyfiles": "2.4.1",
         "cross-env": "10.1.0",
-        "drizzle-dbml-generator": "0.10.0",
         "drizzle-kit": "0.31.10",
         "embla-carousel-react": "8.6.0",
         "esbuild": "0.28.2",
