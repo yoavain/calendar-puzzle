@@ -77,14 +77,28 @@ test.describe("Keyboard shortcuts", () => {
         await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
     });
 
-    test("Ctrl+Z does nothing when there is nothing to undo", async ({ page }) => {
+    test("a spare Ctrl+Z with nothing left to undo does not corrupt redo", async ({ page }) => {
         await mockDate(page, new Date(2024, 0, 1));
         game = new GamePage(page, layout);
         await game.goto();
 
-        // canUndo is false on a fresh board. The board must survive the press.
+        if (layout !== "desktop") {
+            await game.scrollCarouselToPiece(PIECE_CAROUSEL_INDEX);
+        }
+
+        await dragPieceToBoard(page, game.carouselPiece(PIECE_ID), game.boardCell(2, 2), layout);
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
+
         await page.keyboard.press("Control+z");
-        await expect(game.board()).toBeVisible();
         await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(0);
+
+        // Nothing is left to undo. The guard must swallow this press.
+        await page.keyboard.press("Control+z");
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(0);
+
+        // The real assertion. A spare undo that pushed onto the redo stack would
+        // make this redo restore the wrong state.
+        await page.keyboard.press("Control+y");
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
     });
 });

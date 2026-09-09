@@ -45,8 +45,8 @@ const SimplePiece: React.FC<{ pieceId: PieceId }> = ({ pieceId }) => {
     );
 };
 
-// January 1st board. Module scope keeps the identity stable, so the useMemo below
-// can list it as a dependency.
+// January 1st board. Module scope keeps the identity stable across renders, so the
+// useMemo below needs no dependency on it.
 const BOARD_DATE = { month: 0, day: 1 };
 
 interface HelpModalProps {

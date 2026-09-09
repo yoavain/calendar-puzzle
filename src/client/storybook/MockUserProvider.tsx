@@ -19,9 +19,11 @@ export const MOCK_USER_ADMIN: User = {
     name: "Admin User"
 };
 
-// Shared empty defaults. A `= []` default builds a new array on every render,
-// which would change the memoized context value each time.
-const NO_DATES: PuzzleDate[] = [];
+// Stable empty defaults. A `= []` default builds a new array on every render, which
+// would change the memoized context value each time. The two lists get their own
+// constant, so a future push to one cannot show up in the other.
+const NO_COMPLETED_DATES: PuzzleDate[] = [];
+const NO_PLAYED_DATES: PuzzleDate[] = [];
 
 interface Props {
     children: ReactNode;
@@ -34,8 +36,8 @@ interface Props {
 export const MockUserProvider = ({
     children,
     user = null,
-    completedDates = NO_DATES,
-    playedDates = NO_DATES,
+    completedDates = NO_COMPLETED_DATES,
+    playedDates = NO_PLAYED_DATES,
     loading = false
 }: Props) => {
     const value = useMemo(() => ({
