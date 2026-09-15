@@ -10,10 +10,15 @@
  * It deliberately ships NO secrets. `secret-key`, the two `.pem` files and the
  * environment file live on the target and are managed separately. A deploy that
  * carried them would turn every deploy into a secret-handling event.
+ *
+ * It also keeps the target's Node on `.node-version`. Installing Node needs root,
+ * so the deploy account runs one root-owned helper through sudo, and only when the
+ * versions differ. The helper and its sudoers rule come from provision-calendar-puzzle.sh
+ * in the proxmox-setup repository.
  */
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -32,6 +37,11 @@ import {
 const PAYLOAD = ["dist", "build", "package.json", "package-lock.json", ".npmrc", "src/server/db/migrations"];
 
 const REMOTE_ARCHIVE = "/tmp/calendar-puzzle-payload.tar.gz";
+
+/** Root-owned helper on the target. The deploy account may run it through sudo. */
+const INSTALL_NODE = "/usr/local/sbin/install-node";
+
+const VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
 
 // npm is a .cmd shim on Windows. Node refuses to spawn a .cmd without a shell
 // (the CVE-2024-27980 fix), so the npm calls opt into one. The arguments are
@@ -108,6 +118,58 @@ const captureRemote = (env, script) => {
     return { status: result.status, stdout: (result.stdout || "").trim() };
 };
 
+/**
+ * The Node version the target must run. `.node-version` is the one place it is set.
+ * The Dockerfile describes the same runtime, so a Dockerfile that disagrees stops the
+ * deploy here rather than drifting unnoticed.
+ */
+const readNodeVersion = () => {
+    const version = readFileSync(".node-version", "utf8").trim();
+    if (!VERSION_PATTERN.test(version)) {
+        console.error(`Error: .node-version must hold a bare X.Y.Z version, found "${version}".`);
+        process.exit(1);
+    }
+    const dockerTag = /^FROM node:(\d+\.\d+\.\d+)-/m.exec(readFileSync("Dockerfile", "utf8"))?.[1];
+    if (dockerTag !== version) {
+        console.error(`Error: .node-version is ${version}, but the Dockerfile uses node:${dockerTag ?? "<unrecognized tag>"}.`);
+        console.error("Update the Dockerfile tag and digest to match, then deploy again.");
+        process.exit(1);
+    }
+    return version;
+};
+
+/** The version `node --version` reports on the target, or null when no usable node answers. */
+const remoteNodeVersion = (env) => {
+    const { status, stdout } = captureRemote(env, "node --version");
+    const match = /^v(\d+\.\d+\.\d+)$/m.exec(stdout);
+    return status === 0 && match ? match[1] : null;
+};
+
+/**
+ * Installs `version` on the target when it runs anything else. The service keeps its
+ * old binary until the restart later in the deploy.
+ */
+const ensureNodeVersion = (env, version) => {
+    const current = remoteNodeVersion(env);
+    if (current === version) {
+        console.log(`  already on ${version}`);
+        return;
+    }
+    console.log(`  ${current ?? "no working node"} -> ${version}`);
+    // `version` passed VERSION_PATTERN in readNodeVersion, so it is safe inside the remote script.
+    if (runRemote(env, `sudo -n ${INSTALL_NODE} ${version}`, { allowFailure: true }) !== 0) {
+        console.error(`Error: could not install Node ${version} on the target.`);
+        console.error(`If sudo refused, the target lacks ${INSTALL_NODE} or its sudoers rule.`);
+        console.error("Both come from scripts/provision-calendar-puzzle.sh in the proxmox-setup repository.");
+        process.exit(1);
+    }
+    const installed = remoteNodeVersion(env);
+    if (installed !== version) {
+        console.error(`Error: the target reports Node ${installed ?? "<none>"} after the install, not ${version}.`);
+        process.exit(1);
+    }
+};
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const waitForHealth = async (env) => {
@@ -147,6 +209,9 @@ const main = async () => {
         printUsageAndExit();
     }
 
+    // Checked before anything touches the network, so a version mismatch costs nothing.
+    const nodeVersion = readNodeVersion();
+
     const target = sshDestination(env);
     console.log(`Deploying ${env} to ${target} (${proxmoxHost(env)})`);
 
@@ -167,6 +232,11 @@ const main = async () => {
 
     step("Building");
     runNpm(["run", "build"]);
+
+    // After the build, so a broken build never changes the target's Node. Before
+    // `npm ci`, so the dependencies install with the npm that ships with this version.
+    step(`Ensuring Node ${nodeVersion} on ${target}`);
+    ensureNodeVersion(env, nodeVersion);
 
     const stagingDir = mkdtempSync(join(tmpdir(), "calendar-puzzle-deploy-"));
     const archive = join(stagingDir, "payload.tar.gz");
