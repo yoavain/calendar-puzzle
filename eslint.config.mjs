@@ -1,6 +1,7 @@
 import { fixupPluginRules } from "@eslint/compat";
 import js from "@eslint/js";
-import importPlugin from "eslint-plugin-import";
+import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
+import { createNodeResolver, importX } from "eslint-plugin-import-x";
 import jasmine from "eslint-plugin-jasmine";
 import jest from "eslint-plugin-jest";
 import n from "eslint-plugin-n";
@@ -45,16 +46,16 @@ const BASE_GLOBALS = {
 };
 
 const SHARED_PLUGINS = {
-    import: fixupPluginRules(importPlugin),
+    "import-x": importX,
     n: fixupPluginRules(n),
     unicorn: fixupPluginRules(unicorn)
 };
 
 const SHARED_SETTINGS = {
-    "import/resolver": {
-        node: true,
-        typescript: true
-    }
+    "import-x/resolver-next": [
+        createTypeScriptImportResolver(),
+        createNodeResolver()
+    ]
 };
 
 // ------------------------------------------------------------------------------------------
@@ -103,7 +104,7 @@ const JS_RULES = {
     "no-promise-executor-return": "warn",
 
     // Import plugin
-    "import/extensions": [
+    "import-x/extensions": [
         "error",
         {
             "ts": "never",
@@ -115,11 +116,11 @@ const JS_RULES = {
             "json": "always"
         }
     ],
-    "import/named": "warn",
-    "import/no-duplicates": "error",
-    "import/no-unresolved": "warn",
-    "import/no-default-export": "warn",
-    "import/order": [
+    "import-x/named": "warn",
+    "import-x/no-duplicates": "error",
+    "import-x/no-unresolved": "warn",
+    "import-x/no-default-export": "warn",
+    "import-x/order": [
         "off", // todo - might be useful
         {
             "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
@@ -176,7 +177,7 @@ const JS_RULES = {
 // ------------------------------------------------------------------------------------------
 const TS_RULES = {
     ...tseslint.configs.recommendedTypeChecked.rules,
-    "import/extensions": "off",
+    "import-x/extensions": "off",
     "no-redeclare": "off",
     "@typescript-eslint/no-redeclare": "error",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
@@ -353,7 +354,7 @@ export const TEST_CONFIG = {
 export const STORIES_CONFIG = {
     files: ["**/*.stories.ts", "**/*.stories.tsx"],
     rules: {
-        "import/no-default-export": "off"
+        "import-x/no-default-export": "off"
     }
 };
 
@@ -361,7 +362,7 @@ export const OVERRIDES = [
     {
         files: ["**/client/**/*.{ts,tsx}"],
         plugins: {
-            "barrel-files": barrelFiles
+            "barrel-files": fixupPluginRules(barrelFiles)
         },
         rules: {
             "barrel-files/avoid-barrel-files": "error",
