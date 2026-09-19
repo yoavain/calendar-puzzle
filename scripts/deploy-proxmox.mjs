@@ -82,8 +82,8 @@ const printUsageAndExit = () => {
 const step = (message) => console.log(`\n==> ${message}`);
 
 /** Runs a command, streaming its output. Exits the process if it fails. */
-const run = (command, args, { allowFailure = false, shell = false } = {}) => {
-    const result = spawnSync(command, args, { stdio: "inherit", shell });
+const run = (command, args, { allowFailure = false, shell = false, stdin = "inherit" } = {}) => {
+    const result = spawnSync(command, args, { stdio: [stdin, "inherit", "inherit"], shell });
     if (result.error) {
         console.error(`Error running ${command}: ${result.error.message}`);
         process.exit(1);
@@ -106,9 +106,16 @@ const shellQuote = (value) => `'${value.split("'").join("'\\''")}'`;
  * reaches PATH through /etc/profile.d, which a non-login ssh shell never sources. */
 const remoteCommand = (script) => `bash -lc ${shellQuote(script)}`;
 
+/**
+ * Runs ssh with its output streamed and NO stdin. Given the terminal as stdin, ssh on
+ * Windows can finish the remote command and then sit until Enter is pressed. Nothing
+ * here needs input: BatchMode never prompts, and every sudo call is `sudo -n`.
+ */
+const runSsh = (args, options) => run("ssh", args, { ...options, stdin: "ignore" });
+
 /** Runs a command on the target through a LOGIN shell. */
 const runRemote = (env, script, options) =>
-    run("ssh", [...sshOptions(), sshDestination(env), remoteCommand(script)], options);
+    runSsh([...sshOptions(), sshDestination(env), remoteCommand(script)], options);
 
 /** Captures the output of a remote command instead of streaming it. */
 const captureRemote = (env, script) => {
@@ -216,7 +223,7 @@ const main = async () => {
     console.log(`Deploying ${env} to ${target} (${proxmoxHost(env)})`);
 
     step(`Checking ${target} is reachable`);
-    if (run("ssh", [...sshOptions(), target, "true"], { allowFailure: true }) !== 0) {
+    if (runSsh([...sshOptions(), target, "true"], { allowFailure: true }) !== 0) {
         console.error(`Error: cannot reach ${target}.`);
         console.error("Is the container running? A dev LXC is stopped unless in use.");
         process.exit(1);
