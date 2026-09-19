@@ -74,7 +74,7 @@
         "jest-environment-jsdom": "30.5.1",
         "playwright": "1.63.0",
         "react": "19.2.8",
-        "react-doctor": "0.9.13",
+        "react-doctor": "0.9.14",
         "react-dom": "19.2.8",
         "react-router-dom": "7.18.3",
         "rimraf": "6.1.3",
