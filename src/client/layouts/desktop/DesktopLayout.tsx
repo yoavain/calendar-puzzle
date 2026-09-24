@@ -25,7 +25,7 @@ import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
-import { ProgressBar } from "../../components/ProgressBar";
+import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
@@ -213,7 +213,7 @@ export const DesktopLayout: React.FC = () => {
                         </GameTitle>
 
                         {/* Progress Bar */}
-                        <ProgressBar {...game.calculateProgress()} />
+                        <PlacementProgressBar order={game.placementOrder} />
 
                         {/* Statistics Modal */}
                         <StatsModal open={game.modals.stats.isOpen} onClose={game.modals.stats.close} />

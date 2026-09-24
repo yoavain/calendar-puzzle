@@ -306,40 +306,20 @@ interface SessionData {
 
 ### Progress
 
-Display real-time progress during gameplay to give users a sense of how close they are to completion.
+The progress bar tells the story of the solve: one colored segment per piece on the board, left to right in the order the player placed them.
 
-**Low-level design:**
+**Placement order (`src/common/`):**
+- `Piece.placedSeq` is the piece's placement number (1 = first). It is absent when the piece is off the board.
+- `updateBoardAndPieces` sets it to one more than the highest `placedSeq` on the board at each placement, and clears it on removal. Every placement path goes through this function: drag, tap, hint, persistent-hint reload.
+- Moving a piece to another board cell counts as a new placement, so the piece moves to the right end.
+- `getPlacementOrder(pieces)` returns the placed piece ids sorted by `placedSeq`. Placed pieces without one (sessions saved before the field existed, a revealed solution) sort first, by id.
+- The number lives on the pieces, so undo/redo history and the localStorage session carry it with no extra code. The server ignores it: Fastify's default Ajv removes the unknown field from `POST /api/stats/complete`.
 
-**Progress calculation:**
-```typescript
-const TOTAL_CELLS = 12 + 31 - 2;  // 41 playable cells (12 months + 31 days - 2 highlighted)
-
-function calculateProgress(boardState: BoardState): number {
-  const coveredCells = countCoveredCells(boardState);
-  return coveredCells / TOTAL_CELLS;  // 0.0 to 1.0
-}
-
-function countCoveredCells(boardState: BoardState): number {
-  // Count unique cells covered by all placed pieces
-  // Note: Count cells, not pieces (pieces have different sizes: 5 or 6 cells)
-  const coveredSet = new Set<string>();
-  for (const piece of boardState.placedPieces) {
-    for (const cell of piece.occupiedCells) {
-      coveredSet.add(`${cell.row},${cell.col}`);
-    }
-  }
-  return coveredSet.size;
-}
-```
-
-**UI component:**
-- Display a progress bar below or beside the game board
-- Show percentage text (e.g., "73%" or "30/41 cells")
-- Use color gradient: empty (gray) → partial (blue) → complete (green)
-- Animate progress changes smoothly with CSS transitions
-- Consider adding milestone markers (25%, 50%, 75%)
-
-**Component location:** Create `ProgressBar.tsx` in `src/client/components/`
+**UI (`PlacementProgressBar.tsx`):**
+- 8 equal slots. Each placed piece fills one (12.5%) in its `PIECE_COLORS` color.
+- Label `N/8`, centered, white with a dark text shadow.
+- A new segment grows in from the left (150ms, linear). Segments that appear in the same render (first load, reload) grow one after another, left to right. A single new placement starts at once. No animation under `prefers-reduced-motion: reduce`.
+- `role="progressbar"`, `aria-valuenow` = percent in 12.5 steps, `aria-valuetext` = "N of 8 pieces placed".
 
 ---
 

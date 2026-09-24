@@ -71,7 +71,7 @@ src/
 │  │  ├─ Piece.tsx             # Piece component
 │  │  ├─ DraggablePiece.tsx    # dnd-kit draggable wrapper
 │  │  ├─ PieceControls.tsx     # Rotate/flip controls
-│  │  ├─ ProgressBar.tsx       # Board coverage progress bar
+│  │  ├─ PlacementProgressBar.tsx # Progress bar: one segment per placed piece, in placement order
 │  │  ├─ DatePicker.tsx        # Date navigation picker
 │  │  ├─ StatsModal.tsx        # Statistics modal
 │  │  ├─ HallOfFameModal.tsx   # Hall of fame modal
@@ -150,7 +150,7 @@ Pure functions for manipulating board state:
 // Reconstruct board from saved pieces
 rebuildGameState(pieces, date, isSolved): GameState
 
-// Update board when moving a piece
+// Update board when moving a piece; stamps placedSeq on each placement
 updateBoardAndPieces(piece, newPosition, currentBoard, currentPieces): { board, pieces }
 ```
 
@@ -175,8 +175,8 @@ isValidPlacement(board, piece, position): boolean
 // Check if puzzle is solved
 puzzleSolvedForDate(pieces): PuzzleDate | null
 
-// Calculate progress percentage
-calculateProgress(pieces): { covered, total, percentage }
+// Placed piece ids, oldest placement first
+getPlacementOrder(pieces): PieceId[]
 ```
 
 #### `utils/shapeHelpers.ts`

@@ -19,7 +19,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### Features (Progress & Statistics)
 - [x] Personal statistics dashboard (puzzles / 366 completed) — Added to Statistics modal
-- [x] Add progress bar showing board coverage (covered cells / total available cells)
+- [x] Add progress bar showing placed pieces in placement order (one 12.5% segment per piece)
 - [x] Statistics Modal: Display "Played", "Win %", "Current Streak", and "Max Streak"
 - [x] Streak calculation logic (consecutive days)
 - [x] Real-time progress tracking during gameplay

@@ -6,7 +6,7 @@ import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
-import { ProgressBar } from "../../components/ProgressBar";
+import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 
 import { useGameController } from "../common/useGameController";
 import { useDndAdapters } from "../common/useDndAdapters";
@@ -65,7 +65,7 @@ export const LandscapeLayout: React.FC = () => {
                     <ContentRow>
                         <BoardColumn>
                             <ProgressArea>
-                                <ProgressBar {...game.calculateProgress()} />
+                                <PlacementProgressBar order={game.placementOrder} />
                             </ProgressArea>
                             <BoardArea>
                                 <BoardScaleWrapper scale={boardScale}>

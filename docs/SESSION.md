@@ -7,7 +7,7 @@ Persist game state to localStorage so users can resume their progress after page
 ```typescript
 interface SessionData {
   date: PuzzleDate;      // { month, day }
-  pieces: Piece[];       // Piece state (position, rotation, flips, isLocked)
+  pieces: Piece[];       // Piece state (position, rotation, flips, isLocked, placedSeq)
   isSolved: boolean;     // Whether the user solved the puzzle
 }
 ```

@@ -181,6 +181,23 @@ describe("statsRest", () => {
             expect(mockSubmitReport).not.toHaveBeenCalled();
         });
 
+        it("accepts pieces that carry the client-only placedSeq field", async () => {
+            // Fastify's default Ajv removes unknown properties; a stricter Ajv
+            // config would reject every completion from the current client.
+            setupInsertChain();
+            mockPuzzleSolvedForDate.mockReturnValue({ month: 0, day: 1 });
+            const withSeq = pieces.map((p, i) => ({ ...p, placedSeq: i + 1 }));
+
+            const res = await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces: withSeq }
+            });
+
+            expect(res.statusCode).toBe(200);
+        });
+
         it("returns 400 and triggers bug report for a mismatched solution date", async () => {
             // Solver says the pieces solve month=1/day=2, but client claims 0/1
             mockPuzzleSolvedForDate.mockReturnValue({ month: 1, day: 2 });

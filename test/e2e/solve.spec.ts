@@ -252,7 +252,9 @@ test.describe("Solve puzzle via UI", () => {
         // Track placed piece IDs to compute correct carousel index
         const placedPieceIds: number[] = [];
 
-        for (const solvedPiece of solution!.pieces) {
+        // Place in reverse id order (the solver returns pieces sorted by id), so
+        // the progress-bar order check in step 5 cannot pass by id order alone.
+        for (const solvedPiece of [...solution!.pieces].reverse()) {
             if (solvedPiece.position === null) {
                 continue;
             }
@@ -314,5 +316,10 @@ test.describe("Solve puzzle via UI", () => {
         // 4. Assert puzzle is solved (progress bar reaches 100%)
         await expect(page.getByRole("progressbar", { name: "Puzzle completion progress" }))
             .toHaveAttribute("aria-valuenow", "100", { timeout: 10_000 });
+
+        // 5. The progress bar lists the pieces in the order they were placed
+        const segmentIds = await page.locator("[data-segment-piece-id]")
+            .evaluateAll(els => els.map(el => Number(el.getAttribute("data-segment-piece-id"))));
+        expect(segmentIds).toEqual(placedPieceIds);
     });
 });
