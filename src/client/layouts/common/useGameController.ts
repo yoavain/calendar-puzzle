@@ -255,78 +255,10 @@ export function useGameController() {
         });
     }, [gameState, updatePresent]);
 
-    const handleCellClick = useCallback((position: Position) => {
-        // Tap-to-place: If a piece is selected, try to place it at this position
-        if (!gameState.selectedPieceId || gameState.isSolved) {
-            return;
-        }
-
-        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
-        if (!piece || piece.position) {
-            // Piece not found, or it is already placed on the board.
-            // Tapping a board cell while a placed piece is selected is intentionally a no-op:
-            // the selection stays unchanged and the user must drag the piece to move it.
-            return;
-        }
-
-        // Check if placement is valid
-        const valid = isValidPlacement(gameState.board, piece, position, true);
-        if (!valid) {
-            // Trigger visual feedback for invalid placement
-            triggerInvalidDropFeedback(piece, position);
-            return;
-        }
-
-        // Place the piece using the helper function
-        const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
-            piece,
-            position,
-            gameState.board,
-            gameState.pieces
-        );
-
-        const newState: GameState = {
-            ...gameState,
-            pieces: newPieces,
-            board: newBoard,
-            selectedPieceId: null // Deselect after placing
-        };
-
-        pushState(newState, {
-            type: "PLACE_PIECE",
-            pieceId: piece.id,
-            position
-        });
-    }, [gameState, pushState, triggerInvalidDropFeedback]);
-
-    const handlePieceDrop = useCallback((position: Position, dragItem: DragItem) => {
-        const { pieceId } = dragItem;
-        debugLogger.log("ctrl:handlePieceDrop", { pieceId, position });
-        if (gameState.isSolved) {
-            return;
-        }
-
-        const piece = gameState.pieces.find(p => p.id === pieceId);
-        if (!piece) {
-            return;
-        }
-
-        // If piece is dropped back to the same position, do nothing
-        if (piece.position && piece.position.x === position.x && piece.position.y === position.y) {
-            updatePresent({
-                ...gameState,
-                selectedPieceId: null
-            });
-            return;
-        }
-
-        const valid = isValidPlacement(gameState.board, piece, position, true);
-        if (!valid) {
-            // Trigger visual feedback for invalid drop
-            triggerInvalidDropFeedback(piece, position);
-            return;
-        }
-
+    // Commits a validated placement and detects a win. Every placement path
+    // (drag, tap, keyboard Enter) goes through here, so the puzzle is solved
+    // however the last piece arrives.
+    const finalizePlacement = useCallback((piece: PieceType, position: Position) => {
         const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
             piece,
             position,
@@ -358,7 +290,7 @@ export function useGameController() {
         }
 
         // Create a completely new state object
-        const newState = {
+        const newState: GameState = {
             ...gameState,
             board: newBoard,
             pieces: newPieces,
@@ -369,10 +301,66 @@ export function useGameController() {
 
         pushState(newState, {
             type: "PLACE_PIECE",
-            pieceId,
+            pieceId: piece.id,
             position
         });
-    }, [gameState, updatePresent, triggerInvalidDropFeedback, pushState, user, justSolvedRef, statsAutoOpenTimeoutRef, setIsStatsOpen]);
+    }, [gameState, pushState, user, justSolvedRef, statsAutoOpenTimeoutRef, setIsStatsOpen]);
+
+    const handleCellClick = useCallback((position: Position) => {
+        // Tap-to-place: If a piece is selected, try to place it at this position
+        if (!gameState.selectedPieceId || gameState.isSolved) {
+            return;
+        }
+
+        const piece = gameState.pieces.find(p => p.id === gameState.selectedPieceId);
+        if (!piece || piece.position) {
+            // Piece not found, or it is already placed on the board.
+            // Tapping a board cell while a placed piece is selected is intentionally a no-op:
+            // the selection stays unchanged and the user must drag the piece to move it.
+            return;
+        }
+
+        // Check if placement is valid
+        const valid = isValidPlacement(gameState.board, piece, position, true);
+        if (!valid) {
+            // Trigger visual feedback for invalid placement
+            triggerInvalidDropFeedback(piece, position);
+            return;
+        }
+
+        finalizePlacement(piece, position);
+    }, [gameState, finalizePlacement, triggerInvalidDropFeedback]);
+
+    const handlePieceDrop = useCallback((position: Position, dragItem: DragItem) => {
+        const { pieceId } = dragItem;
+        debugLogger.log("ctrl:handlePieceDrop", { pieceId, position });
+        if (gameState.isSolved) {
+            return;
+        }
+
+        const piece = gameState.pieces.find(p => p.id === pieceId);
+        if (!piece) {
+            return;
+        }
+
+        // If piece is dropped back to the same position, do nothing
+        if (piece.position && piece.position.x === position.x && piece.position.y === position.y) {
+            updatePresent({
+                ...gameState,
+                selectedPieceId: null
+            });
+            return;
+        }
+
+        const valid = isValidPlacement(gameState.board, piece, position, true);
+        if (!valid) {
+            // Trigger visual feedback for invalid drop
+            triggerInvalidDropFeedback(piece, position);
+            return;
+        }
+
+        finalizePlacement(piece, position);
+    }, [gameState, updatePresent, triggerInvalidDropFeedback, finalizePlacement]);
 
     const handlePieceReturnToPile = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceReturnToPile", { pieceId });
