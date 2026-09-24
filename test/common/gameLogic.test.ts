@@ -1,9 +1,8 @@
-import { getTransformedShape, puzzleSolvedForDate, isValidPlacement, clearPieceFromBoard, calculateProgress } from "../../src/common/gameLogic";
+import { getTransformedShape, puzzleSolvedForDate, isValidPlacement, clearPieceFromBoard, getPlacementOrder } from "../../src/common/gameLogic";
 import solution0101 from "./resources/01-01.json";
 import type { Board, Piece, PuzzleDate } from "../../src/common/types";
 import type { PieceId } from "../../src/common/pieceData";
 import { initializeBoard, initializePieces } from "../../src/common/initialize";
-import { TOTAL_PLAYABLE_CELLS } from "../../src/common/consts";
 
 describe("gameLogic", () => {
     describe("puzzleSolvedForDate", () => {
@@ -483,46 +482,47 @@ describe("gameLogic", () => {
         });
     });
 
-    describe("calculateProgress", () => {
-        const makePiece = (id: PieceId, position: { x: number; y: number } | null = null): Piece => ({
+    describe("getPlacementOrder", () => {
+        const makePiece = (id: PieceId, position: { x: number; y: number } | null, placedSeq?: number): Piece => ({
             id,
             position,
             rotation: 0,
             isFlippedH: false,
-            isFlippedV: false
+            isFlippedV: false,
+            placedSeq
         });
 
-        it("should return 0% when no pieces are placed", () => {
-            const pieces = initializePieces();
-            const result = calculateProgress(pieces);
-            expect(result.covered).toBe(0);
-            expect(result.percentage).toBe(0);
-            expect(result.total).toBe(TOTAL_PLAYABLE_CELLS);
+        it("returns an empty list when nothing is placed", () => {
+            expect(getPlacementOrder(initializePieces())).toEqual([]);
         });
 
-        it("should calculate correct count for some placed pieces", () => {
-            // Piece 7 is 2x3 = 6 cells
-            const pieces = [makePiece(7, { x: 0, y: 0 })];
-            const result = calculateProgress(pieces);
-            expect(result.covered).toBe(6);
-        });
-
-        it("should count cells correctly when all pieces are placed", () => {
-            const pieces = (solution0101.pieces as Piece[]);
-            const result = calculateProgress(pieces);
-            // 8 pieces covering all but 2 highlighted cells = TOTAL_PLAYABLE_CELLS cells
-            expect(result.covered).toBe(TOTAL_PLAYABLE_CELLS);
-            expect(result.percentage).toBe(100);
-        });
-
-        it("should ignore pieces with null positions", () => {
+        it("orders placed pieces by placedSeq, oldest first", () => {
             const pieces = [
-                makePiece(7, { x: 0, y: 0 }),
-                makePiece(8, null) // not placed
+                makePiece(1, { x: 0, y: 0 }, 3),
+                makePiece(2, { x: 3, y: 0 }, 1),
+                makePiece(3, { x: 0, y: 4 }, 2)
             ];
-            const result = calculateProgress(pieces);
-            // Only piece 7 counts (6 cells)
-            expect(result.covered).toBe(6);
+            expect(getPlacementOrder(pieces)).toEqual([2, 3, 1]);
+        });
+
+        it("leaves out pieces that are off the board", () => {
+            const pieces = [makePiece(1, { x: 0, y: 0 }, 1), makePiece(2, null)];
+            expect(getPlacementOrder(pieces)).toEqual([1]);
+        });
+
+        it("puts placed pieces without placedSeq first, by id (old sessions, revealed solutions)", () => {
+            const pieces = [
+                makePiece(5, { x: 0, y: 0 }, 2),
+                makePiece(3, { x: 3, y: 0 }),
+                makePiece(1, { x: 0, y: 4 })
+            ];
+            expect(getPlacementOrder(pieces)).toEqual([1, 3, 5]);
+        });
+
+        it("does not reorder the input array", () => {
+            const pieces = [makePiece(2, { x: 0, y: 0 }, 2), makePiece(1, { x: 3, y: 0 }, 1)];
+            getPlacementOrder(pieces);
+            expect(pieces.map(p => p.id)).toEqual([2, 1]);
         });
     });
 });

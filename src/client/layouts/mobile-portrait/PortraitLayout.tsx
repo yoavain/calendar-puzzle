@@ -6,7 +6,7 @@ import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
-import { ProgressBar } from "../../components/ProgressBar";
+import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 
 import { useGameController } from "../common/useGameController";
 import { useDndAdapters } from "../common/useDndAdapters";
@@ -29,7 +29,7 @@ import {
  * 
  * Structure:
  * - MobileToolbar at top (hamburger menu)
- * - ProgressBar below toolbar
+ * - PlacementProgressBar below toolbar
  * - Board centered in middle (with @dnd-kit drop support)
  * - PieceCarousel at bottom (with @dnd-kit drag support)
  * 
@@ -62,7 +62,7 @@ export const PortraitLayout: React.FC = () => {
                 <ContentArea>
                     {/* Progress Bar */}
                     <ProgressArea>
-                        <ProgressBar {...game.calculateProgress()} />
+                        <PlacementProgressBar order={game.placementOrder} />
                     </ProgressArea>
 
                     {/* Board Area */}

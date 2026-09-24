@@ -23,6 +23,7 @@ export interface Piece {
     isFlippedV: boolean; // Vertical flip
     rotation: 0 | 90 | 180 | 270; // degrees
     isLocked?: boolean; // When true, piece cannot be moved or undone (used for hints)
+    placedSeq?: number; // Placement order on the board (1 = first). Absent when off the board or unknown.
 }
 
 export interface EncryptedPayload {

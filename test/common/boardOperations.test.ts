@@ -162,6 +162,14 @@ describe("boardOperations", () => {
             expect(state.board[6][6].isOccupied).toBe(true);
             // Cells outside (6,7), (7,6), (7,7), etc. don't exist, so no error
         });
+
+        it("keeps placedSeq when rebuilding from a saved session", () => {
+            const pieces: Piece[] = [
+                { id: 1, position: { x: 0, y: 2 }, rotation: 0, isFlippedH: false, isFlippedV: false, isLocked: false, placedSeq: 4 }
+            ];
+            const state = rebuildGameState(pieces, testDate, false);
+            expect(state.pieces[0].placedSeq).toBe(4);
+        });
     });
 
     describe("updateBoardAndPieces", () => {
@@ -372,6 +380,42 @@ describe("boardOperations", () => {
             expect(result.board[2][1].isOccupied).toBe(true);
             expect(result.board[2][2].isOccupied).toBe(true);
             expect(result.board[2][3].isOccupied).toBe(true);
+        });
+
+        describe("placement sequence", () => {
+            it("stamps placedSeq 1 on the first placement", () => {
+                const result = updateBoardAndPieces(currentPieces[0], { x: 0, y: 2 }, currentBoard, currentPieces);
+                expect(result.pieces[0].placedSeq).toBe(1);
+                expect(result.pieces[1].placedSeq).toBeUndefined();
+            });
+
+            it("stamps each new placement one higher than the newest piece on the board", () => {
+                const first = updateBoardAndPieces(currentPieces[0], { x: 0, y: 2 }, currentBoard, currentPieces);
+                const second = updateBoardAndPieces(first.pieces[1], { x: 3, y: 2 }, first.board, first.pieces);
+                expect(second.pieces[1].placedSeq).toBe(2);
+            });
+
+            it("restamps a piece moved to another board cell so it becomes the newest", () => {
+                const first = updateBoardAndPieces(currentPieces[0], { x: 0, y: 2 }, currentBoard, currentPieces);
+                const second = updateBoardAndPieces(first.pieces[1], { x: 3, y: 2 }, first.board, first.pieces);
+                const moved = updateBoardAndPieces(second.pieces[0], { x: 0, y: 4 }, second.board, second.pieces);
+                expect(moved.pieces[0].placedSeq).toBe(3);
+                expect(moved.pieces[1].placedSeq).toBe(2);
+            });
+
+            it("clears placedSeq when a piece returns to the pile", () => {
+                const first = updateBoardAndPieces(currentPieces[0], { x: 0, y: 2 }, currentBoard, currentPieces);
+                const removed = updateBoardAndPieces(first.pieces[0], null, first.board, first.pieces);
+                expect(removed.pieces[0].placedSeq).toBeUndefined();
+            });
+
+            it("places after the newest remaining piece when a middle piece was removed", () => {
+                const first = updateBoardAndPieces(currentPieces[0], { x: 0, y: 2 }, currentBoard, currentPieces);
+                const second = updateBoardAndPieces(first.pieces[1], { x: 3, y: 2 }, first.board, first.pieces);
+                const removed = updateBoardAndPieces(second.pieces[0], null, second.board, second.pieces);
+                const replaced = updateBoardAndPieces(removed.pieces[0], { x: 0, y: 4 }, removed.board, removed.pieces);
+                expect(replaced.pieces[0].placedSeq).toBe(3);
+            });
         });
     });
 });

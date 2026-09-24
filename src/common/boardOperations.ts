@@ -58,7 +58,7 @@ export const rebuildGameState = (pieces: Piece[], date: PuzzleDate, isSolved: bo
  * This pure function:
  * 1. Creates a deep copy of the board
  * 2. Clears the piece's old position (if any)
- * 3. Places the piece at the new position (if provided)
+ * 3. Places the piece at the new position (if provided) and stamps its placement sequence
  * 4. Returns updated board and pieces array
  *
  * @param piece - The piece to move (with its current transformation state)
@@ -97,6 +97,15 @@ export const updateBoardAndPieces = (
         }
     }
 
+    // The newest placement gets the next sequence number, so the progress bar
+    // can show pieces in the order they went onto the board. Moving a piece
+    // to another cell counts as a new placement.
+    const placedSeq = newPosition
+        ? Math.max(0, ...currentPieces
+            .filter(p => p.id !== piece.id && p.position !== null)
+            .map(p => p.placedSeq ?? 0)) + 1
+        : undefined;
+
     // Update pieces array
     const newPieces = currentPieces.map(p =>
         p.id === piece.id
@@ -106,7 +115,8 @@ export const updateBoardAndPieces = (
                 rotation: piece.rotation,
                 isFlippedH: piece.isFlippedH,
                 isFlippedV: piece.isFlippedV,
-                isLocked: piece.isLocked ?? false
+                isLocked: piece.isLocked ?? false,
+                placedSeq
             }
             : p
     );

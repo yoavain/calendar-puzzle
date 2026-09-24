@@ -1,7 +1,8 @@
 import type { Board, Piece, Position, PuzzleDate } from "./types";
-import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_IN_MONTH, DAYS_LAYOUT, TOTAL_PLAYABLE_CELLS } from "./consts";
+import { BOARD_HEIGHT, BOARD_WIDTH, DAYS_IN_MONTH, DAYS_LAYOUT } from "./consts";
 import { isCellPlayable } from "./boardGeometry";
 import { getPieceShape } from "./pieceData";
+import type { PieceId } from "./pieceData";
 
 /**
  * Get the transformed shape of a piece based on its rotation and flips
@@ -226,17 +227,12 @@ export const clearPieceFromBoard = (board: Board, piece: Piece): void => {
 };
 
 /**
- * Calculate puzzle progress based on placed pieces
- * Uses piece weights (cell count per piece) for efficient calculation
+ * Ids of the pieces on the board, in the order they were placed (oldest first).
+ * Placed pieces without a `placedSeq` (sessions saved before it existed,
+ * revealed solutions) sort first, by id.
  */
-export const calculateProgress = (pieces: Piece[]): { covered: number; total: number; percentage: number } => {
-    const covered = pieces
+export const getPlacementOrder = (pieces: Piece[]): PieceId[] =>
+    pieces
         .filter(p => p.position !== null)
-        .reduce((sum, p) => sum + getPieceShape(p.id).flat().filter(Boolean).length, 0);
-    
-    return {
-        covered,
-        total: TOTAL_PLAYABLE_CELLS,
-        percentage: (covered / TOTAL_PLAYABLE_CELLS) * 100
-    };
-};
+        .sort((a, b) => ((a.placedSeq ?? 0) - (b.placedSeq ?? 0)) || (a.id - b.id))
+        .map(p => p.id);

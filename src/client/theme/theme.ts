@@ -22,15 +22,11 @@ interface GameRadiusTokens {
     board: number;
 }
 
-// Game-level color tokens that don't belong to the MUI palette: progress-bar
-// thresholds, medal ranks, on-piece text, and the theme-switch pill.
+// Game-level color tokens that don't belong to the MUI palette: the
+// progress-bar track, medal ranks, on-piece text, and the theme-switch pill.
 interface GameColorTokens {
     progress: {
         track: string;
-        low: string;
-        medium: string;
-        high: string;
-        complete: string;
     };
     medal: {
         gold: string;
@@ -123,16 +119,10 @@ const gameRadiusTokens: GameRadiusTokens = {
 // they share a single visual baseline.
 const toolbarButtonHeight = 32;
 
-// Progress-bar threshold + medal + on-piece colors are theme-invariant: they
-// communicate status/rank and should read the same in both modes. The switch
-// pill inverts between modes so the moon/sun affordance stays legible.
+// Medal + on-piece colors are theme-invariant: they communicate rank and should
+// read the same in both modes. The progress track and the switch pill change
+// between modes so they stay legible on each background.
 const sharedGameColorTokens = {
-    progress: {
-        low: "#dc3545",
-        medium: "#f59e0b",
-        high: "#84cc16",
-        complete: "#22c55e"
-    },
     medal: {
         gold: "#FFD700",
         silver: "#C0C0C0",
@@ -144,8 +134,7 @@ const sharedGameColorTokens = {
 const lightGameColorTokens: GameColorTokens = {
     ...sharedGameColorTokens,
     progress: {
-        track: "#e0e0e0",
-        ...sharedGameColorTokens.progress
+        track: "#e0e0e0"
     },
     switch: {
         track: "#aab4be",
@@ -156,8 +145,7 @@ const lightGameColorTokens: GameColorTokens = {
 const darkGameColorTokens: GameColorTokens = {
     ...sharedGameColorTokens,
     progress: {
-        track: "#333333",
-        ...sharedGameColorTokens.progress
+        track: "#333333"
     },
     switch: {
         track: "#8796A5",

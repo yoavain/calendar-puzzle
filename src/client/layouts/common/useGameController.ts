@@ -3,7 +3,7 @@ import confetti from "canvas-confetti";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
-import { calculateProgress, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
+import { getPlacementOrder, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { initializeBoard, initializeGame } from "../../../common/initialize";
 import { getRandomPuzzleDate } from "../../../common/streakUtils";
@@ -756,8 +756,8 @@ export function useGameController() {
         handleGlobalDrop,
         handleGlobalDragOver,
 
-        // Utility
-        calculateProgress: () => calculateProgress(gameState.pieces)
+        // Progress bar: pieces on the board, in placement order
+        placementOrder: getPlacementOrder(gameState.pieces)
     };
 }
 
