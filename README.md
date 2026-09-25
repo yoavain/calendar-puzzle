@@ -121,6 +121,12 @@ calendar-puzzle/
 | `npm run storybook` | Start Storybook dev server (port 6006) |
 | `npm run build-storybook` | Build static Storybook site |
 
+### Promo Video
+
+| Script | Description |
+| :--- | :--- |
+| `npm run promo -- [MM-dd]` | Render the 15-second promo video for a date (default: today) to `promo/MM-dd.mp4`. Needs ffmpeg on PATH. Set `PROMO_GPU=true` in `.env` to draw on the GPU (about 3x faster, frames not bit-identical to the CPU render). |
+
 ## Getting Started
 
 ### Prerequisites
