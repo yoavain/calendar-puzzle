@@ -113,6 +113,46 @@ export const SolvedCelebration: Story = {
     render: () => <SolvedCelebrationStory />
 };
 
+// Places the Jan 1 solution one piece per click, so each click plays the
+// landing animation. The last click solves the board and plays the win sweep.
+const PieceLandingStory = () => {
+    const [placed, setPlaced] = useState(0);
+    if (!solvedState) {
+        return <div>Solver failed to find a solution for Jan 1</div>;
+    }
+    const solution = solvedState.pieces;
+    const pieces = initializePieces().map(p => {
+        const index = solution.findIndex(s => s.id === p.id);
+        return index < placed ? solution[index] : p;
+    });
+    const isSolved = placed >= solution.length;
+    return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <Board
+                board={isSolved ? solvedState.board : initializeBoard(JAN_1)}
+                pieces={pieces}
+                onCellClick={noop}
+                onPieceDrop={noop}
+                draggedPieceId={null}
+                onDragStart={noop}
+                onDragEnd={noop}
+                isSolved={isSolved}
+            />
+            <button
+                onClick={() => setPlaced(isSolved ? 0 : placed + 1)}
+                style={{ padding: "8px 20px", cursor: "pointer", fontSize: 14 }}
+            >
+                {isSolved ? "Clear board" : `Place piece ${placed + 1} of ${solution.length}`}
+            </button>
+        </div>
+    );
+};
+
+export const PieceLanding: Story = {
+    name: "Piece Landing",
+    render: () => <PieceLandingStory />
+};
+
 export const TodayDate: Story = {
     name: "Feb 20 (Today)",
     render: () => (

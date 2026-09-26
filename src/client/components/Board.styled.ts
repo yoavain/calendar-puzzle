@@ -20,6 +20,50 @@ export const invalidDropShake = keyframes`
     }
 `;
 
+// A placed piece drops the last few pixels onto the board and flashes. Every
+// cell of the piece runs it with the same timing, so the piece moves as one.
+// It reaches the cell's resting opacity (--cell-opacity, below 1 for hinted
+// pieces) as it touches down.
+export const pieceLandAnim = keyframes`
+    0% {
+        opacity: 0;
+        transform: translateY(-12px);
+        animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45);
+    }
+    35% {
+        opacity: var(--cell-opacity, 1);
+        transform: translateY(0);
+        filter: brightness(1.6);
+        animation-timing-function: ease-out;
+    }
+    100% {
+        transform: translateY(0);
+        filter: brightness(1);
+    }
+`;
+
+// Win sweep: each cell lifts and brightens, staggered by --win-delay so a
+// diagonal wave crosses the board from the top-left corner.
+export const winSweepAnim = keyframes`
+    35% {
+        transform: translateY(-4px);
+        filter: brightness(1.45);
+    }
+`;
+
+/** Per-cell delay for the win sweep, along the top-left -> bottom-right diagonal. */
+export const winSweepDelay = (x: number, y: number): string => `${Math.round((x * 0.6 + y * 0.8) * 55)}ms`;
+
+const REVEAL_ANIMATION = `${revealCellAnim} 0.3s ease-out var(--reveal-delay, 0ms) backwards`;
+
+// Browsers match running animations by name, so adding or dropping the
+// landing / sweep entries never restarts the reveal fade that precedes them.
+const cellAnimation = (isLanding?: boolean, isCelebrating?: boolean): string => [
+    REVEAL_ANIMATION,
+    ...(isLanding ? [`${pieceLandAnim} 480ms 0ms`] : []),
+    ...(isCelebrating ? [`${winSweepAnim} 560ms ease-out var(--win-delay, 0ms)`] : [])
+].join(", ");
+
 // Board container
 export const BoardContainer = styled("div")(({ theme }) => ({
     position: "relative",
@@ -65,6 +109,10 @@ export interface BoardCellProps {
     isSolved?: boolean;
     /** Renders a keyboard-focus outline when the keyboard cursor is on this cell. */
     isKeyboardCursor?: boolean;
+    /** Plays the landing animation (cell of the piece that was just placed). */
+    isLanding?: boolean;
+    /** Plays the win sweep (the board was just solved). */
+    isCelebrating?: boolean;
 }
 
 // Board cell
@@ -81,7 +129,9 @@ export const BoardCell = styled("div", {
         "pieceId",
         "solutionRevealed",
         "isSolved",
-        "isKeyboardCursor"
+        "isKeyboardCursor",
+        "isLanding",
+        "isCelebrating"
     ].includes(prop as string)
 })<BoardCellProps>(({
     theme,
@@ -96,7 +146,9 @@ export const BoardCell = styled("div", {
     pieceId,
     solutionRevealed,
     isSolved,
-    isKeyboardCursor
+    isKeyboardCursor,
+    isLanding,
+    isCelebrating
 }) => ({
     width: theme.game.cellSizePx,
     height: theme.game.cellSizePx,
@@ -111,8 +163,10 @@ export const BoardCell = styled("div", {
     margin: 0,
     padding: 0,
     boxSizing: "border-box",
-    animation: `${revealCellAnim} 0.3s ease-out backwards`,
-    animationDelay: "var(--reveal-delay, 0ms)",
+    animation: cellAnimation(isLanding, isCelebrating),
+    "@media (prefers-reduced-motion: reduce)": {
+        animation: REVEAL_ANIMATION
+    },
     transition: "background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.15s ease, transform 0.15s ease",
 
     // Hidden cell
@@ -178,7 +232,8 @@ export const BoardCell = styled("div", {
         // Subtle inset gradient for depth perception on placed pieces
         backgroundImage: PIECE_CELL_GRADIENT,
         // Apply opacity for hinted pieces (30% faded) or solution revealed (15% faded)
-        opacity: isLocked ? theme.game.hintedOpacity : (solutionRevealed ? theme.game.solutionRevealedOpacity : 1),
+        opacity: "var(--cell-opacity)",
+        "--cell-opacity": isLocked ? theme.game.hintedOpacity : (solutionRevealed ? theme.game.solutionRevealedOpacity : 1),
 
         ...(!isSolved && {
             "&:hover": {

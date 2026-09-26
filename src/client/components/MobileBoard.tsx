@@ -2,7 +2,8 @@ import React, { useCallback, useRef, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import type { Board as BoardType, Piece as PieceType, Position } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
-import { BoardContainer, BoardRow, BoardCell, StyledCellText } from "./Board.styled";
+import { useBoardAnimations } from "../hooks/useBoardAnimations";
+import { BoardContainer, BoardRow, BoardCell, StyledCellText, winSweepDelay } from "./Board.styled";
 import { useDragState } from "../layouts/common/DndProvider";
 import { DraggableBoardCell } from "./DraggableBoardCell";
 
@@ -32,6 +33,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
 }) => {
     const boardRef = useRef<HTMLDivElement>(null);
     const { draggedPiece, hoverPosition, registerBoardElement } = useDragState();
+    const { landingPieceId, celebrating } = useBoardAnimations(pieces, isSolved);
 
     // Make the entire board a single droppable target
     const { setNodeRef } = useDroppable({
@@ -114,6 +116,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                 data-cell-x={x}
                 data-cell-y={y}
                 data-piece-id={piece?.id}
+                style={{ "--win-delay": winSweepDelay(x, y) } as React.CSSProperties}
                 isPlayable={isPlayable}
                 isPieceCell={isPieceCell}
                 isHidden={isHidden}
@@ -124,6 +127,8 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
                 solutionRevealed={solutionRevealed}
                 isSolved={isSolved}
                 isHighlighted={cell.isHighlighted}
+                isLanding={isPieceCell && piece.id === landingPieceId}
+                isCelebrating={celebrating}
                 isDragOver={isHoverPreview && !isPieceCell}
                 data-drag-over={(isHoverPreview && !isPieceCell) || undefined}
                 onClick={() => {

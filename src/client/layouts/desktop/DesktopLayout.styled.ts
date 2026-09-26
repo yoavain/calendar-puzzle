@@ -53,11 +53,20 @@ export const ScaleContainer = styled(Box)<{ scale: number }>(({ scale }) => {
 });
 
 /**
- * Game title styled component.
+ * Game title: the CALENDAR / PUZZLE pixel wordmark from the landing page,
+ * set on one line. The images carry the accessible name via their alt text.
  */
 export const GameTitle = styled(Typography)(({ theme }) => ({
     marginBottom: theme.spacing(2),
-    fontWeight: "bold",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    gap: theme.spacing(1.5),
+    "& img": {
+        height: 36,
+        width: "auto",
+        display: "block"
+    },
     userSelect: "none",
     WebkitUserSelect: "none",
     MozUserSelect: "none",

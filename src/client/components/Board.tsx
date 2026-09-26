@@ -8,8 +8,8 @@ import { getPieceColor } from "../utils/pieceColors";
 import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
 import type { InvalidDropCell } from "../layouts/common/useGameController";
-import { BoardCell, BoardContainer, BoardRow, StyledCellText } from "./Board.styled";
-import { WinCelebration } from "./WinCelebration";
+import { useBoardAnimations } from "../hooks/useBoardAnimations";
+import { BoardCell, BoardContainer, BoardRow, StyledCellText, winSweepDelay } from "./Board.styled";
 
 interface BoardProps {
     board: BoardType;
@@ -41,6 +41,7 @@ export const Board = React.memo<BoardProps>(({
     selectedPieceId = null
 }) => {
     const theme = useTheme();
+    const { landingPieceId, celebrating } = useBoardAnimations(pieces, isSolved);
     const [dragOverCell, setDragOverCell] = useState<{ x: number; y: number } | null>(null);
     // Store the anchor offset (in piece coordinates) set during handleDragStart.
     // getData() is unavailable during dragover in HTML5 DnD, so we persist the
@@ -415,7 +416,6 @@ export const Board = React.memo<BoardProps>(({
             onKeyDown={handleBoardKeyDown}
             data-testid="board"
         >
-            <WinCelebration active={isSolved} />
             {board.map((row, y) => (
                 <BoardRow key={y}>
                     {row.map((cell, x) => {
@@ -453,7 +453,10 @@ export const Board = React.memo<BoardProps>(({
                         return (
                             <BoardCell
                                 key={`${x}-${y}`}
-                                style={{ "--reveal-delay": `${(x + y) * 25}ms` } as React.CSSProperties}
+                                style={{
+                                    "--reveal-delay": `${(x + y) * 25}ms`,
+                                    "--win-delay": winSweepDelay(x, y)
+                                } as React.CSSProperties}
                                 isPlayable={cell.isPlayable}
                                 isHighlighted={cell.isHighlighted}
                                 isPieceCell={!!piece}
@@ -463,6 +466,8 @@ export const Board = React.memo<BoardProps>(({
                                 isInvalidDrop={isInvalid}
                                 isDragOver={isPreview}
                                 isKeyboardCursor={isCursor}
+                                isLanding={!!piece && piece.id === landingPieceId}
+                                isCelebrating={celebrating}
                                 pieceId={piece?.id}
                                 solutionRevealed={solutionRevealed}
                                 isSolved={isSolved}

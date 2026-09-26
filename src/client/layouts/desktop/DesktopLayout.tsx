@@ -32,6 +32,8 @@ import { YearCompleteDialog } from "../../components/YearCompleteDialog";
 import { ShareDialog } from "../../components/ShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
 import { ToolbarIconButton } from "../../components/ToolbarIconButton";
+import calendarImg from "../../assets/CALENDAR.png";
+import puzzleImg from "../../assets/PUZZLE.png";
 
 import { useGameController } from "../common/useGameController";
 import {
@@ -209,7 +211,8 @@ export const DesktopLayout: React.FC = () => {
                             component="h1" 
                             align="center" 
                         >
-                        Calendar Puzzle
+                            <img src={calendarImg} alt="Calendar" />
+                            <img src={puzzleImg} alt="Puzzle" />
                         </GameTitle>
 
                         {/* Progress Bar */}
