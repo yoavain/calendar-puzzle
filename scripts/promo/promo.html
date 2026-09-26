@@ -1,0 +1,1408 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Calendar Puzzle Promo</title>
+<style>
+  html, body { margin: 0; background: #000; overflow: hidden; }
+  canvas { display: block; width: 1920px; height: 1080px; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+"use strict";
+// ============================================================================
+// Calendar Puzzle - 15s promo. Deterministic: renderFrame(t) draws time t.
+// Built and rendered by scripts/generate-promo.ts; open the built page with ?play or ?t=<sec> to preview.
+// ============================================================================
+const ASSETS = { cal: "__CAL__", puz: "__PUZ__" };
+const SOLUTION = __SOL__;
+
+const W = 1920, H = 1080, DUR = 15;
+const view = document.getElementById("c");
+const out = view.getContext("2d");
+const scratch = document.createElement("canvas");
+scratch.width = W; scratch.height = H;
+const ctx = scratch.getContext("2d");
+
+// ---------------------------------------------------------------- math/easing
+const PI = Math.PI, TAU = PI * 2;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const E = {
+    inQuad: x => x * x,
+    outQuad: x => 1 - (1 - x) * (1 - x),
+    inCubic: x => x * x * x,
+    outCubic: x => 1 - Math.pow(1 - x, 3),
+    inOutCubic: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+    outQuart: x => 1 - Math.pow(1 - x, 4),
+    inOutQuart: x => x < .5 ? 8 * x ** 4 : 1 - Math.pow(-2 * x + 2, 4) / 2,
+    outQuint: x => 1 - Math.pow(1 - x, 5),
+    outExpo: x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x),
+    inExpo: x => x <= 0 ? 0 : Math.pow(2, 10 * x - 10),
+    inOutExpo: x => x <= 0 ? 0 : x >= 1 ? 1 : x < .5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2,
+    outBack: (x, s = 1.70158) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2),
+    inBack: (x, s = 1.70158) => (s + 1) * x * x * x - s * x * x
+};
+// Damped oscillation impulse (0 at t<=0).
+const ring = (t, f = 5, d = 8) => t <= 0 ? 0 : Math.sin(t * f * TAU) * Math.exp(-t * d);
+const lerpAngle = (a, b, t) => a + (b - a) * t;
+
+function mulberry32(a) {
+    return function () {
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+// Catmull-Rom keyframe track -> smooth, non-stopping camera motion.
+function track(keys, t, prop) {
+    if (t <= keys[0].t) return keys[0][prop];
+    const n = keys.length;
+    if (t >= keys[n - 1].t) return keys[n - 1][prop];
+    let i = 0;
+    while (t > keys[i + 1].t) i++;
+    const k0 = keys[Math.max(0, i - 1)], k1 = keys[i], k2 = keys[i + 1], k3 = keys[Math.min(n - 1, i + 2)];
+    const u = (t - k1.t) / (k2.t - k1.t);
+    const dt = k2.t - k1.t;
+    const m1 = (k2[prop] - k0[prop]) / Math.max(1e-6, k2.t - k0.t) * dt;
+    const m2 = (k3[prop] - k1[prop]) / Math.max(1e-6, k3.t - k1.t) * dt;
+    const u2 = u * u, u3 = u2 * u;
+    return (2 * u3 - 3 * u2 + 1) * k1[prop] + (u3 - 2 * u2 + u) * m1 + (-2 * u3 + 3 * u2) * k2[prop] + (u3 - u2) * m2;
+}
+
+// ---------------------------------------------------------------- 3D
+const rx = a => { const c = Math.cos(a), s = Math.sin(a); return [1, 0, 0, 0, c, -s, 0, s, c]; };
+const ry = a => { const c = Math.cos(a), s = Math.sin(a); return [c, 0, s, 0, 1, 0, -s, 0, c]; };
+const rz = a => { const c = Math.cos(a), s = Math.sin(a); return [c, -s, 0, s, c, 0, 0, 0, 1]; };
+const mm = (A, B) => {
+    const r = new Array(9);
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++)
+        r[i * 3 + j] = A[i * 3] * B[j] + A[i * 3 + 1] * B[3 + j] + A[i * 3 + 2] * B[6 + j];
+    return r;
+};
+const mv = (M, v) => [M[0] * v[0] + M[1] * v[1] + M[2] * v[2], M[3] * v[0] + M[4] * v[1] + M[5] * v[2], M[6] * v[0] + M[7] * v[1] + M[8] * v[2]];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const norm = a => { const l = Math.hypot(a[0], a[1], a[2]); return [a[0] / l, a[1] / l, a[2] / l]; };
+const vlerp = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+
+let CAM = null;
+function setCamera(c) {
+    const V = mm(rz(c.roll), mm(ry(c.yaw), mm(rx(-c.pitch), rz(c.spin))));
+    CAM = { ...c, V };
+}
+function toView(p) { return mv(CAM.V, sub(p, CAM.T)); }
+function projV(q) {
+    const d = CAM.dist - q[2];
+    return { x: W / 2 + CAM.sx + CAM.f * q[0] / d, y: H / 2 + CAM.sy - CAM.f * q[1] / d, d };
+}
+const proj = p => projV(toView(p));
+const EYE = () => [0, 0, CAM.dist];
+
+// World light (board space). Rest-top of a flat block renders at exactly its base colour.
+const LIGHT = norm([-0.45, 0.25, 1]);
+const AMB = 0.34, DIF = 0.66;
+const REST_LIGHT = AMB + DIF * LIGHT[2];
+const shadeF = n => (AMB + DIF * Math.max(0, dot(n, LIGHT))) / REST_LIGHT;
+
+// ---------------------------------------------------------------- colours
+const PC = { 1: "#E07A5F", 2: "#3D9970", 3: "#6B4423", 4: "#8B5CF6", 5: "#DB5B80", 6: "#E8AA14", 7: "#8DA547", 8: "#4169E1" };
+const YEL = "#ffeb3b";
+const hex2rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const scaleC = (c, f) => c.map(v => clamp(v * f, 0, 255));
+const mixC = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+const WHITE = [255, 255, 255];
+const PRGB = {}; for (const k in PC) PRGB[k] = hex2rgb(PC[k]);
+const YRGB = hex2rgb(YEL);
+
+// ---------------------------------------------------------------- game data
+const SHAPES = {
+    1: [[1, 0], [1, 0], [1, 1], [1, 0]], 2: [[1, 1, 1], [1, 0, 1]], 3: [[1, 0, 0], [1, 1, 1], [0, 0, 1]],
+    4: [[0, 1], [0, 1], [1, 1], [1, 0]], 5: [[0, 1], [1, 1], [1, 1]], 6: [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
+    7: [[1, 1], [1, 1], [1, 1]], 8: [[1, 0], [1, 0], [1, 0], [1, 1]]
+};
+const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+const DIM = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const DAYS_W = [7, 7, 7, 7, 3];
+const DATE = __DATE__;   // { month: 0-11, day: 1-31 }, filled in by scripts/generate-promo.ts
+const cellW = (cx, cy) => [cx - 3, 3 - cy];     // board cell -> world XY (cell centre)
+const monthCell = m => [m % 6, Math.floor(m / 6)];
+const dayCell = d => [(d - 1) % 7, 2 + Math.floor((d - 1) / 7)];
+
+const TILES = [];
+for (let cy = 0; cy < 7; cy++) for (let cx = 0; cx < 7; cx++) {
+    const ok = cy < 2 ? cx < 6 : cx < DAYS_W[cy - 2];
+    if (!ok) continue;
+    const label = cy < 2 ? MONTHS[cy * 6 + cx] : String((cy - 2) * 7 + cx + 1);
+    TILES.push({ cx, cy, label, month: cy < 2 });
+}
+
+const PIECE_T = 0.4;   // block thickness (cell = 1)
+const TILE_T = 0.06;
+const REST_Z = TILE_T + PIECE_T / 2;
+
+// Piece models: base shape centred on its centroid, and the solved pose.
+const PIECES = {};
+for (const s of SOLUTION) {
+    const base = [];
+    SHAPES[s.id].forEach((row, y) => row.forEach((v, x) => v && base.push([x, -y])));
+    const c0 = base.reduce((a, p) => [a[0] + p[0] / base.length, a[1] + p[1] / base.length], [0, 0]);
+    const local = base.map(p => [p[0] - c0[0], p[1] - c0[1]]);
+    const tw = s.cells.map(([cx, cy]) => cellW(cx, cy));
+    const tc = tw.reduce((a, p) => [a[0] + p[0] / tw.length, a[1] + p[1] / tw.length], [0, 0]);
+    // Game order: rotate clockwise, then flip H, then flip V.
+    let az = -s.rotation * PI / 180;
+    while (az <= -PI) az += TAU;
+    const ay = s.flipH ? PI : 0, ax = s.flipV ? PI : 0;
+    const M = mm(rx(ax), mm(ry(ay), rz(az)));
+    for (const l of local) {        // sanity check the orientation maths
+        const p = mv(M, [l[0], l[1], 0]);
+        const hit = tw.some(q => Math.abs(q[0] - (p[0] + tc[0])) < 1e-6 && Math.abs(q[1] - (p[1] + tc[1])) < 1e-6);
+        if (!hit) console.error("orientation mismatch for piece", s.id);
+    }
+    PIECES[s.id] = { id: s.id, local, target: [tc[0], tc[1], REST_Z], az, ay, ax, sol: s, rgb: PRGB[s.id] };
+}
+
+// ---------------------------------------------------------------- timeline (120 BPM, beat = .5s)
+const T = {
+    boardIn: 2.0,
+    tilesIn: 2.2,
+    markersIn: 3.5,
+    rouletteA: 3.6, rouletteB: 5.0,
+    solveOrder: [1, 4, 2, 5, 6, 8, 7, 3],
+    firstLand: 5.5, landStep: 0.5,
+    solved: 9.5,
+    endCam: 10.0,
+    calIn: 10.0, puzIn: 10.5, letterStep: 0.0625,
+    tagIn: 11.4, ctaIn: 11.9
+};
+const LAND = {};
+T.solveOrder.forEach((id, k) => LAND[id] = T.firstLand + k * T.landStep);
+const DATE_STEPS = (() => { let n = 0; for (let m = 0; m < DATE.month; m++) n += DIM[m]; return n + DATE.day - 1; })();
+function dateAt(k) {
+    let m = 0; while (k >= DIM[m]) { k -= DIM[m]; m++; }
+    return { m, d: k + 1 };
+}
+
+// ---------------------------------------------------------------- camera keys
+const CAM_KEYS = [
+    { t: 0.0, pitch: 0.00, spin: 0.00, yaw: -0.16, roll: -0.03, dist: 31, sx: 0, sy: 70 },
+    { t: 1.9, pitch: 0.10, spin: 0.00, yaw: 0.10, roll: 0.00, dist: 28, sx: 0, sy: 70 },
+    { t: 3.0, pitch: 0.86, spin: -0.26, yaw: 0.00, roll: 0.00, dist: 27, sx: 0, sy: 95 },
+    { t: 4.9, pitch: 0.74, spin: -0.10, yaw: 0.00, roll: 0.00, dist: 22.5, sx: 0, sy: 90 },
+    { t: 5.6, pitch: 0.68, spin: -0.07, yaw: 0.00, roll: 0.00, dist: 21.5, sx: 190, sy: 45 },
+    { t: 9.2, pitch: 0.54, spin: 0.22, yaw: 0.00, roll: 0.00, dist: 19.0, sx: 200, sy: 45 },
+    { t: 10.3, pitch: 0.64, spin: -0.02, yaw: -0.06, roll: 0.00, dist: 21.5, sx: 400, sy: 50 },
+    { t: 11.6, pitch: 0.72, spin: -0.20, yaw: -0.10, roll: 0.00, dist: 22.5, sx: 440, sy: 40 },
+    { t: 15.0, pitch: 0.76, spin: -0.26, yaw: -0.12, roll: 0.00, dist: 23.0, sx: 450, sy: 40 }
+];
+function cameraAt(t) {
+    const c = {};
+    for (const p of ["pitch", "spin", "yaw", "roll", "dist", "sx", "sy"]) c[p] = track(CAM_KEYS, t, p);
+    c.f = 1400; c.T = [0, 0, 0];
+    // impact shake
+    let sh = 0;
+    for (const id in LAND) sh += ring(t - LAND[id], 11, 14) * 5;
+    sh += ring(t - T.rouletteB, 11, 12) * 9 + ring(t - T.boardIn, 10, 12) * 8 + ring(t - T.solved, 9, 8) * 10;
+    c.sy += sh;
+    return c;
+}
+
+// ---------------------------------------------------------------- board motion
+function boardDz(t) {
+    let d = 0;
+    for (const id in LAND) d -= 0.05 * Math.max(0, ring(t - LAND[id], 4, 10));
+    d -= 0.10 * Math.max(0, ring(t - T.rouletteB, 4, 9));
+    return d;
+}
+// Celebration ripple from board centre.
+function waveLift(x, y, t) {
+    const tt = t - T.solved;
+    if (tt < 0 || tt > 1.6) return 0;
+    const r = Math.hypot(x, y);
+    const front = tt * 9;
+    return 0.55 * Math.exp(-Math.pow(r - front, 2) / 1.4) * Math.exp(-tt * 1.4);
+}
+function sweepAt(x, y, t) {
+    const u = seg(t, T.solved + 0.05, T.solved + 0.75);
+    if (u <= 0 || u >= 1) return 0;
+    const s = lerp(-9, 9, E.inOutCubic(u));
+    return 0.55 * Math.exp(-Math.pow(x * 0.6 - y * 0.8 - s, 2) / 0.5);
+}
+
+// ---------------------------------------------------------------- piece choreography
+const ROW_X = i => (i - 3.5) * 3.35;
+const BURST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7];
+const ORBIT_ANG = [202.5, 247.5, 292.5, 337.5, 157.5, 112.5, 67.5, 22.5].map(d => d * PI / 180);
+const ORBIT_R = 7.6;
+
+function orbitPose(i, t) {
+    const th = ORBIT_ANG[i] + 0.22 * (t - 2.0);
+    return {
+        pos: [Math.cos(th) * ORBIT_R, Math.sin(th) * ORBIT_R * 0.92, 1.9 + 0.25 * Math.sin(t * 1.7 + i * 1.3)],
+        az: 0.18 * Math.sin(t * 0.9 + i), ax: 0.10 * Math.sin(t * 1.3 + i * 2), ay: 0.12 * Math.sin(t * 1.1 + i * 0.7)
+    };
+}
+function rowPose(i, t) {
+    const st = 0.04 + BURST_ORDER.indexOf(i) * 0.045;
+    const u = seg(t, st, st + 0.85);
+    const e = E.outExpo(u);
+    const dir = i % 2 ? 1 : -1;
+    const bob = 0.14 * Math.sin(t * 2.2 + i * 0.8);
+    const pos = vlerp([0, -1.5, -16], [ROW_X(i), bob, 3], e);
+    const wave = E.inOutCubic(seg(t, 1.0 + i * 0.0625, 1.0 + i * 0.0625 + 0.55));
+    return {
+        pos, visible: t >= st,
+        az: (1 - e) * dir * TAU * 0.75, ax: (1 - e) * PI * 1.3, ay: wave * TAU,
+        scale: lerp(0.2, 1, e)
+    };
+}
+
+function pieceState(id, t) {
+    const P = PIECES[id], i = id - 1;
+    const land = LAND[id];
+    const launch = land - 0.64, hoverT = land - 0.13;
+    if (t < launch) {
+        const r = rowPose(i, t);
+        if (!r.visible) return null;
+        const m = E.inOutCubic(seg(t, 2.0 + i * 0.05, 3.05 + i * 0.05));
+        if (m <= 0) return { pos: r.pos, R: mm(rx(r.ax), mm(ry(r.ay), rz(r.az))), scale: r.scale, flash: 0 };
+        const o = orbitPose(i, t);
+        const pos = vlerp(r.pos, o.pos, m);
+        pos[2] += Math.sin(PI * m) * 2.5;
+        const R = mm(rx(lerp(r.ax, o.ax, m)), mm(ry(lerp(r.ay, o.ay, m)), rz(lerp(r.az, o.az, m))));
+        return { pos, R, scale: 1, flash: 0 };
+    }
+    if (t < land) {
+        const o = orbitPose(i, Math.min(t, launch + 0.25));
+        const hover = [P.target[0], P.target[1], REST_Z + 1.3];
+        const u = seg(t, launch, hoverT);
+        const e = E.inOutQuart(u);
+        let pos = vlerp(o.pos, hover, e);
+        pos[2] += Math.sin(PI * e) * 3.0;
+        const k = T.solveOrder.indexOf(id);
+        const plain = !P.sol.rotation && !P.sol.flipH && !P.sol.flipV;
+        const extra = plain ? (k % 2 ? TAU : -TAU) : 0;
+        const er = E.inOutCubic(seg(t, launch + 0.04, hoverT));
+        const R = mm(rx(lerp(o.ax, P.ax, er) + Math.sin(PI * er) * 0.35),
+            mm(ry(lerp(o.ay, P.ay, er)), rz(lerp(o.az, P.az + extra, er))));
+        if (t >= hoverT) {
+            const v = seg(t, hoverT, land);
+            pos = [P.target[0], P.target[1], lerp(REST_Z + 1.3, REST_Z, E.inCubic(v))];
+        }
+        return { pos, R, scale: 1, flash: 0 };
+    }
+    const dt = t - land;
+    const sq = ring(dt, 4.5, 9);
+    const R = mm(rx(P.ax), mm(ry(P.ay), rz(P.az)));
+    return {
+        pos: [P.target[0], P.target[1], REST_Z * (1 - 0.35 * sq) + boardDz(t)],
+        R, scale: 1, sxy: 1 + 0.07 * sq, sz: 1 - 0.35 * sq,
+        flash: Math.exp(-dt * 7) * 0.55, placed: true
+    };
+}
+
+// ---------------------------------------------------------------- cube rendering
+// Corner index bits: x+ = 1, y+ = 2, z+ = 4.
+const FACES = [
+    { n: [0, 0, 1], idx: [6, 7, 5, 4], cap: true },
+    { n: [0, 0, -1], idx: [2, 0, 1, 3], cap: true },
+    { n: [1, 0, 0], idx: [1, 5, 7, 3] },
+    { n: [-1, 0, 0], idx: [0, 2, 6, 4] },
+    { n: [0, 1, 0], idx: [2, 3, 7, 6] },
+    { n: [0, -1, 0], idx: [0, 4, 5, 1] }
+];
+
+function buildCube(list, cell, R, pos, o) {
+    const sxy = o.sxy ?? 1, sz = o.sz ?? 1, sc = o.scale ?? 1, th = o.th ?? PIECE_T;
+    const corners = [];
+    const cw = mv(R, [cell[0] * sc * sxy, cell[1] * sc * sxy, 0]);
+    let lift = 0;
+    if (o.wave) lift = waveLift(pos[0] + cw[0], pos[1] + cw[1], o.t);
+    for (let k = 0; k < 8; k++) {
+        const lx = (cell[0] + ((k & 1) ? .5 : -.5)) * sc * sxy;
+        const ly = (cell[1] + ((k & 2) ? .5 : -.5)) * sc * sxy;
+        const lz = ((k & 4) ? .5 : -.5) * th * sc * sz;
+        const w = add(pos, mv(R, [lx, ly, lz]));
+        w[2] += lift;
+        corners.push(w);
+    }
+    const centre = add(add(pos, cw), [0, 0, lift]);
+    const qc = toView(centre);
+    list.push({ corners, R, centre, depth: CAM.dist - qc[2], o });
+}
+
+function drawCube(c) {
+    const eye = EYE();
+    const vs = c.corners.map(toView);
+    const ps = vs.map(projV);
+    const o = c.o;
+    const base = o.rgb;
+    for (const F of FACES) {
+        const nW = mv(c.R, F.n);
+        const nV = mv(CAM.V, nW);
+        const fc = vs[F.idx[0]].map((_, j) => (vs[F.idx[0]][j] + vs[F.idx[2]][j]) / 2);
+        if (dot(nV, sub(eye, fc)) <= 0) continue;
+        let col = scaleC(base, shadeF(nW) * (o.bright ?? 1));
+        if (F.cap && o.flash) col = mixC(col, WHITE, o.flash);
+        if (F.cap) {
+            const sw = sweepAt(c.centre[0], c.centre[1], o.t);
+            if (sw) col = mixC(col, WHITE, sw);
+        }
+        const q = F.idx.map(k => ps[k]);
+        ctx.beginPath();
+        ctx.moveTo(q[0].x, q[0].y);
+        for (let k = 1; k < 4; k++) ctx.lineTo(q[k].x, q[k].y);
+        ctx.closePath();
+        ctx.globalAlpha = o.alpha ?? 1;
+        ctx.fillStyle = rgba(col);
+        ctx.fill();
+        if (F.cap) {
+            const xs = q.map(p => p.x), ys = q.map(p => p.y);
+            const g = ctx.createLinearGradient(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys));
+            g.addColorStop(0, "rgba(255,255,255,0.13)");
+            g.addColorStop(0.5, "rgba(255,255,255,0)");
+            g.addColorStop(1, "rgba(0,0,0,0.13)");
+            ctx.fillStyle = g;
+            ctx.fill();
+            ctx.strokeStyle = rgba(scaleC(col, 0.86), 0.9);
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            if (o.label) drawLabelOnQuad(q[0], q[1], q[3], o.label, o.labelColor, o.labelSize);
+        } else {
+            ctx.strokeStyle = rgba(col);
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+    }
+}
+
+// Affine-map a 100x100 label space onto a projected quad (TL, TR, BL).
+function drawLabelOnQuad(p0, p1, p3, text, color, size) {
+    ctx.save();
+    ctx.setTransform((p1.x - p0.x) / 100, (p1.y - p0.y) / 100, (p3.x - p0.x) / 100, (p3.y - p0.y) / 100, p0.x, p0.y);
+    ctx.fillStyle = color;
+    ctx.font = `700 ${size}px "Segoe UI", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 50, 53);
+    ctx.restore();
+}
+
+// ---------------------------------------------------------------- board
+const SLAB_HS = 4.62, SLAB_R = 0.62, SLAB_T = 0.55;
+function roundedOutline(hs, r, n = 7) {
+    const pts = [];
+    const cs = [[hs - r, hs - r, 0], [-(hs - r), hs - r, PI / 2], [-(hs - r), -(hs - r), PI], [hs - r, -(hs - r), 1.5 * PI]];
+    for (const [cx, cy, a0] of cs) for (let k = 0; k <= n; k++) {
+        const a = a0 + (k / n) * PI / 2;
+        pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+    }
+    return pts;
+}
+const SLAB_OUT = roundedOutline(SLAB_HS, SLAB_R);
+const SLAB_IN = roundedOutline(SLAB_HS - 0.09, SLAB_R - 0.09);
+
+function slabScale(t) {
+    const u = t - T.boardIn;
+    if (u < 0) return 0;
+    return clamp(1 - Math.exp(-u * 9) * Math.cos(u * 3.2 * TAU) * 1, 0, 1.2);
+}
+
+function drawBoard(t) {
+    const s = slabScale(t);
+    if (s <= 0.001) return null;
+    const dz = boardDz(t);
+    const top = SLAB_OUT.map(([x, y]) => [x * s, y * s, dz]);
+    const bot = SLAB_OUT.map(([x, y]) => [x * s, y * s, dz - SLAB_T * s]);
+    const eye = EYE();
+    // sides
+    const pt = top.map(proj), pb = bot.map(proj);
+    for (let i = 0; i < top.length; i++) {
+        const j = (i + 1) % top.length;
+        const ex = top[j][0] - top[i][0], ey = top[j][1] - top[i][1];
+        const nW = norm([ey, -ex, 0]);
+        const nV = mv(CAM.V, nW);
+        const fc = toView([(top[i][0] + top[j][0]) / 2, (top[i][1] + top[j][1]) / 2, dz - SLAB_T * s / 2]);
+        if (dot(nV, sub(eye, fc)) <= 0) continue;
+        const col = scaleC([44, 44, 44], shadeF(nW) * 0.85);
+        ctx.beginPath();
+        ctx.moveTo(pt[i].x, pt[i].y); ctx.lineTo(pt[j].x, pt[j].y); ctx.lineTo(pb[j].x, pb[j].y); ctx.lineTo(pb[i].x, pb[i].y);
+        ctx.closePath();
+        ctx.fillStyle = rgba(col); ctx.strokeStyle = rgba(col); ctx.lineWidth = 1;
+        ctx.fill(); ctx.stroke();
+    }
+    // top: border ring + inner panel
+    const path = pts => { ctx.beginPath(); pts.forEach((p, k) => k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); };
+    path(pt);
+    ctx.fillStyle = "#6a6a6a"; ctx.fill();
+    const inner = SLAB_IN.map(([x, y]) => proj([x * s, y * s, dz + 0.001]));
+    path(inner);
+    const c0 = proj([-3, 3, dz]), c1 = proj([3, -3, dz]);
+    const g = ctx.createLinearGradient(c0.x, c0.y, c1.x, c1.y);
+    g.addColorStop(0, "#353535"); g.addColorStop(1, "#2a2a2a");
+    ctx.fillStyle = g; ctx.fill();
+    return { clip: inner, dz };
+}
+
+function tileState(tile, t) {
+    const [x, y] = cellW(tile.cx, tile.cy);
+    const r = Math.hypot(x, y + 0.3);
+    const st = T.tilesIn + r * 0.075 + ((tile.cx * 7 + tile.cy * 3) % 5) * 0.012;
+    const u = seg(t, st, st + 0.42);
+    if (u <= 0) return null;
+    const e = E.outBack(u, 2.2);
+    return { z: lerp(2.6, 0, e), alpha: clamp(u * 3), st };
+}
+
+function drawTiles(t, dz) {
+    const list = [];
+    for (const tile of TILES) {
+        const s = tileState(tile, t);
+        if (!s) continue;
+        const [x, y] = cellW(tile.cx, tile.cy);
+        const z = dz + TILE_T / 2 + s.z + waveLift(x, y, t) * 0.6;
+        const q = toView([x, y, z]);
+        list.push({ tile, x, y, z, alpha: s.alpha, depth: CAM.dist - q[2] });
+    }
+    list.sort((a, b) => b.depth - a.depth);
+    for (const L of list) {
+        const h = 0.48;
+        const tl = proj([L.x - h, L.y + h, L.z + TILE_T / 2]), tr = proj([L.x + h, L.y + h, L.z + TILE_T / 2]);
+        const br = proj([L.x + h, L.y - h, L.z + TILE_T / 2]), bl = proj([L.x - h, L.y - h, L.z + TILE_T / 2]);
+        const bl2 = proj([L.x - h, L.y - h, L.z - TILE_T / 2]), br2 = proj([L.x + h, L.y - h, L.z - TILE_T / 2]);
+        ctx.globalAlpha = L.alpha;
+        // front lip
+        ctx.beginPath(); ctx.moveTo(bl.x, bl.y); ctx.lineTo(br.x, br.y); ctx.lineTo(br2.x, br2.y); ctx.lineTo(bl2.x, bl2.y); ctx.closePath();
+        ctx.fillStyle = "#101010"; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y); ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y); ctx.closePath();
+        const sw = sweepAt(L.x, L.y, t);
+        ctx.fillStyle = sw ? rgba(mixC([30, 30, 30], WHITE, sw * 0.5)) : "#1e1e1e";
+        ctx.fill();
+        ctx.strokeStyle = "#474747"; ctx.lineWidth = 1.1; ctx.stroke();
+        drawLabelOnQuad(tl, tr, bl, L.tile.label, "#ffffff", L.tile.month ? 27 : 31);
+        ctx.globalAlpha = 1;
+    }
+}
+
+// ---------------------------------------------------------------- date markers
+function markerCells(t) {
+    const kf = DATE_STEPS * E.inOutCubic(seg(t, T.rouletteA, T.rouletteB));
+    const k0 = Math.floor(kf), fr = kf - k0;
+    const a = dateAt(k0), b = dateAt(Math.min(DATE_STEPS, k0 + 1));
+    const he = E.inOutCubic(fr);
+    const lift = Math.sin(PI * fr) * 0.55;
+    const dA = cellW(...dayCell(a.d)), dB = cellW(...dayCell(b.d));
+    const mA = cellW(...monthCell(a.m)), mB = cellW(...monthCell(b.m));
+    const mMove = a.m !== b.m;
+    return {
+        day: { x: lerp(dA[0], dB[0], he), y: lerp(dA[1], dB[1], he), lift, label: String(fr > .5 ? b.d : a.d) },
+        month: { x: mMove ? lerp(mA[0], mB[0], he) : mA[0], y: mMove ? lerp(mA[1], mB[1], he) : mA[1], lift: mMove ? lift : 0, label: MONTHS[fr > .5 ? b.m : a.m] }
+    };
+}
+
+function buildMarkers(list, t) {
+    const u = t - T.markersIn;
+    if (u < 0) return;
+    const pop = clamp(1 - Math.exp(-u * 10) * Math.cos(u * 2.8 * TAU));
+    const m = markerCells(t);
+    const land = t - T.rouletteB;
+    const sq = ring(land, 4.5, 8);
+    for (const [key, size] of [["month", 27], ["day", 31]]) {
+        const c = m[key];
+        const lift = c.lift + waveLift(c.x, c.y, t);
+        const zc = TILE_T + boardDz(t) + (PIECE_T / 2) * pop * (1 - 0.35 * sq) + lift;
+        const flash = land > 0 ? Math.exp(-land * 6) * 0.6 : 0;
+        buildCube(list, [0, 0], rz(0), [c.x, c.y, zc], {
+            rgb: YRGB, th: PIECE_T, sz: pop * (1 - 0.35 * sq), sxy: 0.98 + 0.07 * sq, t, flash,
+            label: c.label, labelColor: "rgba(0,0,0,0.87)", labelSize: size
+        });
+    }
+}
+
+// ---------------------------------------------------------------- shadows
+function drawShadows(t, clipPts) {
+    if (!clipPts) return;
+    ctx.save();
+    ctx.beginPath(); clipPts.forEach((p, k) => k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath();
+    ctx.clip();
+    for (const id in PIECES) {
+        const st = pieceState(+id, t);
+        if (!st) continue;
+        const h = Math.max(0, st.pos[2] - REST_Z);
+        const a = 0.55 * clamp(1 - h / 7);
+        if (a <= 0.01) continue;
+        const off = [-LIGHT[0] / LIGHT[2] * (h + 0.35), -LIGHT[1] / LIGHT[2] * (h + 0.35)];
+        ctx.filter = `blur(${(3 + h * 7).toFixed(1)}px)`;
+        ctx.beginPath();
+        for (const cell of PIECES[id].local) {
+            const pts = [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]].map(([dx, dy]) => {
+                const w = add(st.pos, mv(st.R, [(cell[0] + dx) * (st.scale ?? 1), (cell[1] + dy) * (st.scale ?? 1), 0]));
+                return proj([w[0] + off[0], w[1] + off[1], TILE_T + boardDz(t)]);
+            });
+            pts.forEach((p, k) => k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+            ctx.closePath();
+        }
+        ctx.fillStyle = `rgba(0,0,0,${a.toFixed(3)})`;
+        ctx.fill("nonzero");
+        ctx.filter = "none";
+    }
+    ctx.restore();
+}
+
+// ---------------------------------------------------------------- landing FX
+function drawImpacts(t) {
+    const events = Object.keys(LAND).map(id => ({ t0: LAND[id], c: PIECES[id].target, rgb: PRGB[id], r: 2.6, id: +id }));
+    const m = { t0: T.rouletteB, rgb: YRGB, r: 3.4 };
+    const mc = cellW(...monthCell(DATE.month)), dc = cellW(...dayCell(DATE.day));
+    events.push({ ...m, c: [mc[0], mc[1]] }, { ...m, c: [dc[0], dc[1]] });
+    for (const ev of events) {
+        const u = seg(t, ev.t0, ev.t0 + 0.6);
+        if (u <= 0 || u >= 1) continue;
+        const r = 0.6 + ev.r * E.outCubic(u);
+        ctx.beginPath();
+        for (let k = 0; k <= 48; k++) {
+            const a = k / 48 * TAU;
+            const p = proj([ev.c[0] + Math.cos(a) * r, ev.c[1] + Math.sin(a) * r, TILE_T + 0.02]);
+            k ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
+        }
+        ctx.strokeStyle = rgba(mixC(ev.rgb, WHITE, 0.35), 0.75 * (1 - u));
+        ctx.lineWidth = 1 + 5 * (1 - u);
+        ctx.stroke();
+    }
+}
+
+function drawSparks(t) {
+    for (const id in LAND) {
+        const t0 = LAND[id];
+        const u = seg(t, t0, t0 + 0.5);
+        if (u <= 0 || u >= 1) continue;
+        const rnd = mulberry32(+id * 977);
+        const P = PIECES[id];
+        for (let k = 0; k < 16; k++) {
+            const a = (k / 16) * TAU + rnd() * 0.4;
+            const dist = (1.4 + rnd() * 1.8) * E.outCubic(u);
+            const z = TILE_T + Math.sin(PI * Math.min(1, u * 1.2)) * (0.5 + rnd() * 0.9);
+            const p = proj([P.target[0] + Math.cos(a) * (1 + dist), P.target[1] + Math.sin(a) * (1 + dist), z]);
+            const s = CAM.f / p.d * 0.13 * (1 - u);
+            ctx.fillStyle = rgba(mixC(P.rgb, WHITE, 0.3), 1 - u * u);
+            ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+        }
+    }
+}
+
+// ---------------------------------------------------------------- background
+const rndG = mulberry32(7);
+const GRAIN = document.createElement("canvas");
+GRAIN.width = GRAIN.height = 256;
+{
+    const g = GRAIN.getContext("2d"), d = g.createImageData(256, 256);
+    for (let i = 0; i < d.data.length; i += 4) {
+        const v = 128 + (rndG() - .5) * 90;
+        d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255;
+    }
+    g.putImageData(d, 0, 0);
+}
+
+function drawBackground(t) {
+    const g = ctx.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.5, W * 0.75);
+    g.addColorStop(0, "#232323"); g.addColorStop(0.55, "#161616"); g.addColorStop(1, "#090909");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // drifting colour glows (piece palette)
+    ctx.globalCompositeOperation = "lighter";
+    const glows = [
+        { id: 4, x: 0.18 + 0.05 * Math.sin(t * 0.4), y: 0.25 + 0.04 * Math.cos(t * 0.5), r: 0.55 },
+        { id: 1, x: 0.85 + 0.04 * Math.cos(t * 0.35), y: 0.3 + 0.05 * Math.sin(t * 0.45), r: 0.5 },
+        { id: 8, x: 0.7 + 0.06 * Math.sin(t * 0.3 + 1), y: 0.85, r: 0.55 },
+        { id: 2, x: 0.25 + 0.05 * Math.cos(t * 0.33), y: 0.85, r: 0.45 }
+    ];
+    const yb = clamp(seg(t, 3.4, 3.8)) * (1 - seg(t, 5.2, 6.2)) + Math.exp(-Math.max(0, t - T.rouletteB) * 3) * (t > T.rouletteB ? 0.6 : 0);
+    for (const gl of glows) {
+        const rg = ctx.createRadialGradient(gl.x * W, gl.y * H, 0, gl.x * W, gl.y * H, gl.r * W);
+        const c = PRGB[gl.id];
+        rg.addColorStop(0, rgba(c, 0.10)); rg.addColorStop(1, rgba(c, 0));
+        ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    }
+    if (yb > 0) {
+        const p = proj([0, 0, 0]);
+        const rg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 700);
+        rg.addColorStop(0, rgba(YRGB, 0.10 * yb)); rg.addColorStop(1, rgba(YRGB, 0));
+        ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    }
+    const fl = Math.exp(-t * 7) * clamp(t * 40);
+    if (fl > 0.002) {
+        const p = proj([0, -1.5, -16]);
+        const rg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 520);
+        rg.addColorStop(0, `rgba(255,255,255,${0.9 * fl})`); rg.addColorStop(0.2, `rgba(255,235,59,${0.25 * fl})`); rg.addColorStop(1, "rgba(255,235,59,0)");
+        ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+        const st = ctx.createLinearGradient(0, 0, W, 0);
+        st.addColorStop(0, "rgba(120,160,255,0)"); st.addColorStop(0.5, `rgba(200,220,255,${0.8 * fl})`); st.addColorStop(1, "rgba(120,160,255,0)");
+        ctx.fillStyle = st; ctx.fillRect(0, p.y - 2 - 6 * fl, W, 4 + 12 * fl);
+    }
+    const solvedGlow = t > T.solved ? Math.exp(-(t - T.solved) * 1.5) : 0;
+    if (solvedGlow > 0) {
+        const p = proj([0, 0, 0]);
+        const rg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 900);
+        rg.addColorStop(0, `rgba(255,255,255,${0.16 * solvedGlow})`); rg.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    }
+    ctx.globalCompositeOperation = "source-over";
+}
+
+function drawGrid(t) {
+    const Z = -2.4, N = 26, STEP = 2;
+    ctx.lineWidth = 1;
+    for (let dir = 0; dir < 2; dir++) {
+        for (let i = -N; i <= N; i++) {
+            let prev = null;
+            for (let j = -N; j <= N; j += STEP) {
+                const p3 = dir ? [i, j, Z] : [j, i, Z];
+                const q = toView(p3);
+                const d = CAM.dist - q[2];
+                const cur = d > 2 ? projV(q) : null;
+                if (prev && cur) {
+                    const r = Math.hypot(p3[0], p3[1]);
+                    const a = 0.075 * clamp(1 - r / N) * (i % 4 === 0 ? 1.6 : 1);
+                    ctx.strokeStyle = `rgba(255,255,255,${a.toFixed(3)})`;
+                    ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(cur.x, cur.y); ctx.stroke();
+                }
+                prev = cur;
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- typography
+const FONT = "Bahnschrift";
+function setFont(size, weight = 700, stretch = "normal") {
+    ctx.font = `${weight} ${size}px ${FONT}`;
+    ctx.fontStretch = stretch;
+}
+
+const STATEMENTS = [
+    { num: "8", word: "PIECES", tin: 0.42, tout: 1.9 },
+    { num: "1", word: "BOARD", tin: 2.02, tout: 3.36 },
+    { num: "366", word: "DAYS", tin: 3.5, tout: 4.98 }
+];
+function drawStatements(t) {
+    const size = 150, y = 205, lineH = size * 1.05;
+    for (const s of STATEMENTS) {
+        if (t < s.tin || t > s.tout + 0.7) continue;
+        setFont(size, 700, "condensed");
+        ctx.letterSpacing = "4px";
+        const chars = [...`${s.num} ${s.word}`];
+        const widths = chars.map(ch => ctx.measureText(ch).width + 4);
+        const total = widths.reduce((a, b) => a + b, 0);
+        let x = W / 2 - total / 2;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, y - size * 0.85, W, lineH); ctx.clip();
+        chars.forEach((ch, i) => {
+            const pin = E.outExpo(seg(t, s.tin + i * 0.028, s.tin + i * 0.028 + 0.55));
+            const pout = E.inExpo(seg(t, s.tout + i * 0.018, s.tout + i * 0.018 + 0.32));
+            const dy = (1 - pin) * lineH - pout * lineH;
+            const isNum = i < s.num.length;
+            ctx.save();
+            ctx.translate(x + widths[i] / 2, y + dy);
+            ctx.rotate((1 - pin) * 0.25);
+            ctx.fillStyle = isNum ? YEL : "#ffffff";
+            ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+            if (isNum) { ctx.shadowColor = "rgba(255,235,59,0.45)"; ctx.shadowBlur = 30; }
+            ctx.fillText(ch, 0, 0);
+            ctx.restore();
+            x += widths[i];
+        });
+        ctx.restore();
+        // underline wipe
+        const ul = E.outExpo(seg(t, s.tin + 0.15, s.tin + 0.7)) - E.inExpo(seg(t, s.tout, s.tout + 0.35));
+        const ulx = W / 2 - total / 2;
+        if (ul > 0) {
+            const from = t < s.tout ? ulx : ulx + total * (1 - ul);
+            ctx.fillStyle = "rgba(255,255,255,0.18)";
+            ctx.fillRect(from, y + 26, total * ul, 3);
+        }
+        ctx.letterSpacing = "0px";
+    }
+}
+
+const KWORDS = [
+    { text: "ROTATE", dot: 1, tin: 5.45, kind: "rotate", y: 470 },
+    { text: "FLIP", dot: 4, tin: 6.45, kind: "flip", y: 590 },
+    { text: "FIT", dot: 6, tin: 7.45, kind: "fit", y: 710 }
+];
+function drawKineticWords(t) {
+    const x0 = 130, size = 120, tout = 9.3;
+    KWORDS.forEach((k, i) => {
+        if (t < k.tin) return;
+        const u = seg(t, k.tin, k.tin + 0.55);
+        const ex = E.inExpo(seg(t, tout + i * 0.06, tout + i * 0.06 + 0.4));
+        if (ex >= 1) return;
+        setFont(size, 700, "condensed");
+        ctx.save();
+        ctx.globalAlpha = clamp(u * 4) * (1 - ex);
+        ctx.translate(x0 - ex * 500, k.y);
+        let spacing = 2;
+        if (k.kind === "rotate") {
+            ctx.rotate(-(1 - E.outBack(u, 2.2)) * 1.4);
+        } else if (k.kind === "flip") {
+            const e = E.outBack(u, 2.0);
+            ctx.translate(0, -size * 0.36);
+            ctx.scale(1, lerp(-1, 1, e));
+            ctx.translate(0, size * 0.36);
+        } else {
+            const e = E.outExpo(u);
+            ctx.translate(-(1 - e) * 180, 0);
+            spacing = lerp(60, 2, e) + ring(t - k.tin - 0.28, 6, 10) * 6;
+        }
+        ctx.letterSpacing = `${spacing.toFixed(1)}px`;
+        ctx.fillStyle = "#ffffff";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(k.text, 0, 0);
+        const w = ctx.measureText(k.text).width;
+        ctx.letterSpacing = "0px";
+        // piece-coloured square "period"
+        const ds = size * 0.2;
+        const dp = E.outBack(seg(t, k.tin + 0.25, k.tin + 0.6), 3);
+        ctx.fillStyle = PC[k.dot];
+        ctx.save();
+        ctx.translate(w + ds * 0.3 + ds / 2, -ds / 2);
+        ctx.scale(dp, dp);
+        ctx.fillRect(-ds / 2, -ds / 2, ds, ds);
+        ctx.restore();
+        ctx.restore();
+    });
+    // small caption
+    const cu = E.outExpo(seg(t, 5.3, 5.9)), cx = E.inExpo(seg(t, 9.3, 9.6));
+    if (cu > 0 && cx < 1) {
+        setFont(22, 600);
+        ctx.letterSpacing = "7px";
+        ctx.fillStyle = `rgba(255,255,255,${0.55 * cu * (1 - cx)})`;
+        ctx.fillText(`TODAY'S PUZZLE  ·  ${MONTHS[DATE.month]} ${DATE.day}`, 134 - (1 - cu) * 40, 350);
+        ctx.fillStyle = `rgba(255,235,59,${0.9 * cu * (1 - cx)})`;
+        ctx.fillRect(134, 368, 60 * cu, 3);
+        ctx.letterSpacing = "0px";
+    }
+}
+
+function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+function drawProgressBar(t) {
+    const inU = E.outExpo(seg(t, 5.1, 5.6)), outU = E.inExpo(seg(t, 10.0, 10.4));
+    if (inU <= 0 || outU >= 1) return;
+    const bw = 560, bh = 26, x = W / 2 + 190 - bw / 2, y = H - 92 + (1 - inU) * 60 + outU * 120;
+    ctx.save();
+    ctx.globalAlpha = inU * (1 - outU);
+    roundRect(x, y, bw, bh, bh / 2);
+    ctx.fillStyle = "#2f2f2f"; ctx.fill();
+    ctx.save(); ctx.clip();
+    let n = 0;
+    T.solveOrder.forEach((id, k) => {
+        const g = seg(t, LAND[id], LAND[id] + 0.15);
+        if (g <= 0) return;
+        n = k + 1;
+        const sx = x + (bw / 8) * k, w = (bw / 8) * g;
+        ctx.fillStyle = PC[id]; ctx.fillRect(sx, y, w, bh);
+        const gr = ctx.createLinearGradient(sx, y, sx + bw / 8, y + bh);
+        gr.addColorStop(0, "rgba(255,255,255,0.12)"); gr.addColorStop(.5, "rgba(255,255,255,0)"); gr.addColorStop(1, "rgba(0,0,0,0.12)");
+        ctx.fillStyle = gr; ctx.fillRect(sx, y, w, bh);
+        ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(sx + w - 1, y, 1, bh);
+        const fl = Math.exp(-(t - LAND[id]) * 6);
+        ctx.fillStyle = `rgba(255,255,255,${0.5 * fl})`; ctx.fillRect(sx, y, w, bh);
+    });
+    ctx.restore();
+    // completion glow
+    const cg = t > T.solved ? Math.exp(-(t - T.solved) * 2.5) : 0;
+    if (cg > 0) {
+        ctx.shadowColor = "rgba(255,255,255,0.9)"; ctx.shadowBlur = 40 * cg;
+        roundRect(x, y, bw, bh, bh / 2); ctx.strokeStyle = `rgba(255,255,255,${0.8 * cg})`; ctx.lineWidth = 2; ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+    setFont(15, 700);
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 4;
+    ctx.fillText(`${n}/8`, x + bw / 2, y + bh / 2 + 1);
+    ctx.restore();
+}
+
+// ---------------------------------------------------------------- confetti
+const CONFETTI = (() => {
+    const r = mulberry32(42), arr = [];
+    const cols = [...Object.values(PC), YEL];
+    for (let i = 0; i < 220; i++) {
+        const a = -PI / 2 + (r() - .5) * 2.4;
+        const sp = 900 + r() * 1500;
+        arr.push({
+            vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, s: 9 + r() * 14, col: cols[i % cols.length],
+            rot: r() * TAU, w: (r() - .5) * 14, fl: 6 + r() * 10, ph: r() * TAU, delay: r() * 0.12,
+            k: 1.6 + r() * 1.4
+        });
+    }
+    return arr;
+})();
+function drawConfetti(t) {
+    const t0 = T.solved;
+    if (t < t0) return;
+    const o = proj([0, 0, 0]);
+    const g = 1500;
+    for (const p of CONFETTI) {
+        const tt = t - t0 - p.delay;
+        if (tt <= 0) continue;
+        const ek = (1 - Math.exp(-p.k * tt)) / p.k;
+        const x = o.x + p.vx * ek;
+        const y = o.y + (p.vy + g / p.k) * ek - g * tt / p.k;
+        if (y > H + 40) continue;
+        const a = clamp(1 - (tt - 3.2) / 1.5);
+        if (a <= 0) continue;
+        ctx.save();
+        ctx.translate(x, y); ctx.rotate(p.rot + p.w * tt);
+        ctx.scale(Math.cos(p.fl * tt + p.ph), 1);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = p.col;
+        ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s);
+        ctx.restore();
+    }
+}
+
+// ---------------------------------------------------------------- logo
+const LOGO = { cal: null, puz: null };
+function loadImg(src) { return new Promise(res => { const i = new Image(); i.onload = () => res(i); i.src = src; }); }
+function sliceLetters(img, expect) {
+    const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+    const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, img.width, img.height).data;
+    const col = x => { for (let y = 0; y < img.height; y++) if (d[(y * img.width + x) * 4 + 3] > 8) return true; return false; };
+    const runs = []; let s = -1;
+    for (let x = 0; x <= img.width; x++) {
+        const on = x < img.width && col(x);
+        if (on && s < 0) s = x;
+        if (!on && s >= 0) { runs.push([s, x]); s = -1; }
+    }
+    // merge tiny gaps until we reach the expected count
+    while (runs.length > expect) {
+        let bi = 0, bg = 1e9;
+        for (let i = 0; i < runs.length - 1; i++) { const gp = runs[i + 1][0] - runs[i][1]; if (gp < bg) { bg = gp; bi = i; } }
+        runs.splice(bi, 2, [runs[bi][0], runs[bi + 1][1]]);
+    }
+    return runs.map(([a, b]) => ({ x: a, w: b - a }));
+}
+
+function drawLogo(t) {
+    if (!LOGO.cal || t < T.calIn - 0.3) return;
+    const x0 = 120;
+    const rows = [
+        { img: LOGO.cal, letters: LOGO.calL, y: 300, start: T.calIn, scale: 1.12 },
+        { img: LOGO.puz, letters: LOGO.puzL, y: 470, start: T.puzIn, scale: 1.12 }
+    ];
+    for (const r of rows) {
+        const hh = r.img.height * r.scale;
+        r.letters.forEach((L, i) => {
+            const st = r.start + i * T.letterStep;
+            const u = seg(t, st, st + 0.5);
+            if (u <= 0) return;
+            const fall = E.inQuad(clamp(u / 0.45));
+            const dt = t - (st + 0.225);
+            const sq = ring(dt, 4, 9);
+            const y = lerp(-260, r.y, fall);
+            const lx = x0 + L.x * r.scale, lw = L.w * r.scale;
+            ctx.save();
+            ctx.translate(lx + lw / 2, y + hh);
+            ctx.rotate((1 - fall) * (i % 2 ? 0.5 : -0.5));
+            ctx.scale(1 + 0.12 * sq, 1 - 0.2 * sq);
+            ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 24; ctx.shadowOffsetY = 10;
+            ctx.drawImage(r.img, L.x, 0, L.w, r.img.height, -lw / 2, -hh, lw, hh);
+            ctx.restore();
+            // landing dust
+            if (dt > 0 && dt < 0.4) {
+                const du = dt / 0.4;
+                ctx.fillStyle = `rgba(255,255,255,${0.35 * (1 - du)})`;
+                for (let k = -1; k <= 1; k += 2) {
+                    for (let j = 0; j < 3; j++) {
+                        const px = lx + lw / 2 + k * (lw * 0.4 + du * (30 + j * 22));
+                        const py = r.y + hh - du * (10 + j * 9);
+                        const s = 6 * (1 - du);
+                        ctx.fillRect(px - s / 2, py - s / 2, s, s);
+                    }
+                }
+            }
+        });
+    }
+    // tagline
+    const tu = E.outExpo(seg(t, T.tagIn, T.tagIn + 0.9));
+    if (tu > 0) {
+        setFont(34, 400);
+        const words = ["A", "NEW", "PUZZLE.", "EVERY", "SINGLE", "DAY."];
+        ctx.letterSpacing = "6px";
+        let x = x0 + 6;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, 690, W, 60); ctx.clip();
+        words.forEach((w, i) => {
+            const u = E.outExpo(seg(t, T.tagIn + i * 0.07, T.tagIn + i * 0.07 + 0.7));
+            ctx.fillStyle = i >= 3 ? "#ffffff" : "rgba(255,255,255,0.72)";
+            ctx.font = `${i >= 3 ? 700 : 400} 34px ${FONT}`;
+            ctx.fillText(w, x, 734 + (1 - u) * 50);
+            x += ctx.measureText(w + " ").width + 8;
+        });
+        ctx.restore();
+        ctx.letterSpacing = "0px";
+    }
+    // CTA pill
+    const cu = E.outExpo(seg(t, T.ctaIn, T.ctaIn + 0.8));
+    if (cu > 0) {
+        setFont(28, 700);
+        ctx.letterSpacing = "3px";
+        const bw = ctx.measureText("PLAY TODAY'S PUZZLE").width + 34 + 78, bh = 72, bx = x0 + 6, by = 792;
+        ctx.letterSpacing = "0px";
+        ctx.save();
+        ctx.beginPath(); ctx.rect(bx - 70, by - 70, (bw + 140) * cu, bh + 140); ctx.clip();
+        const pulse = 0.5 + 0.5 * Math.sin((t - T.ctaIn) * 4);
+        ctx.shadowColor = `rgba(255,235,59,${0.25 + 0.2 * pulse})`; ctx.shadowBlur = 36;
+        roundRect(bx, by, bw, bh, bh / 2); ctx.fillStyle = YEL; ctx.fill();
+        ctx.shadowBlur = 0;
+        setFont(28, 700);
+        ctx.letterSpacing = "3px";
+        ctx.fillStyle = "rgba(0,0,0,0.87)"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+        ctx.fillText("PLAY TODAY'S PUZZLE", bx + 34, by + bh / 2 + 2);
+        // arrow
+        const ax = bx + bw - 44 + Math.sin((t - T.ctaIn) * 6) * 3;
+        ctx.strokeStyle = "rgba(0,0,0,0.87)"; ctx.lineWidth = 4; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(ax - 12, by + bh / 2); ctx.lineTo(ax + 8, by + bh / 2);
+        ctx.moveTo(ax, by + bh / 2 - 8); ctx.lineTo(ax + 8, by + bh / 2); ctx.lineTo(ax, by + bh / 2 + 8); ctx.stroke();
+        ctx.restore();
+        const uu = E.outExpo(seg(t, T.ctaIn + 0.25, T.ctaIn + 1.0));
+        setFont(26, 400);
+        ctx.letterSpacing = "2px";
+        ctx.fillStyle = `rgba(255,255,255,${0.6 * uu})`;
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText("calendar-puzzle.yoavain.org", bx + 8 + (1 - uu) * 30, by + bh + 58);
+        ctx.letterSpacing = "0px";
+    }
+}
+
+function drawVignette() {
+    const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, W * 0.72);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.6)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------------------------------------------------------------- frame
+function renderScene(t) {
+    setCamera(cameraAt(t));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1; ctx.filter = "none"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    drawBackground(t);
+    drawGrid(t);
+    drawStatements(t);
+    drawKineticWords(t);
+    const board = drawBoard(t);
+    if (board) {
+        drawTiles(t, board.dz);
+        drawImpacts(t);
+        drawShadows(t, board.clip);
+    }
+    const cubes = [];
+    buildMarkers(cubes, t);
+    for (const id in PIECES) {
+        const st = pieceState(+id, t);
+        if (!st) continue;
+        for (const cell of PIECES[id].local)
+            buildCube(cubes, cell, st.R, st.pos, {
+                rgb: PIECES[id].rgb, scale: st.scale, sxy: st.sxy, sz: st.sz, flash: st.flash, t, wave: st.placed
+            });
+    }
+    cubes.sort((a, b) => b.depth - a.depth);
+    for (const c of cubes) drawCube(c);
+    drawSparks(t);
+    drawProgressBar(t);
+    drawLogo(t);
+    drawConfetti(t);
+    drawVignette();
+}
+
+let FRAME_I = 0;
+function renderFrame(t, sub = 1, shutter = 1 / 120) {
+    out.globalCompositeOperation = "source-over";
+    for (let k = 0; k < sub; k++) {
+        const ts = sub > 1 ? t - shutter / 2 + shutter * (k + 0.5) / sub : t;
+        renderScene(Math.max(0, ts));
+        out.globalAlpha = 1 / (k + 1);
+        out.drawImage(scratch, 0, 0);
+    }
+    out.globalAlpha = 1;
+    // film grain
+    const r = mulberry32(FRAME_I++ * 131 + 7);
+    out.globalCompositeOperation = "overlay";
+    out.globalAlpha = 0.07;
+    const ox = -Math.floor(r() * 256), oy = -Math.floor(r() * 256);
+    for (let y = oy; y < H; y += 256) for (let x = ox; x < W; x += 256) out.drawImage(GRAIN, x, y);
+    out.globalAlpha = 1;
+    out.globalCompositeOperation = "source-over";
+}
+
+// ---------------------------------------------------------------- audio cue sheet
+function buildEvents() {
+    const ev = [];
+    BURST_ORDER.forEach((i, k) => ev.push({ t: 0.04 + k * 0.045, type: "whoosh", len: 0.5, pan: (ROW_X(i) / 12) }));
+    for (let i = 0; i < 8; i++) ev.push({ t: 1.0 + i * 0.0625 + 0.2, type: "tick", n: i, pan: ROW_X(i) / 12 });
+    ev.push({ t: T.boardIn, type: "slam" });
+    for (const tile of TILES) { const s = tileState(tile, 99); ev.push({ t: s.st + 0.2, type: "tile" }); }
+    ev.push({ t: T.markersIn, type: "pop" });
+    let last = -1;
+    for (let k = 1; k <= DATE_STEPS; k++) {
+        // time when the roulette crosses step k (inverse of inOutCubic)
+        const y = k / DATE_STEPS;
+        const x = y < .5 ? Math.cbrt(y / 4) : 1 - Math.cbrt((1 - y) * 2) / 2;
+        const tt = lerp(T.rouletteA, T.rouletteB, x);
+        if (tt - last > 0.028) { ev.push({ t: tt, type: "hop" }); last = tt; }
+    }
+    ev.push({ t: T.rouletteB, type: "impact" });
+    T.solveOrder.forEach((id, k) => {
+        ev.push({ t: LAND[id] - 0.64, type: "whoosh", len: 0.55, pan: 0 });
+        ev.push({ t: LAND[id], type: "land", n: k, pan: PIECES[id].target[0] / 5 });
+    });
+    ev.push({ t: T.solved, type: "solved" });
+    ["cal", "puz"].forEach((w, r) => {
+        const n = r ? 6 : 8, st = r ? T.puzIn : T.calIn;
+        for (let i = 0; i < n; i++) ev.push({ t: st + i * T.letterStep + 0.225, type: "letter", n: r * 8 + i });
+    });
+    ev.push({ t: T.ctaIn, type: "cta" });
+    return ev.sort((a, b) => a.t - b.t);
+}
+
+// ---------------------------------------------------------------- boot
+window.READY = (async () => {
+    const [cal, puz] = await Promise.all([loadImg(ASSETS.cal), loadImg(ASSETS.puz)]);
+    LOGO.cal = cal; LOGO.puz = puz;
+    LOGO.calL = sliceLetters(cal, 8);
+    LOGO.puzL = sliceLetters(puz, 6);
+    await document.fonts.load(`700 100px ${FONT}`);
+    window.EVENTS = buildEvents();
+    window.renderFrame = renderFrame;
+    // Renders time t and returns the canvas as base64 raw rgb24 (same pixels as a PNG screenshot, ~5x faster).
+    window.captureFrame = (t, sub) => {
+        renderFrame(t, sub);
+        const d = out.getImageData(0, 0, W, H).data;
+        const rgb = new Uint8Array(W * H * 3);
+        for (let s = 0, o = 0; s < d.length; s += 4) { rgb[o++] = d[s]; rgb[o++] = d[s + 1]; rgb[o++] = d[s + 2]; }
+        let bin = "";
+        for (let k = 0; k < rgb.length; k += 0x8000) bin += String.fromCharCode.apply(null, rgb.subarray(k, k + 0x8000));
+        return btoa(bin);
+    };
+    window.LETTERS = [LOGO.calL.length, LOGO.puzL.length];
+    const q = new URLSearchParams(location.search);
+    if (q.has("play")) {
+        const t0 = performance.now();
+        const loop = () => { renderFrame(((performance.now() - t0) / 1000) % DUR, 1); requestAnimationFrame(loop); };
+        loop();
+    } else {
+        renderFrame(+(q.get("t") || 0), 1);
+    }
+    return true;
+})();
+</script>
+<script>
+"use strict";
+// Soundtrack synth (120 BPM), driven by the renderer's cue sheet (window.EVENTS).
+// Returns a 48 kHz stereo 16-bit WAV as base64.
+window.synthesizeAudio = function (EVENTS) {
+const SR = 48000, DUR = 15, N = SR * DUR;
+const L = new Float32Array(N), R = new Float32Array(N);
+const RevL = new Float32Array(N), RevR = new Float32Array(N);
+const TAU = Math.PI * 2;
+
+let seed = 12345;
+const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+const noise = () => rnd() * 2 - 1;
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+// Write a mono source into the stereo bus with equal-power pan and a reverb send.
+function put(t0, buf, gain = 1, pan = 0, send = 0.15) {
+    const s0 = Math.round(t0 * SR);
+    const a = (pan + 1) * Math.PI / 4, gl = Math.cos(a) * gain, gr = Math.sin(a) * gain;
+    for (let i = 0; i < buf.length; i++) {
+        const j = s0 + i;
+        if (j < 0 || j >= N) continue;
+        L[j] += buf[i] * gl; R[j] += buf[i] * gr;
+        RevL[j] += buf[i] * gl * send; RevR[j] += buf[i] * gr * send;
+    }
+}
+const len = s => new Float32Array(Math.round(s * SR));
+
+// RBJ biquad band-pass, recomputed per block so the centre can sweep.
+function bandpass(buf, fOf, q) {
+    let x1 = 0, x2 = 0, y1 = 0, y2 = 0, b0, b2, a1, a2;
+    for (let i = 0; i < buf.length; i++) {
+        if (i % 32 === 0) {
+            const w = TAU * Math.min(20000, fOf(i / SR)) / SR, al = Math.sin(w) / (2 * q), a0 = 1 + al;
+            b0 = al / a0; b2 = -al / a0; a1 = -2 * Math.cos(w) / a0; a2 = (1 - al) / a0;
+        }
+        const x = buf[i], y = b0 * x + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1; x1 = x; y2 = y1; y1 = y; buf[i] = y;
+    }
+    return buf;
+}
+function lowpass(buf, fOf) {
+    let y = 0;
+    for (let i = 0; i < buf.length; i++) {
+        const a = 1 - Math.exp(-TAU * fOf(i / SR) / SR);
+        y += a * (buf[i] - y); buf[i] = y;
+    }
+    return buf;
+}
+function highpass(buf, f) {
+    let y = 0; const a = 1 - Math.exp(-TAU * f / SR);
+    for (let i = 0; i < buf.length; i++) { y += a * (buf[i] - y); buf[i] = buf[i] - y; }
+    return buf;
+}
+
+// ------------------------------------------------------------------ instruments
+function kick(gain = 1) {
+    const b = len(0.45); let ph = 0;
+    for (let i = 0; i < b.length; i++) {
+        const t = i / SR, f = 45 + 110 * Math.exp(-t * 28);
+        ph += TAU * f / SR;
+        b[i] = Math.sin(ph) * Math.exp(-t * 7) * gain + (t < 0.004 ? noise() * 0.4 : 0);
+    }
+    return b;
+}
+function hat(dec = 45, g = 1) {
+    const b = len(0.12);
+    for (let i = 0; i < b.length; i++) b[i] = noise() * Math.exp(-i / SR * dec) * g;
+    return highpass(highpass(b, 7000), 7000);
+}
+function clap() {
+    const b = len(0.3);
+    for (let i = 0; i < b.length; i++) {
+        const t = i / SR;
+        const env = (t < 0.03 ? (Math.floor(t / 0.01) % 2 ? 0.5 : 1) : 1) * Math.exp(-t * 18);
+        b[i] = noise() * env;
+    }
+    return bandpass(b, () => 1400, 0.9);
+}
+function whoosh(dur, up = true) {
+    const b = len(dur);
+    for (let i = 0; i < b.length; i++) {
+        const u = i / b.length;
+        b[i] = noise() * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.6)), 2);
+    }
+    return bandpass(b, t => { const u = t / dur; return up ? 400 + 3200 * u * u : 3600 - 3000 * u; }, 1.4);
+}
+function click(f, dur = 0.03, g = 1) {
+    const b = len(dur);
+    for (let i = 0; i < b.length; i++) { const t = i / SR; b[i] = Math.sin(TAU * f * t) * Math.exp(-t * 180) * g; }
+    return b;
+}
+function thud(f0 = 120, f1 = 42, dur = 0.9, g = 1) {
+    const b = len(dur); let ph = 0;
+    for (let i = 0; i < b.length; i++) {
+        const t = i / SR; ph += TAU * (f1 + (f0 - f1) * Math.exp(-t * 14)) / SR;
+        b[i] = (Math.sin(ph) * Math.exp(-t * 4.5) + (t < 0.02 ? noise() * (1 - t / 0.02) * 0.6 : 0)) * g;
+    }
+    return b;
+}
+function clack() {   // wooden block snap
+    const b = len(0.12);
+    for (let i = 0; i < b.length; i++) {
+        const t = i / SR;
+        b[i] = noise() * Math.exp(-t * 260) * 0.8 + Math.sin(TAU * 1250 * t) * Math.exp(-t * 90) * 0.35 + Math.sin(TAU * 190 * t) * Math.exp(-t * 40) * 0.5;
+    }
+    return b;
+}
+function pluck(freq, dur = 1.4, bright = 0.5) {   // Karplus-Strong
+    const n = Math.round(SR / freq), ring = new Float32Array(n);
+    for (let i = 0; i < n; i++) ring[i] = noise();
+    const b = len(dur); let idx = 0, prev = 0;
+    for (let i = 0; i < b.length; i++) {
+        const cur = ring[idx];
+        const nx = ring[(idx + 1) % n];
+        const v = 0.996 * ((1 - bright) * 0.5 * (cur + nx) + bright * cur);
+        ring[idx] = v; idx = (idx + 1) % n;
+        b[i] = cur * Math.min(1, (b.length - i) / (SR * 0.05));
+        prev = cur;
+    }
+    return b;
+}
+function bell(freq, dur = 2.2, g = 1) {   // 2-op FM bell
+    const b = len(dur);
+    for (let i = 0; i < b.length; i++) {
+        const t = i / SR, env = Math.exp(-t * 2.6);
+        b[i] = Math.sin(TAU * freq * t + 2.2 * env * Math.sin(TAU * freq * 3.5 * t)) * env * g * Math.min(1, t * 400);
+    }
+    return b;
+}
+function blip(freq, g = 1) {
+    const b = len(0.35);
+    for (let i = 0; i < b.length; i++) {
+        const t = i / SR;
+        const sq = Math.sin(TAU * freq * t) + 0.3 * Math.sin(TAU * freq * 3 * t) + 0.12 * Math.sin(TAU * freq * 5 * t);
+        b[i] = sq * Math.exp(-t * 11) * g * Math.min(1, t * 600);
+    }
+    return b;
+}
+function crash(dur = 2.5) {
+    const b = len(dur);
+    for (let i = 0; i < b.length; i++) b[i] = noise() * Math.exp(-i / SR * 2.2);
+    return highpass(highpass(b, 3500), 2500);
+}
+
+// ------------------------------------------------------------------ music bed
+// Chord roots/tones by time (A minor -> F -> C -> G, lift to F on the solve, resolve to C).
+const CHORDS = [
+    [0, [57, 60, 64]], [2, [53, 57, 60]], [4, [48, 52, 55]], [6, [55, 59, 62]],
+    [8, [57, 60, 64]], [9.5, [53, 57, 60, 64]], [11.5, [48, 52, 55, 59]], [13.5, [48, 55, 60, 64]]
+];
+const chordAt = t => { let c = CHORDS[0][1]; for (const [ct, n] of CHORDS) if (t >= ct) c = n; return c; };
+
+// Pad: detuned saw pairs, low-passed, cross-faded per chord.
+{
+    const pad = new Float32Array(N);
+    for (let ci = 0; ci < CHORDS.length; ci++) {
+        const [t0, notes] = CHORDS[ci];
+        const t1 = ci + 1 < CHORDS.length ? CHORDS[ci + 1][0] : DUR;
+        const s0 = Math.round(t0 * SR), s1 = Math.min(N, Math.round((t1 + 0.25) * SR));
+        for (const m of notes) for (const det of [-0.08, 0.08]) {
+            const f = mtof(m + 12 + det); let ph = rnd();
+            for (let j = s0; j < s1; j++) {
+                ph += f / SR; if (ph > 1) ph -= 1;
+                const tt = (j - s0) / SR, rem = (s1 - j) / SR;
+                pad[j] += (2 * ph - 1) * Math.min(1, tt / 0.12) * Math.min(1, rem / 0.25) * 0.05;
+            }
+        }
+    }
+    // filter opens over the piece, dips during the riser, blooms on the solve
+    lowpass(pad, t => t < 9.5 ? 500 + 1400 * Math.min(1, t / 9) : 3200 * Math.exp(-(t - 9.5) * 0.25) + 900);
+    const gOf = t => (t < 0.2 ? t / 0.2 : 1) * (t > 8.5 && t < 9.5 ? 0.55 : 1) * (t > 14.3 ? Math.max(0, (15 - t) / 0.7) : 1);
+    for (let j = 0; j < N; j++) { const g = gOf(j / SR) * 1.2; L[j] += pad[j] * g; R[j] += pad[j] * g; RevL[j] += pad[j] * 0.25; RevR[j] += pad[j] * 0.25; }
+}
+
+// Drums + bass.
+const beat = 0.5;
+for (let b = 0; b < 30; b++) {
+    const t = b * beat;
+    const inGroove = t >= 2.0 && t < 8.5;
+    const inOutro = t >= 9.5 && t < 14.0;
+    if (inGroove || (inOutro && (b % 2 === 1))) put(t, kick(0.95), 0.72, 0, 0.02);
+    if (t >= 4.0 && t < 8.5 && (b % 2 === 1)) put(t, clap(), 0.32, 0.1, 0.3);
+    if (t >= 3.5 && t < 8.5) {
+        put(t + 0.25, hat(40), 0.16, 0.3, 0.05);
+        if (t >= 5.5) { put(t + 0.125, hat(90), 0.07, -0.3, 0.02); put(t + 0.375, hat(90), 0.07, -0.3, 0.02); }
+    }
+    if (inOutro && b % 2 === 0) put(t + 0.25, hat(35), 0.12, 0.3, 0.1);
+    // bass: 8th-note pulse on the chord root, ducked after each kick
+    if (t >= 2.0 && t < 14.5 && !(t >= 8.5 && t < 9.5)) {
+        for (const off of [0, 0.25]) {
+            const root = chordAt(t + off)[0] - 12, f = mtof(root);
+            const bb = len(0.24);
+            for (let i = 0; i < bb.length; i++) {
+                const tt = i / SR;
+                bb[i] = (Math.sin(TAU * f * tt) + 0.35 * Math.sin(TAU * 2 * f * tt)) * Math.min(1, tt * 200) * Math.exp(-tt * 5) * Math.min(1, (bb.length - i) / 200);
+            }
+            put(t + off, bb, off ? 0.34 : 0.22, 0, 0);
+        }
+    }
+}
+
+// Riser into the solve.
+{
+    const dur = 1.5, b = len(dur);
+    let ph = 0;
+    for (let i = 0; i < b.length; i++) {
+        const u = i / b.length;
+        ph += TAU * (180 + 900 * u * u) / SR;
+        b[i] = (noise() * 0.6 + Math.sin(ph) * 0.25) * u * u;
+    }
+    bandpass(b, t => 400 + 5000 * Math.pow(t / dur, 2), 1.2);
+    put(8.0, b, 1.0, 0, 0.3);
+}
+
+// Opening hit on frame 0.
+put(0.0, thud(170, 36, 1.6), 1.1, 0, 0.35);
+put(0.0, crash(2.2), 0.28, 0, 0.5);
+put(0.02, bell(mtof(81), 2.4), 0.2, -0.3, 0.6);
+put(0.05, bell(mtof(88), 2.4), 0.14, 0.3, 0.6);
+// ------------------------------------------------------------------ SFX from the cue sheet
+const PENTA = [72, 74, 76, 79, 81, 84, 86, 88];          // C major pentatonic, rising per piece
+const LETTER = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81, 84, 86, 88, 91];
+for (const e of EVENTS) {
+    switch (e.type) {
+        case "whoosh": put(e.t, whoosh(e.len ?? 0.5), e.len > 0.52 ? 0.3 : 0.55, clampPan(e.pan), 0.2); break;
+        case "tick": put(e.t, click(1800 + e.n * 160, 0.04), 0.6, clampPan(e.pan), 0.25); break;
+        case "slam": put(e.t, thud(140, 38, 1.2), 1.0, 0, 0.3); put(e.t, crash(1.2), 0.12, 0, 0.4); break;
+        case "tile": put(e.t, click(2600 + rnd() * 1400, 0.02), 0.07, rnd() * 1.2 - 0.6, 0.3); break;
+        case "pop": put(e.t, blip(mtof(76), 0.4), 0.8, -0.2, 0.3); put(e.t + 0.06, blip(mtof(81), 0.4), 0.6, 0.2, 0.3); break;
+        case "hop": put(e.t, click(3100, 0.018), 0.16, 0, 0.1); break;
+        case "impact":
+            put(e.t, thud(110, 40, 1.0), 0.9, 0, 0.3);
+            put(e.t, bell(mtof(81), 2.2), 0.28, -0.25, 0.5);
+            put(e.t, bell(mtof(88), 2.2), 0.18, 0.25, 0.5);
+            break;
+        case "land":
+            put(e.t, clack(), 0.6, clampPan(e.pan), 0.2);
+            put(e.t, pluck(mtof(PENTA[e.n]), 1.4, 0.45), 0.38, clampPan(e.pan) * 0.6, 0.35);
+            break;
+        case "solved":
+            put(e.t, thud(90, 32, 1.8), 1.1, 0, 0.3);
+            put(e.t, crash(3.0), 0.3, 0, 0.5);
+            [72, 76, 79, 84, 88, 91, 96].forEach((m, i) => put(e.t + i * 0.055, bell(mtof(m), 2.0), 0.13, (i % 2 ? 0.4 : -0.4), 0.6));
+            break;
+        case "letter": put(e.t, blip(mtof(LETTER[e.n % LETTER.length]), 0.5), 0.3, (e.n % 8) / 8 - 0.45, 0.4); break;
+        case "cta": put(e.t, bell(mtof(84), 2.4), 0.2, 0, 0.6); put(e.t + 0.12, bell(mtof(91), 2.4), 0.14, 0, 0.6); break;
+    }
+}
+function clampPan(p) { return Math.max(-0.8, Math.min(0.8, p ?? 0)); }
+
+// ------------------------------------------------------------------ reverb (Schroeder) + master
+function reverb(inp, combs, aps) {
+    const outb = new Float32Array(N);
+    for (const [d, fb] of combs) {
+        const buf = new Float32Array(d); let k = 0, lp = 0;
+        for (let i = 0; i < N; i++) {
+            const y = buf[k]; lp = y * 0.7 + lp * 0.3;
+            buf[k] = inp[i] + lp * fb; k = (k + 1) % d; outb[i] += y * 0.25;
+        }
+    }
+    for (const [d, g] of aps) {
+        const buf = new Float32Array(d); let k = 0;
+        for (let i = 0; i < N; i++) {
+            const bv = buf[k], y = -g * outb[i] + bv;
+            buf[k] = outb[i] + g * y; k = (k + 1) % d; outb[i] = y;
+        }
+    }
+    return outb;
+}
+const wetL = reverb(RevL, [[1557, 0.84], [1617, 0.84], [1491, 0.84], [1422, 0.84]], [[225, 0.5], [556, 0.5]]);
+const wetR = reverb(RevR, [[1580, 0.84], [1640, 0.84], [1514, 0.84], [1445, 0.84]], [[248, 0.5], [579, 0.5]]);
+
+let peak = 0;
+for (let i = 0; i < N; i++) { L[i] += wetL[i] * 0.55; R[i] += wetR[i] * 0.55; peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i])); }
+const drive = 1.25 / Math.max(0.5, peak);
+const view = new DataView(new ArrayBuffer(44 + N * 4));
+const str = (o, s) => { for (let k = 0; k < s.length; k++) view.setUint8(o + k, s.charCodeAt(k)); };
+str(0, "RIFF"); view.setUint32(4, 36 + N * 4, true); str(8, "WAVE");
+str(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 2, true);
+view.setUint32(24, SR, true); view.setUint32(28, SR * 4, true); view.setUint16(32, 4, true); view.setUint16(34, 16, true);
+str(36, "data"); view.setUint32(40, N * 4, true);
+for (let i = 0; i < N; i++) {
+    const fade = Math.min(1, i / (SR * 0.01), (N - i) / (SR * 0.25));
+    const l = Math.tanh(L[i] * drive) * 0.89 * fade, r = Math.tanh(R[i] * drive) * 0.89 * fade;
+    view.setInt16(44 + i * 4, Math.round(l * 32767), true);
+    view.setInt16(44 + i * 4 + 2, Math.round(r * 32767), true);
+}
+const bytes = new Uint8Array(view.buffer);
+let bin = "";
+for (let k = 0; k < bytes.length; k += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(k, k + 0x8000));
+return btoa(bin);
+};
+</script>
+</body>
+</html>

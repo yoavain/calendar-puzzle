@@ -95,6 +95,7 @@
         "db:migrate": "drizzle-kit migrate",
         "db:studio": "drizzle-kit studio",
         "db:docs": "tsx scripts/generate-docs.ts",
+        "promo": "tsx --env-file-if-exists=.env scripts/generate-promo.ts",
         "backup:dev:docker": "node --env-file=.env scripts/db-backup.js --env dev --target docker",
         "backup:dev:proxmox": "node --env-file=.env scripts/db-backup.js --env dev --target proxmox",
         "backup:production:docker": "node --env-file=.env scripts/db-backup.js --env production --target docker",
