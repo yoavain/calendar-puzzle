@@ -232,6 +232,18 @@ describe("useGameController hint tokens", () => {
         expect(result.current.hintAvailability).toBe("free");
     });
 
+    it("STALE_HINT_NUMBER: keeps the board's hints when the reload fails", async () => {
+        mockGetHint.mockRejectedValue(new HintRequestError("Your hints are out of date.", "STALE_HINT_NUMBER", 2));
+        mockGetHintState.mockRejectedValue(new Error("Failed to load hint state: Too Many Requests"));
+        const { result } = renderSignedIn({ tokenBalance: 2, hints: 1, settings: { skipTokenConfirm: true } });
+
+        await act(async () => {
+            await result.current.handleHint();
+        });
+
+        expect(lockedIds(result.current.gameState.pieces)).toEqual([solvedPieces[0].id]);
+    });
+
     it("STALE_HINT_NUMBER: drops the reloaded hints when the user switched dates meanwhile", async () => {
         mockGetHint.mockRejectedValue(new HintRequestError("Your hints are out of date.", "STALE_HINT_NUMBER", 2));
         let resolveStale: (pieces: Piece[]) => void = () => {};

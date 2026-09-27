@@ -67,9 +67,9 @@ describe("getHintState", () => {
         await expect(getHintState({ month: 0, day: 1 })).resolves.toHaveLength(2);
     });
 
-    it("returns [] on failure", async () => {
+    it("throws on failure, so an error never reads as \"no hints\"", async () => {
         routes["/api/hint/01-01/state"] = () => json(500, { error: "x" });
-        await expect(getHintState({ month: 0, day: 1 })).resolves.toEqual([]);
+        await expect(getHintState({ month: 0, day: 1 })).rejects.toThrow();
     });
 });
 

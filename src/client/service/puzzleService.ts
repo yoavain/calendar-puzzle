@@ -160,7 +160,8 @@ export const getHint = async (date: PuzzleDate, hintNumber: number): Promise<Hin
 };
 
 /**
- * Every hint the user has already used for a date ([] if none or on failure)
+ * Every hint the user has already used for a date ([] if none).
+ * Throws on failure: callers must never read an error as "no hints".
  */
 export const getHintState = async (date: PuzzleDate): Promise<Piece[]> => {
     const response = await apiFetch(getHintStatePath(date), {
@@ -168,7 +169,7 @@ export const getHintState = async (date: PuzzleDate): Promise<Piece[]> => {
     });
 
     if (!response.ok) {
-        return [];
+        throw new Error(`Failed to load hint state: ${response.statusText}`);
     }
 
     const data = await response.json() as HintStateResponse;
