@@ -35,15 +35,16 @@ const mockSubmitReport = submitInvalidSolutionReport as jest.Mock;
 /** Wire up the default happy-path DB insert chain. */
 const setupInsertChain = (
     onConflictDoNothing = jest.fn().mockResolvedValue(undefined),
-    onConflictDoUpdate = jest.fn().mockResolvedValue(undefined)
+    returning = jest.fn().mockResolvedValue([{ userId: "user-test-123" }])
 ) => {
+    const onConflictDoUpdate = jest.fn().mockReturnValue({ returning });
     mockInsert.mockReturnValue({
         values: jest.fn().mockReturnValue({
             onConflictDoNothing,
             onConflictDoUpdate
         })
     });
-    return { onConflictDoNothing, onConflictDoUpdate };
+    return { onConflictDoNothing, onConflictDoUpdate, returning };
 };
 
 // ---------------------------------------------------------------------------
@@ -176,9 +177,40 @@ describe("statsRest", () => {
             });
 
             expect(res.statusCode).toBe(200);
-            expect(res.json()).toEqual({ success: true });
+            expect(res.json()).toEqual({ success: true, tokenGranted: true });
             expect(onConflictDoUpdate).toHaveBeenCalledTimes(1);
             expect(mockSubmitReport).not.toHaveBeenCalled();
+        });
+
+        it("grants a token on the first solve of a date", async () => {
+            mockPuzzleSolvedForDate.mockReturnValue({ month: 0, day: 1 });
+            setupInsertChain(undefined, jest.fn().mockResolvedValue([{ userId: "user-test-123" }]));
+
+            const res = await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces: makeEightPieces() }
+            });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.json()).toEqual({ success: true, tokenGranted: true });
+        });
+
+        it("never grants a second token for a date already solved", async () => {
+            mockPuzzleSolvedForDate.mockReturnValue({ month: 0, day: 1 });
+            // ON CONFLICT ... WHERE first_completed_at IS NULL skipped the update: no row returned
+            setupInsertChain(undefined, jest.fn().mockResolvedValue([]));
+
+            const res = await authServer.inject({
+                method: "POST",
+                url: "/api/stats/complete",
+                headers: { "content-type": "application/json" },
+                payload: { month: 0, day: 1, pieces: makeEightPieces() }
+            });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.json()).toEqual({ success: true, tokenGranted: false });
         });
 
         it("accepts pieces that carry the client-only placedSeq field", async () => {
@@ -280,7 +312,9 @@ describe("statsRest", () => {
             mockPuzzleSolvedForDate.mockReturnValue({ month: 0, day: 1 });
             mockInsert.mockReturnValue({
                 values: jest.fn().mockReturnValue({
-                    onConflictDoUpdate: jest.fn().mockRejectedValue(new Error("DB error"))
+                    onConflictDoUpdate: jest.fn().mockReturnValue({
+                        returning: jest.fn().mockRejectedValue(new Error("DB error"))
+                    })
                 })
             });
 

@@ -43,6 +43,20 @@
       "when": 1769366382339,
       "tag": "0005_massive_omega_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790505286447,
+      "tag": "0006_hint_tokens_add",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790505302378,
+      "tag": "0007_hint_tokens_drop_hint_used",
+      "breakpoints": true
     }
   ]
 }

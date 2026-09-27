@@ -1,4 +1,5 @@
 import type { Piece, PuzzleDate } from "./types";
+import type { HintErrorCode } from "./hintTokens";
 
 // Common path params for date-based endpoints
 export interface DatePathParams {
@@ -14,26 +15,31 @@ export interface SolutionResponse {
 }
 
 // ============================================
-// GET /api/hint/:date
-// Returns a partial solution (one random piece placed)
-// ============================================
-export interface HintResponse {
-    piece: Piece; // Single piece with position set
-}
-
-// ============================================
 // GET /api/hint/:date/state
-// Returns the hint if it was used, or null
+// Returns every hint the user has used for the date (possibly none)
 // ============================================
 export interface HintStateResponse {
-    piece: Piece | null;
+    pieces: Piece[];
 }
 
 // ============================================
 // PUT /api/hint
-// Record hint usage and return the hint piece
+// Request hint #hintNumber. Returns all hints so far and the new balance.
 // ============================================
-export interface HintRequest extends PuzzleDate {}
+export interface HintRequest extends PuzzleDate {
+    hintNumber: number; // 1..MAX_HINTS
+}
+
+export interface HintResponse {
+    pieces: Piece[]; // hints 1..n, in order
+    tokenBalance: number;
+}
+
+// 409 body for a refused hint
+export interface HintErrorResponse extends ErrorResponse {
+    code: HintErrorCode;
+    tokenBalance: number;
+}
 
 // ============================================
 // POST /api/stats/start
@@ -47,6 +53,11 @@ export interface StartPuzzleRequest extends PuzzleDate {}
 // ============================================
 export interface CompletePuzzleRequest extends PuzzleDate {
     pieces: Piece[];
+}
+
+export interface CompletePuzzleResponse {
+    success: true;
+    tokenGranted: boolean; // true only when this request recorded the first solve of the date
 }
 
 // ============================================
@@ -90,6 +101,19 @@ export interface LogRequest {
     logLevel: "error" | "info";
     message: string;
     stack?: string;
+}
+
+// ============================================
+// Per-user settings, stored in users.settings (jsonb)
+// ============================================
+export interface UserSettings {
+    tokenIntroSeen?: boolean;
+    skipTokenConfirm?: boolean;
+}
+
+// PATCH /api/user/settings — body is a partial UserSettings
+export interface UserSettingsResponse {
+    settings: UserSettings;
 }
 
 // Error response for invalid requests

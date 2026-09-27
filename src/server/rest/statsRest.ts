@@ -8,7 +8,7 @@ import { puzzleSolvedForDate } from "../../common/gameLogic.js";
 import { statsCompleteSchema, statsStartSchema } from "./schemas.js";
 import { submitInvalidSolutionReport } from "../service/issueSubmitter.js";
 import { API_STATS_COMPLETE, API_STATS_START } from "../../common/restPaths.js";
-import type { CompletePuzzleRequest, ErrorResponse, StartPuzzleRequest, SuccessResponse } from "../../common/restTypes.js";
+import type { CompletePuzzleRequest, CompletePuzzleResponse, ErrorResponse, StartPuzzleRequest, SuccessResponse } from "../../common/restTypes.js";
 
 const lastIssueSentAt = new Map<string, number>();
 const ISSUE_COOLDOWN_MS = 10 * 60 * 1000;
@@ -54,7 +54,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
     );
 
     // Record that a user completed a puzzle (with server-side validation)
-    app.post<{ Body: CompletePuzzleRequest; Reply: SuccessResponse | ErrorResponse }>(
+    app.post<{ Body: CompletePuzzleRequest; Reply: CompletePuzzleResponse | ErrorResponse }>(
         API_STATS_COMPLETE,
         { 
             preHandler: requireAuth,
@@ -78,8 +78,9 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                 const isValid = solvedDate && solvedDate.month === month && solvedDate.day === day;
 
                 if (isValid) {
-                    // 2. Record completion in DB
-                    await db.insert(userPuzzleStats)
+                    // 2. Record completion in DB. A row comes back only when this request
+                    //    set first_completed_at, which is exactly when a token is earned.
+                    const recorded = await db.insert(userPuzzleStats)
                         .values({
                             userId: user.id,
                             month,
@@ -93,9 +94,10 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
                                 firstCompletedAt: new Date()
                             },
                             where: isNull(userPuzzleStats.firstCompletedAt)
-                        });
+                        })
+                        .returning({ userId: userPuzzleStats.userId });
 
-                    return { success: true };
+                    return { success: true, tokenGranted: recorded.length > 0 };
                 }
                 else {
                     // Automatically report a bug to GitHub if a solution fails server-side validation

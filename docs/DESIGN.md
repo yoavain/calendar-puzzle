@@ -67,7 +67,7 @@ Implement OAuth-based authentication using trusted providers (Google, GitHub). N
 
 ### Database Schema
 
-> **Note:** This subsection captures the original plan. The implemented schema differs — see [DB_SCHEMA.md](DB_SCHEMA.md) for the authoritative description. Key differences: the user-progress table is `user_puzzle_stats` (not `users_results`) with composite PK `(user_id, month, day)` and columns `first_started_at`, `first_completed_at`, `hint_used` — no `solution_state` JSONB. No PII (email, display name) is stored in the `users` table; only the Google ID and an `is_admin` flag.
+> **Note:** This subsection captures the original plan. The implemented schema differs — see [DB_SCHEMA.md](DB_SCHEMA.md) for the authoritative description. Key differences: the user-progress table is `user_puzzle_stats` (not `users_results`) with composite PK `(user_id, month, day)` and columns `first_started_at`, `first_completed_at`, `hints_used` (hints used per date, 0–7) — no `solution_state` JSONB. No PII (email, display name) is stored in the `users` table; only the Google ID, an `is_admin` flag and a `settings` JSONB of UI preferences.
 
 Design a relational schema to track users and their puzzle completion history.
 
@@ -105,7 +105,12 @@ Design a relational schema to track users and their puzzle completion history.
 
 ### Solver and Hint APIs
 
-> **As implemented:** `puzzleSolver.ts` lives in `src/common/` (pure DLX algorithm, no DOM/Node deps). It is invoked server-side only from a worker thread at `src/server/workers/puzzleSolverWorker.ts`, orchestrated by `src/server/service/solverService.ts`. The solver endpoint is `GET /api/admin/solution/:date` (admin-only). The hint endpoint is `PUT /api/hint`.
+> **As implemented:** `puzzleSolver.ts` lives in `src/common/` (pure DLX algorithm, no DOM/Node deps). It is invoked server-side only from a worker thread at `src/server/workers/puzzleSolverWorker.ts`, orchestrated by `src/server/service/solverService.ts`. The solver endpoint is `GET /api/admin/solution/:date` (admin-only). Hints use hint tokens:
+>
+> - `PUT /api/hint` takes `{ month, day, hintNumber }` (1–7) and returns `{ pieces, tokenBalance }`: every hint so far, in a fixed order per date, plus the new balance. Hint #1 is free; each later hint costs one token. A `hintNumber` the user already has is a free replay. Refusals are `409` with `{ error, code, tokenBalance }`, `code` one of `STALE_HINT_NUMBER`, `ALREADY_SOLVED`, `NO_TOKENS`.
+> - `GET /api/hint/:date/state` returns `{ pieces }`: every hint used for the date.
+> - The balance is derived, never stored: solved dates minus every hint after the first on each date (`src/common/hintTokens.ts`). `POST /api/stats/complete` returns `tokenGranted: true` only for the first solve of a date. `GET /api/auth/me` returns `tokenBalance` and `settings`.
+> - `PATCH /api/user/settings` stores the per-user `tokenIntroSeen` and `skipTokenConfirm` flags.
 
 Move the puzzle solver to the server and expose it through authenticated endpoints.
 

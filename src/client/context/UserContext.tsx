@@ -1,7 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { PuzzleDate } from "../../common/types.js";
+import type { UserSettings } from "../../common/restTypes.js";
 import { clearCsrfToken, getCsrfToken } from "../service/csrfService";
 import { logToServer } from "../service/logService.js";
+import { saveUserSettings } from "../service/puzzleService.js";
 import { API_AUTH_ME, AUTH_LOGOUT } from "../../common/restPaths.js";
 
 export interface User {
@@ -22,6 +24,11 @@ interface UserContextValue {
     refreshUser: () => Promise<void>;
     addCompletedDate: (date: PuzzleDate) => void;
     addPlayedDate: (date: PuzzleDate) => void;
+    tokenBalance: number;
+    settings: UserSettings;
+    setTokenBalance: (balance: number) => void;
+    adjustTokenBalance: (delta: number) => void;
+    updateSettings: (patch: UserSettings) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextValue | null>(null);
@@ -31,6 +38,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [completedDates, setCompletedDates] = useState<PuzzleDate[]>([]);
     const [playedDates, setPlayedDates] = useState<PuzzleDate[]>([]);
     const [loading, setLoading] = useState(true);
+    const [tokenBalance, setTokenBalance] = useState(0);
+    const [settings, setSettings] = useState<UserSettings>({});
 
     const fetchUser = useCallback(async () => {
         try {
@@ -43,6 +52,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser(data.user);
                     setCompletedDates(data.completedDates || []);
                     setPlayedDates(data.playedDates || []);
+                    setTokenBalance(data.tokenBalance ?? 0);
+                    setSettings(data.settings ?? {});
                     
                     // Fetch CSRF token separately after authenticated session is established
                     getCsrfToken().catch(err => {
@@ -53,6 +64,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser(null);
                     setCompletedDates([]);
                     setPlayedDates([]);
+                    setTokenBalance(0);
+                    setSettings({});
                     clearCsrfToken();
                 }
             }
@@ -60,6 +73,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
                 setUser(null);
                 setCompletedDates([]);
                 setPlayedDates([]);
+                setTokenBalance(0);
+                setSettings({});
                 clearCsrfToken();
             }
         }
@@ -68,6 +83,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(null);
             setCompletedDates([]);
             setPlayedDates([]);
+            setTokenBalance(0);
+            setSettings({});
             clearCsrfToken();
         }
         finally {
@@ -84,6 +101,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(null);
             setCompletedDates([]);
             setPlayedDates([]);
+            setTokenBalance(0);
+            setSettings({});
             clearCsrfToken();
         };
 
@@ -116,6 +135,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setCompletedDates([]);
         setPlayedDates([]);
+        setTokenBalance(0);
+        setSettings({});
         clearCsrfToken();
     }, [user]);
 
@@ -139,6 +160,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         });
     }, []);
 
+    const adjustTokenBalance = useCallback((delta: number) => {
+        setTokenBalance(prev => prev + delta);
+    }, []);
+
+    // Optimistic: the UI follows the choice at once; a failed save only logs,
+    // and the next /me read shows the stored value.
+    const updateSettings = useCallback(async (patch: UserSettings) => {
+        setSettings(prev => ({ ...prev, ...patch }));
+        try {
+            await saveUserSettings(patch);
+        }
+        catch (error) {
+            logToServer("error", "UserContext: Failed to save settings", error);
+        }
+    }, []);
+
     const contextValue = useMemo(() => ({
         user,
         completedDates,
@@ -147,8 +184,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         refreshUser: fetchUser,
         addCompletedDate,
-        addPlayedDate
-    }), [user, completedDates, playedDates, loading, logout, fetchUser, addCompletedDate, addPlayedDate]);
+        addPlayedDate,
+        tokenBalance,
+        settings,
+        setTokenBalance,
+        adjustTokenBalance,
+        updateSettings
+    }), [user, completedDates, playedDates, loading, logout, fetchUser, addCompletedDate, addPlayedDate, tokenBalance, settings, adjustTokenBalance, updateSettings]);
 
     return (
         <UserContext.Provider value={contextValue}>

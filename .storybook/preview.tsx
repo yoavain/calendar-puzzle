@@ -9,10 +9,11 @@ const withProviders: Decorator = (Story, context) => {
         user = MOCK_USER_REGULAR,
         completedDates = [],
         playedDates = [],
-        loading = false
+        loading = false,
+        tokenBalance = 0
     } = context.parameters["userContext"] ?? {};
     return (
-        <MockUserProvider user={user} completedDates={completedDates} playedDates={playedDates} loading={loading}>
+        <MockUserProvider user={user} completedDates={completedDates} playedDates={playedDates} loading={loading} tokenBalance={tokenBalance}>
             <StoryThemeProvider mode={mode}>
                 <Story />
             </StoryThemeProvider>

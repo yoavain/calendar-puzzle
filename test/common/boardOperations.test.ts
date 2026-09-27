@@ -1,5 +1,5 @@
-import { rebuildGameState, updateBoardAndPieces } from "../../src/common/boardOperations";
-import { initializeBoard } from "../../src/common/initialize";
+import { applyHintPieces, rebuildGameState, updateBoardAndPieces } from "../../src/common/boardOperations";
+import { initializeBoard, initializePieces } from "../../src/common/initialize";
 import type { Piece, PuzzleDate } from "../../src/common/types";
 
 describe("boardOperations", () => {
@@ -417,5 +417,29 @@ describe("boardOperations", () => {
                 expect(replaced.pieces[0].placedSeq).toBe(3);
             });
         });
+    });
+});
+
+describe("applyHintPieces", () => {
+    const date = { month: 0, day: 1 };
+    const hint = (id: number, x: number, y: number): Piece => ({
+        id: id as Piece["id"], position: { x, y }, isFlippedH: false, isFlippedV: false, rotation: 0
+    });
+
+    it("places every hint locked, in hint order, and returns other pieces to the pool", () => {
+        const pieces = initializePieces().map(p => (p.id === 5 ? { ...p, position: { x: 3, y: 3 } } : p));
+
+        const result = applyHintPieces(date, pieces, [hint(2, 0, 0), hint(7, 4, 4)]);
+
+        const byId = new Map(result.pieces.map(p => [p.id, p]));
+        expect(byId.get(2)).toMatchObject({ position: { x: 0, y: 0 }, isLocked: true, placedSeq: 1 });
+        expect(byId.get(7)).toMatchObject({ position: { x: 4, y: 4 }, isLocked: true, placedSeq: 2 });
+        expect(byId.get(5)).toMatchObject({ position: null, isLocked: false });
+        expect(byId.get(5)?.placedSeq).toBeUndefined();
+    });
+
+    it("returns an unlocked, empty board for no hints", () => {
+        const result = applyHintPieces(date, initializePieces(), []);
+        expect(result.pieces.every(p => p.position === null && !p.isLocked)).toBe(true);
     });
 });

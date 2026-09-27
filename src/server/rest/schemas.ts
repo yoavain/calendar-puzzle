@@ -1,6 +1,7 @@
 /**
  * Common JSON schemas for REST API input validation
  */
+import { MAX_HINTS } from "../../common/hintTokens.js";
 
 export const dateParamSchema = {
     type: "object",
@@ -54,6 +55,33 @@ export const statsStartSchema = {
     properties: {
         month: { type: "integer", minimum: 0, maximum: 11 },
         day: { type: "integer", minimum: 1, maximum: 31 }
+    }
+};
+
+export const hintRequestSchema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["month", "day", "hintNumber"],
+    properties: {
+        month: { type: "integer", minimum: 0, maximum: 11 },
+        day: { type: "integer", minimum: 1, maximum: 31 },
+        hintNumber: { type: "integer", minimum: 1, maximum: MAX_HINTS }
+    }
+};
+
+// Fastify's Ajv runs with removeAdditional, so unknown keys are stripped. The
+// anyOf requires at least one known key; minProperties would count unknown
+// keys before they are stripped.
+export const userSettingsSchema = {
+    type: "object",
+    additionalProperties: false,
+    anyOf: [
+        { required: ["tokenIntroSeen"] },
+        { required: ["skipTokenConfirm"] }
+    ],
+    properties: {
+        tokenIntroSeen: { type: "boolean" },
+        skipTokenConfirm: { type: "boolean" }
     }
 };
 

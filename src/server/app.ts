@@ -16,6 +16,7 @@ import { registerAdminRoutes } from "./rest/adminRest.js";
 import { registerHintRoutes } from "./rest/hintRest.js";
 import { registerAuthRoutes } from "./rest/authRest.js";
 import { registerStatsRoutes } from "./rest/statsRest.js";
+import { registerUserRoutes } from "./rest/userRest.js";
 import { registerIssueRoutes } from "./rest/issueRest.js";
 import { registerLogRoutes } from "./rest/logRest.js";
 import { setupPassport } from "./auth/passport.js";
@@ -331,6 +332,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
     registerAdminRoutes(app);
     registerHintRoutes(app);
     registerStatsRoutes(app);
+    registerUserRoutes(app);
     registerIssueRoutes(app);
     registerLogRoutes(app);
 

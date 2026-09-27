@@ -165,7 +165,7 @@ export const MobileBoard: React.FC<MobileBoardProps> = ({
     };
 
     return (
-        <BoardContainer ref={setRefs} data-droppable-board="true" data-testid="board">
+        <BoardContainer ref={setRefs} data-droppable-board="true" data-testid="board" data-token-source="true">
             {board.map((row, y) => (
                 <BoardRow key={y}>
                     {row.map((cell, x) => renderCell(cell, x, y))}

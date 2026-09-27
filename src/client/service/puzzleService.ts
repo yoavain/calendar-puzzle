@@ -1,7 +1,9 @@
 import type { EncryptedPayload, Piece, PuzzleDate } from "../../common/types";
 import type {
     CompletePuzzleRequest,
+    CompletePuzzleResponse,
     ErrorResponse,
+    HintErrorResponse,
     HintRequest,
     HintResponse,
     HintStateResponse,
@@ -9,8 +11,11 @@ import type {
     SolutionResponse,
     StartPuzzleRequest,
     UserActivity,
-    UserDataResponse
+    UserDataResponse,
+    UserSettings,
+    UserSettingsResponse
 } from "../../common/restTypes";
+import type { HintErrorCode } from "../../common/hintTokens";
 import { encryptPayload } from "../utils/encryption.js";
 import { logToServer } from "./logService.js";
 import { getCsrfToken, clearCsrfToken } from "./csrfService.js";
@@ -21,6 +26,7 @@ import {
     API_ISSUE,
     API_STATS_COMPLETE,
     API_STATS_START,
+    API_USER_SETTINGS,
     getAdminSolutionPath,
     getHintStatePath
 } from "../../common/restPaths.js";
@@ -79,6 +85,37 @@ const getPublicKey = async (): Promise<string | null> => {
     return null;
 };
 
+/** Build headers for a JSON write: optional encryption, plus the CSRF token. */
+const prepareWrite = async <T extends object>(payload: T): Promise<{ body: T | EncryptedPayload; headers: Record<string, string> }> => {
+    let body: T | EncryptedPayload = payload;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+    const publicKey = await getPublicKey();
+    if (publicKey) {
+        body = await encryptPayload(payload, publicKey);
+        headers["X-Encrypted"] = "true";
+    }
+
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+        headers["X-CSRF-Token"] = csrfToken;
+    }
+    return { body, headers };
+};
+
+/** A hint request the server refused (409 carries a code) or failed. */
+export class HintRequestError extends Error {
+    readonly code: HintErrorCode | null;
+    readonly tokenBalance: number | null;
+
+    constructor(message: string, code: HintErrorCode | null, tokenBalance: number | null) {
+        super(message);
+        this.name = "HintRequestError";
+        this.code = code;
+        this.tokenBalance = tokenBalance;
+    }
+}
+
 /**
  * Get the full puzzle solution for a specific date (Admin only)
  */
@@ -97,23 +134,11 @@ export const getSolution = async (date: PuzzleDate): Promise<Piece[]> => {
 };
 
 /**
- * Get a hint (single piece placement) for a specific date
- * This records hint usage in the database.
+ * Request hint #hintNumber for a date. Hint #2 and later spend a token.
+ * Returns every hint so far, in order, and the new balance.
  */
-export const getHint = async (date: PuzzleDate): Promise<Piece> => {
-    let body: HintRequest | EncryptedPayload = { month: date.month, day: date.day };
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-
-    const publicKey = await getPublicKey();
-    if (publicKey) {
-        body = await encryptPayload(body, publicKey);
-        headers["X-Encrypted"] = "true";
-    }
-
-    const csrfToken = await getCsrfToken();
-    if (csrfToken) {
-        headers["X-CSRF-Token"] = csrfToken;
-    }
+export const getHint = async (date: PuzzleDate, hintNumber: number): Promise<HintResponse> => {
+    const { body, headers } = await prepareWrite<HintRequest>({ month: date.month, day: date.day, hintNumber });
 
     const response = await apiFetch(API_HINT, {
         method: "PUT",
@@ -121,30 +146,33 @@ export const getHint = async (date: PuzzleDate): Promise<Piece> => {
         body: JSON.stringify(body),
         credentials: "include"
     });
-    
+
     if (!response.ok) {
-        const errorData = await response.json() as ErrorResponse;
-        throw new Error(errorData.error || `Failed to get hint: ${response.statusText}`);
+        const errorData = await response.json() as Partial<HintErrorResponse>;
+        throw new HintRequestError(
+            errorData.error || `Failed to get hint: ${response.statusText}`,
+            errorData.code ?? null,
+            errorData.tokenBalance ?? null
+        );
     }
-    
-    const data = await response.json() as HintResponse;
-    return data.piece;
+
+    return await response.json() as HintResponse;
 };
 
 /**
- * Check if a hint was already used for a specific date
+ * Every hint the user has already used for a date ([] if none or on failure)
  */
-export const getHintState = async (date: PuzzleDate): Promise<Piece | null> => {
+export const getHintState = async (date: PuzzleDate): Promise<Piece[]> => {
     const response = await apiFetch(getHintStatePath(date), {
         credentials: "include"
     });
-    
+
     if (!response.ok) {
-        return null;
+        return [];
     }
-    
+
     const data = await response.json() as HintStateResponse;
-    return data.piece;
+    return data.pieces;
 };
 
 /**
@@ -181,7 +209,7 @@ export const recordStart = async (date: PuzzleDate): Promise<boolean> => {
 /**
  * Record that a user completed a puzzle
  */
-export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promise<boolean> => {
+export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promise<{ success: boolean; tokenGranted: boolean }> => {
     let body: CompletePuzzleRequest | EncryptedPayload = { 
         month: date.month, 
         day: date.day,
@@ -207,7 +235,31 @@ export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promi
         credentials: "include"
     });
     
-    return response.ok;
+    if (!response.ok) {
+        return { success: false, tokenGranted: false };
+    }
+    const data = await response.json() as CompletePuzzleResponse;
+    return { success: true, tokenGranted: data.tokenGranted === true };
+};
+
+/**
+ * Merge known settings into the user's stored settings
+ */
+export const saveUserSettings = async (patch: UserSettings): Promise<UserSettings> => {
+    const { body, headers } = await prepareWrite(patch);
+
+    const response = await apiFetch(API_USER_SETTINGS, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify(body),
+        credentials: "include"
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to save settings: ${response.statusText}`);
+    }
+    const data = await response.json() as UserSettingsResponse;
+    return data.settings;
 };
 
 /**

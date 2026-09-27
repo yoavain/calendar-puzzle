@@ -17,17 +17,36 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the architecture overview a
 
 ## Environments
 
-> **Local-only project.** Both environments run on the same host machine via Docker Compose. Docker images are built locally and never pushed to any registry. Secrets baked into image layers are only accessible to the host operator and do not represent a distribution risk.
+Each environment runs on its own Proxmox LXC, with its own DNS and its own Postgres.
+`scripts/deploy-proxmox.mjs` ships the built tree over SSH and restarts the `calendar-puzzle` systemd unit.
+It ships no secrets; those live on each LXC.
 
-There are two separate deployed environments, each with its own DNS:
+| Environment | Deploy command | DB backup |
+|---|---|---|
+| **Dev** | `npm run deploy:dev:proxmox` | `npm run backup:dev:proxmox` |
+| **Production** | `npm run deploy:production:proxmox` | `npm run backup:production:proxmox` |
+
+**Every change must be deployed to Dev first and manually tested before being promoted to Production.**
+Deploy to Production only after Dev validation.
+
+- The server applies pending DB migrations at startup, so each deploy migrates that environment's DB.
+  Back up an environment before a deploy that adds a migration. See
+  [docs/DB_BACKUP_SETUP.md](docs/DB_BACKUP_SETUP.md) for backup, restore and rollback.
+- `.node-version` sets the Node version on the LXC. The deploy refuses to run when the `Dockerfile`
+  `FROM node:X.Y.Z` tag differs. The `Dockerfile` exists only to mirror the Proxmox runtime.
+
+<details>
+<summary>Docker deploy (retired)</summary>
+
+The Docker Compose stacks ran both environments on one host machine. Images were built locally and never
+pushed to a registry, so secrets baked into image layers stayed with the host operator.
 
 | Environment | Deploy command |
 |---|---|
 | **Dev** | `npm run deploy:dev:docker` |
 | **Production** | `npm run deploy:production:docker` |
 
-**Every change must be deployed to Dev first and manually tested before being promoted to Production.**
-Deploy to Production only after Dev validation.
+</details>
 
 ## Conventions
 

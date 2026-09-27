@@ -1,157 +1,128 @@
-# Database Backup & Restore Setup Guide
+# Database Backup & Restore
 
-This document explains how to finalize the setup of the daily database backup system after the scripts have been added to the codebase.
+Each environment's Postgres runs on its Proxmox LXC. The backup and restore scripts reach it over SSH as
+the deploy account, with the same key and host settings as `npm run deploy:<env>:proxmox`.
 
-## Files Added
+- `scripts/db-backup.js` streams a plain-SQL `pg_dump` from the LXC to a local file.
+- `scripts/db-restore.js` streams a local file back into `psql` on the LXC, after a Y/N prompt.
+- `scripts/db-target.mjs` builds the remote commands. Read its comments for the flag choices.
 
-- `scripts/db-backup.js` — Backup utility
-- `scripts/db-restore.js` — Restore utility with Y/N confirmation gate
-- `package.json` — Four new npm scripts:
-  - `backup:dev:docker`, `backup:production:docker`
-  - `restore:dev:docker`, `restore:production:docker`
+Always use the `:proxmox` npm scripts. The scripts default to `--target docker` when called directly.
 
-## Step 1: Configure `.env`
+## Behavior
 
-Add the backup directory to your `.env` file:
+- **Dumps restore onto a populated database.** `pg_dump --clean --if-exists` emits a `DROP` before each `CREATE`.
+- **Restores are all-or-nothing.** `psql --single-transaction -v ON_ERROR_STOP=1` stops at the first error and rolls back. A failed restore leaves the old data in place.
+- **A restore replaces the whole database.** The tables and the `drizzle` migrations schema are both replaced.
+- **Production to Dev is allowed.** `--from production` seeds Dev with real data, for example to rehearse a migration.
+- **Dev to Production is refused.** No flag overrides this.
 
-```
-CALENDAR_PUZZLE_DB_BACKUP_PATH=C:\Backups\calendar-puzzle
-```
+## Setup
 
-You can use any path you prefer. The directory will be created automatically if it doesn't exist.
+Add these keys to `.env`. The deploy script uses the same SSH keys.
 
-## Step 2: Test the Scripts Manually
+| Key | Required | Meaning |
+|---|---|---|
+| `CALENDAR_PUZZLE_DB_BACKUP_PATH` | yes | Local backup directory, e.g. `C:\Backups\calendar-puzzle`. The script creates it. |
+| `CALENDAR_PUZZLE_DEV_HOST` | yes | Address of the Dev LXC |
+| `CALENDAR_PUZZLE_PRODUCTION_HOST` | yes | Address of the Production LXC |
+| `CALENDAR_PUZZLE_DEPLOY_USER` | no | SSH user. Default: `deploy`. |
+| `CALENDAR_PUZZLE_SSH_KEY` | no | Private key path. Default: `~/.ssh/id_ed25519_calpuzzle`. |
 
-Verify both scripts work before setting up the schedule:
+SSH runs with `BatchMode=yes`, so it never prompts. A key with a passphrase works only when `ssh-agent`
+holds it.
 
-### Backup test (dev)
-
-```bash
-npm run backup:dev:docker
-```
-
-Expected output:
-```
-[2026-05-15] Backing up dev database...
-  Container: calendar-puzzle-dev-postgres-1
-  Output:    C:\Backups\calendar-puzzle\2026-05-15-dev.sql
-✓ Backup complete (XXX KB, X.XXs)
-```
-
-A file at `C:\Backups\calendar-puzzle\2026-05-15-dev.sql` should exist with SQL dump contents.
-
-### Restore test (dev only)
-
-After backing up, make a test change to the dev database (add a row via the app), then restore:
+## Back up
 
 ```bash
-npm run restore:dev:docker -- --date 2026-05-15
+npm run backup:dev:proxmox
+npm run backup:production:proxmox
 ```
 
-You should see:
-1. A loud warning with the environment, container, and file details
-2. A prompt: "Type Y to proceed, anything else to abort: "
-3. Type `Y` to proceed
-4. Upon completion: "✓ Restore complete"
+The output is `<CALENDAR_PUZZLE_DB_BACKUP_PATH>\YYYY-MM-DD-<env>.sql`. The date is the local date at
+backup time.
 
-Verify the app rolls back to the backed-up state.
+**One file per environment per day.** A second backup of the same environment on the same day overwrites
+the first. Before a deploy that runs a migration, back up that environment. Do not back it up again that
+day, or copy the file somewhere else first.
 
-## Step 3: Create Windows Task Scheduler Tasks
+## Restore
 
-Run the PowerShell commands below as Administrator. Open PowerShell as Administrator and paste:
+Restores are manual and interactive. The script shows the target and the source file, then asks for `Y`.
+
+```bash
+npm run restore:dev:proxmox -- --date 2026-05-15
+npm run restore:production:proxmox -- --date 2026-05-15
+
+# Seed Dev from a Production backup
+npm run restore:dev:proxmox -- --from production --date 2026-05-15
+```
+
+A restore does not change the deployed code. To roll back a release that ran a migration, restore the
+backup, then deploy the previous release.
+
+## Scheduled daily backups
+
+Run in PowerShell as Administrator. `-Force` replaces a task of the same name.
 
 ```powershell
-# Create the dev backup task (daily at 3:00 AM)
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries
+
+# Dev: daily at 3:00 AM
 $action  = New-ScheduledTaskAction `
     -Execute "cmd.exe" `
-    -Argument "/c npm run backup:dev:docker" `
+    -Argument "/c npm run backup:dev:proxmox" `
     -WorkingDirectory "C:\Dev\_MISC\calendar-puzzle"
 $trigger = New-ScheduledTaskTrigger -Daily -At 3:00am
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries
-Register-ScheduledTask -TaskName "CalendarPuzzle-Backup-Dev" `
+Register-ScheduledTask -TaskName "CalendarPuzzle-Backup-Dev" -Force `
     -Action $action -Trigger $trigger -Settings $settings `
     -Description "Daily pg_dump of calendar-puzzle dev DB"
 
-# Create the production backup task (daily at 3:15 AM, offset so they don't compete)
+# Production: daily at 3:15 AM
 $action  = New-ScheduledTaskAction `
     -Execute "cmd.exe" `
-    -Argument "/c npm run backup:production:docker" `
+    -Argument "/c npm run backup:production:proxmox" `
     -WorkingDirectory "C:\Dev\_MISC\calendar-puzzle"
 $trigger = New-ScheduledTaskTrigger -Daily -At 3:15am
-Register-ScheduledTask -TaskName "CalendarPuzzle-Backup-Production" `
+Register-ScheduledTask -TaskName "CalendarPuzzle-Backup-Production" -Force `
     -Action $action -Trigger $trigger -Settings $settings `
     -Description "Daily pg_dump of calendar-puzzle production DB"
 ```
 
-### Verify the tasks were created
+To test a task, open Task Scheduler (`taskschd.msc`), right-click the task, and select **Run**. A new
+`.sql` file with today's date appears in the backup directory.
 
-Open Task Scheduler (`taskschd.msc`) and confirm:
-- **CalendarPuzzle-Backup-Dev** is listed (trigger: Daily, 3:00 AM)
-- **CalendarPuzzle-Backup-Production** is listed (trigger: Daily, 3:15 AM)
+A scheduled backup needs three conditions:
 
-### Test the tasks
+1. The machine is on.
+2. The machine reaches the LXC over the network.
+3. SSH reaches the LXC without a prompt (see Setup).
 
-Right-click each task → **Run** to execute them immediately. Check that new `.sql` files appear in your backup directory with today's date.
+There is no automatic cleanup. Delete old files in the backup directory by hand.
 
-### Important: Docker Desktop Requirement
+## Troubleshooting
 
-The scheduled tasks **will not work if Docker Desktop is not running** when they fire. Ensure one of the following:
+| Symptom | Check |
+|---|---|
+| `CALENDAR_PUZZLE_<ENV>_HOST is not set` | Add the key to `.env`. |
+| `Permission denied (publickey)` or a timeout | Run the command by hand. Check the key path and that the LXC is up. |
+| `backup file is empty` / `pg_dump exited with code N` | Read the `[pg_dump stderr]` lines. Postgres on the LXC may be down. |
+| Task shows "Did not complete" | Run `npm run backup:<env>:proxmox` by hand and read the output. |
 
-1. **Docker Desktop starts on login** (recommended):
-   - Open Docker Desktop → Settings → General → check "Start Docker Desktop when you sign in"
-   - Close and reopen Docker Desktop to confirm
+<details>
+<summary>Docker target (retired)</summary>
 
-2. **Your machine is always on at 3:00 AM** and Docker is running
-
-## Restore: Manual Operation
-
-Restores are **always manual and interactive** — there is no schedule for them. To restore from a backup:
+The same scripts support the retired Docker Compose stacks with `--target docker`. They reach the
+container `calendar-puzzle-<env>-postgres-1` with `docker exec`. Docker Desktop must run.
 
 ```bash
+npm run backup:dev:docker
+npm run backup:production:docker
 npm run restore:dev:docker -- --date 2026-05-15
 npm run restore:production:docker -- --date 2026-05-15
 ```
 
-The script will prompt for Y/N confirmation. This is intentional — restores are destructive and require deliberate action.
+The Docker target does not need the host, user or key keys in `.env`. It needs only
+`CALENDAR_PUZZLE_DB_BACKUP_PATH`.
 
-## File Naming
-
-Backups are named `YYYY-MM-DD-<env>.sql`, e.g.:
-- `2026-05-15-dev.sql` (dev backup from May 15, 2026)
-- `2026-05-15-production.sql` (production backup from May 15, 2026)
-
-The date is derived from the **system's local timezone** at backup time.
-
-## Backup Directory Contents
-
-Backups accumulate in the directory you configured. There is **no automatic cleanup** — you manage retention manually:
-
-```bash
-# List all backups
-dir C:\Backups\calendar-puzzle
-
-# Delete a backup
-del C:\Backups\calendar-puzzle\2026-04-15-dev.sql
-```
-
-## Troubleshooting
-
-### Task shows "Did not complete" in Task Scheduler
-
-1. Check that Docker Desktop is running
-2. Manually run `npm run backup:dev:docker` and check the output
-3. Check the backup directory for the file
-
-### "Error: container not found" or "Error spawning docker"
-
-The docker container may not exist or Docker Desktop may not be running. Verify:
-- Docker Desktop is running
-- Run `docker ps` and confirm containers exist
-- Run `npm run backup:dev:docker` manually to see the error
-
-### "Error: backup file is empty"
-
-pg_dump may have failed. Check:
-- Is the database running?
-- Is the container still healthy?
-- Try the backup manually and check for stderr output
+</details>

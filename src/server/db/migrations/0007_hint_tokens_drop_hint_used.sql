@@ -1,0 +1,1 @@
+ALTER TABLE "user_puzzle_stats" DROP COLUMN "hint_used";

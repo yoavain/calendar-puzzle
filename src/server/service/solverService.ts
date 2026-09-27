@@ -112,9 +112,15 @@ export const solvePuzzle = async (month: number, day: number, log: FastifyBaseLo
 };
 
 /**
- * Get a deterministic hint piece for a given date
+ * Get hints 1..count for a date. The sequence is fixed per date: it starts at
+ * the piece the single-hint version always returned and steps through the solution,
+ * so every player gets the same hints in the same order.
  */
-export const getHintPiece = async (month: number, day: number, log: FastifyBaseLogger): Promise<Piece> => {
+export const getHintPieces = async (month: number, day: number, count: number, log: FastifyBaseLogger): Promise<Piece[]> => {
+    if (count === 0) {
+        return [];
+    }
+
     const pieces = await solvePuzzle(month, day, log);
     const placedPieces = pieces.filter(p => p.position !== null);
 
@@ -122,7 +128,6 @@ export const getHintPiece = async (month: number, day: number, log: FastifyBaseL
         throw new Error("No placed pieces found in solution");
     }
 
-    const dateKey = toDateKey(month, day);
-    const pieceIndex = hashString(dateKey) % 8;
-    return placedPieces[pieceIndex % placedPieces.length];
+    const start = hashString(toDateKey(month, day)) % 8;
+    return Array.from({ length: count }, (_, k) => placedPieces[(start + k) % placedPieces.length]);
 };

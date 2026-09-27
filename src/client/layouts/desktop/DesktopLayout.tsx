@@ -29,6 +29,10 @@ import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
+import { TokenFlight } from "../../components/TokenFlight";
+import { HintErrorToast } from "../../components/HintErrorToast";
+import { TokenIntroDialog } from "../../components/TokenIntroDialog";
+import { TokenConfirmDialog } from "../../components/TokenConfirmDialog";
 import { ShareDialog } from "../../components/ShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
 import { ToolbarIconButton } from "../../components/ToolbarIconButton";
@@ -105,7 +109,7 @@ export const DesktopLayout: React.FC = () => {
                         >
                             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                                 <ThemeToggle />
-                                {!game.userLoading && (game.user ? <UserMenu /> : <LoginButton />)}
+                                {!game.userLoading && (game.user ? <UserMenu onShowTokenIntro={game.modals.tokenIntro.open} /> : <LoginButton />)}
                             </Stack>
                             <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }}>
                                 {game.solverError && (
@@ -155,8 +159,8 @@ export const DesktopLayout: React.FC = () => {
                                     onHint={() => {
                                         game.handleHint().catch(() => {});
                                     }}
-                                    isLoading={game.isHintLoading}
-                                    disabled={!game.isBoardEmpty || game.gameState.isSolved}
+                                    availability={game.hintAvailability}
+                                    tokenBalance={game.tokenBalance}
                                     sx={toolbarButtonSx}
                                 />
                                 <Tooltip title="Ctrl+Z" arrow>
@@ -243,6 +247,26 @@ export const DesktopLayout: React.FC = () => {
                             isOpen={game.modals.yearComplete.isOpen}
                             onPlayRandom={game.handlePlayRandomDate}
                             onClose={game.modals.yearComplete.close}
+                        />
+                        <TokenFlight
+                            pending={game.pendingTokenFlights}
+                            notBefore={game.tokenFlightNotBefore}
+                            onLanded={game.landTokenFlight}
+                        />
+                        <HintErrorToast message={game.hintMessage} onClose={game.clearHintMessage} />
+                        <TokenIntroDialog
+                            open={game.modals.tokenIntro.isOpen}
+                            tokenBalance={game.tokenBalance}
+                            solvedCount={game.completedDates.length}
+                            onClose={game.modals.tokenIntro.close}
+                        />
+                        <TokenConfirmDialog
+                            open={game.modals.tokenConfirm.isOpen}
+                            tokenBalance={game.tokenBalance}
+                            onConfirm={(dontAskAgain) => {
+                                game.handleConfirmTokenHint(dontAskAgain).catch(() => {});
+                            }}
+                            onCancel={game.modals.tokenConfirm.close}
                         />
 
                         {/* Game Area */}
