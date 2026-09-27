@@ -38,8 +38,9 @@ Deploy to Production only after Dev validation.
 <details>
 <summary>Docker deploy (retired)</summary>
 
-The Docker Compose stacks ran both environments on one host machine. Images were built locally and never
-pushed to a registry, so secrets baked into image layers stayed with the host operator.
+The Docker Compose target is retired, and its commands remain in `package.json`. It runs both environments
+on one host machine. It builds images locally and never pushes them to a registry, so secrets baked into
+image layers stay with the host operator.
 
 | Environment | Deploy command |
 |---|---|

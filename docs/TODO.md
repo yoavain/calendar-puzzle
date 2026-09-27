@@ -10,6 +10,9 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 ### Accessibility
 - [ ] High contrast mode
 
+### Hint Tokens
+- [ ] Reconcile a board restored from browser storage with the server's hints on load. Deferred (PR #153 review): when the server has more hints (used on another device), the Hint button asks for a token the server would not charge, and at 0 tokens the board cannot catch up. Reset already recovers.
+
 ---
 
 ## Archived (Completed)

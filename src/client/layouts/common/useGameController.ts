@@ -61,12 +61,23 @@ const fireConfetti = () => {
     fire(0.10, { spread: 120, startVelocity: 45 });
 };
 
-// Post-solve timing (docs/plan/2026-09-27-hint-tokens-ui-decisions.md, item 8)
+// Post-solve timing: docs/DESIGN.md, Hint Tokens
 const STATS_DELAY_MS = 1500; // stats dialog after a solve that earns no token
 const TOKEN_FLIGHT_EARLIEST_MS = 1050; // the flight waits for the win sweep
 const STATS_AFTER_LANDING_MS = 250; // stats dialog after the token lands
 const STATS_FALLBACK_MS = 2500; // stats dialog when an expected token never arrives
 const STATS_SAFETY_MS = 3000; // stats dialog if a granted token never lands
+
+/** The player-facing text for a known hint failure, or "" to fall back to the raw message. */
+const hintErrorCopy = (error: unknown): string => {
+    if (!(error instanceof HintRequestError)) {
+        return "";
+    }
+    if (error.code !== null) {
+        return HINT_TOKEN_COPY.errors[error.code];
+    }
+    return error.status === 429 ? HINT_TOKEN_COPY.rateLimited : "";
+};
 
 /**
  * Hook that encapsulates all game state and handlers.
@@ -529,8 +540,7 @@ export function useGameController() {
             }
             const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
             logToServer("error", `Game: Hint failed: ${errorMessage}`, error);
-            const knownCopy = error instanceof HintRequestError && error.code !== null ? HINT_TOKEN_COPY.errors[error.code] : "";
-            setHintMessage(knownCopy || errorMessage);
+            setHintMessage(hintErrorCopy(error) || errorMessage);
         }
         finally {
             setIsHintLoading(false);
@@ -686,25 +696,28 @@ export function useGameController() {
         checkInitialHint().catch(() => {});
     }, [user, userLoading, gameState.currentDate, loadPersistentHint, clearHistory]);
 
-    // Tokens earned but not yet shown. Task 14's flight lands them one by one.
+    // Earned tokens count in the balance from the grant on. The shown balance holds
+    // them back until their flight lands. If this layout remounts mid-flight (a
+    // rotation), the pending count resets and the shown balance is simply right.
     const [pendingTokenFlights, setPendingTokenFlights] = useState(0);
+    const shownTokenBalance = Math.max(tokenBalance - pendingTokenFlights, 0);
 
     const landTokenFlight = useCallback(() => {
         setPendingTokenFlights(n => Math.max(n - 1, 0));
-        adjustTokenBalance(1);
         if (statsAfterFlightRef.current) {
             statsAfterFlightRef.current = false;
             scheduleStatsOpen(STATS_AFTER_LANDING_MS);
         }
-    }, [adjustTokenBalance, scheduleStatsOpen]);
+    }, [scheduleStatsOpen]);
 
     const handleTokenGranted = useCallback(() => {
+        adjustTokenBalance(1);
         setPendingTokenFlights(n => n + 1);
         if (statsAfterFlightRef.current) {
             // The landing opens stats; this only covers a flight that never lands
             scheduleStatsOpen(STATS_SAFETY_MS);
         }
-    }, [scheduleStatsOpen]);
+    }, [adjustTokenBalance, scheduleStatsOpen]);
 
     useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate, onTokenGranted: handleTokenGranted });
 
@@ -768,7 +781,8 @@ export function useGameController() {
         isLoading,
         isHintLoading,
         hintAvailability,
-        tokenBalance,
+        // What the UI shows: excludes tokens still in flight
+        tokenBalance: shownTokenBalance,
         completedDates,
         solverError,
         invalidDropCells,

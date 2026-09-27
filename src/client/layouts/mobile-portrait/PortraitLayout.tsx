@@ -131,6 +131,7 @@ export const PortraitLayout: React.FC = () => {
                     open={game.modals.tokenIntro.isOpen}
                     tokenBalance={game.tokenBalance}
                     solvedCount={game.completedDates.length}
+                    isFirstView={game.modals.tokenIntro.isFirstView}
                     onClose={game.modals.tokenIntro.close}
                 />
                 <TokenConfirmDialog

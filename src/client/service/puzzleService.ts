@@ -107,12 +107,15 @@ const prepareWrite = async <T extends object>(payload: T): Promise<{ body: T | E
 export class HintRequestError extends Error {
     readonly code: HintErrorCode | null;
     readonly tokenBalance: number | null;
+    /** HTTP status, when the server answered (429 = rate limited) */
+    readonly status: number | null;
 
-    constructor(message: string, code: HintErrorCode | null, tokenBalance: number | null) {
+    constructor(message: string, code: HintErrorCode | null, tokenBalance: number | null, status: number | null = null) {
         super(message);
         this.name = "HintRequestError";
         this.code = code;
         this.tokenBalance = tokenBalance;
+        this.status = status;
     }
 }
 
@@ -152,7 +155,8 @@ export const getHint = async (date: PuzzleDate, hintNumber: number): Promise<Hin
         throw new HintRequestError(
             errorData.error || `Failed to get hint: ${response.statusText}`,
             errorData.code ?? null,
-            errorData.tokenBalance ?? null
+            errorData.tokenBalance ?? null,
+            response.status
         );
     }
 

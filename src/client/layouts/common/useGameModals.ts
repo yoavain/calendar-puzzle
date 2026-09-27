@@ -167,6 +167,7 @@ export function useGameModals({
             },
             tokenIntro: {
                 isOpen: isTokenIntroRequested && !isAnyOtherModalOpen,
+                isFirstView: !settings.tokenIntroSeen,
                 open: () => setIsTokenIntroRequested(true),
                 close: closeTokenIntro
             }

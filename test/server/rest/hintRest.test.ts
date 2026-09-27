@@ -109,6 +109,25 @@ describe("hintRest", () => {
             expect(res.statusCode).toBe(500);
             expect(res.json()).toMatchObject({ error: expect.stringContaining("hint") });
         });
+
+        it("reports the balance after the spend when the solver fails, so the client does not overcount", async () => {
+            mockSpendHint.mockResolvedValue({ ok: true, hintsUsed: 2, tokenBalance: 4 });
+            mockGetHintPieces.mockRejectedValue(new Error("Solver failure"));
+
+            const res = await putHint(authServer, { month: 0, day: 1, hintNumber: 2 });
+
+            expect(res.statusCode).toBe(500);
+            expect(res.json()).toMatchObject({ tokenBalance: 4 });
+        });
+
+        it("reports no balance when the spend itself fails", async () => {
+            mockSpendHint.mockRejectedValue(new Error("db down"));
+
+            const res = await putHint(authServer, { month: 0, day: 1, hintNumber: 2 });
+
+            expect(res.statusCode).toBe(500);
+            expect(res.json().tokenBalance).toBeUndefined();
+        });
     });
 
     describe("GET /api/hint/:date/state", () => {

@@ -39,6 +39,11 @@ describe("useGameModals token intro", () => {
         expect(result.current.modals.tokenIntro.isOpen).toBe(false);
     });
 
+    it("marks the view as the first one until the intro was seen", () => {
+        expect(renderModals({}).result.current.modals.tokenIntro.isFirstView).toBe(true);
+        expect(renderModals({ tokenIntroSeen: true }).result.current.modals.tokenIntro.isFirstView).toBe(false);
+    });
+
     it("waits while another dialog is open, then shows", () => {
         const { result } = renderModals({});
         act(() => result.current.modals.stats.open());

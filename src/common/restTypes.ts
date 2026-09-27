@@ -41,6 +41,11 @@ export interface HintErrorResponse extends ErrorResponse {
     tokenBalance: number;
 }
 
+// 500 body for a failed hint; tokenBalance is set when the token spend had already committed
+export interface HintFailureResponse extends ErrorResponse {
+    tokenBalance?: number;
+}
+
 // ============================================
 // POST /api/stats/start
 // Record that a user started a puzzle

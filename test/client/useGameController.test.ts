@@ -206,6 +206,17 @@ describe("useGameController hint tokens", () => {
         expect(lockedIds(result.current.gameState.pieces)).toEqual([solvedPieces[0].id]);
     });
 
+    it("rate limited: shows the friendly message, not the raw server text", async () => {
+        mockGetHint.mockRejectedValue(new HintRequestError("Too Many Requests", null, null, 429));
+        const { result } = renderSignedIn({ tokenBalance: 2, hints: 1, settings: { skipTokenConfirm: true } });
+
+        await act(async () => {
+            await result.current.handleHint();
+        });
+
+        expect(result.current.hintMessage).toBe(HINT_TOKEN_COPY.rateLimited);
+    });
+
     it("ALREADY_SOLVED: records the date as solved so the button stops offering paid hints", async () => {
         mockGetHint.mockRejectedValue(new HintRequestError("This date is already solved.", "ALREADY_SOLVED", 2));
         const { result } = renderSignedIn({ tokenBalance: 2, hints: 1, settings: { skipTokenConfirm: true } });
@@ -329,6 +340,33 @@ describe("useGameController post-solve timing", () => {
 
         expect(result.current.pendingTokenFlights).toBe(0);
         expect(result.current.modals.stats.isOpen).toBe(true);
+    });
+
+    it("adds the earned token at the grant, and shows it once the flight lands", async () => {
+        // Counting at the grant keeps the balance right if the layout remounts mid-flight
+        // (a rotation) or a server balance arrives during the flight
+        (recordCompletion as jest.Mock).mockResolvedValue({ success: true, tokenGranted: true });
+        const adjustTokenBalance = jest.fn();
+        const pieces = solvedPieces.map(p => (p.id === lastPiece.id ? { ...p, position: null } : p));
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ date: { month: 0, day: 1 }, pieces, isSolved: false }));
+        const wrapper3 = ({ children }: { children: ReactNode }) =>
+            React.createElement(MockUserProvider, { user, completedDates: [], tokenBalance: 3, adjustTokenBalance, children });
+        const { result } = renderHook(() => useGameController(), { wrapper: wrapper3 });
+
+        act(() => result.current.handlePieceDrop(lastPiece.position!, { pieceId: lastPiece.id }));
+        await act(async () => {
+            await Promise.resolve();
+        });
+
+        expect(adjustTokenBalance).toHaveBeenCalledWith(1);
+        expect(result.current.pendingTokenFlights).toBe(1);
+        // The mock context stays at 3; the shown balance holds back the token in flight
+        expect(result.current.tokenBalance).toBe(2);
+
+        act(() => result.current.landTokenFlight());
+
+        expect(adjustTokenBalance).toHaveBeenCalledTimes(1);
+        expect(result.current.tokenBalance).toBe(3);
     });
 
     it("opens stats at 1500 ms when the date was already solved", () => {

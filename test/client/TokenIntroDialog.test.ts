@@ -11,14 +11,17 @@ import { HINT_TOKEN_COPY } from "../../src/client/copy/hintTokenCopy";
 
 const copy = HINT_TOKEN_COPY.intro;
 
-const renderDialog = (tokenBalance: number, solvedCount: number) => {
-    const onClose = jest.fn();
-    render(React.createElement(
+const dialog = (tokenBalance: number, solvedCount: number, isFirstView: boolean, onClose: () => void) =>
+    React.createElement(
         ThemeProvider,
         { theme: lightTheme },
-        React.createElement(TokenIntroDialog, { open: true, tokenBalance, solvedCount, onClose })
-    ));
-    return { onClose };
+        React.createElement(TokenIntroDialog, { open: true, tokenBalance, solvedCount, isFirstView, onClose })
+    );
+
+const renderDialog = (tokenBalance: number, solvedCount: number, isFirstView = true) => {
+    const onClose = jest.fn();
+    const view = render(dialog(tokenBalance, solvedCount, isFirstView, onClose));
+    return { onClose, view };
 };
 
 describe("TokenIntroDialog", () => {
@@ -41,8 +44,20 @@ describe("TokenIntroDialog", () => {
     });
 
     it("shows the current balance when reopened after tokens were spent", () => {
-        renderDialog(5, 12);
+        renderDialog(5, 12, false);
         expect(screen.getByText(copy.balance(5))).toBeInTheDocument();
+    });
+
+    it("shows the current balance when reopened, even if it happens to equal the solved count", () => {
+        renderDialog(12, 12, false);
+        expect(screen.getByText(copy.balance(12))).toBeInTheDocument();
+    });
+
+    it("keeps the first-view line while it closes (the seen flag flips on close)", () => {
+        const onClose = jest.fn();
+        const { view } = renderDialog(12, 12, true);
+        view.rerender(dialog(12, 12, false, onClose));
+        expect(screen.getByText(copy.startingBalance(12))).toBeInTheDocument();
     });
 
     it("closes from its button", () => {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -16,26 +16,38 @@ interface TokenIntroDialogProps {
     open: boolean;
     tokenBalance: number;
     solvedCount: number;
+    /** True until the user has closed the intro once */
+    isFirstView: boolean;
     onClose: () => void;
 }
 
 const copy = HINT_TOKEN_COPY.intro;
 
 /**
- * Which balance line to show. On the first view the balance equals the solved
- * count (no extra hints were possible before tokens existed); once tokens were
- * spent, the dialog was reopened from the menu and shows the plain balance.
+ * Which balance line to show. The first view explains the starting balance (one
+ * token per solved date); a view reopened from the menu shows the plain balance.
  */
-const balanceLine = (tokenBalance: number, solvedCount: number): string => {
-    if (solvedCount === 0) {
-        return copy.newUser;
+const balanceLine = (tokenBalance: number, solvedCount: number, isFirstView: boolean): string => {
+    if (!isFirstView) {
+        return copy.balance(tokenBalance);
     }
-    return tokenBalance === solvedCount ? copy.startingBalance(tokenBalance) : copy.balance(tokenBalance);
+    return solvedCount === 0 ? copy.newUser : copy.startingBalance(tokenBalance);
 };
 
 /** Explains hint tokens. Opens once per user, and again from the user menu. */
-export const TokenIntroDialog: React.FC<TokenIntroDialogProps> = ({ open, tokenBalance, solvedCount, onClose }) => {
+export const TokenIntroDialog: React.FC<TokenIntroDialogProps> = ({ open, tokenBalance, solvedCount, isFirstView, onClose }) => {
     const [solveStep, earnStep, spendStep] = copy.steps;
+
+    // Latch isFirstView when the dialog opens: closing marks the intro seen, and
+    // the text must not change while the dialog fades out
+    const [wasOpen, setWasOpen] = useState(open);
+    const [firstView, setFirstView] = useState(isFirstView);
+    if (open !== wasOpen) {
+        setWasOpen(open);
+        if (open) {
+            setFirstView(isFirstView);
+        }
+    }
 
     return (
         <BaseDialog open={open} onClose={onClose}>
@@ -61,7 +73,7 @@ export const TokenIntroDialog: React.FC<TokenIntroDialogProps> = ({ open, tokenB
                     <Typography variant="body2" color="text.secondary">{copy.firstHintFree}</Typography>
                     <BalanceCallout>
                         <TokenCoin />
-                        <span>{balanceLine(tokenBalance, solvedCount)}</span>
+                        <span>{balanceLine(tokenBalance, solvedCount, firstView)}</span>
                     </BalanceCallout>
                 </Stack>
             </DialogContent>

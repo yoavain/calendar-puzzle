@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { DatePathParams, ErrorResponse, HintErrorResponse, HintRequest, HintResponse, HintStateResponse } from "../../common/restTypes.js";
+import type { DatePathParams, ErrorResponse, HintErrorResponse, HintFailureResponse, HintRequest, HintResponse, HintStateResponse } from "../../common/restTypes.js";
 import type { HintErrorCode } from "../../common/hintTokens.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { getHintPieces } from "../service/solverService.js";
@@ -17,7 +17,7 @@ const HINT_ERROR_MESSAGES: Record<HintErrorCode, string> = {
 
 export const registerHintRoutes = (app: FastifyInstance): void => {
     // PUT /api/hint - Request hint #hintNumber; spends a token for #2 and later
-    app.put<{ Body: HintRequest; Reply: HintResponse | HintErrorResponse | ErrorResponse }>(
+    app.put<{ Body: HintRequest; Reply: HintResponse | HintErrorResponse | HintFailureResponse }>(
         API_HINT,
         {
             preHandler: requireAuth,
@@ -26,7 +26,8 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
             },
             config: {
                 rateLimit: {
-                    max: 5,
+                    // Room for all MAX_HINTS hints of a date, plus replays and retries
+                    max: 20,
                     timeWindow: "1 minute"
                 }
             }
@@ -34,6 +35,8 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
         async (request, reply) => {
             const { month, day, hintNumber } = request.body;
             const user = request.user as SessionUser;
+            // Set once the spend commits, so a later failure can still report the balance
+            let tokenBalance: number | undefined;
 
             try {
                 const result = await spendHint(user.id, month, day, hintNumber);
@@ -45,6 +48,8 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
                     });
                 }
 
+                tokenBalance = result.tokenBalance;
+
                 // Outside the transaction: the solver never runs under the row lock
                 const pieces = await getHintPieces(month, day, result.hintsUsed, request.log);
                 return reply.send({ pieces, tokenBalance: result.tokenBalance });
@@ -52,7 +57,8 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
             catch (error) {
                 request.log.error(error, `[HintRoute] Failed to get hint #${hintNumber} for ${month}/${day}`);
                 return reply.code(500).send({
-                    error: "Unable to generate hint for this date. Please try again."
+                    error: "Unable to generate hint for this date. Please try again.",
+                    tokenBalance
                 });
             }
         }

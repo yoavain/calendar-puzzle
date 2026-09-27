@@ -387,6 +387,32 @@ function calculateStats(session: SessionData): GameStats {
 
 ---
 
+### Hint Tokens
+
+The first hint on each date is free. Hints 2 to 7 cost one token each. A player earns one token the
+first time they solve a date. The API and the balance rule are under [Solver and Hint APIs](#solver-and-hint-apis).
+All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
+
+- **Hint button**: the balance sits inside the button, after a divider, as a gold coin and a count.
+  The tooltip names the cost or the reason the button is disabled.
+- **Mobile**: the Hint button is in the drawer, so a gold badge on the menu button also shows the balance.
+- **Confirm dialog**: hint 2 and later ask first, unless the player ticked "Don't ask me again"
+  (`users.settings.skipTokenConfirm`).
+- **Intro dialog**: shown once per player (`users.settings.tokenIntroSeen`), only when no other dialog is
+  open. The user menu reopens it.
+- **Token flight** (`TokenFlight.tsx`): on a first solve, a 26px coin pops at the board center (scale 0 to
+  1.2 in the first 18%) and flies straight to the balance (`[data-token-target]`), ending at scale 0.6.
+  It takes 850 ms, `ease-in-out`. The balance count then pulses (scale 1.4, 320 ms). With reduced motion,
+  or with no visible target, the token lands at once.
+- **Balance during the flight**: the token counts in the balance from the grant. The shown balance holds it
+  back until the landing.
+- **Post-solve timing**: the win sweep runs 0 to about 1020 ms and confetti fires at 400 ms. The flight
+  starts no earlier than 1050 ms. When a token is expected, the stats dialog opens 250 ms after the
+  landing (fallback 2500 ms if no grant arrives, 3000 ms if a granted token never lands). Otherwise stats
+  opens at 1500 ms. The play-another prompt follows when the stats dialog closes.
+- **Errors**: hint errors show as a toast in every layout (5 s). A stale hint number shows nothing: the
+  board adopts the server's hints.
+
 ### Personal Statistics Dashboard (Future)
 
 Provide users with a comprehensive dashboard showing their puzzle completion progress across the year.

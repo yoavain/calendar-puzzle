@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { boolean, check, integer, jsonb, pgTable, primaryKey, timestamp, varchar } from "drizzle-orm/pg-core";
 import type { Piece } from "../../common/types.js";
 import type { UserSettings } from "../../common/restTypes.js";
+import { MAX_HINTS } from "../../common/hintTokens.js";
 
 export const solutions = pgTable("solutions", {
     dateKey: varchar("date_key", { length: 5 }).primaryKey(), // '01-01' to '12-31'
@@ -25,7 +26,8 @@ export const userPuzzleStats = pgTable("user_puzzle_stats", {
 }, (table) => {
     return {
         pk: primaryKey({ columns: [table.userId, table.month, table.day] }),
-        hintsUsedRange: check("hints_used_range", sql`${table.hintsUsed} BETWEEN 0 AND 7`)
+        // Built from MAX_HINTS: changing it makes `npm run db:generate` emit the new constraint
+        hintsUsedRange: check("hints_used_range", sql`${table.hintsUsed} BETWEEN 0 AND ${sql.raw(String(MAX_HINTS))}`)
     };
 });
 

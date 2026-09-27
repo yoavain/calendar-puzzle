@@ -1,6 +1,5 @@
 /**
- * User-facing strings for hint tokens. Chosen on the UI decision page,
- * recorded in docs/plan/2026-09-27-hint-tokens-ui-decisions.md.
+ * User-facing strings for hint tokens. Where each one appears: docs/DESIGN.md, Hint Tokens.
  */
 import type { HintAvailability, HintErrorCode } from "../../common/hintTokens";
 
@@ -29,6 +28,8 @@ export interface HintTokenCopy {
     };
     /** Empty string: show nothing (the board reloads its hints instead). */
     errors: Record<HintErrorCode, string>;
+    /** The server rate limit (HTTP 429) refused a hint request */
+    rateLimited: string;
 }
 
 const ALREADY_SOLVED = "This date is already solved, so tokens can't be spent on it.";
@@ -72,5 +73,6 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
         NO_TOKENS: "No hint tokens left. Solve another date to earn one.",
         ALREADY_SOLVED,
         STALE_HINT_NUMBER: ""
-    }
+    },
+    rateLimited: "Too many hint requests. Try again in a minute."
 };

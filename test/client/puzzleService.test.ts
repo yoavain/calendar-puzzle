@@ -53,6 +53,13 @@ describe("getHint", () => {
         expect(error).toMatchObject({ message: "No hint tokens left.", code: "NO_TOKENS", tokenBalance: 0 });
     });
 
+    it("marks a rate-limited request with status 429", async () => {
+        routes["/api/hint"] = () => json(429, { statusCode: 429, error: "Too Many Requests", message: "Rate limit exceeded, retry in 1 minute" });
+
+        const error = await getHint({ month: 0, day: 1 }, 3).catch((e: unknown) => e);
+        expect(error).toMatchObject({ code: null, status: 429 });
+    });
+
     it("throws HintRequestError with a null code on 500", async () => {
         routes["/api/hint"] = () => json(500, { error: "boom" });
 

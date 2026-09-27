@@ -1,7 +1,7 @@
 import { styled } from "@mui/material/styles";
 import { CoinRoot } from "./TokenCoin.styled";
 
-// docs/plan/2026-09-27-hint-tokens-ui-decisions.md, item 5
+// Flight spec: docs/DESIGN.md, Hint Tokens
 export const TOKEN_FLIGHT_MS = 850;
 export const TOKEN_FLIGHT_EASING = "ease-in-out";
 export const TOKEN_FLIGHT_SIZE = 26;
