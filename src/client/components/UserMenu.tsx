@@ -4,6 +4,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
+import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
@@ -11,12 +12,19 @@ import { useUser } from "../context/UserContext";
 import { hasCompletedAllDates } from "../../common/streakUtils";
 import { HallOfFameModal } from "./HallOfFameModal";
 import { CompletionBadge } from "./CompletionBadge";
+import { TokenCoin } from "./TokenCoin";
+import { HINT_TOKEN_COPY } from "../copy/hintTokenCopy";
 
 /** Badge size on the avatar — small enough that it needs the simplified form. */
 const AVATAR_BADGE_SIZE = 19;
 
-export const UserMenu: React.FC = () => {
-    const { user, logout, completedDates } = useUser();
+interface UserMenuProps {
+    /** Opens the hint token intro dialog */
+    onShowTokenIntro?: () => void;
+}
+
+export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
+    const { user, logout, completedDates, tokenBalance } = useUser();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [dashboardOpen, setDashboardOpen] = useState(false);
     const open = Boolean(anchorEl);
@@ -111,6 +119,17 @@ export const UserMenu: React.FC = () => {
                         {user.email}
                     </MenuItem>
                 )}
+                <MenuItem
+                    onClick={() => {
+                        handleClose();
+                        onShowTokenIntro?.();
+                    }}
+                    sx={{ gap: 1 }}
+                >
+                    <TokenCoin />
+                    {HINT_TOKEN_COPY.menu.balance(tokenBalance)} {"·"}
+                    <Box component="span" sx={{ color: "primary.main" }}>{HINT_TOKEN_COPY.menu.howItWorks}</Box>
+                </MenuItem>
                 <MenuItem
                     onClick={() => {
                         handleLogout().catch(() => {});

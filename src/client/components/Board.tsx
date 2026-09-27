@@ -399,6 +399,7 @@ export const Board = React.memo<BoardProps>(({
 
     return (
         <BoardContainer
+            data-token-source="true"
             onDragLeave={handleDragLeave}
             onDrop={handleBoardAreaDrop}
             onDragOver={(e) => {

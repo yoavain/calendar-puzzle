@@ -85,7 +85,9 @@ describe("authRest", () => {
             expect(res.json()).toEqual({
                 user: null,
                 completedDates: [],
-                playedDates: []
+                playedDates: [],
+                tokenBalance: 0,
+                settings: {}
             });
         });
 
@@ -124,6 +126,35 @@ describe("authRest", () => {
             expect(body.completedDates).toContainEqual({ month: 0, day: 1 });
             expect(body.completedDates).toContainEqual({ month: 1, day: 5 });
             expect(body.playedDates).toHaveLength(3);
+        });
+
+        it("returns the derived token balance and the stored settings", async () => {
+            mockSelect
+                .mockReturnValueOnce({
+                    from: jest.fn().mockReturnValue({
+                        where: jest.fn().mockResolvedValue([
+                            { month: 0, day: 1, firstCompletedAt: new Date("2024-01-01"), hintsUsed: 2 },
+                            { month: 0, day: 2, firstCompletedAt: new Date("2024-01-02"), hintsUsed: 0 },
+                            { month: 0, day: 3, firstCompletedAt: null, hintsUsed: 1 }
+                        ])
+                    })
+                })
+                .mockReturnValueOnce({
+                    from: jest.fn().mockReturnValue({
+                        where: jest.fn().mockResolvedValue([{ settings: { tokenIntroSeen: true } }])
+                    })
+                });
+
+            const res = await authServer.inject({ method: "GET", url: "/api/auth/me" });
+
+            expect(res.statusCode).toBe(200);
+            // 2 solved dates − 1 extra hint on Jan 1 = 1
+            expect(res.json()).toMatchObject({ tokenBalance: 1, settings: { tokenIntroSeen: true } });
+        });
+
+        it("defaults settings to {} when the user row has none", async () => {
+            const res = await authServer.inject({ method: "GET", url: "/api/auth/me" });
+            expect(res.json()).toMatchObject({ tokenBalance: 0, settings: {} });
         });
     });
 

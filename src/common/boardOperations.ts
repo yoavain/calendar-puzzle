@@ -53,6 +53,36 @@ export const rebuildGameState = (pieces: Piece[], date: PuzzleDate, isSolved: bo
 };
 
 /**
+ * Rebuild the board so it holds exactly the given hints, locked, in hint order.
+ *
+ * Hints are only requested on a board that holds nothing but hints, so every
+ * other piece goes back to the pool. Used when a hint arrives and when the
+ * hints for a date are restored from the server.
+ */
+export const applyHintPieces = (date: PuzzleDate, pieces: Piece[], hintPieces: Piece[]) => {
+    const hintOrder = new Map(hintPieces.map((hint, index) => [hint.id, { hint, seq: index + 1 }]));
+
+    const nextPieces = pieces.map((piece): Piece => {
+        const entry = hintOrder.get(piece.id);
+        if (!entry) {
+            return { ...piece, position: null, isLocked: false, placedSeq: undefined };
+        }
+        return {
+            ...piece,
+            position: entry.hint.position,
+            rotation: entry.hint.rotation,
+            isFlippedH: entry.hint.isFlippedH,
+            isFlippedV: entry.hint.isFlippedV,
+            isLocked: true,
+            placedSeq: entry.seq
+        };
+    });
+
+    const { board, pieces: rebuilt } = rebuildGameState(nextPieces, date, false);
+    return { board, pieces: rebuilt };
+};
+
+/**
  * Update board and pieces when moving a piece to a new position.
  *
  * This pure function:

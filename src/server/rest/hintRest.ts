@@ -1,63 +1,70 @@
 import type { FastifyInstance } from "fastify";
-import type { DatePathParams, ErrorResponse, HintRequest, HintResponse, HintStateResponse } from "../../common/restTypes.js";
+import type { DatePathParams, ErrorResponse, HintErrorResponse, HintFailureResponse, HintRequest, HintResponse, HintStateResponse } from "../../common/restTypes.js";
+import type { HintErrorCode } from "../../common/hintTokens.js";
 import { parseDate } from "../utils/dateUtils.js";
-import { getHintPiece } from "../service/solverService.js";
+import { getHintPieces } from "../service/solverService.js";
+import { getHintsUsed, spendHint } from "../db/hintRepository.js";
 import { requireAuth } from "../auth/requireAuth.js";
-import { dateParamSchema, statsStartSchema } from "./schemas.js";
-import { db } from "../db/connection.js";
-import { userPuzzleStats } from "../db/schema.js";
-import { and, eq } from "drizzle-orm";
+import { dateParamSchema, hintRequestSchema } from "./schemas.js";
 import type { SessionUser } from "../auth/passport.js";
 import { API_HINT, API_HINT_STATE } from "../../common/restPaths.js";
 
+const HINT_ERROR_MESSAGES: Record<HintErrorCode, string> = {
+    STALE_HINT_NUMBER: "Your hints are out of date.",
+    ALREADY_SOLVED: "This date is already solved.",
+    NO_TOKENS: "No hint tokens left."
+};
+
 export const registerHintRoutes = (app: FastifyInstance): void => {
-    // PUT /api/hint - Get a hint and record usage
-    app.put<{ Body: HintRequest; Reply: HintResponse | ErrorResponse }>(
+    // PUT /api/hint - Request hint #hintNumber; spends a token for #2 and later
+    app.put<{ Body: HintRequest; Reply: HintResponse | HintErrorResponse | HintFailureResponse }>(
         API_HINT,
-        { 
+        {
             preHandler: requireAuth,
             schema: {
-                body: statsStartSchema
+                body: hintRequestSchema
             },
             config: {
                 rateLimit: {
-                    max: 5,
+                    // Room for all MAX_HINTS hints of a date, plus replays and retries
+                    max: 20,
                     timeWindow: "1 minute"
                 }
             }
         },
         async (request, reply) => {
-            const { month, day } = request.body;
+            const { month, day, hintNumber } = request.body;
             const user = request.user as SessionUser;
+            // Set once the spend commits, so a later failure can still report the balance
+            let tokenBalance: number | undefined;
 
             try {
-                // 1. Record hint usage
-                await db.insert(userPuzzleStats)
-                    .values({
-                        userId: user.id,
-                        month,
-                        day,
-                        hintUsed: true
-                    })
-                    .onConflictDoUpdate({
-                        target: [userPuzzleStats.userId, userPuzzleStats.month, userPuzzleStats.day],
-                        set: { hintUsed: true }
+                const result = await spendHint(user.id, month, day, hintNumber);
+                if (!result.ok) {
+                    return reply.code(409).send({
+                        error: HINT_ERROR_MESSAGES[result.code],
+                        code: result.code,
+                        tokenBalance: result.tokenBalance
                     });
+                }
 
-                // 2. Get the hint piece
-                const hintPiece = await getHintPiece(month, day, request.log);
-                return reply.send({ piece: hintPiece });
+                tokenBalance = result.tokenBalance;
+
+                // Outside the transaction: the solver never runs under the row lock
+                const pieces = await getHintPieces(month, day, result.hintsUsed, request.log);
+                return reply.send({ pieces, tokenBalance: result.tokenBalance });
             }
             catch (error) {
-                request.log.error(error, `[HintRoute] Failed to get hint for ${month}/${day}`);
+                request.log.error(error, `[HintRoute] Failed to get hint #${hintNumber} for ${month}/${day}`);
                 return reply.code(500).send({
-                    error: "Unable to generate hint for this date. Please try again."
+                    error: "Unable to generate hint for this date. Please try again.",
+                    tokenBalance
                 });
             }
         }
     );
 
-    // GET /api/hint/:date/state - Check if a hint was used and return it
+    // GET /api/hint/:date/state - Every hint the user has used for this date
     app.get<{ Params: DatePathParams; Reply: HintStateResponse | ErrorResponse }>(
         API_HINT_STATE,
         {
@@ -67,8 +74,7 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
             }
         },
         async (request, reply) => {
-            const { date } = request.params;
-            const parsed = parseDate(date);
+            const parsed = parseDate(request.params.date);
 
             if (!parsed) {
                 return reply.code(400).send({ error: "Invalid date format" });
@@ -78,23 +84,9 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
             const user = request.user as SessionUser;
 
             try {
-                const stats = await db.select()
-                    .from(userPuzzleStats)
-                    .where(
-                        and(
-                            eq(userPuzzleStats.userId, user.id),
-                            eq(userPuzzleStats.month, month),
-                            eq(userPuzzleStats.day, day)
-                        )
-                    )
-                    .limit(1);
-
-                if (stats.length > 0 && stats[0].hintUsed) {
-                    const hintPiece = await getHintPiece(month, day, request.log);
-                    return reply.send({ piece: hintPiece });
-                }
-
-                return reply.send({ piece: null });
+                const hintsUsed = await getHintsUsed(user.id, month, day);
+                const pieces = hintsUsed > 0 ? await getHintPieces(month, day, hintsUsed, request.log) : [];
+                return reply.send({ pieces });
             }
             catch (error) {
                 request.log.error(error, `[HintRoute] Failed to check hint state for ${month}/${day}`);

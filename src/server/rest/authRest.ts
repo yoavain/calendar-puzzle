@@ -2,19 +2,30 @@ import type { FastifyInstance } from "fastify";
 import fastifyPassport from "@fastify/passport";
 import type { SessionUser } from "../auth/passport.js";
 import { db } from "../db/connection.js";
-import { userPuzzleStats } from "../db/schema.js";
+import { userPuzzleStats, users } from "../db/schema.js";
+import { computeTokenBalance } from "../../common/hintTokens.js";
 import { eq } from "drizzle-orm";
 import fs from "node:fs/promises";
 import { config } from "../config.js";
 import { requireAuth } from "../auth/requireAuth.js";
 import { API_AUTH_CSRF_TOKEN, API_AUTH_ME, API_AUTH_PUBLIC_KEY, AUTH_GOOGLE, AUTH_GOOGLE_CALLBACK, AUTH_LOGOUT } from "../../common/restPaths.js";
-import type { CsrfTokenResponse, ErrorResponse, PublicKeyResponse, SuccessResponse } from "../../common/restTypes.js";
+import type { CsrfTokenResponse, ErrorResponse, PublicKeyResponse, SuccessResponse, UserSettings } from "../../common/restTypes.js";
 import type { PuzzleDate } from "../../common/types.js";
 
 interface MeResponse {
     user: SessionUser;
     completedDates: PuzzleDate[];
     playedDates: PuzzleDate[];
+    tokenBalance: number;
+    settings: UserSettings;
+}
+
+interface LoggedOutMeResponse {
+    user: null;
+    completedDates: [];
+    playedDates: [];
+    tokenBalance: 0;
+    settings: Record<string, never>;
 }
 
 export const registerAuthRoutes = (app: FastifyInstance): void => {
@@ -38,7 +49,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     });
 
     // Get current authenticated user profile and completion history
-    app.get<{ Reply: MeResponse | { user: null; completedDates: []; playedDates: [] } }>(API_AUTH_ME, {
+    app.get<{ Reply: MeResponse | LoggedOutMeResponse }>(API_AUTH_ME, {
         config: {
             rateLimit: {
                 max: 20,
@@ -49,14 +60,19 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
         if (request.user) {
             const user = request.user as SessionUser;
 
-            // Fetch all stats for this user to calculate played count
+            // Fetch all stats for this user: played/completed dates and the token balance
             const stats = await db.select({
                 month: userPuzzleStats.month,
                 day: userPuzzleStats.day,
-                firstCompletedAt: userPuzzleStats.firstCompletedAt
+                firstCompletedAt: userPuzzleStats.firstCompletedAt,
+                hintsUsed: userPuzzleStats.hintsUsed
             })
                 .from(userPuzzleStats)
                 .where(eq(userPuzzleStats.userId, user.id));
+
+            const [userRow] = await db.select({ settings: users.settings })
+                .from(users)
+                .where(eq(users.id, user.id));
 
             const completedDates = stats
                 .filter(s => s.firstCompletedAt !== null)
@@ -64,13 +80,19 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
 
             const playedDates = stats.map(s => ({ month: s.month, day: s.day }));
 
+            const tokenBalance = computeTokenBalance(
+                stats.map(s => ({ completed: s.firstCompletedAt !== null, hintsUsed: s.hintsUsed }))
+            );
+
             return {
                 user,
                 completedDates,
-                playedDates
+                playedDates,
+                tokenBalance,
+                settings: userRow?.settings ?? {}
             };
         }
-        return { user: null, completedDates: [], playedDates: [] };
+        return { user: null, completedDates: [], playedDates: [], tokenBalance: 0, settings: {} };
     });
 
     // Get server's public key for encryption (Authenticated)

@@ -55,6 +55,7 @@ src/
 │  ├─ consts.ts                # Game constants (board layout, months)
 │  ├─ dlx.d.ts                 # Type declarations for the DLX solver library
 │  ├─ gameLogic.ts             # Core game rules and validation
+│  ├─ hintTokens.ts            # Hint token rules: balance, hint decision, hint availability
 │  ├─ initialize.ts            # Board/piece/game initialisation
 │  ├─ pieceData.ts             # Piece shape definitions
 │  ├─ puzzleSolver.ts          # Puzzle solving algorithm
@@ -78,8 +79,14 @@ src/
 │  │  ├─ HelpModal.tsx         # Help/rules modal
 │  │  ├─ IssueModal.tsx        # Bug report modal
 │  │  ├─ LoginButton.tsx       # Google sign-in button
-│  │  ├─ UserMenu.tsx          # User avatar + logout menu
-│  │  ├─ HintButton.tsx        # Request hint (auth-gated)
+│  │  ├─ UserMenu.tsx          # User avatar menu: token balance, logout
+│  │  ├─ HintButton.tsx        # Request hint; shows the token balance (auth-gated)
+│  │  ├─ TokenCoin.tsx         # Hint token coin icon
+│  │  ├─ TokenMenuBadge.tsx    # Token balance badge on the mobile menu button
+│  │  ├─ TokenConfirmDialog.tsx # Confirm before spending a token
+│  │  ├─ TokenIntroDialog.tsx  # Explains hint tokens (once per user, reopened from the user menu)
+│  │  ├─ TokenFlight.tsx       # Token flies from the board to the balance on a first solve
+│  │  ├─ HintErrorToast.tsx    # Hint error toast (all layouts)
 │  │  ├─ SolutionButton.tsx    # Reveal solution (auth-gated)
 │  │  └─ DebugPanel.tsx        # Debug overlay (admin "Debug Logging" toggle)
 │  ├─ layouts/                 # Layout-specific code
@@ -100,10 +107,12 @@ src/
 │  │     ├─ MobileToolbar.tsx         # Shared mobile toolbar
 │  │     ├─ boardScale.ts             # Board scale calculation logic
 │  │     ├─ useBoardScale.ts          # Board scale hook (resize-aware)
-│  │     ├─ useGameModals.ts          # Modal open/close state
-│  │     ├─ useServerSync.ts          # Server sync (stats, hints)
+│  │     ├─ useGameModals.ts          # Modal open/close state, token intro gating
+│  │     ├─ useServerSync.ts          # Server sync (stats) and hint token grants
 │  │     ├─ useSessionPersistence.ts  # Session save/restore
 │  │     └─ useKeyboardShortcuts.ts   # Keyboard shortcut bindings
+│  ├─ copy/
+│  │  └─ hintTokenCopy.ts      # Hint token UI strings
 │  ├─ context/
 │  │  └─ UserContext.tsx       # Auth state (useUser hook)
 │  ├─ hooks/                   # React hooks
@@ -437,6 +446,7 @@ Pure functions tested in isolation (no DOM, no React):
 | File | What it covers |
 |---|---|
 | `test/common/boardOperations.test.ts` | Board state mutations |
+| `test/common/hintTokens.test.ts` | Token balance, hint decision, hint availability |
 | `test/common/gameLogic.test.ts` | Core rules, validation, transformations |
 | `test/common/puzzleSolver.test.ts` | DLX solver algorithm |
 | `test/common/pieceData.test.ts` | Piece shape definitions |
@@ -454,6 +464,11 @@ React hooks and components tested with Jest + Testing Library:
 | `test/client/initialize.test.ts` | Game initialization |
 | `test/client/useGameHistory.test.ts` | Undo/redo hook |
 | `test/client/useGameSession.test.ts` | Session persistence hook |
+| `test/client/useGameController.test.ts` | Solve detection, hint token flow, post-solve timing |
+| `test/client/useGameModals.test.ts` | Token intro gating, play-another after a solve |
+| `test/client/useServerSync.test.ts` | Token grant on first solve |
+| `test/client/puzzleService.test.ts` | Hint, completion and settings API calls |
+| `test/client/HintButton.test.ts`, `TokenConfirmDialog.test.ts`, `TokenIntroDialog.test.ts`, `TokenFlight.test.ts`, `HintErrorToast.test.ts` | Hint token components |
 
 ### Unit Tests — Server Layer
 
@@ -462,7 +477,9 @@ Server routes and services tested with Fastify's inject API:
 | File | What it covers |
 |---|---|
 | `test/server/rest/authRest.test.ts` | Auth endpoints |
-| `test/server/rest/hintRest.test.ts` | Hint endpoint |
+| `test/server/rest/hintRest.test.ts` | Hint endpoints (token spend, replay, 409 codes) |
+| `test/server/rest/userRest.test.ts` | User settings endpoint |
+| `test/server/service/solverService.test.ts` | Fixed hint sequence |
 | `test/server/rest/statsRest.test.ts` | Stats endpoints |
 | `test/server/auth/requireAuth.test.ts` | Auth middleware |
 | `test/server/dateUtils.test.ts` | Date parsing utilities |
@@ -477,6 +494,7 @@ Playwright tests covering all three layouts:
 | `test/e2e/drag-drop.spec.ts` | Happy path and failing path drag-and-drop |
 | `test/e2e/drag-stale-rect.spec.ts` | Rotated piece and empty-cell snap regressions |
 | `test/e2e/solve.spec.ts` | Full puzzle solve flow |
+| `test/e2e/hint-tokens.spec.ts` | Free hint, confirmed token hint, no tokens left |
 
 Tests run across three Playwright projects: `desktop`, `mobile-portrait`, `mobile-landscape`.
 

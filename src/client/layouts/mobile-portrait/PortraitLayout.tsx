@@ -6,6 +6,10 @@ import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
+import { TokenFlight } from "../../components/TokenFlight";
+import { HintErrorToast } from "../../components/HintErrorToast";
+import { TokenIntroDialog } from "../../components/TokenIntroDialog";
+import { TokenConfirmDialog } from "../../components/TokenConfirmDialog";
 import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 
 import { useGameController } from "../common/useGameController";
@@ -116,6 +120,27 @@ export const PortraitLayout: React.FC = () => {
                     isOpen={game.modals.yearComplete.isOpen}
                     onPlayRandom={game.handlePlayRandomDate}
                     onClose={game.modals.yearComplete.close}
+                />
+                <TokenFlight
+                    pending={game.pendingTokenFlights}
+                    notBefore={game.tokenFlightNotBefore}
+                    onLanded={game.landTokenFlight}
+                />
+                <HintErrorToast message={game.hintMessage} onClose={game.clearHintMessage} />
+                <TokenIntroDialog
+                    open={game.modals.tokenIntro.isOpen}
+                    tokenBalance={game.tokenBalance}
+                    solvedCount={game.completedDates.length}
+                    isFirstView={game.modals.tokenIntro.isFirstView}
+                    onClose={game.modals.tokenIntro.close}
+                />
+                <TokenConfirmDialog
+                    open={game.modals.tokenConfirm.isOpen}
+                    tokenBalance={game.tokenBalance}
+                    onConfirm={(dontAskAgain) => {
+                        game.handleConfirmTokenHint(dontAskAgain).catch(() => {});
+                    }}
+                    onCancel={game.modals.tokenConfirm.close}
                 />
                 <DebugPanel />
             </PortraitContainer>

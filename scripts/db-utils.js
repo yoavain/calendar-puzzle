@@ -12,8 +12,11 @@ const printUsage = () => {
     console.log("Usage: node scripts/db-utils.js <command> [flags]");
     console.log("");
     console.log("Commands:");
-    console.log("  hint-list  --id <id>                 List dates where the user requested a hint");
-    console.log("  hint-clear --id <id> --date <MM-DD>  Clear a recorded hint for a user on a date");
+    console.log("  hint-list  --id <id>                 List dates where the user used hints, with the count");
+    console.log("  hint-clear --id <id> --date <MM-DD>  Clear all hints for a user on a date");
+    console.log("");
+    console.log("Hint #2 and later each cost a token, and the balance is derived from the hint counts,");
+    console.log("so hint-clear refunds one token for every hint after the first on that date.");
 };
 
 const withPool = async (fn) => {
@@ -76,9 +79,9 @@ const parseDate = (dateStr) => {
 const listHints = async (userId) => {
     await withPool(async (pool) => {
         const { rows } = await pool.query(
-            `SELECT month, day
+            `SELECT month, day, hints_used
              FROM user_puzzle_stats
-             WHERE user_id = $1 AND hint_used = true
+             WHERE user_id = $1 AND hints_used > 0
              ORDER BY month, day`,
             [userId]
         );
@@ -89,8 +92,8 @@ const listHints = async (userId) => {
         }
 
         console.log(`Hints used by user ${userId} (${rows.length}):`);
-        for (const { month, day } of rows) {
-            console.log(`  ${formatDate(month, day)}`);
+        for (const { month, day, hints_used: hintsUsed } of rows) {
+            console.log(`  ${formatDate(month, day)}  ${hintsUsed} hint${hintsUsed === 1 ? "" : "s"}`);
         }
     });
 };
@@ -100,7 +103,7 @@ const clearHint = async (userId, month, day) => {
         const dateLabel = formatDate(month, day);
 
         const { rows } = await pool.query(
-            `SELECT hint_used
+            `SELECT hints_used
              FROM user_puzzle_stats
              WHERE user_id = $1 AND month = $2 AND day = $3`,
             [userId, month, day]
@@ -111,18 +114,20 @@ const clearHint = async (userId, month, day) => {
             return;
         }
 
-        if (rows[0].hint_used === false) {
-            console.log(`Hint is already cleared for user ${userId} on ${dateLabel}. Nothing to do.`);
+        const hintsUsed = rows[0].hints_used;
+        if (hintsUsed === 0) {
+            console.log(`Hints are already cleared for user ${userId} on ${dateLabel}. Nothing to do.`);
             return;
         }
 
         await pool.query(
             `UPDATE user_puzzle_stats
-             SET hint_used = false
+             SET hints_used = 0
              WHERE user_id = $1 AND month = $2 AND day = $3`,
             [userId, month, day]
         );
-        console.log(`Cleared hint for user ${userId} on ${dateLabel}.`);
+        const refunded = Math.max(hintsUsed - 1, 0);
+        console.log(`Cleared ${hintsUsed} hint${hintsUsed === 1 ? "" : "s"} for user ${userId} on ${dateLabel} (${refunded} token${refunded === 1 ? "" : "s"} refunded).`);
     });
 };
 

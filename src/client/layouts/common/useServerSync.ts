@@ -4,7 +4,7 @@ import { recordCompletion, recordStart } from "../../service/puzzleService";
 import type { User } from "../../context/UserContext";
 
 /**
- * Syncs puzzle start/completion events to the server.
+ * Syncs puzzle start/completion events to the server and reports earned hint tokens.
  * Tracks which dates have already been reported to avoid duplicate calls.
  */
 export function useServerSync({
@@ -14,7 +14,8 @@ export function useServerSync({
     playedDates,
     completedDates,
     addPlayedDate,
-    addCompletedDate
+    addCompletedDate,
+    onTokenGranted
 }: {
     user: User | null;
     userLoading: boolean;
@@ -23,6 +24,7 @@ export function useServerSync({
     completedDates: PuzzleDate[];
     addPlayedDate: (date: PuzzleDate) => void;
     addCompletedDate: (date: PuzzleDate) => void;
+    onTokenGranted: () => void;
 }) {
     const startedDatesRef = useRef<Set<string>>(new Set());
     const completedDatesRef = useRef<Set<string>>(new Set());
@@ -52,13 +54,18 @@ export function useServerSync({
         if (isSolved && !solutionRevealed && !completedDatesRef.current.has(dateKey)) {
             const alreadyCompleted = completedDates.some(d => d.month === currentDate.month && d.day === currentDate.day);
             if (!alreadyCompleted) {
-                recordCompletion(currentDate, pieces).then(success => {
-                    if (success) {
-                        addCompletedDate(currentDate);
+                recordCompletion(currentDate, pieces).then(({ success, tokenGranted }) => {
+                    if (!success) {
+                        return;
+                    }
+                    addCompletedDate(currentDate);
+                    // Only the server knows whether this was the first solve of the date
+                    if (tokenGranted) {
+                        onTokenGranted();
                     }
                 }).catch(() => {});
             }
             completedDatesRef.current.add(dateKey);
         }
-    }, [user, userLoading, gameState.currentDate, gameState.pieces, gameState.isSolved, gameState.solutionRevealed, playedDates, completedDates, addPlayedDate, addCompletedDate]);
+    }, [user, userLoading, gameState.currentDate, gameState.pieces, gameState.isSolved, gameState.solutionRevealed, playedDates, completedDates, addPlayedDate, addCompletedDate, onTokenGranted]);
 }

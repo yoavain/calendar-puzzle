@@ -25,6 +25,7 @@ import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
 import { SolutionButton } from "../../components/SolutionButton";
 import { HintButton } from "../../components/HintButton";
+import { TokenMenuBadge } from "../../components/TokenMenuBadge";
 import { HallOfFameModal } from "../../components/HallOfFameModal";
 import { ShareDialog } from "../../components/ShareDialog";
 
@@ -87,7 +88,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
             <ToolbarContainer orientation={orientation}>
                 <ToolbarLeft orientation={orientation}>
                     <ThemeToggle />
-                    {!game.userLoading && (game.user ? <UserMenu /> : <LoginButton />)}
+                    {!game.userLoading && (game.user ? <UserMenu onShowTokenIntro={game.modals.tokenIntro.open} /> : <LoginButton />)}
                 </ToolbarLeft>
 
                 <ToolbarCenter orientation={orientation}>
@@ -124,7 +125,9 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                         aria-label="Open menu"
                         size="medium"
                     >
-                        <MenuIcon />
+                        <TokenMenuBadge tokenBalance={game.tokenBalance} invisible={!game.user}>
+                            <MenuIcon />
+                        </TokenMenuBadge>
                     </IconButton>
                 </ToolbarRight>
             </ToolbarContainer>
@@ -223,8 +226,8 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             onHint={() => handleAction(() => {
                                 game.handleHint().catch(() => {});
                             })}
-                            isLoading={game.isHintLoading}
-                            disabled={!game.isBoardEmpty || game.gameState.isSolved}
+                            availability={game.hintAvailability}
+                            tokenBalance={game.tokenBalance}
                             fullWidth
                             sx={drawerButtonSx}
                         />

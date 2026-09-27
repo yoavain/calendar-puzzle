@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { UserContext } from "../context/UserContext";
 import type { User } from "../context/UserContext";
 import type { PuzzleDate } from "../../common/types";
+import type { UserSettings } from "../../common/restTypes";
 
 export const MOCK_USER_REGULAR: User = {
     id: "story-user",
@@ -24,6 +25,9 @@ export const MOCK_USER_ADMIN: User = {
 // constant, so a future push to one cannot show up in the other.
 const NO_COMPLETED_DATES: PuzzleDate[] = [];
 const NO_PLAYED_DATES: PuzzleDate[] = [];
+const NO_SETTINGS: UserSettings = {};
+const noop = () => {};
+const noopAsync = async () => {};
 
 interface Props {
     children: ReactNode;
@@ -31,6 +35,12 @@ interface Props {
     completedDates?: PuzzleDate[];
     playedDates?: PuzzleDate[];
     loading?: boolean;
+    tokenBalance?: number;
+    settings?: UserSettings;
+    setTokenBalance?: (balance: number) => void;
+    adjustTokenBalance?: (delta: number) => void;
+    updateSettings?: (patch: UserSettings) => Promise<void>;
+    addCompletedDate?: (date: PuzzleDate) => void;
 }
 
 export const MockUserProvider = ({
@@ -38,7 +48,13 @@ export const MockUserProvider = ({
     user = null,
     completedDates = NO_COMPLETED_DATES,
     playedDates = NO_PLAYED_DATES,
-    loading = false
+    loading = false,
+    tokenBalance = 0,
+    settings = NO_SETTINGS,
+    setTokenBalance = noop,
+    adjustTokenBalance = noop,
+    updateSettings = noopAsync,
+    addCompletedDate = noop
 }: Props) => {
     const value = useMemo(() => ({
         user,
@@ -47,9 +63,14 @@ export const MockUserProvider = ({
         loading,
         logout: async () => {},
         refreshUser: async () => {},
-        addCompletedDate: () => {},
-        addPlayedDate: () => {}
-    }), [user, completedDates, playedDates, loading]);
+        addCompletedDate,
+        addPlayedDate: () => {},
+        tokenBalance,
+        settings,
+        setTokenBalance,
+        adjustTokenBalance,
+        updateSettings
+    }), [user, completedDates, playedDates, loading, tokenBalance, settings, setTokenBalance, adjustTokenBalance, updateSettings, addCompletedDate]);
 
     return (
         <UserContext.Provider value={value}>

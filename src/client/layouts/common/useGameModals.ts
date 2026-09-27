@@ -3,6 +3,7 @@ import type { PuzzleDate } from "../../../common/types";
 import { toPuzzleDate } from "../../../common/types";
 import { findLastUnsolvedDate } from "../../../common/streakUtils";
 import type { User } from "../../context/UserContext";
+import type { UserSettings } from "../../../common/restTypes";
 
 /**
  * Manages all modal open/close state and the play-another dialog flow.
@@ -11,12 +12,16 @@ export function useGameModals({
     user,
     userLoading,
     completedDates,
-    currentDate
+    currentDate,
+    settings,
+    onTokenIntroSeen
 }: {
     user: User | null;
     userLoading: boolean;
     completedDates: PuzzleDate[];
     currentDate: PuzzleDate;
+    settings: UserSettings;
+    onTokenIntroSeen: () => void;
 }) {
     const [isStatsOpen, setIsStatsOpen] = useState(false);
     const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
@@ -26,6 +31,7 @@ export function useGameModals({
     const [playAnotherDate, setPlayAnotherDate] = useState<PuzzleDate | null>(null);
     const [playAnotherMode, setPlayAnotherMode] = useState<"just-solved" | "already-solved">("already-solved");
     const [isYearCompleteOpen, setIsYearCompleteOpen] = useState(false);
+    const [isTokenConfirmOpen, setIsTokenConfirmOpen] = useState(false);
 
     // Refs for play-another dialog flow control
     const justSolvedRef = useRef(false);
@@ -57,9 +63,15 @@ export function useGameModals({
         }
     }, []);
 
-    // Trigger 1: after stats dialog is closed following a solve, show "play another"
+    // Trigger 1: after stats dialog is closed following a solve, show "play another".
+    // It fires on the open -> closed transition only. The effect also re-runs when
+    // currentDate or completedDates change identity (the game history copies the
+    // date on every move), and those re-runs must not count as a close.
+    const wasStatsOpenRef = useRef(false);
     useEffect(() => {
-        if (!isStatsOpen && justSolvedRef.current && user) {
+        const statsJustClosed = wasStatsOpenRef.current && !isStatsOpen;
+        wasStatsOpenRef.current = isStatsOpen;
+        if (statsJustClosed && justSolvedRef.current && user) {
             if (statsAutoOpenTimeoutRef.current !== null) {
                 window.clearTimeout(statsAutoOpenTimeoutRef.current);
                 statsAutoOpenTimeoutRef.current = null;
@@ -83,6 +95,28 @@ export function useGameModals({
         }
     }, [userLoading, user, completedDates, checkAndSuggestNextPuzzle]);
 
+    // The intro is "requested" once per session for a user who has not seen it,
+    // and shown only while no other dialog is open, so it never stacks.
+    const [isTokenIntroRequested, setIsTokenIntroRequested] = useState(false);
+    const hasRequestedTokenIntroRef = useRef(false);
+
+    useEffect(() => {
+        if (!userLoading && user && !settings.tokenIntroSeen && !hasRequestedTokenIntroRef.current) {
+            hasRequestedTokenIntroRef.current = true;
+            setIsTokenIntroRequested(true);
+        }
+    }, [userLoading, user, settings.tokenIntroSeen]);
+
+    const isAnyOtherModalOpen = isStatsOpen || isIssueModalOpen || isHelpModalOpen || isShareOpen
+        || isPlayAnotherOpen || isYearCompleteOpen || isTokenConfirmOpen;
+
+    const closeTokenIntro = useCallback(() => {
+        setIsTokenIntroRequested(false);
+        if (!settings.tokenIntroSeen) {
+            onTokenIntroSeen();
+        }
+    }, [settings.tokenIntroSeen, onTokenIntroSeen]);
+
     return {
         // Refs and setters needed by handlers in useGameController
         justSolvedRef,
@@ -90,6 +124,7 @@ export function useGameModals({
         setIsStatsOpen,
         setIsPlayAnotherOpen,
         setIsYearCompleteOpen,
+        setIsTokenConfirmOpen,
 
         // Structured modal state consumed by layouts
         modals: {
@@ -124,6 +159,17 @@ export function useGameModals({
                 isOpen: isYearCompleteOpen,
                 open: () => setIsYearCompleteOpen(true),
                 close: () => setIsYearCompleteOpen(false)
+            },
+            tokenConfirm: {
+                isOpen: isTokenConfirmOpen,
+                open: () => setIsTokenConfirmOpen(true),
+                close: () => setIsTokenConfirmOpen(false)
+            },
+            tokenIntro: {
+                isOpen: isTokenIntroRequested && !isAnyOtherModalOpen,
+                isFirstView: !settings.tokenIntroSeen,
+                open: () => setIsTokenIntroRequested(true),
+                close: closeTokenIntro
             }
         }
     };

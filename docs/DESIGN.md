@@ -67,7 +67,7 @@ Implement OAuth-based authentication using trusted providers (Google, GitHub). N
 
 ### Database Schema
 
-> **Note:** This subsection captures the original plan. The implemented schema differs — see [DB_SCHEMA.md](DB_SCHEMA.md) for the authoritative description. Key differences: the user-progress table is `user_puzzle_stats` (not `users_results`) with composite PK `(user_id, month, day)` and columns `first_started_at`, `first_completed_at`, `hint_used` — no `solution_state` JSONB. No PII (email, display name) is stored in the `users` table; only the Google ID and an `is_admin` flag.
+> **Note:** This subsection captures the original plan. The implemented schema differs — see [DB_SCHEMA.md](DB_SCHEMA.md) for the authoritative description. Key differences: the user-progress table is `user_puzzle_stats` (not `users_results`) with composite PK `(user_id, month, day)` and columns `first_started_at`, `first_completed_at`, `hints_used` (hints used per date, 0–7) — no `solution_state` JSONB. No PII (email, display name) is stored in the `users` table; only the Google ID, an `is_admin` flag and a `settings` JSONB of UI preferences.
 
 Design a relational schema to track users and their puzzle completion history.
 
@@ -105,7 +105,12 @@ Design a relational schema to track users and their puzzle completion history.
 
 ### Solver and Hint APIs
 
-> **As implemented:** `puzzleSolver.ts` lives in `src/common/` (pure DLX algorithm, no DOM/Node deps). It is invoked server-side only from a worker thread at `src/server/workers/puzzleSolverWorker.ts`, orchestrated by `src/server/service/solverService.ts`. The solver endpoint is `GET /api/admin/solution/:date` (admin-only). The hint endpoint is `PUT /api/hint`.
+> **As implemented:** `puzzleSolver.ts` lives in `src/common/` (pure DLX algorithm, no DOM/Node deps). It is invoked server-side only from a worker thread at `src/server/workers/puzzleSolverWorker.ts`, orchestrated by `src/server/service/solverService.ts`. The solver endpoint is `GET /api/admin/solution/:date` (admin-only). Hints use hint tokens:
+>
+> - `PUT /api/hint` takes `{ month, day, hintNumber }` (1–7) and returns `{ pieces, tokenBalance }`: every hint so far, in a fixed order per date, plus the new balance. Hint #1 is free; each later hint costs one token. A `hintNumber` the user already has is a free replay. Refusals are `409` with `{ error, code, tokenBalance }`, `code` one of `STALE_HINT_NUMBER`, `ALREADY_SOLVED`, `NO_TOKENS`.
+> - `GET /api/hint/:date/state` returns `{ pieces }`: every hint used for the date.
+> - The balance is derived, never stored: solved dates minus every hint after the first on each date (`src/common/hintTokens.ts`). `POST /api/stats/complete` returns `tokenGranted: true` only for the first solve of a date. `GET /api/auth/me` returns `tokenBalance` and `settings`.
+> - `PATCH /api/user/settings` stores the per-user `tokenIntroSeen` and `skipTokenConfirm` flags.
 
 Move the puzzle solver to the server and expose it through authenticated endpoints.
 
@@ -381,6 +386,32 @@ function calculateStats(session: SessionData): GameStats {
 **Component location:** Create `SuccessPopup.tsx` or update existing completion modal
 
 ---
+
+### Hint Tokens
+
+The first hint on each date is free. Hints 2 to 7 cost one token each. A player earns one token the
+first time they solve a date. The API and the balance rule are under [Solver and Hint APIs](#solver-and-hint-apis).
+All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
+
+- **Hint button**: the balance sits inside the button, after a divider, as a gold coin and a count.
+  The tooltip names the cost or the reason the button is disabled.
+- **Mobile**: the Hint button is in the drawer, so a gold badge on the menu button also shows the balance.
+- **Confirm dialog**: hint 2 and later ask first, unless the player ticked "Don't ask me again"
+  (`users.settings.skipTokenConfirm`).
+- **Intro dialog**: shown once per player (`users.settings.tokenIntroSeen`), only when no other dialog is
+  open. The user menu reopens it.
+- **Token flight** (`TokenFlight.tsx`): on a first solve, a 26px coin pops at the board center (scale 0 to
+  1.2 in the first 18%) and flies straight to the balance (`[data-token-target]`), ending at scale 0.6.
+  It takes 850 ms, `ease-in-out`. The balance count then pulses (scale 1.4, 320 ms). With reduced motion,
+  or with no visible target, the token lands at once.
+- **Balance during the flight**: the token counts in the balance from the grant. The shown balance holds it
+  back until the landing.
+- **Post-solve timing**: the win sweep runs 0 to about 1020 ms and confetti fires at 400 ms. The flight
+  starts no earlier than 1050 ms. When a token is expected, the stats dialog opens 250 ms after the
+  landing (fallback 2500 ms if no grant arrives, 3000 ms if a granted token never lands). Otherwise stats
+  opens at 1500 ms. The play-another prompt follows when the stats dialog closes.
+- **Errors**: hint errors show as a toast in every layout (5 s). A stale hint number shows nothing: the
+  board adopts the server's hints.
 
 ### Personal Statistics Dashboard (Future)
 

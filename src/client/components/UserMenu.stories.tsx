@@ -21,7 +21,7 @@ type Story = StoryObj<typeof UserMenu>;
 
 export const LoggedIn: Story = {
     parameters: {
-        userContext: { user: MOCK_USER_REGULAR }
+        userContext: { user: MOCK_USER_REGULAR, tokenBalance: 12 }
     },
     render: () => <UserMenu />
 };

@@ -29,6 +29,11 @@ export const API_STATS_START = "/api/stats/start";
 export const API_STATS_COMPLETE = "/api/stats/complete";
 
 /**
+ * User settings path
+ */
+export const API_USER_SETTINGS = "/api/user/settings";
+
+/**
  * Issue & Logging paths
  */
 export const API_ISSUE = "/api/issue";

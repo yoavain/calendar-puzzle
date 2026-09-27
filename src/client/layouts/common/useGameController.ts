@@ -4,11 +4,12 @@ import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } fr
 import { isDragItem, toPuzzleDate } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
 import { getPlacementOrder, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
-import { rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
+import { applyHintPieces, rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
+import { countHintPieces, getHintAvailability } from "../../../common/hintTokens";
 import { initializeBoard, initializeGame } from "../../../common/initialize";
 import { getRandomPuzzleDate } from "../../../common/streakUtils";
 import { useGameHistory } from "../../hooks/useGameHistory";
-import { getHint, getHintState, getSolution } from "../../service/puzzleService";
+import { getHint, getHintState, getSolution, HintRequestError } from "../../service/puzzleService";
 import { clearSession, loadSession } from "../../hooks/useGameSession";
 import { logToServer } from "../../service/logService";
 import { useUser } from "../../context/UserContext";
@@ -17,6 +18,7 @@ import { useGameModals } from "./useGameModals";
 import { useServerSync } from "./useServerSync";
 import { useSessionPersistence } from "./useSessionPersistence";
 import { useKeyboardShortcuts } from "./useKeyboardShortcuts";
+import { HINT_TOKEN_COPY } from "../../copy/hintTokenCopy";
 
 // Type for invalid drop feedback
 export interface InvalidDropCell {
@@ -59,6 +61,24 @@ const fireConfetti = () => {
     fire(0.10, { spread: 120, startVelocity: 45 });
 };
 
+// Post-solve timing: docs/DESIGN.md, Hint Tokens
+const STATS_DELAY_MS = 1500; // stats dialog after a solve that earns no token
+const TOKEN_FLIGHT_EARLIEST_MS = 1050; // the flight waits for the win sweep
+const STATS_AFTER_LANDING_MS = 250; // stats dialog after the token lands
+const STATS_FALLBACK_MS = 2500; // stats dialog when an expected token never arrives
+const STATS_SAFETY_MS = 3000; // stats dialog if a granted token never lands
+
+/** The player-facing text for a known hint failure, or "" to fall back to the raw message. */
+const hintErrorCopy = (error: unknown): string => {
+    if (!(error instanceof HintRequestError)) {
+        return "";
+    }
+    if (error.code !== null) {
+        return HINT_TOKEN_COPY.errors[error.code];
+    }
+    return error.status === 429 ? HINT_TOKEN_COPY.rateLimited : "";
+};
+
 /**
  * Hook that encapsulates all game state and handlers.
  * This is the main controller for the game logic, independent of layout.
@@ -71,7 +91,12 @@ export function useGameController() {
         addCompletedDate,
         addPlayedDate,
         completedDates,
-        playedDates
+        playedDates,
+        tokenBalance,
+        setTokenBalance,
+        settings,
+        updateSettings,
+        adjustTokenBalance
     } = useUser();
 
     // Get initial state (from session or fresh game)
@@ -91,6 +116,7 @@ export function useGameController() {
     // State for the puzzle solver
     const [isLoading, setIsLoading] = useState(false);
     const [isHintLoading, setIsHintLoading] = useState(false);
+    const [hintMessage, setHintMessage] = useState<string | null>(null);
     const [solverError, setSolverError] = useState<string | null>(null);
 
     // State for invalid drop visual feedback
@@ -113,6 +139,10 @@ export function useGameController() {
         setDraggedPieceId(null);
     }, []);
 
+    const markTokenIntroSeen = useCallback(() => {
+        updateSettings({ tokenIntroSeen: true }).catch(() => {});
+    }, [updateSettings]);
+
     // Modal state and play-another dialog flow
     const {
         justSolvedRef,
@@ -120,43 +150,43 @@ export function useGameController() {
         setIsStatsOpen,
         setIsPlayAnotherOpen,
         setIsYearCompleteOpen,
+        setIsTokenConfirmOpen,
         modals
-    } = useGameModals({ user, userLoading, completedDates, currentDate: gameState.currentDate });
+    } = useGameModals({
+        user,
+        userLoading,
+        completedDates,
+        currentDate: gameState.currentDate,
+        settings,
+        onTokenIntroSeen: markTokenIntroSeen
+    });
 
-    // Helper to load persistent hint from server
+    // Post-solve: when stats should wait for the token flight, and when the flight may start
+    const statsAfterFlightRef = useRef(false);
+    const [tokenFlightNotBefore, setTokenFlightNotBefore] = useState(0);
+
+    // (Re)schedules the post-solve stats dialog; a later call replaces an earlier one
+    const scheduleStatsOpen = useCallback((delayMs: number) => {
+        if (statsAutoOpenTimeoutRef.current !== null) {
+            window.clearTimeout(statsAutoOpenTimeoutRef.current);
+        }
+        statsAutoOpenTimeoutRef.current = window.setTimeout(() => {
+            statsAutoOpenTimeoutRef.current = null;
+            statsAfterFlightRef.current = false;
+            setIsStatsOpen(true);
+        }, delayMs);
+    }, [statsAutoOpenTimeoutRef, setIsStatsOpen]);
+
+    // Helper to load every hint the user has used for a date from the server
     const loadPersistentHint = useCallback(async (date: PuzzleDate, currentPieces: PieceType[]) => {
         if (!user) {
             return null;
         }
 
         try {
-            const hintPiece = await getHintState(date);
-            if (hintPiece) {
-                // Find the original piece to get its metadata
-                const originalPiece = currentPieces.find(p => p.id === hintPiece.id);
-                if (!originalPiece) {
-                    return null;
-                }
-
-                // Create the updated piece with hint data - mark as locked
-                const updatedPiece = {
-                    ...originalPiece,
-                    position: hintPiece.position,
-                    rotation: hintPiece.rotation,
-                    isFlippedH: hintPiece.isFlippedH,
-                    isFlippedV: hintPiece.isFlippedV,
-                    isLocked: true
-                };
-
-                // Update the board
-                const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
-                    updatedPiece,
-                    hintPiece.position,
-                    initializeBoard(date),
-                    currentPieces
-                );
-
-                return { board: newBoard, pieces: newPieces };
+            const hintPieces = await getHintState(date);
+            if (hintPieces.length > 0) {
+                return applyHintPieces(date, currentPieces, hintPieces);
             }
         }
         catch (error) {
@@ -201,6 +231,16 @@ export function useGameController() {
 
     // Reset is disabled if no pieces are placed OR if only locked pieces (hints) are placed
     const isResetDisabled = gameState.pieces.every(piece => piece.position === null || piece.isLocked);
+
+    // What the Hint button offers right now (free, token, or why not)
+    const hintAvailability = getHintAvailability({
+        isLoggedIn: !!user,
+        isSolved: gameState.isSolved,
+        isDateSolved: completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day),
+        isLoading: isHintLoading,
+        pieces: gameState.pieces,
+        tokenBalance
+    });
 
     // Format current date as DD/MM
     const formattedDate = `${String(gameState.currentDate.day).padStart(2, "0")}/${String(gameState.currentDate.month + 1).padStart(2, "0")}`;
@@ -280,12 +320,13 @@ export function useGameController() {
                 fireConfetti();
                 confettiTimeoutRef.current = null;
             }, 400);
-            // Automatically show stats on completion after a short delay
+            // Automatically show stats on completion after a short delay. A first
+            // solve earns a token: then stats waits for the token flight to land.
             if (user) {
-                statsAutoOpenTimeoutRef.current = window.setTimeout(() => {
-                    statsAutoOpenTimeoutRef.current = null;
-                    setIsStatsOpen(true);
-                }, 1500);
+                const expectsToken = !completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day);
+                statsAfterFlightRef.current = expectsToken;
+                setTokenFlightNotBefore(Date.now() + TOKEN_FLIGHT_EARLIEST_MS);
+                scheduleStatsOpen(expectsToken ? STATS_FALLBACK_MS : STATS_DELAY_MS);
             }
         }
 
@@ -304,7 +345,7 @@ export function useGameController() {
             pieceId: piece.id,
             position
         });
-    }, [gameState, pushState, user, justSolvedRef, statsAutoOpenTimeoutRef, setIsStatsOpen]);
+    }, [gameState, pushState, user, completedDates, justSolvedRef, scheduleStatsOpen]);
 
     const handleCellClick = useCallback((position: Position) => {
         // Tap-to-place: If a piece is selected, try to place it at this position
@@ -451,63 +492,81 @@ export function useGameController() {
         }
     }, [gameState, isLoading, clearHistory]);
 
-    const handleHint = useCallback(async () => {
-        debugLogger.log("ctrl:handleHint", { date: gameState.currentDate });
-        if (gameState.isSolved || isHintLoading || !isBoardEmpty) {
-            return;
-        }
+    // Ask the server for the next hint. The server decides the cost and the pieces.
+    const requestNextHint = useCallback(async () => {
+        const requested = getGameState();
+        const hintNumber = countHintPieces(requested.pieces) + 1;
 
-        setSolverError(null);
+        setHintMessage(null);
         setIsHintLoading(true);
 
         try {
-            // Call the server to get a hint (one random piece placement) using the playing date
-            const hintPiece = await getHint(gameState.currentDate);
+            const { pieces: hintPieces, tokenBalance: newBalance } = await getHint(requested.currentDate, hintNumber);
+            setTokenBalance(newBalance);
 
-            // Find the original piece to get its shape
-            const originalPiece = gameState.pieces.find(p => p.id === hintPiece.id);
-            if (!originalPiece) {
-                throw new Error("Hint piece not found in game state");
+            const latest = getGameState();
+            if (latest.currentDate.month !== requested.currentDate.month || latest.currentDate.day !== requested.currentDate.day) {
+                return; // The user switched dates while the request ran
             }
-
-            // Create the updated piece with hint data - mark as locked
-            const updatedPiece = {
-                ...originalPiece,
-                position: hintPiece.position,
-                rotation: hintPiece.rotation,
-                isFlippedH: hintPiece.isFlippedH,
-                isFlippedV: hintPiece.isFlippedV,
-                isLocked: true // Mark the hint piece as locked/unmovable
-            };
-
-            // Update the board and pieces
-            const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
-                updatedPiece,
-                hintPiece.position,
-                gameState.board,
-                gameState.pieces
-            );
-
-            const newState = {
-                ...gameState,
-                board: newBoard,
-                pieces: newPieces,
-                selectedPieceId: null
-            };
+            const { board, pieces } = applyHintPieces(latest.currentDate, latest.pieces, hintPieces);
 
             // Clear history to prevent undoing the hint
-            clearHistory(newState);
-
+            clearHistory({ ...latest, board, pieces, selectedPieceId: null });
         }
         catch (error) {
+            if (error instanceof HintRequestError && error.tokenBalance !== null) {
+                setTokenBalance(error.tokenBalance);
+            }
+            if (error instanceof HintRequestError && error.code === "STALE_HINT_NUMBER") {
+                // The board and the server disagree on the hints used (another tab or device, or
+                // server data restored from a backup): adopt the server's hints, which may be none
+                try {
+                    const serverHints = await getHintState(requested.currentDate);
+                    const latest = getGameState();
+                    if (latest.currentDate.month !== requested.currentDate.month || latest.currentDate.day !== requested.currentDate.day) {
+                        return; // The user switched dates while the request ran
+                    }
+                    const { board, pieces } = applyHintPieces(latest.currentDate, latest.pieces, serverHints);
+                    clearHistory({ ...latest, board, pieces, selectedPieceId: null });
+                }
+                catch (reloadError) {
+                    logToServer("error", "Game: Failed to reload hints", reloadError);
+                }
+                return;
+            }
+            if (error instanceof HintRequestError && error.code === "ALREADY_SOLVED") {
+                // This device did not know: record it so the button stops offering paid hints
+                addCompletedDate(requested.currentDate);
+            }
             const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
             logToServer("error", `Game: Hint failed: ${errorMessage}`, error);
-            setSolverError(errorMessage);
+            setHintMessage(hintErrorCopy(error) || errorMessage);
         }
         finally {
             setIsHintLoading(false);
         }
-    }, [gameState, isHintLoading, isBoardEmpty, clearHistory]);
+    }, [clearHistory, setTokenBalance, addCompletedDate]);
+
+    const clearHintMessage = useCallback(() => setHintMessage(null), []);
+
+    const handleHint = useCallback(async () => {
+        debugLogger.log("ctrl:handleHint", { date: gameState.currentDate, hintAvailability });
+        if (hintAvailability === "token" && !settings.skipTokenConfirm) {
+            setIsTokenConfirmOpen(true);
+            return;
+        }
+        if (hintAvailability === "free" || hintAvailability === "token") {
+            await requestNextHint();
+        }
+    }, [gameState.currentDate, hintAvailability, settings.skipTokenConfirm, setIsTokenConfirmOpen, requestNextHint]);
+
+    const handleConfirmTokenHint = useCallback(async (dontAskAgain: boolean) => {
+        setIsTokenConfirmOpen(false);
+        if (dontAskAgain) {
+            updateSettings({ skipTokenConfirm: true }).catch(() => {});
+        }
+        await requestNextHint();
+    }, [setIsTokenConfirmOpen, updateSettings, requestNextHint]);
 
     // Per-piece control handlers
     const rotatePiece = useCallback((pieceId: PieceId, direction: "cw" | "ccw") => {
@@ -637,7 +696,30 @@ export function useGameController() {
         checkInitialHint().catch(() => {});
     }, [user, userLoading, gameState.currentDate, loadPersistentHint, clearHistory]);
 
-    useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate });
+    // Earned tokens count in the balance from the grant on. The shown balance holds
+    // them back until their flight lands. If this layout remounts mid-flight (a
+    // rotation), the pending count resets and the shown balance is simply right.
+    const [pendingTokenFlights, setPendingTokenFlights] = useState(0);
+    const shownTokenBalance = Math.max(tokenBalance - pendingTokenFlights, 0);
+
+    const landTokenFlight = useCallback(() => {
+        setPendingTokenFlights(n => Math.max(n - 1, 0));
+        if (statsAfterFlightRef.current) {
+            statsAfterFlightRef.current = false;
+            scheduleStatsOpen(STATS_AFTER_LANDING_MS);
+        }
+    }, [scheduleStatsOpen]);
+
+    const handleTokenGranted = useCallback(() => {
+        adjustTokenBalance(1);
+        setPendingTokenFlights(n => n + 1);
+        if (statsAfterFlightRef.current) {
+            // The landing opens stats; this only covers a flight that never lands
+            scheduleStatsOpen(STATS_SAFETY_MS);
+        }
+    }, [adjustTokenBalance, scheduleStatsOpen]);
+
+    useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate, onTokenGranted: handleTokenGranted });
 
     useEffect(() => () => {
         if (confettiTimeoutRef.current !== null) {
@@ -698,6 +780,10 @@ export function useGameController() {
         gameState,
         isLoading,
         isHintLoading,
+        hintAvailability,
+        // What the UI shows: excludes tokens still in flight
+        tokenBalance: shownTokenBalance,
+        completedDates,
         solverError,
         invalidDropCells,
         draggedPieceId,
@@ -729,6 +815,12 @@ export function useGameController() {
         handlePieceReturnToPile,
         handleSolve,
         handleHint,
+        handleConfirmTokenHint,
+        pendingTokenFlights,
+        landTokenFlight,
+        tokenFlightNotBefore,
+        hintMessage,
+        clearHintMessage,
 
         // Per-piece handlers
         handleRotatePiece,
