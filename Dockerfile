@@ -1,6 +1,6 @@
 # Docker deploys are retired. This file is kept as a description of the Proxmox runtime.
 # The tag must equal .node-version: scripts/deploy-proxmox.mjs refuses to deploy otherwise.
-FROM node:24.21.0-slim@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553
+FROM node:26.10.0-slim@sha256:ec7758ee051e457b468b32bde57b0879010b325bb9862718e9615225ce4aaae1
 
 # Timezone
 ENV DEBIAN_FRONTEND=noninteractive
