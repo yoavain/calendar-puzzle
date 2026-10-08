@@ -32,8 +32,8 @@ Deploy to Production only after Dev validation.
 - The server applies pending DB migrations at startup, so each deploy migrates that environment's DB.
   Back up an environment before a deploy that adds a migration. See
   [docs/DB_BACKUP_SETUP.md](docs/DB_BACKUP_SETUP.md) for backup, restore and rollback.
-- `.node-version` sets the Node version on the LXC. The deploy refuses to run when the `Dockerfile`
-  `FROM node:X.Y.Z` tag differs. The `Dockerfile` exists only to mirror the Proxmox runtime.
+- `.node-version` sets the Node version on the LXC. The deploy installs that version when the LXC differs.
+  The `Dockerfile` is deprecated. Do not update its Node version.
 
 <details>
 <summary>Docker deploy (retired)</summary>
