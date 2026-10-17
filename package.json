@@ -20,7 +20,7 @@
         "fastify": "5.12.5",
         "ipaddr.js": "2.5.0",
         "passport-google-oauth20": "2.0.0",
-        "pg": "8.23.0"
+        "pg": "8.23.1"
     },
     "devDependencies": {
         "@dnd-kit/core": "6.3.1",
@@ -33,8 +33,8 @@
         "@mui/icons-material": "9.4.0",
         "@mui/material": "9.4.0",
         "@playwright/test": "1.63.0",
-        "@storybook/react-vite": "10.6.0",
-        "@swc/core": "1.16.2",
+        "@storybook/react-vite": "10.6.1",
+        "@swc/core": "1.16.13",
         "@swc/jest": "0.2.39",
         "@testing-library/dom": "10.4.2",
         "@testing-library/jest-dom": "7.0.1",
@@ -42,7 +42,7 @@
         "@testing-library/user-event": "14.6.7",
         "@types/canvas-confetti": "1.9.0",
         "@types/jest": "30.0.0",
-        "@types/node": "26.6.3",
+        "@types/node": "26.6.4",
         "@types/passport-google-oauth20": "2.0.17",
         "@types/pg": "8.23.1",
         "@types/react": "19.3.0",
@@ -58,7 +58,7 @@
         "drizzle-kit": "0.31.11",
         "embla-carousel-react": "8.6.0",
         "esbuild": "0.28.2",
-        "eslint": "10.11.0",
+        "eslint": "10.12.0",
         "eslint-import-resolver-typescript": "4.4.5",
         "eslint-plugin-barrel-files": "3.0.1",
         "eslint-plugin-import-x": "4.17.1",
@@ -69,21 +69,21 @@
         "eslint-plugin-react-hooks": "7.1.1",
         "eslint-plugin-security": "4.0.1",
         "eslint-plugin-unicorn": "65.0.1",
-        "globals": "17.12.0",
+        "globals": "17.13.0",
         "jest": "30.5.2",
         "jest-environment-jsdom": "30.5.2",
         "playwright": "1.63.0",
         "react": "19.3.0",
-        "react-doctor": "0.9.14",
+        "react-doctor": "0.9.17",
         "react-dom": "19.3.0",
         "react-router-dom": "7.18.4",
         "rimraf": "6.1.3",
         "rollup-plugin-visualizer": "7.1.1",
-        "storybook": "10.6.0",
+        "storybook": "10.6.1",
         "tsx": "4.23.15",
         "typescript": "npm:@typescript/typescript6@6.0.2",
         "typescript-eslint": "8.70.1",
-        "vite": "8.3.1"
+        "vite": "8.3.2"
     },
     "overrides": {
         "eslint-plugin-react": {
