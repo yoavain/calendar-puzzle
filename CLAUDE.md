@@ -32,8 +32,8 @@ Deploy to Production only after Dev validation.
 - The server applies pending DB migrations at startup, so each deploy migrates that environment's DB.
   Back up an environment before a deploy that adds a migration. See
   [docs/DB_BACKUP_SETUP.md](docs/DB_BACKUP_SETUP.md) for backup, restore and rollback.
-- `.node-version` sets the Node version on the LXC. The deploy refuses to run when the `Dockerfile`
-  `FROM node:X.Y.Z` tag differs. The `Dockerfile` exists only to mirror the Proxmox runtime.
+- `.node-version` sets the Node version on the LXC. The deploy installs that version when the LXC differs.
+  The `Dockerfile` is deprecated. Do not update its Node version.
 
 <details>
 <summary>Docker deploy (retired)</summary>
@@ -62,3 +62,17 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage roles are used as-is: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.

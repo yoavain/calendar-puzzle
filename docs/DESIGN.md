@@ -412,6 +412,10 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
   opens at 1500 ms. The play-another prompt follows when the stats dialog closes.
 - **Errors**: hint errors show as a toast in every layout (5 s). A stale hint number shows nothing: the
   board adopts the server's hints.
+- **Hints from the server**: on load, on a date change and on reset, the board adopts the server's hints
+  for its date when they differ (hints used on another device, or a server restored from a backup). The
+  Hint button shows as loading until the server answers. If a load clears the player's own pieces, the
+  same toast says so.
 
 ### Personal Statistics Dashboard (Future)
 

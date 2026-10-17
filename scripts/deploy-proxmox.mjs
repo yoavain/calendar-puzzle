@@ -125,21 +125,11 @@ const captureRemote = (env, script) => {
     return { status: result.status, stdout: (result.stdout || "").trim() };
 };
 
-/**
- * The Node version the target must run. `.node-version` is the one place it is set.
- * The Dockerfile describes the same runtime, so a Dockerfile that disagrees stops the
- * deploy here rather than drifting unnoticed.
- */
+/** The Node version the target must run. `.node-version` is the one place it is set. */
 const readNodeVersion = () => {
     const version = readFileSync(".node-version", "utf8").trim();
     if (!VERSION_PATTERN.test(version)) {
         console.error(`Error: .node-version must hold a bare X.Y.Z version, found "${version}".`);
-        process.exit(1);
-    }
-    const dockerTag = /^FROM node:(\d+\.\d+\.\d+)-/m.exec(readFileSync("Dockerfile", "utf8"))?.[1];
-    if (dockerTag !== version) {
-        console.error(`Error: .node-version is ${version}, but the Dockerfile uses node:${dockerTag ?? "<unrecognized tag>"}.`);
-        console.error("Update the Dockerfile tag and digest to match, then deploy again.");
         process.exit(1);
     }
     return version;

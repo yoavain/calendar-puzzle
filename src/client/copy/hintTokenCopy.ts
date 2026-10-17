@@ -30,6 +30,8 @@ export interface HintTokenCopy {
     errors: Record<HintErrorCode, string>;
     /** The server rate limit (HTTP 429) refused a hint request */
     rateLimited: string;
+    /** On load, the board adopted the server's hints and cleared the player's own pieces */
+    hintsReconciled: string;
 }
 
 const ALREADY_SOLVED = "This date is already solved, so tokens can't be spent on it.";
@@ -74,5 +76,6 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
         ALREADY_SOLVED,
         STALE_HINT_NUMBER: ""
     },
-    rateLimited: "Too many hint requests. Try again in a minute."
+    rateLimited: "Too many hint requests. Try again in a minute.",
+    hintsReconciled: "Your hints were updated from the server, so your own pieces were cleared."
 };
