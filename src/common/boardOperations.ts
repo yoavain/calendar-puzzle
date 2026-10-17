@@ -52,6 +52,20 @@ export const rebuildGameState = (pieces: Piece[], date: PuzzleDate, isSolved: bo
     };
 };
 
+/** True when the board's locked pieces are exactly the given hints, placed as the hints place them. */
+export const boardMatchesHints = (pieces: readonly Piece[], hintPieces: readonly Piece[]): boolean => {
+    const locked = pieces.filter(p => p.isLocked && p.position !== null);
+    return locked.length === hintPieces.length && hintPieces.every(hint => {
+        const piece = locked.find(p => p.id === hint.id);
+        return piece !== undefined &&
+            piece.position?.x === hint.position?.x &&
+            piece.position?.y === hint.position?.y &&
+            piece.rotation === hint.rotation &&
+            piece.isFlippedH === hint.isFlippedH &&
+            piece.isFlippedV === hint.isFlippedV;
+    });
+};
+
 /**
  * Rebuild the board so it holds exactly the given hints, locked, in hint order.
  *

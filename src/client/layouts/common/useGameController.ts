@@ -4,7 +4,7 @@ import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } fr
 import { isDragItem, toPuzzleDate } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
 import { getPlacementOrder, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
-import { applyHintPieces, rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
+import { applyHintPieces, boardMatchesHints, rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { countHintPieces, getHintAvailability } from "../../../common/hintTokens";
 import { initializeBoard, initializeGame } from "../../../common/initialize";
 import { getRandomPuzzleDate } from "../../../common/streakUtils";
@@ -127,6 +127,9 @@ export function useGameController() {
     // Generation counter to discard stale hint responses
     const hintLoadIdRef = useRef(0);
 
+    // Bumped on a date change or reset, so the hint reconcile runs once the new board is committed
+    const [hintSyncKey, setHintSyncKey] = useState(0);
+
     // Always-current read used by async callbacks to avoid stale closures.
     // A useEffectEvent getter is re-read at each call site, so a read placed
     // after an await still sees the latest committed state.
@@ -177,23 +180,48 @@ export function useGameController() {
         }, delayMs);
     }, [statsAutoOpenTimeoutRef, setIsStatsOpen]);
 
-    // Helper to load every hint the user has used for a date from the server
-    const loadPersistentHint = useCallback(async (date: PuzzleDate, currentPieces: PieceType[]) => {
-        if (!user) {
-            return null;
-        }
+    // Rebuild the latest board around the given hints. History restarts so a hint cannot be undone.
+    const adoptHints = useCallback((hintPieces: PieceType[]) => {
+        const latest = getGameState();
+        const { board, pieces } = applyHintPieces(latest.currentDate, latest.pieces, hintPieces);
+        clearHistory({ ...latest, board, pieces, selectedPieceId: null });
+    }, [clearHistory]);
 
+    // Adopt the server's hints for a date when the board disagrees with them: a board restored
+    // from the session can lag hints used on another device, or lead a server restored from a backup.
+    // The Hint button waits meanwhile, since the board's own count may price a free replay as paid.
+    const reconcileHints = useCallback(async (date: PuzzleDate) => {
+        if (!user) {
+            return;
+        }
+        const thisHintLoadId = ++hintLoadIdRef.current;
+        setIsHintLoading(true);
         try {
-            const hintPieces = await getHintState(date);
-            if (hintPieces.length > 0) {
-                return applyHintPieces(date, currentPieces, hintPieces);
+            const serverHints = await getHintState(date);
+            if (hintLoadIdRef.current !== thisHintLoadId) {
+                return; // A date change or reset started a newer load
+            }
+            const latest = getGameState();
+            if (latest.currentDate.month !== date.month || latest.currentDate.day !== date.day) {
+                return; // A date change is under way: its own reconcile follows
+            }
+            if (boardMatchesHints(latest.pieces, serverHints)) {
+                return;
+            }
+            adoptHints(serverHints);
+            if (latest.pieces.some(p => p.position !== null && !p.isLocked)) {
+                setHintMessage(HINT_TOKEN_COPY.hintsReconciled);
             }
         }
         catch (error) {
-            logToServer("error", "Game: Failed to load persistent hint", error);
+            logToServer("error", "Game: Failed to reconcile hints", error);
         }
-        return null;
-    }, [user]);
+        finally {
+            if (hintLoadIdRef.current === thisHintLoadId) {
+                setIsHintLoading(false);
+            }
+        }
+    }, [user, adoptHints]);
 
     // Helper function to trigger invalid drop feedback
     const triggerInvalidDropFeedback = useCallback((piece: PieceType, position: Position) => {
@@ -256,21 +284,11 @@ export function useGameController() {
         // Immediately clear history with the new game state for instant feedback
         clearHistory(newGameState);
 
-        // Load persistent hint if available
-        const thisHintLoadId = ++hintLoadIdRef.current;
-        loadPersistentHint(date, newGameState.pieces).then(hintState => {
-            if (hintLoadIdRef.current !== thisHintLoadId) {
-                return;
-            }
-            if (hintState) {
-                updatePresent({ ...newGameState, board: hintState.board, pieces: hintState.pieces });
-            }
-        }).catch(err => {
-            logToServer("error", "Game: Failed to load persistent hint", err);
-        });
+        // Then restore the hints the user already has for this date
+        setHintSyncKey(key => key + 1);
 
         setSolverError(null);
-    }, [clearHistory, loadPersistentHint, updatePresent]);
+    }, [clearHistory]);
 
     const handleDateChange = useCallback((newDate: PuzzleDate) => {
         clearSession(); // Clear saved session when changing date
@@ -508,10 +526,7 @@ export function useGameController() {
             if (latest.currentDate.month !== requested.currentDate.month || latest.currentDate.day !== requested.currentDate.day) {
                 return; // The user switched dates while the request ran
             }
-            const { board, pieces } = applyHintPieces(latest.currentDate, latest.pieces, hintPieces);
-
-            // Clear history to prevent undoing the hint
-            clearHistory({ ...latest, board, pieces, selectedPieceId: null });
+            adoptHints(hintPieces);
         }
         catch (error) {
             if (error instanceof HintRequestError && error.tokenBalance !== null) {
@@ -526,8 +541,7 @@ export function useGameController() {
                     if (latest.currentDate.month !== requested.currentDate.month || latest.currentDate.day !== requested.currentDate.day) {
                         return; // The user switched dates while the request ran
                     }
-                    const { board, pieces } = applyHintPieces(latest.currentDate, latest.pieces, serverHints);
-                    clearHistory({ ...latest, board, pieces, selectedPieceId: null });
+                    adoptHints(serverHints);
                 }
                 catch (reloadError) {
                     logToServer("error", "Game: Failed to reload hints", reloadError);
@@ -545,7 +559,7 @@ export function useGameController() {
         finally {
             setIsHintLoading(false);
         }
-    }, [clearHistory, setTokenBalance, addCompletedDate]);
+    }, [adoptHints, setTokenBalance, addCompletedDate]);
 
     const clearHintMessage = useCallback(() => setHintMessage(null), []);
 
@@ -660,41 +674,15 @@ export function useGameController() {
 
     // === SUB-HOOKS (side effects only) ===
 
-    // Check for initial hint on mount / when user logs in / when date changes.
-    // getGameState is used inside the async callback so reads are always fresh,
-    // avoiding a stale-closure bug without adding gameState.pieces to the deps
-    // (which would re-run the effect on every piece placement).
+    // Reconcile the board restored on mount, again when the user logs in, and after
+    // each date change or reset (hintSyncKey). Running after commit means
+    // getGameState already holds the board that the fetched hints are for.
     useEffect(() => {
-        const checkInitialHint = async () => {
-            const currentDate = gameState.currentDate;
-            const currentPieces = getGameState().pieces;
-            const isEmpty = currentPieces.every(p => p.position === null);
-            if (!userLoading && user && isEmpty) {
-                try {
-                    const thisHintLoadId = ++hintLoadIdRef.current;
-                    const hintState = await loadPersistentHint(currentDate, currentPieces);
-                    if (hintLoadIdRef.current !== thisHintLoadId) {
-                        return;
-                    }
-                    // Re-check emptiness after the async gap to avoid overwriting user moves
-                    if (!getGameState().pieces.every(p => p.position === null)) {
-                        return;
-                    }
-                    if (hintState) {
-                        clearHistory({
-                            ...getGameState(),
-                            board: hintState.board,
-                            pieces: hintState.pieces
-                        });
-                    }
-                }
-                catch (err) {
-                    logToServer("error", "Game: Failed to load initial hint", err);
-                }
-            }
-        };
-        checkInitialHint().catch(() => {});
-    }, [user, userLoading, gameState.currentDate, loadPersistentHint, clearHistory]);
+        const { currentDate, isSolved } = getGameState();
+        if (!userLoading && !isSolved) {
+            reconcileHints(currentDate).catch(() => {});
+        }
+    }, [userLoading, reconcileHints, hintSyncKey]);
 
     // Earned tokens count in the balance from the grant on. The shown balance holds
     // them back until their flight lands. If this layout remounts mid-flight (a
