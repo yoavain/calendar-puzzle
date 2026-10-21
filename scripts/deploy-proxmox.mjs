@@ -13,8 +13,8 @@
  *
  * It also keeps the target's Node on `.node-version`. Installing Node needs root,
  * so the deploy account runs one root-owned helper through sudo, and only when the
- * versions differ. The helper and its sudoers rule come from provision-calendar-puzzle.sh
- * in the proxmox-setup repository.
+ * versions differ. The helper and its sudoers rule come from
+ * proxmox/scripts/provision-calendar-puzzle.sh in the network repository.
  */
 
 import { spawnSync } from "node:child_process";
@@ -157,7 +157,7 @@ const ensureNodeVersion = (env, version) => {
     if (runRemote(env, `sudo -n ${INSTALL_NODE} ${version}`, { allowFailure: true }) !== 0) {
         console.error(`Error: could not install Node ${version} on the target.`);
         console.error(`If sudo refused, the target lacks ${INSTALL_NODE} or its sudoers rule.`);
-        console.error("Both come from scripts/provision-calendar-puzzle.sh in the proxmox-setup repository.");
+        console.error("Both come from proxmox/scripts/provision-calendar-puzzle.sh in the network repository.");
         process.exit(1);
     }
     const installed = remoteNodeVersion(env);
