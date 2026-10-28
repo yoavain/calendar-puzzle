@@ -13,7 +13,10 @@ const config = {
             }
         ]
     },
-    moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+    // cookie@2 (pulled in by light-my-request, which backs fastify.inject) is ESM-only,
+    // so it must be compiled to CommonJS for Jest's CJS runtime.
+    transformIgnorePatterns: ["/node_modules/(?!cookie/)"],
+    moduleFileExtensions:["ts", "tsx", "js", "jsx", "json", "node"],
     moduleNameMapper: {
         // Strip .js extensions so the transform resolves TypeScript source files from ESM-style imports
         "^(\\.{1,2}/.+)\\.js$": "$1"
