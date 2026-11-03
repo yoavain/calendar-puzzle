@@ -416,6 +416,9 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
   for its date when they differ (hints used on another device, or a server restored from a backup). The
   Hint button shows as loading until the server answers. If a load clears the player's own pieces, the
   same toast says so.
+- **Reset and Undo**: Reset clears the player's pieces and keeps the hints locked, as one undo step. Hints
+  themselves cannot be undone, so adopting a new hint from the server clears the history. Reset on a solved
+  board has no undo step.
 
 ### Personal Statistics Dashboard (Future)
 

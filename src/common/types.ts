@@ -76,7 +76,7 @@ export interface GameHistory {
 }
 
 export interface GameStateAction {
-    type: "PLACE_PIECE" | "REMOVE_PIECE" | "ROTATE_PIECE" | "FLIP_PIECE_H" | "FLIP_PIECE_V" | "SELECT_PIECE" | "SOLVE_PUZZLE";
-    pieceId: PieceId;
+    type: "PLACE_PIECE" | "REMOVE_PIECE" | "ROTATE_PIECE" | "FLIP_PIECE_H" | "FLIP_PIECE_V" | "SELECT_PIECE" | "SOLVE_PUZZLE" | "RESET_BOARD";
+    pieceId?: PieceId;
     position?: Position;
 }

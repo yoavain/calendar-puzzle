@@ -107,6 +107,57 @@ test.describe("Mobile toolbar and carousel controls", () => {
         });
     });
 
+    test.describe("the progress bar", () => {
+        for (const viewport of [
+            { width: 320, height: 568 },
+            { width: 360, height: 640 },
+            { width: 393, height: 851 },
+            { width: 667, height: 375 },
+            { width: 844, height: 390 }
+        ]) {
+            test.describe(`at ${viewport.width} x ${viewport.height}`, () => {
+                test.use({ viewport });
+
+                test("fits inside the window, with its label centred", async ({ page }, testInfo) => {
+                    test.skip(testInfo.project.name !== "mobile-portrait", "The size under test comes from the viewport, not the project");
+                    await game.goto();
+
+                    const bar = page.getByRole("progressbar", { name: "Puzzle completion progress" });
+                    const measured = await bar.evaluate((track) => {
+                        const rect = track.getBoundingClientRect();
+
+                        // A clipping parent can cut the bar off well inside the window.
+                        let clipLeft = 0;
+                        let clipRight = window.innerWidth;
+                        for (let el = track.parentElement; el; el = el.parentElement) {
+                            if (getComputedStyle(el).overflowX !== "visible") {
+                                const parent = el.getBoundingClientRect();
+                                clipLeft = Math.max(clipLeft, parent.left);
+                                clipRight = Math.min(clipRight, parent.right);
+                            }
+                        }
+
+                        // Measure the label's text, because its box fills the whole bar.
+                        const range = document.createRange();
+                        range.selectNodeContents(track.querySelector("[aria-hidden='true']") as Node);
+                        const text = range.getBoundingClientRect();
+                        return {
+                            left: rect.left,
+                            right: rect.right,
+                            clipLeft,
+                            clipRight,
+                            textCentre: text.left + text.width / 2,
+                            visibleCentre: (Math.max(rect.left, clipLeft) + Math.min(rect.right, clipRight)) / 2
+                        };
+                    });
+                    expect(measured.left).toBeGreaterThanOrEqual(measured.clipLeft);
+                    expect(measured.right).toBeLessThanOrEqual(measured.clipRight);
+                    expect(Math.abs(measured.textCentre - measured.visibleCentre)).toBeLessThanOrEqual(1);
+                });
+            });
+        }
+    });
+
     test.describe("on a 360 x 640 phone", () => {
         test.use({ viewport: { width: 360, height: 640 } });
         test.beforeEach(async ({ page: _page }, testInfo) => {
