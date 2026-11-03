@@ -153,7 +153,7 @@ function buildSlides(pieces: PieceType[]): SlideEntry[] {
  * - Infinite loop scrolling
  * - Touch/swipe support (tap to select, tap on board to place)
  * - Shows current piece centered with controls
- * - Adjacent pieces are partially visible and dimmed
+ * - Adjacent pieces are partially visible and dimmed, without their controls
  * - Non-adjacent slides hidden to prevent loop animation glitches
  * - Indicator dots show position
  */
@@ -426,7 +426,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                     />
                                 </PieceWrapper>
 
-                                <ControlsWrapper>
+                                <ControlsWrapper isActive={slideState === "active"}>
                                     <IconButton
                                         size="large"
                                         onClick={() => onRotatePiece(piece.id)}

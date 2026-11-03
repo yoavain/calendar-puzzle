@@ -25,6 +25,7 @@ import { DatePicker } from "../../components/DatePicker";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { PlacementProgressBar } from "../../components/PlacementProgressBar";
+import { GoalHint } from "../../components/GoalHint";
 import { HelpModal } from "../../components/HelpModal";
 import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
@@ -226,6 +227,7 @@ export const DesktopLayout: React.FC = () => {
                             </ToolbarGroup>
                         </ToolbarGroups>
                     </Stack>
+                    <GoalHint placedCount={game.placementOrder.length} sx={{ typography: "body1", fontWeight: 500, pt: 1.5, pb: 0 }} />
                 </ToolbarContainer>
                 <ScaleContainer scale={scale}>
                     <Container 

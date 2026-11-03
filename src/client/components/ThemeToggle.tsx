@@ -69,9 +69,11 @@ const ThemeSwitch = styled(Switch)(({ theme }) => ({
 
 interface ThemeToggleProps {
   className?: string;
+  /** Show the sun and moon beside the switch. Mobile hides them to save width. */
+  showIcons?: boolean;
 }
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
+const ThemeToggle: React.FC<ThemeToggleProps> = ({ className, showIcons = true }) => {
     const { effectiveMode, toggleColorMode } = useColorMode();
     const isDark = effectiveMode === "dark";
 
@@ -80,14 +82,14 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
             sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
             className={className}
         >
-            <LightModeIcon
+            {showIcons && <LightModeIcon
                 sx={(theme) => ({
                     color: isDark ? "text.disabled" : "warning.main",
                     fontSize: theme.game.fontSize.lg,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(0.9)" : "scale(1.1)"
                 })}
-            />
+            />}
             <FormControlLabel
                 control={
                     <ThemeSwitch
@@ -98,14 +100,14 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
                 label={<VisuallyHiddenLabel>Toggle dark mode</VisuallyHiddenLabel>}
                 sx={{ margin: 0, gap: 0, "& .MuiFormControlLabel-label": { margin: 0 } }}
             />
-            <DarkModeIcon
+            {showIcons && <DarkModeIcon
                 sx={(theme) => ({
                     color: isDark ? "primary.main" : "text.disabled",
                     fontSize: theme.game.fontSize.lg,
                     transition: "color 0.25s ease, transform 0.25s ease",
                     transform: isDark ? "scale(1.1)" : "scale(0.9)"
                 })}
-            />
+            />}
         </Box>
     );
 };

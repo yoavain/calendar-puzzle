@@ -11,6 +11,7 @@ import { HintErrorToast } from "../../components/HintErrorToast";
 import { TokenIntroDialog } from "../../components/TokenIntroDialog";
 import { TokenConfirmDialog } from "../../components/TokenConfirmDialog";
 import { PlacementProgressBar } from "../../components/PlacementProgressBar";
+import { GoalHint } from "../../components/GoalHint";
 
 import { useGameController } from "../common/useGameController";
 import { useDndAdapters } from "../common/useDndAdapters";
@@ -64,6 +65,8 @@ export const PortraitLayout: React.FC = () => {
 
                 {/* Content Area - Progress + Board */}
                 <ContentArea>
+                    <GoalHint placedCount={game.placementOrder.length} sx={{ pt: 0.5 }} />
+
                     {/* Progress Bar */}
                     <ProgressArea>
                         <PlacementProgressBar order={game.placementOrder} />

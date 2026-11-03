@@ -14,6 +14,7 @@ export const LoginButton: React.FC = () => {
             startIcon={<GoogleIcon />}
             onClick={handleLogin}
             size="small"
+            sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
         >
             Sign in
         </Button>
