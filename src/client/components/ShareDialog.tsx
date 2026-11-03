@@ -45,7 +45,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                     Share
                 </DialogTitle>
                 <DialogContent>
-                    <Stack direction="row" sx={{ mt: 1 }}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 3, sm: 0 }} sx={{ mt: 1 }}>
                         {/* Copy Link */}
                         <Stack spacing={1} sx={{ flex: 1, alignItems: "center" }}>
                             <Button
@@ -55,7 +55,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                             >
                                 {copied ? "Copied!" : "Copy Link"}
                             </Button>
-                            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "bold", whiteSpace: "nowrap", textAlign: "center" }}>
+                            <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: "bold", textAlign: "center", overflowWrap: "anywhere" }}>
                                 {SHARE_URL}
                             </Typography>
                         </Stack>

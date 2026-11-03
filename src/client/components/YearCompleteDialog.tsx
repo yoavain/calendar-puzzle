@@ -129,19 +129,12 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
             aria-labelledby="year-complete-title"
             slotProps={{
                 paper: {
-                    sx: (t) => ({
+                    sx: {
                         // Wider than BaseDialog's sizes, because 31 mosaic columns need the room.
                         // The mosaic grows taller with the width, so a short window gets a narrower
                         // dialog. Otherwise the buttons cover the last line of the text.
-                        maxWidth: "clamp(600px, 250vh - 960px, 760px)",
-                        // MUI's full-width calculation assumes a 32px margin, so a
-                        // smaller margin needs its own width.
-                        [t.breakpoints.down("sm")]: {
-                            margin: 2,
-                            width: "calc(100% - 32px)",
-                            maxWidth: "calc(100% - 32px)"
-                        }
-                    })
+                        maxWidth: "clamp(600px, 250vh - 960px, 760px)"
+                    }
                 }
             }}
         >

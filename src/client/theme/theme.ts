@@ -378,18 +378,61 @@ const sharedOptions: ThemeOptions = {
         // text on it below 4.5:1.
         MuiDialog: {
             styleOverrides: {
-                paper: {
+                paper: ({ theme }) => ({
                     backgroundImage: "none",
                     boxShadow: "none",
-                    borderRadius: gameRadiusTokens.md
-                }
+                    borderRadius: gameRadiusTokens.md,
+                    // MUI's full-width calculation assumes a 32px margin, so a
+                    // smaller margin needs its own width.
+                    [theme.breakpoints.down("sm")]: {
+                        margin: theme.spacing(2),
+                        width: `calc(100% - ${theme.spacing(4)})`,
+                        maxWidth: `calc(100% - ${theme.spacing(4)})`,
+                        maxHeight: `calc(100% - ${theme.spacing(4)})`
+                    },
+                    // A phone on its side has little height to give away.
+                    "@media (max-height: 500px)": {
+                        marginTop: theme.spacing(1),
+                        marginBottom: theme.spacing(1),
+                        maxHeight: `calc(100% - ${theme.spacing(2)})`
+                    },
+                    // Touch targets, on any touch device. A mouse keeps the compact size.
+                    "@media (pointer: coarse)": {
+                        "& .MuiButton-root": {
+                            minHeight: 44
+                        }
+                    }
+                })
             }
         },
-        // Actions end on the same 24px edge as the dialog's text.
+        MuiDialogTitle: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    [theme.breakpoints.down("sm")]: {
+                        paddingLeft: theme.spacing(2),
+                        paddingRight: theme.spacing(2)
+                    }
+                })
+            }
+        },
+        MuiDialogContent: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    [theme.breakpoints.down("sm")]: {
+                        paddingLeft: theme.spacing(2),
+                        paddingRight: theme.spacing(2)
+                    }
+                })
+            }
+        },
+        // Actions end on the same edge as the dialog's text: 24px, or 16px on a phone.
         MuiDialogActions: {
             styleOverrides: {
                 root: ({ theme }) => ({
-                    padding: theme.spacing(1, 3, 3)
+                    padding: theme.spacing(1, 3, 3),
+                    [theme.breakpoints.down("sm")]: {
+                        padding: theme.spacing(1, 2, 2)
+                    }
                 })
             }
         },

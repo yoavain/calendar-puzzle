@@ -62,22 +62,27 @@ export const ShortcutKey = styled("kbd")(({ theme }) => ({
     whiteSpace: "nowrap"
 }));
 
-export const ScaledBoardWrapper = styled(Box)(({ theme }) => ({
-    display: "flex",
-    justifyContent: "center",
-    position: "relative",
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-    // We allow the wrapper to overflow so the piece can be seen outside the board
-    // but the DialogContent will catch it.
-    "& > .scaling-container": {
-        transform: "scale(0.6)",
-        transformOrigin: "top center",
-        height: theme.game.cellSize * 7 * 0.6 + 40,
+export const ScaledBoardWrapper = styled(Box)(({ theme }) => {
+    // Nine cells tall (seven rows plus the one-cell padding), plus the border.
+    const boardSize = theme.game.cellSize * 9 + 8;
+
+    return {
+        display: "flex",
+        justifyContent: "center",
         position: "relative",
-        [theme.breakpoints.down("sm")]: {
-            transform: "scale(0.45)",
-            height: theme.game.cellSize * 7 * 0.45 + 30
+        marginTop: theme.spacing(2),
+        // The animated piece starts below the board. The dialog's content has to scroll on
+        // short screens, so the clip for that start belongs here.
+        overflow: "hidden",
+        "& > .scaling-container": {
+            transform: "scale(0.6)",
+            transformOrigin: "top center",
+            height: boardSize * 0.6,
+            position: "relative",
+            [theme.breakpoints.down("sm")]: {
+                transform: "scale(0.45)",
+                height: boardSize * 0.45
+            }
         }
-    }
-}));
+    };
+});

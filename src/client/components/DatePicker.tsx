@@ -177,7 +177,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                             const isMonthFullyCompleted = completedDaysInMonth === daysInThisMonth;
                             
                             return (
-                                <Grid size={{ xs: 4, sm: 2 }} key={monthName}>
+                                <Grid size={2} key={monthName}>
                                     <Button
                                         fullWidth
                                         size="small"
@@ -187,7 +187,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                         sx={{
                                             minWidth: 0,
                                             borderColor: alpha(theme.palette.text.primary, 0.23),
-                                            px: 1,
+                                            px: 0.5,
                                             fontSize: theme.game.fontSize.xs,
                                             position: "relative",
                                             overflow: "hidden" // Ensure star doesn't spill out

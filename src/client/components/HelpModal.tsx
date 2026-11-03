@@ -114,18 +114,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
         <BaseDialog
             open={open}
             onClose={onClose}
-            slotProps={{
-                paper: {
-                    sx: {
-                        display: "flex",
-                        flexDirection: "column",
-                        overflow: "hidden"
-                    }
-                }
-            }}
         >
             <DialogTitle sx={{ typography: "h5", fontWeight: "bold", pb: 1 }}>How to Play</DialogTitle>
-            <DialogContent sx={{ pb: 4, overflow: "hidden" }}>
+            <DialogContent sx={{ pb: 3 }}>
                 <Stack spacing={3} sx={{ mt: 1 }}>
                     <Typography variant="h6" sx={{ lineHeight: 1.4 }}>
                         {GOAL_SENTENCE}
