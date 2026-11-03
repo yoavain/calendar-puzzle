@@ -19,7 +19,7 @@ const MOCK_HALL_OF_FAME: UserActivity[] = [
 const MOCK_WITH_COMPLETERS: UserActivity[] = [
     { userKey: "fake-key-story-user", isCurrentUser: true, daysPlayed: 412, daysSolved: TOTAL_DATES, daysPlayedWithHint: 30, daysSolvedWithHint: 22 },
     { userKey: "fake-key-alice", isCurrentUser: false, daysPlayed: 389, daysSolved: TOTAL_DATES, daysPlayedWithHint: 12, daysSolvedWithHint: 9 },
-    ...MOCK_HALL_OF_FAME.slice(1)
+    ...MOCK_HALL_OF_FAME.slice(2)
 ];
 
 /** Serves a fixed hall-of-fame payload for the duration of a story. */

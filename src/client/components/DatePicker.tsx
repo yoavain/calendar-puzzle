@@ -5,24 +5,49 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import type { SxProps, Theme } from "@mui/material/styles";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import StarIcon from "@mui/icons-material/Star";
-import ExtensionIcon from "@mui/icons-material/Extension";
+import { toPuzzleDate } from "../../common/types";
 import type { PuzzleDate } from "../../common/types";
 import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
 import { useUser } from "../context/UserContext";
 import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
+import {
+    DayFelt,
+    DayTile,
+    EmptyTile,
+    Legend,
+    LegendItem,
+    SolvedSwatch,
+    StartedSwatch,
+    TodayStatusMark,
+    TodaySwatch
+} from "./DatePicker.styled";
+import type { DayStatus } from "./DatePicker.styled";
+
+// Five rows of seven, the same shape for every month.
+const DAY_GRID_CELLS = 35;
 
 // Format date as DD/MM
 const formatDate = (date: PuzzleDate): string => {
     const day = String(date.day).padStart(2, "0");
     const month = String(date.month + 1).padStart(2, "0");
     return `${day}/${month}`;
+};
+
+const describeDay = (month: number, day: number, isToday: boolean, status: DayStatus): string => {
+    const parts = [`${MONTHS[month]} ${day}`];
+    if (isToday) {
+        parts.push("today");
+    }
+    if (status !== "none") {
+        parts.push(status);
+    }
+    return parts.join(", ");
 };
 
 interface DatePickerProps {
@@ -81,12 +106,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
         setIsOpen(false);
     };
 
+    const today = toPuzzleDate(new Date());
+
     // Generate days array
     const daysInMonth = DAYS_IN_MONTH[selectedMonth];
     const days: number[] = [];
     for (let i = 1; i <= daysInMonth; i++) {
         days.push(i);
     }
+    const emptyCells = Array.from({ length: DAY_GRID_CELLS - daysInMonth }, (_, i) => daysInMonth + i + 1);
 
     const button = (
         <Button
@@ -153,10 +181,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                                     <Button
                                         fullWidth
                                         size="small"
+                                        color={index === selectedMonth ? "primary" : "inherit"}
                                         variant={index === selectedMonth ? "contained" : "outlined"}
                                         onClick={() => handleMonthChange(index)}
                                         sx={{
                                             minWidth: 0,
+                                            borderColor: alpha(theme.palette.text.primary, 0.23),
                                             px: 1,
                                             fontSize: theme.game.fontSize.xs,
                                             position: "relative",
@@ -184,73 +214,36 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                     <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
                         Day
                     </Typography>
-                    <Box 
-                        sx={{ 
-                            display: "grid",
-                            gridTemplateColumns: "repeat(7, 1fr)",
-                            gap: 0.5
-                        }}
-                    >
+                    <DayFelt role="group" aria-label={`Days in ${MONTHS[selectedMonth]}`}>
                         {days.map(day => {
-                            const completed = isDateCompleted(selectedMonth, day);
-                            const played = isDatePlayed(selectedMonth, day);
+                            const status: DayStatus = isDateCompleted(selectedMonth, day)
+                                ? "solved"
+                                : isDatePlayed(selectedMonth, day) ? "started" : "none";
+                            const isToday = selectedMonth === today.month && day === today.day;
                             const isSelected = day === selectedDay;
 
                             return (
-                                <Button
+                                <DayTile
                                     key={day}
-                                    size="small"
-                                    variant={isSelected ? "contained" : "text"}
+                                    status={status}
+                                    isToday={isToday}
+                                    isSelected={isSelected}
+                                    aria-pressed={isSelected}
+                                    aria-label={describeDay(selectedMonth, day, isToday, status)}
                                     onClick={() => handleDayClick(day)}
-                                    sx={{
-                                        minWidth: 0,
-                                        aspectRatio: "1",
-                                        p: 0,
-                                        fontSize: theme.game.fontSize.sm,
-                                        position: "relative",
-                                        bgcolor: isSelected ? "primary.main" : "action.hover",
-                                        "&:hover": {
-                                            bgcolor: isSelected ? "primary.dark" : "action.selected"
-                                        },
-                                        overflow: "hidden"
-                                    }}
                                 >
-                                    <Box sx={{ 
-                                        zIndex: 1, 
-                                        position: "relative", 
-                                        fontWeight: "bold",
-                                        color: (completed || played) && !isSelected ? "white" : "inherit",
-                                        textShadow: (completed || played) && !isSelected ? "0px 0px 2px rgba(0,0,0,0.5)" : "none"
-                                    }}>
-                                        {day}
-                                    </Box>
-                                    {completed ? (
-                                        <StarIcon sx={{ 
-                                            position: "absolute", 
-                                            fontSize: "3.5rem",
-                                            color: theme.game.starColor,
-                                            opacity: 1,
-                                            zIndex: 0,
-                                            top: "50%",
-                                            left: "50%",
-                                            transform: "translate(-50%, -50%)"
-                                        }} />
-                                    ) : played ? (
-                                        <ExtensionIcon sx={{ 
-                                            position: "absolute", 
-                                            fontSize: "3rem",
-                                            color: theme.game.extensionColor,
-                                            opacity: 1,
-                                            zIndex: 0,
-                                            top: "50%",
-                                            left: "50%",
-                                            transform: "translate(-50%, -50%)"
-                                        }} />
-                                    ) : null}
-                                </Button>
+                                    {day}
+                                    {isToday && status !== "none" && <TodayStatusMark status={status} />}
+                                </DayTile>
                             );
                         })}
-                    </Box>
+                        {emptyCells.map(cell => <EmptyTile key={cell} aria-hidden="true" />)}
+                    </DayFelt>
+                    <Legend>
+                        <LegendItem><SolvedSwatch />Solved</LegendItem>
+                        <LegendItem><StartedSwatch />Started</LegendItem>
+                        <LegendItem><TodaySwatch />Today</LegendItem>
+                    </Legend>
                 </DialogContent>
 
                 <DialogActions>
