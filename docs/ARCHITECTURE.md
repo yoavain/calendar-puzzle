@@ -468,7 +468,7 @@ React hooks and components tested with Jest + Testing Library:
 | `test/client/useGameModals.test.ts` | Token intro gating, the solve result, the solved-today notice |
 | `test/client/useServerSync.test.ts` | Token grant on first solve |
 | `test/client/puzzleService.test.ts` | Hint, completion and settings API calls |
-| `test/client/HintButton.test.ts`, `TokenConfirmDialog.test.ts`, `TokenIntroDialog.test.ts`, `TokenFlight.test.ts`, `HintErrorToast.test.ts` | Hint token components |
+| `test/client/HintButton.test.ts`, `TokenFlight.test.ts` | Hint token components |
 
 ### Unit Tests — Server Layer
 
@@ -487,14 +487,20 @@ Server routes and services tested with Fastify's inject API:
 
 ### E2E Tests
 
-Playwright tests covering all three layouts:
+Playwright tests for core flows only. The drag and solve specs prove that the game is playable in all three layouts:
 
 | File | What it covers |
 |---|---|
 | `test/e2e/drag-drop.spec.ts` | Happy path and failing path drag-and-drop |
 | `test/e2e/drag-stale-rect.spec.ts` | Rotated piece and empty-cell snap regressions |
-| `test/e2e/solve.spec.ts` | Full puzzle solve flow |
-| `test/e2e/hint-tokens.spec.ts` | Free hint, confirmed token hint, no tokens left |
+| `test/e2e/solve.spec.ts` | Full signed-in solve, by hand, through to the next date |
+| `test/e2e/undo-and-reset.spec.ts` | Reset, Undo and Redo in each layout's toolbar |
+| `test/e2e/carousel-swipe.spec.ts` | A swipe moves the carousel, and a drag still starts (touch layouts) |
+| `test/e2e/hint-tokens.spec.ts` | Free hint, confirmed token hint, no tokens left (desktop) |
+| `test/e2e/keyboard-shortcuts.spec.ts` | Undo, Redo and Esc from the keyboard (desktop) |
+| `test/e2e/first-visit-goal.spec.ts` | The goal sentence on a first visit (desktop) |
+| `test/e2e/solved-today-notice.spec.ts` | Opening the game with today already solved (desktop) |
+| `test/e2e/year-complete.spec.ts` | The year-complete screen (desktop) |
 
 Tests run across three Playwright projects: `desktop`, `mobile-portrait`, `mobile-landscape`.
 

@@ -298,7 +298,14 @@ test.describe("Solve puzzle via UI", () => {
 
     test.beforeEach(async ({ page }, testInfo) => {
         layout = layoutFromProject(testInfo.project.name);
-        await mockApiRoutes(page);
+        await mockApiRoutes(page, {
+            authMe: {
+                user: { id: "e2e-solver", isAdmin: false, name: "Solver" },
+                completedDates: [],
+                playedDates: [],
+                settings: { tokenIntroSeen: true }
+            }
+        });
         await clearStorage(page);
     });
 
@@ -329,34 +336,14 @@ test.describe("Solve puzzle via UI", () => {
         const segmentIds = await page.locator("[data-segment-piece-id]")
             .evaluateAll(els => els.map(el => Number(el.getAttribute("data-segment-piece-id"))));
         expect(segmentIds).toEqual(placedPieceIds);
-    });
 
-    test("a signed-in solve of today shows one dialog that names the date and offers the next", async ({ page }) => {
-        test.setTimeout(180_000);
-
-        const jan1: PuzzleDate = { month: 0, day: 1 };
-        const solution = findSolution(initializeBoard(jan1), initializePieces(), jan1);
-        expect(solution).toBeTruthy();
-
-        await mockApiRoutes(page, {
-            authMe: {
-                user: { id: "e2e-solver", isAdmin: false, name: "Solver" },
-                completedDates: [],
-                playedDates: [],
-                settings: { tokenIntroSeen: true }
-            }
-        });
-        await mockDate(page, new Date(2024, jan1.month, jan1.day));
-        game = new GamePage(page, layout);
-        await game.goto();
-
-        await solveByHand(page, game, layout, solution!);
-
+        // 6. The solve opens one dialog that names the date and offers the next one.
+        // Jan 1 is today here, and solving today must not also read as "already solved".
         await expect(page.getByRole("heading", { name: "Jan 1 solved" }).first()).toBeVisible({ timeout: 10_000 });
-        // Solving today must not also read as "already solved".
         await expect(page.getByText(SOLVE_COPY.solvedTodayNotice)).toHaveCount(0);
 
         await page.getByRole("button", { name: "Play Dec 31" }).first().click();
         await expect(page).toHaveTitle("Calendar Puzzle - 31/12");
     });
+
 });

@@ -49,6 +49,17 @@ image layers stay with the host operator.
 
 </details>
 
+## Testing
+
+**Persistent end-to-end tests cover core flows only.** They run in CI on every change. They prove that the game stays
+playable in all three layouts, through the real drag-and-drop package.
+
+**Test each UX feature end to end, but ad hoc.** Drive the real app with a throwaway script, keep the script out of the
+repo, and report the result. Do not add the check to `test/e2e/` or to CI. A new feature, a bug fix or a ticket's
+acceptance list is not a reason for a new persistent test. Add one only when the user asks.
+
+Put logic tests in Jest. The manual Dev test above still applies to every change.
+
 ## Conventions
 
 All commits should follow `<subject> – <description>` style.
