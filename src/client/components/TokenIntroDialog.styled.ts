@@ -22,7 +22,7 @@ export const StepIcon = styled("span")(({ theme }) => ({
     display: "grid",
     placeItems: "center",
     borderRadius: "50%",
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.background.default,
     border: `1px solid ${theme.game.boardBorderLightColor}`,
     "& > svg": {
         fontSize: 22,
@@ -40,7 +40,7 @@ export const BalanceCallout = styled("div")(({ theme }) => ({
     gap: theme.spacing(1.25),
     padding: theme.spacing(1.25, 1.5),
     borderRadius: theme.game.radius.sm,
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.background.default,
     border: `1px solid ${theme.game.boardBorderLightColor}`,
     fontWeight: 600
 }));

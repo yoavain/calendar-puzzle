@@ -4,15 +4,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
@@ -22,26 +13,24 @@ import { useUser } from "../context/UserContext.js";
 import { TOTAL_DATES } from "../../common/consts.js";
 import type { UserActivity } from "../../common/restTypes.js";
 import { CompletionBadge } from "./CompletionBadge";
+import {
+    PlayerCell,
+    RankList,
+    RankMarker,
+    RankRow,
+    Score,
+    ScoreCaption,
+    ScoreDetail,
+    VisuallyHidden
+} from "./HallOfFameModal.styled";
 
-/** Matches the avatar beside it, so the two columns read as one pair. */
+/** Matches the avatar beside it, so the two read as one pair. */
 const COMPLETION_BADGE_SIZE = 32;
 
 interface HallOfFameModalProps {
     open: boolean;
     onClose: () => void;
 }
-
-interface HeadCell {
-    id: string;
-    label: string;
-}
-
-const headCells: HeadCell[] = [
-    { id: "rank", label: "" },
-    { id: "userId", label: "User" },
-    { id: "daysPlayed", label: "Days Played" },
-    { id: "daysSolved", label: "Days Solved" }
-];
 
 export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose }) => {
     const { user: currentUser } = useUser();
@@ -85,90 +74,62 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
         <Dialog 
             open={open} 
             onClose={onClose}
-            maxWidth="md"
+            maxWidth="sm"
             fullWidth
             slotProps={{
                 paper: {
-                    sx: (theme) => ({
-                        borderRadius: `${theme.game.radius.md}px`,
-                        userSelect: "none"
-                    })
+                    sx: { userSelect: "none" }
                 }
             }}
         >
-            <DialogTitle sx={{ m: 0, p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <DialogTitle>
                 Hall of Fame
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{ color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent>
                 {loading ? (
                     <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
                         <CircularProgress aria-label="Loading" />
                     </Box>
                 ) : (
-                    <TableContainer component={Paper} elevation={0}>
-                        <Table stickyHeader aria-label="hall of fame table">
-                            <TableHead>
-                                <TableRow>
-                                    {headCells.map((headCell) => (
-                                        <TableCell
-                                            key={headCell.id}
-                                            align="center"
-                                        >
-                                            {headCell.label}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {sortedData.map((row) => {
-                                    const isCurrentUser = row.isCurrentUser;
-                                    const avatarUrl = isCurrentUser && currentUser?.avatarUrl
+                    sortedData.length === 0 ? (
+                        <Box sx={{ textAlign: "center", py: 3 }}>No data available</Box>
+                    ) : (
+                        <>
+                            <ScoreCaption aria-hidden="true">Days solved</ScoreCaption>
+                            <RankList aria-label="Players by days solved">
+                                {sortedData.map((row, index) => {
+                                    const avatarUrl = row.isCurrentUser && currentUser?.avatarUrl
                                         ? currentUser.avatarUrl
                                         : `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(row.userKey)}`;
 
                                     return (
-                                        <TableRow key={row.userKey} hover selected={isCurrentUser}>
-                                            <TableCell align="center">
+                                        <RankRow key={row.userKey} isCurrentUser={row.isCurrentUser}>
+                                            <RankMarker rank={index + 1}>{index + 1}</RankMarker>
+                                            <Avatar src={avatarUrl} alt="" sx={{ width: 32, height: 32 }} />
+                                            <PlayerCell>
+                                                {row.isCurrentUser && "You"}
                                                 {row.daysSolved >= TOTAL_DATES && (
                                                     <CompletionBadge
                                                         size={COMPLETION_BADGE_SIZE}
                                                         title="Solved every date"
                                                     />
                                                 )}
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Avatar 
-                                                    src={avatarUrl}
-                                                    alt="Player avatar"
-                                                    sx={{ width: 32, height: 32, margin: "0 auto" }}
-                                                />
-                                            </TableCell>
-                                            <TableCell align="center">{row.daysPlayed}</TableCell>
-                                            <TableCell align="center">{row.daysSolved}</TableCell>
-                                        </TableRow>
+                                            </PlayerCell>
+                                            <Score>
+                                                {row.daysSolved}
+                                                <VisuallyHidden> days solved</VisuallyHidden>
+                                                <ScoreDetail>{row.daysPlayed} played</ScoreDetail>
+                                            </Score>
+                                        </RankRow>
                                     );
                                 })}
-                                {sortedData.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                                            No data available
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                            </RankList>
+                        </>
+                    )
                 )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Close</Button>
+                <Button onClick={onClose} color="inherit" variant="outlined">Close</Button>
             </DialogActions>
         </Dialog>
     );

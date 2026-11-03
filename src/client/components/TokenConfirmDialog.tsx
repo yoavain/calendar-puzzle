@@ -34,7 +34,7 @@ export const TokenConfirmDialog: React.FC<TokenConfirmDialogProps> = ({ open, to
     }
 
     return (
-        <BaseDialog open={open} onClose={onCancel}>
+        <BaseDialog size="compact" open={open} onClose={onCancel}>
             <DialogTitle sx={{ fontWeight: "bold" }}>{copy.title}</DialogTitle>
             <DialogContent>
                 <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
@@ -51,7 +51,7 @@ export const TokenConfirmDialog: React.FC<TokenConfirmDialogProps> = ({ open, to
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={onCancel} color="inherit">
+                <Button onClick={onCancel} color="inherit" variant="outlined">
                     {copy.cancel}
                 </Button>
                 <Button onClick={() => onConfirm(dontAskAgain)} color="primary" variant="contained" autoFocus>

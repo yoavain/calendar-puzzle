@@ -42,6 +42,8 @@ interface GameColorTokens {
         bronze: string;
     };
     onPieceText: string;
+    // The notice bar is dark in both themes, so its action colour is the same in both.
+    snackbarAction: string;
     switch: {
         track: string;
         thumb: string;
@@ -144,7 +146,8 @@ const sharedGameColorTokens = {
         silver: "#C0C0C0",
         bronze: "#CD7F32"
     },
-    onPieceText: "#ffffff"
+    onPieceText: "#ffffff",
+    snackbarAction: "#58a6ff"
 };
 
 const lightGameColorTokens: GameColorTokens = {
@@ -354,7 +357,7 @@ const sharedOptions: ThemeOptions = {
                 // MuiButtonBase above already draws a :focus-visible outline.
                 // MUI's focus ripple stacks a 2.5s infinite scale loop on top of
                 // it, which reads as a slow "hum" on the autoFocus'd buttons in
-                // YearCompleteDialog and PlayAnotherDialog for as long as they
+                // YearCompleteDialog and StatsModal for as long as they
                 // hold focus. Only the focus ripple is dropped — press ripples
                 // still fire.
                 disableFocusRipple: true
@@ -371,6 +374,69 @@ const sharedOptions: ThemeOptions = {
                 // autoFocus here, but tabbing to an icon button is enough to
                 // start it, so leaving this out would hum for keyboard users.
                 disableFocusRipple: true
+            }
+        },
+        // Dialogs belong to the flat interface layer. MUI's elevation overlay would
+        // also lift the dark paper from #2d2d2d to #505050, which drops the blue
+        // text on it below 4.5:1.
+        MuiDialog: {
+            styleOverrides: {
+                paper: ({ theme }) => ({
+                    backgroundImage: "none",
+                    boxShadow: "none",
+                    borderRadius: gameRadiusTokens.md,
+                    // MUI's full-width calculation assumes a 32px margin, so a
+                    // smaller margin needs its own width.
+                    [theme.breakpoints.down("sm")]: {
+                        margin: theme.spacing(2),
+                        width: `calc(100% - ${theme.spacing(4)})`,
+                        maxWidth: `calc(100% - ${theme.spacing(4)})`,
+                        maxHeight: `calc(100% - ${theme.spacing(4)})`
+                    },
+                    // A phone on its side has little height to give away.
+                    "@media (max-height: 500px)": {
+                        marginTop: theme.spacing(1),
+                        marginBottom: theme.spacing(1),
+                        maxHeight: `calc(100% - ${theme.spacing(2)})`
+                    },
+                    // Touch targets, on any touch device. A mouse keeps the compact size.
+                    "@media (pointer: coarse)": {
+                        "& .MuiButton-root": {
+                            minHeight: 44
+                        }
+                    }
+                })
+            }
+        },
+        MuiDialogTitle: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    [theme.breakpoints.down("sm")]: {
+                        paddingLeft: theme.spacing(2),
+                        paddingRight: theme.spacing(2)
+                    }
+                })
+            }
+        },
+        MuiDialogContent: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    [theme.breakpoints.down("sm")]: {
+                        paddingLeft: theme.spacing(2),
+                        paddingRight: theme.spacing(2)
+                    }
+                })
+            }
+        },
+        // Actions end on the same edge as the dialog's text: 24px, or 16px on a phone.
+        MuiDialogActions: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    padding: theme.spacing(1, 3, 3),
+                    [theme.breakpoints.down("sm")]: {
+                        padding: theme.spacing(1, 2, 2)
+                    }
+                })
             }
         },
         // MUI Switch renders its hit target via MuiButtonBase. The default

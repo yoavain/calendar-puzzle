@@ -147,7 +147,7 @@ export const CompletionCount = styled(Typography)(({ theme }) => ({
     lineHeight: 1,
     letterSpacing: "-0.02em",
     fontVariantNumeric: "tabular-nums",
-    color: theme.game.colors.medal.gold
+    color: theme.palette.text.primary
 }));
 
 export const CompletionTitle = styled(Typography)({

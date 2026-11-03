@@ -129,14 +129,12 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
             aria-labelledby="year-complete-title"
             slotProps={{
                 paper: {
-                    sx: (t) => ({
-                        borderRadius: `${t.game.radius.md}px`,
-                        // Wider than BaseDialog's fixed `sm`: 31 mosaic columns
-                        // need the room, and BaseDialog pins maxWidth after the
-                        // prop spread so it can't be overridden from outside.
-                        maxWidth: 760,
-                        [t.breakpoints.down("sm")]: { margin: 2 }
-                    })
+                    sx: {
+                        // Wider than BaseDialog's sizes, because 31 mosaic columns need the room.
+                        // The mosaic grows taller with the width, so a short window gets a narrower
+                        // dialog. Otherwise the buttons cover the last line of the text.
+                        maxWidth: "clamp(600px, 250vh - 960px, 760px)"
+                    }
                 }
             }}
         >
@@ -183,7 +181,7 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
                     </Box>
                 </CelebrationStack>
             </DialogContent>
-            <DialogActions sx={{ justifyContent: "center", flexWrap: "wrap", gap: 1, pb: 2 }}>
+            <DialogActions sx={{ justifyContent: "center", flexWrap: "wrap", gap: 1 }}>
                 <Button
                     onClick={() => {
                         handleSave().catch(() => {});

@@ -78,7 +78,7 @@ export const TokenIntroDialog: React.FC<TokenIntroDialogProps> = ({ open, tokenB
                 </Stack>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} color="primary" variant="contained" autoFocus>
+                <Button onClick={onClose} color="inherit" variant="outlined" autoFocus>
                     {copy.close}
                 </Button>
             </DialogActions>
