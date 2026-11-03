@@ -37,7 +37,7 @@ export const PlayAnotherDialog: React.FC<PlayAnotherDialogProps> = ({
                 </Typography>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onDecline} color="inherit">
+                <Button onClick={onDecline} color="inherit" variant="outlined">
                     Not now
                 </Button>
                 <Button onClick={onAccept} color="primary" variant="contained" autoFocus>

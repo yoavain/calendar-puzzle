@@ -51,7 +51,7 @@ export const TokenConfirmDialog: React.FC<TokenConfirmDialogProps> = ({ open, to
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={onCancel} color="inherit">
+                <Button onClick={onCancel} color="inherit" variant="outlined">
                     {copy.cancel}
                 </Button>
                 <Button onClick={() => onConfirm(dontAskAgain)} color="primary" variant="contained" autoFocus>

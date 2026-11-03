@@ -247,7 +247,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={handleClose} color="inherit">
+                    <Button onClick={handleClose} color="inherit" variant="outlined">
                         Cancel
                     </Button>
                     <Button onClick={handleConfirm} variant="contained">
