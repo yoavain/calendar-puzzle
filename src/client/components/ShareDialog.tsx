@@ -69,7 +69,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                 </DialogTitle>
                 <DialogContent>
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 3, sm: 0 }} sx={{ mt: 1 }}>
-                        {/* Copy Link */}
+                        {/* Copy link */}
                         <Stack spacing={1} sx={{ flex: 1, alignItems: "center" }}>
                             <Button
                                 variant="outlined"
@@ -78,7 +78,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                                 }}
                                 startIcon={copyResult === "copied" ? <CheckIcon /> : <ContentCopyIcon />}
                             >
-                                {copyResult === "copied" ? "Copied!" : copyResult === "failed" ? "Couldn't copy" : "Copy Link"}
+                                {copyResult === "copied" ? "Copied!" : copyResult === "failed" ? "Couldn't copy" : "Copy link"}
                             </Button>
                             <VisuallyHidden role="status">
                                 {copyResult === "copied" && "Link copied."}

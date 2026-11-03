@@ -372,7 +372,7 @@ function calculateStats(session: SessionData): GameStats {
 - Show statistics grid:
   ```
   ┌─────────────┬─────────────┐
-  │   Played    │   Win %     │
+  │   Played    │  Solved %   │
   │     42      │    85%      │
   ├─────────────┼─────────────┤
   │ Current     │   Max       │

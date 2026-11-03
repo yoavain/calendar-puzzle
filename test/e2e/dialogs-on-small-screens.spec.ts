@@ -32,11 +32,11 @@ test.describe("Dialogs on small screens", () => {
     test("Help scrolls to its end on a small phone", async ({ page }, testInfo) => {
         test.skip(testInfo.project.name !== "mobile-portrait", "Portrait phone only");
         await page.setViewportSize({ width: 320, height: 568 });
-        await openFromDrawer(page, "How to Play");
+        await openFromDrawer(page, "How to play");
 
         expect(await scrollContentToEnd(page)).toBeLessThanOrEqual(1);
         await expect(page.getByRole("dialog").locator(".scaling-container")).toBeInViewport();
-        await expect(page.getByRole("button", { name: "Got it!" })).toBeInViewport();
+        await expect(page.getByRole("button", { name: "Got it" })).toBeInViewport();
     });
 
     test("Help scrolls to its end in a short desktop window", async ({ page }, testInfo) => {
@@ -46,7 +46,7 @@ test.describe("Dialogs on small screens", () => {
 
         expect(await scrollContentToEnd(page)).toBeLessThanOrEqual(1);
         await expect(page.getByRole("dialog").locator(".scaling-container")).toBeInViewport();
-        await expect(page.getByRole("button", { name: "Got it!" })).toBeInViewport();
+        await expect(page.getByRole("button", { name: "Got it" })).toBeInViewport();
     });
 
     test("Help's sample board isn't cut by the clip that hides the animated piece", async ({ page }, testInfo) => {
@@ -71,9 +71,9 @@ test.describe("Dialogs on small screens", () => {
 
     test("Dialog buttons reach the touch size on a phone", async ({ page }, testInfo) => {
         test.skip(testInfo.project.name !== "mobile-portrait", "Portrait phone only");
-        await openFromDrawer(page, "How to Play");
+        await openFromDrawer(page, "How to play");
 
-        const box = await page.getByRole("button", { name: "Got it!" }).boundingBox();
+        const box = await page.getByRole("button", { name: "Got it" }).boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
     });
 
@@ -81,7 +81,7 @@ test.describe("Dialogs on small screens", () => {
         test.skip(testInfo.project.name !== "desktop", "Desktop only");
         await page.getByRole("button", { name: "How to play" }).click();
 
-        const box = await page.getByRole("button", { name: "Got it!" }).boundingBox();
+        const box = await page.getByRole("button", { name: "Got it" }).boundingBox();
         expect(box?.height).toBeLessThan(TOUCH_TARGET_PX);
     });
 });

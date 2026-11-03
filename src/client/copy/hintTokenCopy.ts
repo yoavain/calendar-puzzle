@@ -15,6 +15,7 @@ export interface HintTokenCopy {
     };
     intro: {
         title: string;
+        reopenedTitle: string;
         steps: [string, string, string];
         firstHintFree: string;
         startingBalance: (tokenBalance: number) => string;
@@ -27,6 +28,8 @@ export interface HintTokenCopy {
         howItWorks: string;
         askBeforeSpending: string;
     };
+    /** The line about hints in the Help dialog. */
+    help: string;
     /** Empty string: show nothing (the board reloads its hints instead). */
     errors: Record<HintErrorCode, string>;
     /** The server rate limit (HTTP 429) refused a hint request */
@@ -48,7 +51,7 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
         "max-reached": { label: "Hint", tooltip: () => "No more hints for this date" },
         "date-solved": { label: "Hint", tooltip: () => ALREADY_SOLVED },
         "solved": { label: "Hint", tooltip: () => "Puzzle solved" },
-        "login-required": { label: "Hint", tooltip: () => "Sign-in to see hint" },
+        "login-required": { label: "Hint", tooltip: () => "Sign in to see a hint" },
         "loading": { label: "Getting hint...", tooltip: () => "Getting hint..." }
     },
     confirm: {
@@ -61,6 +64,7 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
     },
     intro: {
         title: "New: hint tokens",
+        reopenedTitle: "Hint tokens",
         steps: ["Solve a new date", "Earn 1 token", "Spend it on an extra hint"],
         firstHintFree: "The first hint on each date stays free.",
         startingBalance: (n) => `You start with ${plural(n, "token")}, one for each date you've solved.`,
@@ -73,6 +77,7 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
         howItWorks: "How it works",
         askBeforeSpending: "Ask before spending a token"
     },
+    help: "Stuck? Use a hint. The first one on each date is free.",
     errors: {
         NO_TOKENS: "No hint tokens left. Solve another date to earn one.",
         ALREADY_SOLVED,

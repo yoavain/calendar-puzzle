@@ -25,6 +25,16 @@ const renderDialog = (tokenBalance: number, solvedCount: number, isFirstView = t
 };
 
 describe("TokenIntroDialog", () => {
+    it("says 'New' on the first view only", () => {
+        renderDialog(0, 0, true);
+        expect(screen.getByRole("heading", { name: copy.title })).toBeInTheDocument();
+    });
+
+    it("drops 'New' when reopened from the menu", () => {
+        renderDialog(5, 5, false);
+        expect(screen.getByRole("heading", { name: copy.reopenedTitle })).toBeInTheDocument();
+    });
+
     it("shows the three steps and the free-first-hint rule", () => {
         renderDialog(0, 0);
         for (const step of copy.steps) {

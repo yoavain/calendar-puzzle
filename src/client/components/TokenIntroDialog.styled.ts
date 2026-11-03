@@ -31,6 +31,7 @@ export const StepIcon = styled("span")(({ theme }) => ({
 }));
 
 export const StepArrow = styled("span")(({ theme }) => ({
+    display: "flex",
     color: theme.palette.text.secondary
 }));
 

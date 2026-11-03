@@ -51,7 +51,7 @@ describe("ShareDialog copying", () => {
     const renderShare = () => withTheme(React.createElement(ShareDialog, { open: true, onClose: () => {} }));
     const clickCopy = async () => {
         await act(async () => {
-            fireEvent.click(screen.getByRole("button", { name: "Copy Link" }));
+            fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
         });
     };
 
@@ -59,7 +59,7 @@ describe("ShareDialog copying", () => {
         writeText.mockReturnValue(new Promise(() => {}));
         renderShare();
         await clickCopy();
-        expect(screen.getByRole("button", { name: "Copy Link" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
         expect(screen.getByRole("status")).toBeEmptyDOMElement();
     });
 
@@ -94,7 +94,7 @@ describe("ShareDialog copying", () => {
         act(() => {
             jest.advanceTimersByTime(2000);
         });
-        expect(screen.getByRole("button", { name: "Copy Link" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
     });
 });
 
@@ -183,6 +183,12 @@ describe("UserMenu token confirm setting", () => {
 describe("Dialog semantics", () => {
     beforeEach(() => {
         mockUser();
+    });
+
+    it("lists Help's points as a real list, including how hints work", () => {
+        withTheme(React.createElement(HelpModal, { open: true, onClose: () => {} }));
+        const points = within(screen.getByRole("dialog")).getAllByRole("listitem");
+        expect(points.map((point) => point.textContent)).toContain(HINT_TOKEN_COPY.help);
     });
 
     it("describes the token confirm with its message", () => {

@@ -58,7 +58,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose, solveResu
                         <StatItem value={playedCount} label="Played" />
                     </Grid>
                     <Grid size={3}>
-                        <StatItem value={winPercent} label="Win %" />
+                        <StatItem value={winPercent} label="Solved %" />
                     </Grid>
                     <Grid size={3}>
                         <StatItem value={stats.current} label="Current Streak" />

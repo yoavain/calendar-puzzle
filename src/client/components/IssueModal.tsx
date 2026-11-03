@@ -94,7 +94,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
 
     return (
         <BaseDialog open={open} onClose={handleDialogClose}>
-            <DialogTitle>Submit bug / Request Feature</DialogTitle>
+            <DialogTitle>Report a bug or request a feature</DialogTitle>
             <DialogContent>
                 {success ? (
                     <Alert severity="success">

@@ -63,8 +63,8 @@ test.describe("Toolbar, Esc and Help", () => {
 
         // A disabled button ignores the pointer, so the hover lands on its wrapper.
         // The previous tooltip may still be fading out, so match on the text.
-        await page.getByRole("group", { name: "Sign-in to see statistics" }).hover();
-        await expect(page.getByRole("tooltip").filter({ hasText: "Sign-in to see statistics" })).toBeVisible();
+        await page.getByRole("group", { name: "Sign in to see statistics" }).hover();
+        await expect(page.getByRole("tooltip").filter({ hasText: "Sign in to see statistics" })).toBeVisible();
     });
 
     test("Help lists the shortcuts on keyboard devices only", async ({ page }, testInfo) => {
@@ -72,14 +72,14 @@ test.describe("Toolbar, Esc and Help", () => {
         await page.getByRole("button", { name: "How to play" }).click();
         await expect(page.getByRole("heading", { name: "Keyboard shortcuts" })).toBeVisible();
         await expect(page.getByRole("dialog").getByText("Clear the selection")).toBeVisible();
-        await expect(page.getByRole("button", { name: "Got it!" })).toBeVisible();
+        await expect(page.getByRole("button", { name: "Got it" })).toBeVisible();
     });
 
     test("Help hides the shortcuts on touch devices", async ({ page }, testInfo) => {
         test.skip(testInfo.project.name === "desktop", "Touch layouts only");
         await page.getByRole("button", { name: "Open menu" }).click();
-        await page.getByRole("button", { name: "How to Play" }).click();
-        await expect(page.getByRole("button", { name: "Got it!" })).toBeVisible();
+        await page.getByRole("button", { name: "How to play" }).click();
+        await expect(page.getByRole("button", { name: "Got it" })).toBeVisible();
         await expect(page.getByRole("heading", { name: "Keyboard shortcuts" })).toHaveCount(0);
     });
 });
