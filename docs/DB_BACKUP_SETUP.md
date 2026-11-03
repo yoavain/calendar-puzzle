@@ -61,6 +61,37 @@ npm run restore:dev:proxmox -- --from production --date 2026-05-15
 A restore does not change the deployed code. To roll back a release that ran a migration, restore the
 backup, then deploy the previous release.
 
+## Restore from a Proxmox snapshot
+
+Use this when no local `.sql` file exists for the date. The Proxmox host backs up each LXC every night.
+
+The first step needs root on the Proxmox host, so its script lives in the `network` repo, at
+`proxmox/scripts/pg-from-snapshot.mjs`. That repo's `proxmox/README.md` lists the CTIDs.
+
+1. From the `network` repo, get the dump and read the diff. The script never writes to the live LXC.
+
+   ```bash
+   node proxmox/scripts/pg-from-snapshot.mjs --ct <ctid> --db puzzle --date 2026-11-03 \
+     --label production --stop-service calendar-puzzle
+   ```
+
+   The script prints an output directory with two files. `snapshot/` holds the backup. `live/` holds the rollback copy.
+   Add `--storage pbs` for a date older than the last 3 nights.
+
+2. Read the diff. A restore undoes every row in it.
+
+3. From this repo, restore the snapshot file. The variable overrides the directory in `.env`, for this one run.
+
+   ```bash
+   CALENDAR_PUZZLE_DB_BACKUP_PATH="<output-dir>/snapshot" npm run restore:production:proxmox -- --date 2026-11-03
+   ```
+
+4. To roll back, run the same command with `<output-dir>/live` and the date in that file's name.
+
+5. Delete the output directory. Both files hold real user data.
+
+For Dev, use the Dev CTID, `--label dev` and `npm run restore:dev:proxmox`.
+
 ## Scheduled daily backups
 
 Run in PowerShell as Administrator. `-Force` replaces a task of the same name.
