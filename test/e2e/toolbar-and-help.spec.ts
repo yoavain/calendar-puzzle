@@ -42,6 +42,19 @@ test.describe("Toolbar, Esc and Help", () => {
         await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(0);
     });
 
+    test("Undo brings the board back after Reset, and Redo clears it again", async ({ page }) => {
+        await placePiece(page);
+
+        await page.getByRole("button", { name: "Reset" }).click();
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(0);
+
+        await page.getByRole("button", { name: "Undo" }).click();
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
+
+        await page.getByRole("button", { name: "Redo" }).click();
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(0);
+    });
+
     test("a toolbar tooltip appears on an enabled and on a disabled button", async ({ page }, testInfo) => {
         test.skip(testInfo.project.name !== "desktop", "The icon toolbar is desktop only");
 

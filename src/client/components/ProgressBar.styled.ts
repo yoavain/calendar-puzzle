@@ -3,7 +3,10 @@ import Box from "@mui/material/Box";
 import LinearProgress, { linearProgressClasses } from "@mui/material/LinearProgress";
 
 export const ProgressContainer = styled(Box)(({ theme }) => ({
-    width: theme.game.cellSize * 7 + theme.game.cellSize * 2 + 8, // Match board width (cells + padding + border)
+    width: "100%",
+    // Match the unscaled board width (cells + padding + border). Mobile renders the
+    // bar outside the board's scaling, so a narrower column must be able to shrink it.
+    maxWidth: theme.game.cellSize * 7 + theme.game.cellSize * 2 + 8,
     marginLeft: "auto",
     marginRight: "auto",
     marginBottom: theme.spacing(2)

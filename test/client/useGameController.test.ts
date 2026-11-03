@@ -151,6 +151,7 @@ describe("useGameController hint tokens", () => {
     };
 
     const lockedIds = (pieces: Piece[]) => pieces.filter(p => p.isLocked && p.position).map(p => p.id);
+    const userPieceIds = (pieces: Piece[]) => pieces.filter(p => !p.isLocked && p.position).map(p => p.id);
 
     beforeEach(() => {
         jest.useFakeTimers({ now: new Date(2024, 0, 1, 12) });
@@ -350,6 +351,92 @@ describe("useGameController hint tokens", () => {
 
         expect(lockedIds(result.current.gameState.pieces)).toEqual(solvedPieces.slice(0, 3).map(p => p.id));
         expect(result.current.hintMessage).toBeNull(); // the user asked for the reset
+    });
+
+    it("reset: Undo brings back the user's pieces, and the hints stay locked", async () => {
+        const { result } = await renderSignedIn({ tokenBalance: 0, hints: 1, userPieces: 2 });
+        const hintIds = [solvedPieces[0].id];
+        const userIds = [solvedPieces[1].id, solvedPieces[2].id];
+        expect(userPieceIds(result.current.gameState.pieces)).toEqual(userIds);
+        mockGetHintState.mockResolvedValueOnce([solvedPieces[0]]);
+
+        await act(async () => {
+            result.current.handleReset();
+        });
+        expect(lockedIds(result.current.gameState.pieces)).toEqual(hintIds);
+        expect(userPieceIds(result.current.gameState.pieces)).toEqual([]);
+        expect(result.current.canUndo).toBe(true);
+
+        await act(async () => {
+            result.current.undo();
+        });
+        expect(lockedIds(result.current.gameState.pieces)).toEqual(hintIds);
+        expect(userPieceIds(result.current.gameState.pieces)).toEqual(userIds);
+        expect(result.current.canRedo).toBe(true);
+
+        await act(async () => {
+            result.current.redo();
+        });
+        expect(lockedIds(result.current.gameState.pieces)).toEqual(hintIds);
+        expect(userPieceIds(result.current.gameState.pieces)).toEqual([]);
+    });
+
+    it("reset: Undo also brings back the orientation of the pieces still in the pile", async () => {
+        const { result } = await renderSignedIn({ tokenBalance: 0, userPieces: 2 });
+        const pileId = solvedPieces[solvedPieces.length - 1].id;
+        const rotationOf = () => result.current.gameState.pieces.find(p => p.id === pileId)?.rotation;
+        await act(async () => {
+            result.current.handleRotatePiece(pileId);
+        });
+        const rotated = rotationOf();
+
+        await act(async () => {
+            result.current.handleReset();
+        });
+        expect(rotationOf()).toBe(0);
+
+        await act(async () => {
+            result.current.undo();
+        });
+        expect(rotationOf()).toBe(rotated);
+    });
+
+    it("reset: a hint from the server still cannot be undone", async () => {
+        const { result } = await renderSignedIn({ tokenBalance: 0, hints: 1, userPieces: 2 });
+        mockGetHintState.mockResolvedValueOnce(solvedPieces.slice(0, 2));
+
+        await act(async () => {
+            result.current.handleReset();
+        });
+
+        expect(lockedIds(result.current.gameState.pieces)).toEqual(solvedPieces.slice(0, 2).map(p => p.id));
+        expect(result.current.canUndo).toBe(false);
+    });
+
+    it("reset: a solved board has no undo step, so a solve is not replayed", async () => {
+        const { result } = await renderSignedIn({ tokenBalance: 0, userPieces: solvedPieces.length, isSolved: true });
+
+        await act(async () => {
+            result.current.handleReset();
+        });
+
+        expect(result.current.gameState.isSolved).toBe(false);
+        expect(userPieceIds(result.current.gameState.pieces)).toEqual([]);
+        expect(result.current.canUndo).toBe(false);
+    });
+
+    it("date change: leaves no undo step", async () => {
+        const { result } = await renderSignedIn({ tokenBalance: 0, userPieces: 2 });
+        await act(async () => {
+            result.current.handleReset();
+        });
+        expect(result.current.canUndo).toBe(true);
+
+        await act(async () => {
+            result.current.handleDateChange({ month: 0, day: 2 });
+        });
+
+        expect(result.current.canUndo).toBe(false);
     });
 
     it("restored board ahead of the server: adopts the server's hints on load", async () => {

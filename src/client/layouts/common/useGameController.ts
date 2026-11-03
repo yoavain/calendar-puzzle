@@ -83,6 +83,9 @@ const hintErrorCopy = (error: unknown): string => {
  * Hook that encapsulates all game state and handlers.
  * This is the main controller for the game logic, independent of layout.
  */
+// A fixed year (2024), since the puzzle only cares about the month and day
+const createGameForDate = (date: PuzzleDate) => initializeGame(new Date(2024, date.month, date.day));
+
 export function useGameController() {
     // Get user authentication state
     const {
@@ -275,14 +278,10 @@ export function useGameController() {
 
     // === HANDLERS ===
 
-    // Shared initialization logic used by both handleDateChange and handleReset
+    // Starts a date from scratch, with no undo steps
     const initializeForDate = useCallback((date: PuzzleDate) => {
-        // We use a fixed year (2024) since the puzzle only cares about month and day
-        const jsDate = new Date(2024, date.month, date.day);
-        const newGameState = initializeGame(jsDate);
-
         // Immediately clear history with the new game state for instant feedback
-        clearHistory(newGameState);
+        clearHistory(createGameForDate(date));
 
         // Then restore the hints the user already has for this date
         setHintSyncKey(key => key + 1);
@@ -297,8 +296,27 @@ export function useGameController() {
 
     const handleReset = useCallback(() => {
         debugLogger.log("ctrl:handleReset", { date: gameState.currentDate });
-        initializeForDate(gameState.currentDate);
-    }, [gameState.currentDate, initializeForDate]);
+        // A solved board restarts with no undo step. Its solve is already recorded, and
+        // Undo would put a solved board back, which nothing else in the game can do.
+        if (gameState.isSolved) {
+            initializeForDate(gameState.currentDate);
+            return;
+        }
+
+        // Reset is one undo step, so a stray tap cannot cost the player their progress.
+        // The hints stay locked: an empty board would differ from the server's hints, and
+        // adopting them clears the history, which would erase this undo step at once.
+        const newGameState = createGameForDate(gameState.currentDate);
+        const hints = gameState.pieces
+            .filter(p => p.isLocked && p.position !== null)
+            .sort((a, b) => (a.placedSeq ?? 0) - (b.placedSeq ?? 0));
+        const { board, pieces } = applyHintPieces(gameState.currentDate, newGameState.pieces, hints);
+        pushState({ ...newGameState, board, pieces }, { type: "RESET_BOARD" });
+
+        // A hint the server has and this board lacks still arrives here, and it cannot be undone
+        setHintSyncKey(key => key + 1);
+        setSolverError(null);
+    }, [gameState.currentDate, gameState.isSolved, gameState.pieces, initializeForDate, pushState]);
 
     const handlePieceSelect = useCallback((pieceId: PieceId) => {
         debugLogger.log("ctrl:handlePieceSelect", { pieceId });
