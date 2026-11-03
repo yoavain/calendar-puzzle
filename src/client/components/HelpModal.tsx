@@ -175,7 +175,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
                 </Stack>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} color="primary" variant="contained">
+                <Button onClick={onClose} color="inherit" variant="outlined">
                     Got it!
                 </Button>
             </DialogActions>

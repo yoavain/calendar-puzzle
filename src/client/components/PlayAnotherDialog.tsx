@@ -22,6 +22,7 @@ export const PlayAnotherDialog: React.FC<PlayAnotherDialogProps> = ({
 }) => {
     return (
         <BaseDialog
+            size="compact"
             open={isOpen}
             onClose={onDecline}
             slots={{ transition: Zoom }}

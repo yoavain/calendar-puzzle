@@ -20,7 +20,7 @@ export const ProgressBarWithLabel: React.FC<ProgressBarWithLabelProps> = ({
 }) => {
     const theme = useTheme();
     const resolvedColor = color ?? theme.palette.primary.main;
-    const resolvedLabelColor = labelColor ?? theme.palette.getContrastText(resolvedColor);
+    const labelColorOnFill = labelColor ?? theme.palette.getContrastText(resolvedColor);
 
     return (
         <Box sx={{ position: "relative" }}>
@@ -30,7 +30,16 @@ export const ProgressBarWithLabel: React.FC<ProgressBarWithLabelProps> = ({
                 progressColor={resolvedColor}
                 aria-label={ariaLabel}
             />
-            <ProgressLabel labelColor={resolvedLabelColor}>{label}</ProgressLabel>
+            {/* The centred label can span both the track and the fill, so one colour
+                can't stay readable on both. A second copy, clipped to the fill, takes over there. */}
+            <ProgressLabel labelColor={theme.palette.text.primary}>{label}</ProgressLabel>
+            <ProgressLabel
+                labelColor={labelColorOnFill}
+                aria-hidden="true"
+                style={{ clipPath: `inset(0 ${100 - value}% 0 0)` }}
+            >
+                {label}
+            </ProgressLabel>
         </Box>
     );
 };

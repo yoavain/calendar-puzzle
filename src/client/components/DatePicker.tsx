@@ -128,10 +128,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 fullWidth
                 slotProps={{
                     paper: {
-                        sx: (theme) => ({
-                            borderRadius: `${theme.game.radius.md}px`,
-                            userSelect: "none"
-                        })
+                        sx: { userSelect: "none" }
                     }
                 }}
             >
@@ -256,7 +253,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 2 }}>
+                <DialogActions>
                     <Button onClick={handleClose} color="inherit">
                         Cancel
                     </Button>

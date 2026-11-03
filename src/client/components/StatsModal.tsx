@@ -7,8 +7,6 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
 import { ProgressBarWithLabel } from "./ProgressBarWithLabel";
 import { useUser } from "../context/UserContext.js";
 import { calculateStreaks } from "../../common/streakUtils.js";
@@ -43,27 +41,9 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
     const winPercent = playedCount > 0 ? Math.round((completedDates.length / playedCount) * 100) : 0;
 
     return (
-        <BaseDialog
-            open={open}
-            onClose={onClose}
-            slotProps={{
-                paper: { sx: (theme) => ({ borderRadius: `${theme.game.radius.md}px` }) }
-            }}
-        >
+        <BaseDialog open={open} onClose={onClose}>
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
                 STATISTICS
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{
-                        position: "absolute",
-                        right: 8,
-                        top: 8,
-                        color: (theme) => theme.palette.grey[500]
-                    }}
-                >
-                    <CloseIcon />
-                </IconButton>
             </DialogTitle>
             <DialogContent>
                 <Grid container spacing={1} sx={{ mb: 2 }}>
@@ -92,8 +72,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                     />
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
-                <Button onClick={onClose} variant="contained" fullWidth sx={{ mx: 2 }}>
+            <DialogActions>
+                <Button onClick={onClose} color="inherit" variant="outlined">
                     Close
                 </Button>
             </DialogActions>

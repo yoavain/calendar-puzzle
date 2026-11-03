@@ -373,6 +373,26 @@ const sharedOptions: ThemeOptions = {
                 disableFocusRipple: true
             }
         },
+        // Dialogs belong to the flat interface layer. MUI's elevation overlay would
+        // also lift the dark paper from #2d2d2d to #505050, which drops the blue
+        // text on it below 4.5:1.
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    backgroundImage: "none",
+                    boxShadow: "none",
+                    borderRadius: gameRadiusTokens.md
+                }
+            }
+        },
+        // Actions end on the same 24px edge as the dialog's text.
+        MuiDialogActions: {
+            styleOverrides: {
+                root: ({ theme }) => ({
+                    padding: theme.spacing(1, 3, 3)
+                })
+            }
+        },
         // MUI Switch renders its hit target via MuiButtonBase. The default
         // ThemeSwitch overrides translate the thumb, which pushes the focus
         // ring off-center; clip the ring to the visible switchBase so it

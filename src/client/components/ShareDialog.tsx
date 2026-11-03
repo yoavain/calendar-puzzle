@@ -6,10 +6,8 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import IconButton from "@mui/material/IconButton";
 import Modal from "@mui/material/Modal";
 import Tooltip from "@mui/material/Tooltip";
-import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
 import { BaseDialog } from "./BaseDialog";
@@ -42,27 +40,9 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
 
     return (
         <>
-            <BaseDialog
-                open={open}
-                onClose={onClose}
-                slotProps={{
-                    paper: { sx: (theme) => ({ borderRadius: `${theme.game.radius.md}px`, minWidth: 420 }) }
-                }}
-            >
+            <BaseDialog open={open} onClose={onClose}>
                 <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
                     Share
-                    <IconButton
-                        aria-label="close"
-                        onClick={onClose}
-                        sx={{
-                            position: "absolute",
-                            right: 8,
-                            top: 8,
-                            color: (theme) => theme.palette.grey[500]
-                        }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
                 </DialogTitle>
                 <DialogContent>
                     <Stack direction="row" sx={{ mt: 1 }}>
@@ -97,8 +77,8 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose }) => {
                         </Stack>
                     </Stack>
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
-                    <Button onClick={onClose} variant="contained" fullWidth sx={{ mx: 2 }}>
+                <DialogActions>
+                    <Button onClick={onClose} color="inherit" variant="outlined">
                         Close
                     </Button>
                 </DialogActions>

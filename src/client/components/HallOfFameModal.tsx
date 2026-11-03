@@ -11,8 +11,6 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
 import Avatar from "@mui/material/Avatar";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
@@ -89,22 +87,12 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
             fullWidth
             slotProps={{
                 paper: {
-                    sx: (theme) => ({
-                        borderRadius: `${theme.game.radius.md}px`,
-                        userSelect: "none"
-                    })
+                    sx: { userSelect: "none" }
                 }
             }}
         >
-            <DialogTitle sx={{ m: 0, p: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <DialogTitle sx={{ m: 0, p: 2 }}>
                 Hall of Fame
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{ color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
             </DialogTitle>
             <DialogContent dividers>
                 {loading ? (
@@ -112,7 +100,7 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                         <CircularProgress aria-label="Loading" />
                     </Box>
                 ) : (
-                    <TableContainer component={Paper} elevation={0}>
+                    <TableContainer component={Paper} elevation={0} sx={{ bgcolor: "background.default" }}>
                         <Table stickyHeader aria-label="hall of fame table">
                             <TableHead>
                                 <TableRow>
@@ -168,7 +156,7 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                 )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Close</Button>
+                <Button onClick={onClose} color="inherit" variant="outlined">Close</Button>
             </DialogActions>
         </Dialog>
     );

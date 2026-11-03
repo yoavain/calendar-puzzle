@@ -127,7 +127,7 @@ export const IssueModal: React.FC<IssueModalProps> = ({ open, onClose }) => {
                     />
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 3 }}>
+            <DialogActions>
                 <Button onClick={handleClose} disabled={loading}>
                     Cancel
                 </Button>
