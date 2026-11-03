@@ -174,7 +174,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             onClick={() => handleAction(game.modals.help.open)}
                             color="secondary"
                         >
-                            How to Play
+                            How to play
                         </DrawerButton>
                         <DrawerButton
                             fullWidth
@@ -193,7 +193,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             disabled={!game.user}
                             color="info"
                         >
-                            Report Bug
+                            Report a bug
                         </DrawerButton>
                         <DrawerButton
                             fullWidth

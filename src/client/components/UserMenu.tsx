@@ -24,7 +24,7 @@ interface UserMenuProps {
 }
 
 export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
-    const { user, logout, completedDates, tokenBalance } = useUser();
+    const { user, logout, completedDates, tokenBalance, settings, updateSettings } = useUser();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [dashboardOpen, setDashboardOpen] = useState(false);
     const open = Boolean(anchorEl);
@@ -130,6 +130,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
                     {HINT_TOKEN_COPY.menu.balance(tokenBalance)} {"·"}
                     <Box component="span" sx={{ color: "primary.main" }}>{HINT_TOKEN_COPY.menu.howItWorks}</Box>
                 </MenuItem>
+                {settings.skipTokenConfirm && (
+                    <MenuItem
+                        onClick={() => {
+                            handleClose();
+                            updateSettings({ skipTokenConfirm: false }).catch(() => {});
+                        }}
+                    >
+                        {HINT_TOKEN_COPY.menu.askBeforeSpending}
+                    </MenuItem>
+                )}
                 <MenuItem
                     onClick={() => {
                         handleLogout().catch(() => {});

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import DialogTitle from "@mui/material/DialogTitle";
 import { BaseDialog } from "./BaseDialog";
+import { HINT_TOKEN_COPY } from "../copy/hintTokenCopy";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
@@ -114,17 +115,24 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
         <BaseDialog
             open={open}
             onClose={onClose}
+            aria-describedby="help-goal"
         >
-            <DialogTitle sx={{ typography: "h5", fontWeight: "bold", pb: 1 }}>How to Play</DialogTitle>
+            <DialogTitle sx={{ typography: "h5", fontWeight: "bold", pb: 1 }}>How to play</DialogTitle>
             <DialogContent sx={{ pb: 3 }}>
                 <Stack spacing={3} sx={{ mt: 1 }}>
-                    <Typography variant="h6" sx={{ lineHeight: 1.4 }}>
+                    <Typography id="help-goal" variant="h6" component="p" sx={{ lineHeight: 1.4 }}>
                         {GOAL_SENTENCE}
                     </Typography>
-                    <Typography variant="subtitle1" color="text.secondary" component="div">
-                        <Box component="span" sx={{ display: "block", mb: 1 }}>• Drag and drop pieces onto the board.</Box>
-                        <Box component="span" sx={{ display: "block", mb: 1 }}>• Rotate and flip pieces using the controls.</Box>
-                        <Box component="span" sx={{ display: "block" }}>• Every day has at least one solution!</Box>
+                    <Typography
+                        variant="subtitle1"
+                        color="text.secondary"
+                        component="ul"
+                        sx={{ m: 0, pl: 2.5, "& li + li": { mt: 1 } }}
+                    >
+                        <li>Drag and drop pieces onto the board.</li>
+                        <li>Rotate and flip pieces using the controls.</li>
+                        <li>Every day has at least one solution!</li>
+                        <li>{HINT_TOKEN_COPY.help}</li>
                     </Typography>
                     {hasKeyboard && (
                         <Box>
@@ -167,7 +175,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} color="inherit" variant="outlined">
-                    Got it!
+                    Got it
                 </Button>
             </DialogActions>
         </BaseDialog>

@@ -38,7 +38,11 @@ export const AnimatedPieceWrapper = styled(Box)({
     position: "absolute",
     zIndex: 10,
     animation: `${dragAnimation} 5s ease-in-out infinite`,
-    pointerEvents: "none"
+    pointerEvents: "none",
+    // Without the animation, the piece simply rests where it would be placed.
+    "@media (prefers-reduced-motion: reduce)": {
+        animation: "none"
+    }
 });
 
 export const ShortcutGrid = styled("div")(({ theme }) => ({

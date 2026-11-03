@@ -136,15 +136,15 @@ export const DesktopLayout: React.FC = () => {
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? "Sign-in to submit a bug or request a feature" : "Submit bug / Request Feature"}
+                                    tooltip={!game.user ? "Sign in to submit a bug or request a feature" : "Report a bug or request a feature"}
                                     onClick={game.modals.issue.open}
                                     icon={<BugReportIcon />}
-                                    ariaLabel="Submit bug or request feature"
+                                    ariaLabel="Report a bug or request a feature"
                                     disabled={!game.user}
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? "Sign-in to see statistics" : "Statistics"}
+                                    tooltip={!game.user ? "Sign in to see statistics" : "Statistics"}
                                     onClick={game.modals.stats.open}
                                     icon={<BarChartIcon />}
                                     ariaLabel="Statistics"

@@ -68,7 +68,7 @@ describe("DatePicker days", () => {
         expect(tile).toHaveAttribute("aria-pressed", "false");
         fireEvent.click(tile);
         expect(tile).toHaveAttribute("aria-pressed", "true");
-        fireEvent.click(screen.getByRole("button", { name: "Play This Date" }));
+        fireEvent.click(screen.getByRole("button", { name: "Play this date" }));
         expect(onDateChange).toHaveBeenCalledWith({ month: FEB, day: 2 });
     });
 

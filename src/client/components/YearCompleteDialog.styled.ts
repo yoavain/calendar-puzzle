@@ -156,4 +156,5 @@ export const CompletionTitle = styled(Typography)({
     lineHeight: 1.2,
     textAlign: "center",
     textWrap: "balance"
-});
+// The cast keeps the component prop, which styled() drops from the type.
+}) as typeof Typography;

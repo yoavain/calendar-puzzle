@@ -372,7 +372,7 @@ function calculateStats(session: SessionData): GameStats {
 - Show statistics grid:
   ```
   ┌─────────────┬─────────────┐
-  │   Played    │   Win %     │
+  │   Played    │  Solved %   │
   │     42      │    85%      │
   ├─────────────┼─────────────┤
   │ Current     │   Max       │
@@ -397,7 +397,7 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
   The tooltip names the cost or the reason the button is disabled.
 - **Mobile**: the Hint button is in the drawer, so a gold badge on the menu button also shows the balance.
 - **Confirm dialog**: hint 2 and later ask first, unless the player ticked "Don't ask me again"
-  (`users.settings.skipTokenConfirm`).
+  (`users.settings.skipTokenConfirm`). The user menu then offers "Ask before spending a token", which clears the flag.
 - **Intro dialog**: shown once per player (`users.settings.tokenIntroSeen`), only when no other dialog is
   open. The user menu reopens it.
 - **Token flight** (`TokenFlight.tsx`): on a first solve, a 26px coin pops at the board center (scale 0 to
@@ -409,7 +409,9 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
 - **Post-solve timing**: the win sweep runs 0 to about 1020 ms and confetti fires at 400 ms. The flight
   starts no earlier than 1050 ms. When a token is expected, the stats dialog opens 250 ms after the
   landing (fallback 2500 ms if no grant arrives, 3000 ms if a granted token never lands). Otherwise stats
-  opens at 1500 ms. The play-another prompt follows when the stats dialog closes.
+  opens at 1500 ms. That dialog names the solved date and offers the next unsolved one.
+- **Today already solved**: on load, a notice offers the next unsolved date, without blocking the board.
+  It waits for any open dialog, gives way to a hint error, and closes after 8 s or on a date change.
 - **Errors**: hint errors show as a toast in every layout (5 s). A stale hint number shows nothing: the
   board adopts the server's hints.
 - **Hints from the server**: on load, on a date change and on reset, the board adopts the server's hints

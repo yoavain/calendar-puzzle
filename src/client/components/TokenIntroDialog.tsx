@@ -5,6 +5,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import { BaseDialog } from "./BaseDialog";
@@ -50,21 +51,21 @@ export const TokenIntroDialog: React.FC<TokenIntroDialogProps> = ({ open, tokenB
     }
 
     return (
-        <BaseDialog open={open} onClose={onClose}>
-            <DialogTitle sx={{ fontWeight: "bold" }}>{copy.title}</DialogTitle>
+        <BaseDialog open={open} onClose={onClose} aria-describedby="token-intro-description">
+            <DialogTitle sx={{ fontWeight: "bold" }}>{firstView ? copy.title : copy.reopenedTitle}</DialogTitle>
             <DialogContent>
-                <Stack spacing={2}>
+                <Stack id="token-intro-description" spacing={2}>
                     <Steps>
                         <Step>
                             <StepIcon><CheckCircleIcon /></StepIcon>
                             <span>{solveStep}</span>
                         </Step>
-                        <StepArrow aria-hidden="true">{"→"}</StepArrow>
+                        <StepArrow aria-hidden="true"><ArrowForwardIcon fontSize="small" /></StepArrow>
                         <Step>
                             <StepIcon><TokenCoin size={22} /></StepIcon>
                             <span>{earnStep}</span>
                         </Step>
-                        <StepArrow aria-hidden="true">{"→"}</StepArrow>
+                        <StepArrow aria-hidden="true"><ArrowForwardIcon fontSize="small" /></StepArrow>
                         <Step>
                             <StepIcon><LightbulbIcon /></StepIcon>
                             <span>{spendStep}</span>

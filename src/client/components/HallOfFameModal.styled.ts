@@ -79,12 +79,3 @@ export const ScoreDetail = styled("span")(({ theme }) => ({
     lineHeight: 1.5,
     color: theme.palette.text.secondary
 }));
-
-export const VisuallyHidden = styled("span")({
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-    clipPath: "inset(50%)",
-    whiteSpace: "nowrap"
-});

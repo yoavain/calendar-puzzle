@@ -30,7 +30,7 @@ interface StatItemProps {
 
 const StatItem: React.FC<StatItemProps> = ({ value, label }) => (
     <Box sx={{ textAlign: "center", p: 1 }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+        <Typography variant="h4" component="div" sx={{ fontWeight: "bold" }}>
             {value}
         </Typography>
         <Typography variant="caption" sx={{ textTransform: "uppercase", color: "text.secondary" }}>
@@ -58,7 +58,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose, solveResu
                         <StatItem value={playedCount} label="Played" />
                     </Grid>
                     <Grid size={3}>
-                        <StatItem value={winPercent} label="Win %" />
+                        <StatItem value={winPercent} label="Solved %" />
                     </Grid>
                     <Grid size={3}>
                         <StatItem value={stats.current} label="Current Streak" />

@@ -465,7 +465,7 @@ React hooks and components tested with Jest + Testing Library:
 | `test/client/useGameHistory.test.ts` | Undo/redo hook |
 | `test/client/useGameSession.test.ts` | Session persistence hook |
 | `test/client/useGameController.test.ts` | Solve detection, hint token flow, post-solve timing |
-| `test/client/useGameModals.test.ts` | Token intro gating, play-another after a solve |
+| `test/client/useGameModals.test.ts` | Token intro gating, the solve result, the solved-today notice |
 | `test/client/useServerSync.test.ts` | Token grant on first solve |
 | `test/client/puzzleService.test.ts` | Hint, completion and settings API calls |
 | `test/client/HintButton.test.ts`, `TokenConfirmDialog.test.ts`, `TokenIntroDialog.test.ts`, `TokenFlight.test.ts`, `HintErrorToast.test.ts` | Hint token components |

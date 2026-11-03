@@ -146,7 +146,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
 
     return (
         <>
-            <Tooltip title={isLoginRequired ? "Sign-in to select a different date" : "Change date"} arrow>
+            <Tooltip title={isLoginRequired ? "Sign in to select a different date" : "Change date"} arrow>
                 <TooltipDisabledWrapper disabled={isLoginRequired}>{button}</TooltipDisabledWrapper>
             </Tooltip>
 
@@ -162,7 +162,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 }}
             >
                 <DialogTitle sx={{ pb: 1 }}>
-                    Select Date
+                    Select date
                 </DialogTitle>
                 
                 <DialogContent sx={{ pt: 1 }}>
@@ -252,7 +252,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                         Cancel
                     </Button>
                     <Button onClick={handleConfirm} variant="contained">
-                        Play This Date
+                        Play this date
                     </Button>
                 </DialogActions>
             </Dialog>

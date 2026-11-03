@@ -20,9 +20,9 @@ import {
     RankRow,
     Score,
     ScoreCaption,
-    ScoreDetail,
-    VisuallyHidden
+    ScoreDetail
 } from "./HallOfFameModal.styled";
+import { VisuallyHidden } from "./VisuallyHidden";
 
 /** Matches the avatar beside it, so the two read as one pair. */
 const COMPLETION_BADGE_SIZE = 32;
@@ -36,15 +36,18 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
     const { user: currentUser } = useUser();
     const [data, setData] = useState<UserActivity[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
+        setLoadFailed(false);
         try {
             const users = await getUserActivity();
             setData(users);
         }
         catch (error) {
             logToServer("error", "HallOfFame: Failed to fetch user activity", error);
+            setLoadFailed(true);
         }
         finally {
             setLoading(false);
@@ -89,6 +92,19 @@ export const HallOfFameModal: React.FC<HallOfFameModalProps> = ({ open, onClose 
                 {loading ? (
                     <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
                         <CircularProgress aria-label="Loading" />
+                    </Box>
+                ) : loadFailed ? (
+                    <Box role="alert" sx={{ textAlign: "center", py: 3 }}>
+                        <Box sx={{ mb: 2 }}>Couldn&apos;t load the Hall of Fame.</Box>
+                        <Button
+                            onClick={() => {
+                                fetchData().catch(() => {});
+                            }}
+                            color="inherit"
+                            variant="outlined"
+                        >
+                            Try again
+                        </Button>
                     </Box>
                 ) : (
                     sortedData.length === 0 ? (

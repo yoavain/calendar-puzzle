@@ -43,7 +43,8 @@ test.describe("Year complete", () => {
         await gamePage.goto();
 
         const dialog = page.getByRole("dialog").first();
-        await expect(dialog.getByText(TITLE)).toBeVisible();
+        await expect(dialog.getByRole("heading", { name: new RegExp(TITLE) })).toBeVisible();
+        await expect(dialog).toHaveAccessibleDescription(`${TOTAL_DATES} / ${TOTAL_DATES}`);
         await expect(dialog.getByText(`${TOTAL_DATES} / ${TOTAL_DATES}`)).toBeVisible();
         await expect(dialog.getByRole("button", { name: "Play a random date" })).toBeVisible();
 
