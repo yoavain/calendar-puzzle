@@ -127,6 +127,7 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
             open={isOpen}
             onClose={onClose}
             aria-labelledby="year-complete-title"
+            aria-describedby="year-complete-count"
             slotProps={{
                 paper: {
                     sx: {
@@ -167,8 +168,8 @@ export const YearCompleteDialog: React.FC<YearCompleteDialogProps> = ({
                     </BadgeSlot>
 
                     <Box sx={{ textAlign: "center" }}>
-                        <CompletionCount>{`${TOTAL_DATES} / ${TOTAL_DATES}`}</CompletionCount>
-                        <CompletionTitle id="year-complete-title" sx={{ mt: 1 }}>
+                        <CompletionCount id="year-complete-count">{`${TOTAL_DATES} / ${TOTAL_DATES}`}</CompletionCount>
+                        <CompletionTitle id="year-complete-title" component="h2" sx={{ mt: 1 }}>
                             {greeting}
                             <br />
                             Every date on the calendar.

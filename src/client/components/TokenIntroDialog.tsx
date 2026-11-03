@@ -50,10 +50,10 @@ export const TokenIntroDialog: React.FC<TokenIntroDialogProps> = ({ open, tokenB
     }
 
     return (
-        <BaseDialog open={open} onClose={onClose}>
+        <BaseDialog open={open} onClose={onClose} aria-describedby="token-intro-description">
             <DialogTitle sx={{ fontWeight: "bold" }}>{copy.title}</DialogTitle>
             <DialogContent>
-                <Stack spacing={2}>
+                <Stack id="token-intro-description" spacing={2}>
                     <Steps>
                         <Step>
                             <StepIcon><CheckCircleIcon /></StepIcon>

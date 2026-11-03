@@ -30,7 +30,7 @@ interface StatItemProps {
 
 const StatItem: React.FC<StatItemProps> = ({ value, label }) => (
     <Box sx={{ textAlign: "center", p: 1 }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+        <Typography variant="h4" component="div" sx={{ fontWeight: "bold" }}>
             {value}
         </Typography>
         <Typography variant="caption" sx={{ textTransform: "uppercase", color: "text.secondary" }}>

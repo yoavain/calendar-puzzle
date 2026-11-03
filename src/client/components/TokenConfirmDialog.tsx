@@ -34,12 +34,12 @@ export const TokenConfirmDialog: React.FC<TokenConfirmDialogProps> = ({ open, to
     }
 
     return (
-        <BaseDialog size="compact" open={open} onClose={onCancel}>
+        <BaseDialog size="compact" open={open} onClose={onCancel} aria-describedby="token-confirm-description">
             <DialogTitle sx={{ fontWeight: "bold" }}>{copy.title}</DialogTitle>
             <DialogContent>
                 <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
                     <TokenCoin size={44} />
-                    <div>
+                    <div id="token-confirm-description">
                         <Typography variant="body1">{copy.body(tokenBalance)}</Typography>
                         <Typography variant="body2" color="text.secondary">{copy.earnMore}</Typography>
                     </div>

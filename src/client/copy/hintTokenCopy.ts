@@ -25,6 +25,7 @@ export interface HintTokenCopy {
     menu: {
         balance: (tokenBalance: number) => string;
         howItWorks: string;
+        askBeforeSpending: string;
     };
     /** Empty string: show nothing (the board reloads its hints instead). */
     errors: Record<HintErrorCode, string>;
@@ -69,7 +70,8 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
     },
     menu: {
         balance: (n) => `Hint tokens: ${n}`,
-        howItWorks: "How it works"
+        howItWorks: "How it works",
+        askBeforeSpending: "Ask before spending a token"
     },
     errors: {
         NO_TOKENS: "No hint tokens left. Solve another date to earn one.",

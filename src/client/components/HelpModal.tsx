@@ -114,11 +114,12 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
         <BaseDialog
             open={open}
             onClose={onClose}
+            aria-describedby="help-goal"
         >
             <DialogTitle sx={{ typography: "h5", fontWeight: "bold", pb: 1 }}>How to Play</DialogTitle>
             <DialogContent sx={{ pb: 3 }}>
                 <Stack spacing={3} sx={{ mt: 1 }}>
-                    <Typography variant="h6" sx={{ lineHeight: 1.4 }}>
+                    <Typography id="help-goal" variant="h6" component="p" sx={{ lineHeight: 1.4 }}>
                         {GOAL_SENTENCE}
                     </Typography>
                     <Typography variant="subtitle1" color="text.secondary" component="div">

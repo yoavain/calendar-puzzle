@@ -397,7 +397,7 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
   The tooltip names the cost or the reason the button is disabled.
 - **Mobile**: the Hint button is in the drawer, so a gold badge on the menu button also shows the balance.
 - **Confirm dialog**: hint 2 and later ask first, unless the player ticked "Don't ask me again"
-  (`users.settings.skipTokenConfirm`).
+  (`users.settings.skipTokenConfirm`). The user menu then offers "Ask before spending a token", which clears the flag.
 - **Intro dialog**: shown once per player (`users.settings.tokenIntroSeen`), only when no other dialog is
   open. The user menu reopens it.
 - **Token flight** (`TokenFlight.tsx`): on a first solve, a 26px coin pops at the board center (scale 0 to
