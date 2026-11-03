@@ -13,7 +13,7 @@ Each day presents a unique puzzle challenge:
   - **Drag and Drop**: Move pieces onto the board.
   - **Rotate/Flip**: Use the controls on each piece to orient it correctly.
   - **Undo/Redo**: Use `Ctrl+Z` to undo and `Ctrl+Shift+Z` (or `Ctrl+Y`) to redo your moves.
-  - **Reset**: Press `Escape` to clear the board.
+  - **Reset**: Use the Reset button to clear the board.
 - **Hint System**: Get help by requesting a hint that places one piece correctly.
 - **Solution Reveal**: Stuck? Request the full solution (requires sign-in).
 - **Statistics**: Track your progress, win percentage, and streaks.

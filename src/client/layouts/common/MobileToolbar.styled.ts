@@ -1,11 +1,28 @@
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
 import MuiButton from "@mui/material/Button";
 
 /**
  * Height of the mobile toolbar in pixels (horizontal layout).
  */
 export const MOBILE_TOOLBAR_HEIGHT = 56;
+
+/** Smallest comfortable touch target, in pixels. */
+const TOUCH_TARGET_SIZE = 44;
+
+/** Target size on phones narrower than 360px, where four 44px buttons overflow the bar. */
+const NARROW_TOUCH_TARGET_SIZE = 38;
+
+/** Icon button for the toolbar's game actions and menu, sized for a thumb. */
+export const ToolbarActionButton = styled(IconButton)({
+    width: TOUCH_TARGET_SIZE,
+    height: TOUCH_TARGET_SIZE,
+    "@media (max-width: 359px)": {
+        width: NARROW_TOUCH_TARGET_SIZE,
+        height: NARROW_TOUCH_TARGET_SIZE
+    }
+});
 
 export type ToolbarOrientation = "horizontal" | "vertical";
 
@@ -21,7 +38,7 @@ export const ToolbarContainer = styled(Box, {
     alignItems: orientation === "vertical" ? "center" : "center",
     justifyContent: orientation === "vertical" ? "flex-start" : "space-between",
     gap: orientation === "vertical" ? theme.spacing(1) : 0,
-    padding: orientation === "vertical" ? theme.spacing(1, 0.5) : theme.spacing(1, 2),
+    padding: orientation === "vertical" ? theme.spacing(1, 0.5) : theme.spacing(0, 1),
     ...(orientation === "vertical"
         ? {
             width: "100%",

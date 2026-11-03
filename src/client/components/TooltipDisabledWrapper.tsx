@@ -10,9 +10,8 @@ const FocusableSpan = styled("span")(({ theme }) => ({
     }
 }));
 
-interface TooltipDisabledWrapperProps {
+interface TooltipDisabledWrapperProps extends React.ComponentPropsWithRef<"span"> {
     disabled?: boolean;
-    children: React.ReactNode;
 }
 
 /**
@@ -20,11 +19,25 @@ interface TooltipDisabledWrapperProps {
  * users can focus it and read the tooltip even when the button itself is
  * disabled (disabled native buttons cannot receive focus).
  *
+ * Tooltip attaches its hover and focus handlers, its ref and its label to this
+ * wrapper, so they must all reach the span.
+ *
  * When the inner button is enabled the span is removed from tab order so there
- * is no duplicate focus stop.
+ * is no duplicate focus stop, and it carries no label because the button names
+ * itself. When disabled the span is the focus stop, so it takes the label.
  */
-export const TooltipDisabledWrapper: React.FC<TooltipDisabledWrapperProps> = ({ disabled, children }) => (
-    <FocusableSpan tabIndex={disabled ? 0 : -1}>
+export const TooltipDisabledWrapper: React.FC<TooltipDisabledWrapperProps> = ({
+    disabled,
+    children,
+    "aria-label": ariaLabel,
+    ...spanProps
+}) => (
+    <FocusableSpan
+        {...spanProps}
+        tabIndex={disabled ? 0 : -1}
+        role={disabled ? "group" : undefined}
+        aria-label={disabled ? ariaLabel : undefined}
+    >
         {children}
     </FocusableSpan>
 );

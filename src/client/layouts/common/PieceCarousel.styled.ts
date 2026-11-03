@@ -130,8 +130,13 @@ export const PieceWrapper = styled(Box)({
 /**
  * Container for piece controls within the carousel.
  * Added margin-top to separate from piece border.
+ * Only the active slide shows its controls. Hiding them with visibility keeps
+ * the slide's layout, removes them from the tab order, and lets a touch on the
+ * empty space reach the slide, so a swipe still starts there.
  */
-export const ControlsWrapper = styled(Box)(({ theme }) => ({
+export const ControlsWrapper = styled(Box, {
+    shouldForwardProp: (prop) => prop !== "isActive"
+})<{ isActive: boolean }>(({ theme, isActive }) => ({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
@@ -139,7 +144,10 @@ export const ControlsWrapper = styled(Box)(({ theme }) => ({
     gap: theme.spacing(1),
     marginTop: theme.spacing(1),
     paddingBottom: theme.spacing(0.5),
-    flexShrink: 0
+    flexShrink: 0,
+    opacity: isActive ? 1 : 0,
+    visibility: isActive ? "visible" : "hidden",
+    transition: "opacity 0.15s ease, visibility 0.15s"
 }));
 
 /**

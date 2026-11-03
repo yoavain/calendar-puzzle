@@ -22,8 +22,16 @@ interface GameRadiusTokens {
     board: number;
 }
 
+// One toolbar button colour: its fill, its fill on hover, and its text.
+interface ToolbarColorTokens {
+    main: string;
+    hover: string;
+    text: string;
+}
+
 // Game-level color tokens that don't belong to the MUI palette: the
-// progress-bar track, medal ranks, on-piece text, and the theme-switch pill.
+// progress-bar track, medal ranks, on-piece text, the theme-switch pill, and
+// the desktop toolbar colours, where each colour means one job.
 interface GameColorTokens {
     progress: {
         track: string;
@@ -37,6 +45,14 @@ interface GameColorTokens {
     switch: {
         track: string;
         thumb: string;
+    };
+    toolbar: {
+        info: ToolbarColorTokens;
+        reset: ToolbarColorTokens;
+        // Actions fill with palette.primary, whose dark shade is unreadable under
+        // the dark theme's black button text, so they only override the hover.
+        actionHover: string;
+        disabledText: string;
     };
 }
 
@@ -139,6 +155,12 @@ const lightGameColorTokens: GameColorTokens = {
     switch: {
         track: "#aab4be",
         thumb: "#ffc107"
+    },
+    toolbar: {
+        info: { main: "#5b6570", hover: "#4a535c", text: "#ffffff" },
+        reset: { main: "#b84a00", hover: "#963c00", text: "#ffffff" },
+        actionHover: "#033d8b",
+        disabledText: "#999999"
     }
 };
 
@@ -150,6 +172,12 @@ const darkGameColorTokens: GameColorTokens = {
     switch: {
         track: "#8796A5",
         thumb: "#003892"
+    },
+    toolbar: {
+        info: { main: "#adb5bd", hover: "#ced4da", text: "#111111" },
+        reset: { main: "#ffa726", hover: "#ffb74d", text: "#111111" },
+        actionHover: "#79b8ff",
+        disabledText: "#7a7a7a"
     }
 };
 

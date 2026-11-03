@@ -743,8 +743,6 @@ export function useGameController() {
         canRedo,
         undo,
         redo,
-        handleReset,
-        isResetDisabled,
         selectablePieceId,
         onRotateCW: handleRotatePiece,
         onRotateCCW: handleRotateCCWPiece,

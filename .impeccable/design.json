@@ -1,0 +1,653 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T08:40:01.215Z",
+  "title": "Design System: Calendar Puzzle",
+  "extensions": {
+    "colorMeta": {
+      "ink-blue": {
+        "role": "primary",
+        "displayName": "Ink Blue",
+        "canonical": "#0550ae",
+        "tonalRamp": [
+          "#000334",
+          "#001a68",
+          "#003a96",
+          "#185dbc",
+          "#3d80e2",
+          "#68a5ff",
+          "#9ecbff",
+          "#dbf0ff"
+        ]
+      },
+      "ink-blue-deep": {
+        "role": "primary",
+        "displayName": "Ink Blue Deep",
+        "canonical": "#033d8b",
+        "tonalRamp": [
+          "#00052e",
+          "#001e5f",
+          "#033d8b",
+          "#295fb0",
+          "#4a81d6",
+          "#73a6f4",
+          "#a5cbff",
+          "#def0ff"
+        ]
+      },
+      "ink-blue-night": {
+        "role": "primary",
+        "displayName": "Ink Blue Night",
+        "canonical": "#58a6ff",
+        "tonalRamp": [
+          "#000630",
+          "#001f62",
+          "#003e8f",
+          "#0361b4",
+          "#3584da",
+          "#63a8f9",
+          "#9ccdff",
+          "#daf1ff"
+        ]
+      },
+      "date-marker-yellow": {
+        "role": "secondary",
+        "displayName": "Date Marker Yellow",
+        "canonical": "#ffeb3b",
+        "tonalRamp": [
+          "#150800",
+          "#362200",
+          "#574000",
+          "#776100",
+          "#988300",
+          "#b9a700",
+          "#d8cc6e",
+          "#f5f1c9"
+        ]
+      },
+      "piece-coral": {
+        "role": "tertiary",
+        "displayName": "Piece Coral",
+        "canonical": "#E07A5F",
+        "tonalRamp": [
+          "#240000",
+          "#4f0000",
+          "#791b00",
+          "#9e3f25",
+          "#c46147",
+          "#e6886f",
+          "#fcb6a3",
+          "#ffe6dd"
+        ]
+      },
+      "piece-teal": {
+        "role": "tertiary",
+        "displayName": "Piece Teal",
+        "canonical": "#3D9970",
+        "tonalRamp": [
+          "#001203",
+          "#003215",
+          "#00522f",
+          "#04744d",
+          "#3a966d",
+          "#69b891",
+          "#a1d8bb",
+          "#ddf5e8"
+        ]
+      },
+      "piece-chocolate": {
+        "role": "tertiary",
+        "displayName": "Piece Chocolate",
+        "canonical": "#6B4423",
+        "tonalRamp": [
+          "#180600",
+          "#3b1c00",
+          "#5e3816",
+          "#7f5736",
+          "#a37856",
+          "#c49c7d",
+          "#e1c3ac",
+          "#faece1"
+        ]
+      },
+      "piece-violet": {
+        "role": "tertiary",
+        "displayName": "Piece Violet",
+        "canonical": "#8B5CF6",
+        "tonalRamp": [
+          "#14003c",
+          "#310077",
+          "#4e00a8",
+          "#6c35cf",
+          "#8b5df7",
+          "#ac87ff",
+          "#ccb7ff",
+          "#efe7ff"
+        ]
+      },
+      "piece-rose": {
+        "role": "tertiary",
+        "displayName": "Piece Rose",
+        "canonical": "#DB5B80",
+        "tonalRamp": [
+          "#270006",
+          "#55001c",
+          "#800036",
+          "#a72a55",
+          "#ce5075",
+          "#f07a99",
+          "#ffacc0",
+          "#ffe2ea"
+        ]
+      },
+      "piece-marigold": {
+        "role": "tertiary",
+        "displayName": "Piece Marigold",
+        "canonical": "#E8AA14",
+        "tonalRamp": [
+          "#1e0200",
+          "#441500",
+          "#6a3200",
+          "#8d5300",
+          "#b17500",
+          "#d19a1e",
+          "#ebc37a",
+          "#feeccd"
+        ]
+      },
+      "piece-olive": {
+        "role": "tertiary",
+        "displayName": "Piece Olive",
+        "canonical": "#8DA547",
+        "tonalRamp": [
+          "#070f00",
+          "#1d2b00",
+          "#384a00",
+          "#566b00",
+          "#768d2d",
+          "#9ab05d",
+          "#c0d297",
+          "#eaf3d8"
+        ]
+      },
+      "piece-royal-blue": {
+        "role": "tertiary",
+        "displayName": "Piece Royal Blue",
+        "canonical": "#4169E1",
+        "tonalRamp": [
+          "#02003a",
+          "#060a73",
+          "#152ea4",
+          "#3054ca",
+          "#4e78f1",
+          "#739fff",
+          "#a4c7ff",
+          "#deeeff"
+        ]
+      },
+      "solved-green": {
+        "role": "tertiary",
+        "displayName": "Solved Green",
+        "canonical": "#1a7f37",
+        "tonalRamp": [
+          "#001300",
+          "#003300",
+          "#005408",
+          "#06752e",
+          "#3a984f",
+          "#69bb77",
+          "#a1daa8",
+          "#ddf7e0"
+        ]
+      },
+      "solved-green-night": {
+        "role": "tertiary",
+        "displayName": "Solved Green Night",
+        "canonical": "#238636",
+        "tonalRamp": [
+          "#001300",
+          "#003300",
+          "#005400",
+          "#057626",
+          "#3a9948",
+          "#69bb71",
+          "#a0daa4",
+          "#ddf7de"
+        ]
+      },
+      "invalid-red": {
+        "role": "tertiary",
+        "displayName": "Invalid Red",
+        "canonical": "#dc3545",
+        "tonalRamp": [
+          "#2e0000",
+          "#610000",
+          "#900003",
+          "#b80029",
+          "#e23b4a",
+          "#ff6d71",
+          "#ffa5a4",
+          "#ffe0dd"
+        ]
+      },
+      "invalid-red-night": {
+        "role": "tertiary",
+        "displayName": "Invalid Red Night",
+        "canonical": "#ff5252",
+        "tonalRamp": [
+          "#2f0000",
+          "#630000",
+          "#920000",
+          "#bb0018",
+          "#e5373c",
+          "#ff6b67",
+          "#ffa59d",
+          "#ffe0da"
+        ]
+      },
+      "toolbar-slate": {
+        "role": "neutral",
+        "displayName": "Toolbar Slate",
+        "canonical": "#5b6570",
+        "tonalRamp": [
+          "#070c11",
+          "#1e262e",
+          "#3a434d",
+          "#58626d",
+          "#79848f",
+          "#9ca6b1",
+          "#c3cad2",
+          "#ebeff3"
+        ]
+      },
+      "toolbar-slate-night": {
+        "role": "neutral",
+        "displayName": "Toolbar Slate Night",
+        "canonical": "#adb5bd",
+        "tonalRamp": [
+          "#080c0f",
+          "#20262b",
+          "#3c434a",
+          "#5b6269",
+          "#7c838b",
+          "#9fa6ad",
+          "#c4cacf",
+          "#eceff1"
+        ]
+      },
+      "toolbar-orange": {
+        "role": "neutral",
+        "displayName": "Toolbar Orange",
+        "canonical": "#b84a00",
+        "tonalRamp": [
+          "#270000",
+          "#540000",
+          "#7f0e00",
+          "#a53800",
+          "#cc5c21",
+          "#ed8555",
+          "#ffb492",
+          "#ffe6d6"
+        ]
+      },
+      "toolbar-orange-night": {
+        "role": "neutral",
+        "displayName": "Toolbar Orange Night",
+        "canonical": "#ffa726",
+        "tonalRamp": [
+          "#220000",
+          "#4d0600",
+          "#752500",
+          "#994800",
+          "#bf6b00",
+          "#df9220",
+          "#f6bd7b",
+          "#ffeacd"
+        ]
+      },
+      "date-played-violet": {
+        "role": "secondary",
+        "displayName": "Date Played Violet",
+        "canonical": "#7c3aed",
+        "tonalRamp": [
+          "#160043",
+          "#350081",
+          "#5200b4",
+          "#6f25dc",
+          "#8e53ff",
+          "#ae81ff",
+          "#ceb4ff",
+          "#f0e6ff"
+        ]
+      },
+      "medal-gold": {
+        "role": "tertiary",
+        "displayName": "Medal Gold",
+        "canonical": "#FFD700",
+        "tonalRamp": [
+          "#1a0500",
+          "#3d1c00",
+          "#603a00",
+          "#825b00",
+          "#a47d00",
+          "#c5a200",
+          "#e1c96a",
+          "#f9efc7"
+        ]
+      },
+      "medal-silver": {
+        "role": "tertiary",
+        "displayName": "Medal Silver",
+        "canonical": "#C0C0C0",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "medal-bronze": {
+        "role": "tertiary",
+        "displayName": "Medal Bronze",
+        "canonical": "#CD7F32",
+        "tonalRamp": [
+          "#200000",
+          "#490d00",
+          "#702a00",
+          "#944b00",
+          "#b96d1a",
+          "#da9352",
+          "#f2bd90",
+          "#ffe9d5"
+        ]
+      },
+      "table-white": {
+        "role": "neutral",
+        "displayName": "Table White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "tray-mist": {
+        "role": "neutral",
+        "displayName": "Tray Mist",
+        "canonical": "#f5f5f5",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "board-felt": {
+        "role": "neutral",
+        "displayName": "Board Felt",
+        "canonical": "#eeeeee",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "board-edge": {
+        "role": "neutral",
+        "displayName": "Board Edge",
+        "canonical": "#999999",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "pencil-ink": {
+        "role": "neutral",
+        "displayName": "Pencil Ink",
+        "canonical": "#333333",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "table-night": {
+        "role": "neutral",
+        "displayName": "Table Night",
+        "canonical": "#1a1a1a",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "tray-night": {
+        "role": "neutral",
+        "displayName": "Tray Night",
+        "canonical": "#2d2d2d",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "board-felt-night": {
+        "role": "neutral",
+        "displayName": "Board Felt Night",
+        "canonical": "#333333",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "board-edge-night": {
+        "role": "neutral",
+        "displayName": "Board Edge Night",
+        "canonical": "#666666",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Dialog titles and major headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section headings inside dialogs and panels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Help text and dialog content."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons and toolbar actions, in sentence case."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Small supporting text."
+      }
+    },
+    "shadows": [
+      {
+        "name": "board-rest",
+        "value": "0 4px 16px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08)",
+        "purpose": "The board on the table."
+      },
+      {
+        "name": "piece-rest",
+        "value": "drop-shadow(0 2px 4px rgba(0,0,0,0.15)) drop-shadow(0 1px 2px rgba(0,0,0,0.1))",
+        "purpose": "An unplaced piece (CSS filter)."
+      },
+      {
+        "name": "piece-lifted",
+        "value": "drop-shadow(0 4px 8px rgba(0,0,0,0.2)) drop-shadow(0 2px 4px rgba(0,0,0,0.12))",
+        "purpose": "A piece responding to the pointer (CSS filter)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Piece lift and transform transitions."
+      },
+      {
+        "name": "piece-land",
+        "value": "480ms",
+        "purpose": "A placed piece drops the last 12px and flashes on contact."
+      },
+      {
+        "name": "win-sweep",
+        "value": "560ms ease-out",
+        "purpose": "A staggered diagonal brightness wave across the board."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Toolbar Action Button",
+      "kind": "button",
+      "refersTo": "toolbar-button-action",
+      "description": "Solid blue sentence-case action in the desktop toolbar. Slate marks information and orange marks Reset, and a disabled button has no fill.",
+      "html": "<button class=\"ds-btn-toolbar\">Undo</button> <button class=\"ds-btn-toolbar\" disabled>Redo</button>",
+      "css": ".ds-btn-toolbar { height: 32px; padding: 0 10px; background: #0550ae; color: #fff; border: 0; border-radius: 4px; font: 500 0.875rem/1.5 sans-serif; transition: background-color 0.2s ease; cursor: pointer; } .ds-btn-toolbar:hover { background: #033d8b; } .ds-btn-toolbar:disabled { background: transparent; color: #999; cursor: default; } .ds-btn-toolbar:focus-visible { outline: 2px solid #0550ae; outline-offset: 2px; }"
+    },
+    {
+      "name": "Board",
+      "kind": "custom",
+      "refersTo": "board",
+      "description": "The signature object: rounded felt with a 4px rim and a 50px cell grid.",
+      "html": "<div class=\"ds-board\"><span class=\"ds-cell\">JAN</span><span class=\"ds-cell ds-today\">NOV</span><span class=\"ds-cell\">2</span><span class=\"ds-cell ds-today\">3</span></div>",
+      "css": ".ds-board { display: inline-grid; grid-template-columns: 50px 50px; padding: 50px; background: #eee; border: 4px solid #999; border-radius: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08); } .ds-cell { display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; box-sizing: border-box; background: #fff; color: #333; border: 1px solid #999; font: 700 1em sans-serif; } .ds-today { background: #ffeb3b; color: rgba(0,0,0,0.87); box-shadow: inset 0 0 8px rgba(255,200,0,0.5); }"
+    },
+    {
+      "name": "Piece",
+      "kind": "custom",
+      "description": "A polyomino block with one fixed colour, a bevel, and a soft shadow.",
+      "html": "<div class=\"ds-piece\"><i></i><i></i><i></i><b></b><i></i><b></b></div>",
+      "css": ".ds-piece { display: inline-grid; grid-template-columns: 34px 34px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)) drop-shadow(0 1px 2px rgba(0,0,0,0.1)); transition: filter 0.25s ease; } .ds-piece:hover { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)) drop-shadow(0 2px 4px rgba(0,0,0,0.12)); } .ds-piece i { width: 34px; height: 34px; background: #E07A5F linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%); }"
+    },
+    {
+      "name": "Piece Tray",
+      "kind": "card",
+      "refersTo": "piece-tray",
+      "description": "A flat tonal panel holding piece cards.",
+      "html": "<div class=\"ds-tray\"><div class=\"ds-card\"></div><div class=\"ds-card\"></div></div>",
+      "css": ".ds-tray { display: inline-flex; gap: 16px; padding: 16px; background: #f5f5f5; border-radius: 8px; } .ds-card { width: 125px; height: 150px; background: #fff; border-radius: 8px; }"
+    },
+    {
+      "name": "Progress Bar",
+      "kind": "custom",
+      "description": "A pill-shaped track above the board showing placed pieces.",
+      "html": "<div class=\"ds-progress\"><span></span></div>",
+      "css": ".ds-progress { width: 300px; height: 16px; background: #e0e0e0; border-radius: 999px; overflow: hidden; } .ds-progress span { display: block; width: 37.5%; height: 100%; background: #1a7f37; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Daily Tabletop",
+    "overview": "Calendar Puzzle is a real puzzle on a quiet table, played once a day. The board and the eight pieces are the objects in the room, and everything else steps back so they can be handled. The mood is calm, tactile, and satisfying: an unhurried ritual where the reward is the feel of a piece landing and the board filling up.\n\nThe system is built from two layers. The object layer holds the board and pieces, which have weight, bevels, shadows, and most of the colour. The interface layer holds toolbars, trays, and dialogs, which stay flat and precise. Trays and dialogs stay neutral, while toolbar buttons use colour to show their job. Density stays moderate, because the puzzle should fill the view.\n\nThe system rejects the generic admin dashboard: a default component-library look of grey toolbars and bordered cards, with no sense of a game.",
+    "keyCharacteristics": [
+      "The pieces carry most of the colour, on a neutral table.",
+      "Toolbar buttons use colour only to show what each button does.",
+      "Today's date is the one loud mark on the board.",
+      "Physical objects have depth, and controls do not.",
+      "Light and dark themes use the same structure and the same piece colours."
+    ],
+    "rules": [
+      {
+        "name": "The Pieces Own the Colour Rule",
+        "body": "Saturated colour belongs to the pieces and the date marker. The one exception is toolbar buttons, which use colour to show their job. Every other interface surface stays neutral.",
+        "section": "colors"
+      },
+      {
+        "name": "The Colour Means a Job Rule",
+        "body": "On the toolbar, slate means information about the game, blue means an action on the puzzle, and orange means Reset. A button with no fill is disabled. The date button is the one exception, because its colour shows the date's status: blue when not started, violet when started, green when solved. The admin-only Solution button stays green.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Marker Rule",
+        "body": "Date Marker Yellow always means today, and nothing else uses it.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hold It Rule",
+        "body": "Only an object you could hold gets a shadow or bevel. Contained buttons have elevation disabled, and shadows on controls are limited to focus rings.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give saturated colour to the pieces and the date marker, and keep trays and dialogs neutral.",
+      "Do use toolbar colour only to show a button's job: slate for information, blue for actions, orange for Reset.",
+      "Do keep shadows and bevels on the board and pieces only.",
+      "Do make placing a piece feel physical, through weight and contact rather than rewards.",
+      "Do use theme tokens (`theme.game.radius.*`, `theme.spacing()`, `theme.palette.*`) rather than raw values, in sibling `.styled.ts` files.",
+      "Do keep each piece's colour identical in both themes."
+    ],
+    "donts": [
+      "Don't let the game look like a generic admin dashboard, with grey toolbars and bordered cards and no sense of play.",
+      "Don't use Date Marker Yellow for anything except today's cells.",
+      "Don't add elevation to buttons, toolbars, or trays.",
+      "Don't set button labels in uppercase."
+    ]
+  }
+}

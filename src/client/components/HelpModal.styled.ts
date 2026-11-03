@@ -41,6 +41,27 @@ export const AnimatedPieceWrapper = styled(Box)({
     pointerEvents: "none"
 });
 
+export const ShortcutGrid = styled("div")(({ theme }) => ({
+    display: "grid",
+    gridTemplateColumns: "auto minmax(0, 1fr) auto minmax(0, 1fr)",
+    alignItems: "center",
+    gap: theme.spacing(1, 1.5),
+    marginTop: theme.spacing(1),
+    fontSize: theme.game.fontSize.sm
+}));
+
+export const ShortcutKey = styled("kbd")(({ theme }) => ({
+    justifySelf: "start",
+    padding: theme.spacing(0.25, 0.75),
+    border: `1px solid ${theme.game.boardBorderColor}`,
+    borderRadius: theme.game.radius.sm,
+    backgroundColor: theme.palette.background.default,
+    fontFamily: "inherit",
+    fontSize: theme.game.fontSize.xs,
+    fontWeight: 600,
+    whiteSpace: "nowrap"
+}));
+
 export const ScaledBoardWrapper = styled(Box)(({ theme }) => ({
     display: "flex",
     justifyContent: "center",

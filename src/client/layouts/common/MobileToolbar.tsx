@@ -35,6 +35,7 @@ import {
     ToolbarLeft,
     ToolbarCenter,
     ToolbarRight,
+    ToolbarActionButton,
     DrawerContent,
     DrawerHeader,
     DrawerSection,
@@ -87,48 +88,44 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
         <>
             <ToolbarContainer orientation={orientation}>
                 <ToolbarLeft orientation={orientation}>
-                    <ThemeToggle />
+                    <ThemeToggle showIcons={false} />
                     {!game.userLoading && (game.user ? <UserMenu onShowTokenIntro={game.modals.tokenIntro.open} /> : <LoginButton />)}
                 </ToolbarLeft>
 
                 <ToolbarCenter orientation={orientation}>
-                    <IconButton
+                    <ToolbarActionButton
                         onClick={game.undo}
                         disabled={!game.canUndo || game.gameState.isSolved}
                         aria-label="Undo"
-                        size="small"
                     >
                         <UndoIcon />
-                    </IconButton>
-                    <IconButton
+                    </ToolbarActionButton>
+                    <ToolbarActionButton
                         onClick={game.redo}
                         disabled={!game.canRedo || game.gameState.isSolved}
                         aria-label="Redo"
-                        size="small"
                     >
                         <RedoIcon />
-                    </IconButton>
-                    <IconButton
+                    </ToolbarActionButton>
+                    <ToolbarActionButton
                         onClick={game.handleReset}
                         disabled={game.isResetDisabled}
                         aria-label="Reset"
-                        size="small"
                         color="warning"
                     >
                         <RestartAltIcon />
-                    </IconButton>
+                    </ToolbarActionButton>
                 </ToolbarCenter>
 
                 <ToolbarRight orientation={orientation}>
-                    <IconButton
+                    <ToolbarActionButton
                         onClick={openDrawer}
                         aria-label="Open menu"
-                        size="medium"
                     >
                         <TokenMenuBadge tokenBalance={game.tokenBalance} invisible={!game.user}>
                             <MenuIcon />
                         </TokenMenuBadge>
-                    </IconButton>
+                    </ToolbarActionButton>
                 </ToolbarRight>
             </ToolbarContainer>
 

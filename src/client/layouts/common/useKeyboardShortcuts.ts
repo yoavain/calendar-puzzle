@@ -13,7 +13,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => {
  * Registers global keyboard shortcuts:
  * - Ctrl/Cmd+Z: undo
  * - Ctrl/Cmd+Shift+Z / Ctrl/Cmd+Y: redo
- * - Escape: clear selection if a pool piece is selected, else reset
+ * - Escape: clear selection if a pool piece is selected
  * - R / Shift+R: rotate the selected pool piece CW / CCW
  * - F / Shift+F: flip the selected pool piece horizontally / vertically
  *
@@ -26,8 +26,6 @@ export function useKeyboardShortcuts({
     canRedo,
     undo,
     redo,
-    handleReset,
-    isResetDisabled,
     selectablePieceId,
     onRotateCW,
     onRotateCCW,
@@ -39,11 +37,9 @@ export function useKeyboardShortcuts({
     canRedo: boolean;
     undo: () => void;
     redo: () => void;
-    handleReset: () => void;
-    isResetDisabled: boolean;
     /**
      * The currently-selected pool piece, if any. When set, R/F shortcuts act
-     * on it and Esc clears the selection instead of resetting. `null` when
+     * on it and Esc clears the selection. `null` when
      * either nothing is selected or the selected piece is already placed.
      */
     selectablePieceId?: PieceId | null;
@@ -76,16 +72,11 @@ export function useKeyboardShortcuts({
             }
             return;
         }
-        // Escape: clear selection first, else reset
+        // Escape only clears the selection: a stray press must never wipe the board.
         if (e.key === "Escape") {
             if (selectablePieceId !== null && selectablePieceId !== undefined) {
                 e.preventDefault();
                 onClearSelection?.();
-                return;
-            }
-            if (!isResetDisabled) {
-                e.preventDefault();
-                handleReset();
             }
             return;
         }
