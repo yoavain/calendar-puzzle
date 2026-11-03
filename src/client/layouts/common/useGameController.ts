@@ -6,7 +6,7 @@ import type { PieceId } from "../../../common/pieceData";
 import { getPlacementOrder, getTransformedShape, isValidPlacement, puzzleSolvedForDate } from "../../../common/gameLogic";
 import { applyHintPieces, boardMatchesHints, rebuildGameState, updateBoardAndPieces } from "../../../common/boardOperations";
 import { countHintPieces, getHintAvailability } from "../../../common/hintTokens";
-import { initializeBoard, initializeGame } from "../../../common/initialize";
+import { initializeGame } from "../../../common/initialize";
 import { getRandomPuzzleDate } from "../../../common/streakUtils";
 import { useGameHistory } from "../../hooks/useGameHistory";
 import { getHint, getHintState, getSolution, HintRequestError } from "../../service/puzzleService";
@@ -149,12 +149,13 @@ export function useGameController() {
         updateSettings({ tokenIntroSeen: true }).catch(() => {});
     }, [updateSettings]);
 
-    // Modal state and play-another dialog flow
+    // Modal state and what follows a solve
     const {
-        justSolvedRef,
+        noteSolve,
+        openStatsAfterSolve,
         statsAutoOpenTimeoutRef,
         setIsStatsOpen,
-        setIsPlayAnotherOpen,
+        setIsSolvedNoticeRequested,
         setIsYearCompleteOpen,
         setIsTokenConfirmOpen,
         modals
@@ -179,9 +180,9 @@ export function useGameController() {
         statsAutoOpenTimeoutRef.current = window.setTimeout(() => {
             statsAutoOpenTimeoutRef.current = null;
             statsAfterFlightRef.current = false;
-            setIsStatsOpen(true);
+            openStatsAfterSolve();
         }, delayMs);
-    }, [statsAutoOpenTimeoutRef, setIsStatsOpen]);
+    }, [statsAutoOpenTimeoutRef, openStatsAfterSolve]);
 
     // Rebuild the latest board around the given hints. History restarts so a hint cannot be undone.
     const adoptHints = useCallback((hintPieces: PieceType[]) => {
@@ -348,7 +349,7 @@ export function useGameController() {
                        solvedDate.month === gameState.currentDate.month &&
                        solvedDate.day === gameState.currentDate.day;
         if (solved) {
-            justSolvedRef.current = true;
+            noteSolve(gameState.currentDate);
             if (confettiTimeoutRef.current !== null) {
                 window.clearTimeout(confettiTimeoutRef.current);
             }
@@ -381,7 +382,7 @@ export function useGameController() {
             pieceId: piece.id,
             position
         });
-    }, [gameState, pushState, user, completedDates, justSolvedRef, scheduleStatsOpen]);
+    }, [gameState, pushState, user, completedDates, noteSolve, scheduleStatsOpen]);
 
     const handleCellClick = useCallback((position: Position) => {
         // Tap-to-place: If a piece is selected, try to place it at this position
@@ -675,13 +676,11 @@ export function useGameController() {
         e.dataTransfer.dropEffect = "move";
     }, []);
 
-    const handlePlayAnother = useCallback((date: PuzzleDate | null) => {
-        if (!date) {
-            return;
-        }
-        setIsPlayAnotherOpen(false);
+    const handlePlayNext = useCallback((date: PuzzleDate) => {
+        setIsStatsOpen(false);
+        setIsSolvedNoticeRequested(false);
         handleDateChange(date);
-    }, [handleDateChange, setIsPlayAnotherOpen]);
+    }, [handleDateChange, setIsStatsOpen, setIsSolvedNoticeRequested]);
 
     // Offered once every date is solved: there is no "next" puzzle to suggest,
     // so any date other than the current one will do.
@@ -810,7 +809,7 @@ export function useGameController() {
 
         // Game handlers
         handleDateChange,
-        handlePlayAnother,
+        handlePlayNext,
         handlePlayRandomDate,
         handleReset,
         handlePieceSelect,

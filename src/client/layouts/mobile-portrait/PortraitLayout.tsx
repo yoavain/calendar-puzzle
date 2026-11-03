@@ -4,7 +4,7 @@ import { MobileBoard } from "../../components/MobileBoard";
 import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
-import { PlayAnotherDialog } from "../../components/PlayAnotherDialog";
+import { SolvedTodayNotice } from "../../components/SolvedTodayNotice";
 import { YearCompleteDialog } from "../../components/YearCompleteDialog";
 import { TokenFlight } from "../../components/TokenFlight";
 import { HintErrorToast } from "../../components/HintErrorToast";
@@ -102,8 +102,10 @@ export const PortraitLayout: React.FC = () => {
 
                 {/* Modals */}
                 <StatsModal
-                    open={game.modals.stats.isOpen} 
-                    onClose={game.modals.stats.close} 
+                    open={game.modals.stats.isOpen}
+                    onClose={game.modals.stats.close}
+                    solveResult={game.modals.stats.solveResult}
+                    onPlayNext={game.handlePlayNext}
                 />
                 <IssueModal 
                     open={game.modals.issue.isOpen} 
@@ -112,12 +114,6 @@ export const PortraitLayout: React.FC = () => {
                 <HelpModal
                     open={game.modals.help.isOpen}
                     onClose={game.modals.help.close}
-                />
-                <PlayAnotherDialog
-                    isOpen={game.modals.playAnother.isOpen}
-                    mode={game.modals.playAnother.mode}
-                    onAccept={() => game.handlePlayAnother(game.modals.playAnother.suggestedDate)}
-                    onDecline={game.modals.playAnother.close}
                 />
                 <YearCompleteDialog
                     isOpen={game.modals.yearComplete.isOpen}
@@ -130,6 +126,13 @@ export const PortraitLayout: React.FC = () => {
                     onLanded={game.landTokenFlight}
                 />
                 <HintErrorToast message={game.hintMessage} onClose={game.clearHintMessage} />
+                {/* It shares the toast's place on screen, so it gives way to a hint error. */}
+                <SolvedTodayNotice
+                    open={game.modals.solvedNotice.isOpen && game.hintMessage === null}
+                    nextDate={game.modals.solvedNotice.nextDate}
+                    onPlay={game.handlePlayNext}
+                    onClose={game.modals.solvedNotice.close}
+                />
                 <TokenIntroDialog
                     open={game.modals.tokenIntro.isOpen}
                     tokenBalance={game.tokenBalance}

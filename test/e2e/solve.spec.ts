@@ -1,13 +1,14 @@
 import type { Page, Locator } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import { GamePage, type LayoutKind } from "./fixtures/gamePage";
+import { SOLVE_COPY } from "../../src/client/copy/solveCopy";
 import { dragPieceToBoard } from "./helpers/dragHelpers";
 import { layoutFromProject, mockDate, mockApiRoutes, clearStorage } from "./helpers/testUtils";
 import { initializeBoard, initializePieces } from "../../src/common/initialize";
 import { findSolution } from "../../src/common/puzzleSolver";
 import { getTransformedShape } from "../../src/common/gameLogic";
 import { findFirstFilledCell } from "../../src/common/utils/shapeHelpers";
-import type { PuzzleDate } from "../../src/common/types";
+import type { GameState, PuzzleDate } from "../../src/common/types";
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -220,6 +221,75 @@ async function transformPiece(
     }
 }
 
+/** Places every piece of the solution through the UI. Returns the piece ids in placement order. */
+async function solveByHand(page: Page, game: GamePage, layout: LayoutKind, solution: GameState): Promise<number[]> {
+    // Track placed piece IDs to compute correct carousel index
+    const placedPieceIds: number[] = [];
+
+    // Place in reverse id order (the solver returns pieces sorted by id), so
+    // the progress-bar order check in step 5 cannot pass by id order alone.
+    for (const solvedPiece of [...solution.pieces].reverse()) {
+        if (solvedPiece.position === null) {
+            continue;
+        }
+
+        const pieceId = solvedPiece.id;
+        const { rotation, isFlippedH, isFlippedV, position } = solvedPiece;
+
+        // The carousel only shows unplaced pieces. Compute the
+        // current index of this piece in the filtered carousel.
+        const carouselIndex = solution.pieces
+            .filter(p => p.position !== null)
+            .filter(p => !placedPieceIds.includes(p.id))
+            .sort((a, b) => a.id - b.id)
+            .findIndex(p => p.id === pieceId);
+
+        // 3a. Apply rotation/flip transforms
+        await transformPiece(page, game, layout, pieceId, carouselIndex, rotation, isFlippedH, isFlippedV);
+
+        // 3b. Compute drag target cell
+        // The solver gives `position` = top-left of the transformed bounding box.
+        // We drag to the cell where firstFilledCell should land.
+        const shape = getTransformedShape(solvedPiece);
+        const firstFilled = findFirstFilledCell(shape);
+        const targetCell = {
+            x: position.x + firstFilled.x,
+            y: position.y + firstFilled.y
+        };
+
+        // 3c. Ensure piece is visible for drag
+        if (layout !== "desktop") {
+            await game.scrollCarouselToPiece(carouselIndex);
+            await page.waitForTimeout(500);
+        }
+
+        // 3d. Drag piece to board
+        // Use .first() because Embla loop mode can duplicate slides
+        const pieceLocator = game.carouselPiece(pieceId).first();
+        await expect(pieceLocator).toBeVisible({ timeout: 5_000 });
+
+        if (layout === "desktop") {
+            const targetLocator = game.boardCell(targetCell.x, targetCell.y);
+            await dragPieceToBoard(page, pieceLocator, targetLocator, layout);
+        }
+        else {
+            // Mobile: use center-most filled cell as touch anchor to avoid
+            // clipping by toolbar (especially in landscape mode).
+            const anchorCell = findCenterAnchorCell(shape);
+            await mobileDragFromCell(page, pieceLocator, shape, anchorCell, game, position);
+        }
+
+        // 3e. Verify piece was placed
+        const cellCount = shape.flat().filter(Boolean).length;
+        const placedCells = game.pieceCellsOnBoard(pieceId);
+        await expect(placedCells).toHaveCount(cellCount, { timeout: 5_000 });
+
+        placedPieceIds.push(pieceId);
+    }
+
+    return placedPieceIds;
+}
+
 // ─── Tests ───────────────────────────────────────────────────
 
 test.describe("Solve puzzle via UI", () => {
@@ -249,69 +319,7 @@ test.describe("Solve puzzle via UI", () => {
         await game.goto();
 
         // 3. For each piece, apply transforms and drag to solved position
-        // Track placed piece IDs to compute correct carousel index
-        const placedPieceIds: number[] = [];
-
-        // Place in reverse id order (the solver returns pieces sorted by id), so
-        // the progress-bar order check in step 5 cannot pass by id order alone.
-        for (const solvedPiece of [...solution!.pieces].reverse()) {
-            if (solvedPiece.position === null) {
-                continue;
-            }
-
-            const pieceId = solvedPiece.id;
-            const { rotation, isFlippedH, isFlippedV, position } = solvedPiece;
-
-            // The carousel only shows unplaced pieces. Compute the
-            // current index of this piece in the filtered carousel.
-            const carouselIndex = solution!.pieces
-                .filter(p => p.position !== null)
-                .filter(p => !placedPieceIds.includes(p.id))
-                .sort((a, b) => a.id - b.id)
-                .findIndex(p => p.id === pieceId);
-
-            // 3a. Apply rotation/flip transforms
-            await transformPiece(page, game, layout, pieceId, carouselIndex, rotation, isFlippedH, isFlippedV);
-
-            // 3b. Compute drag target cell
-            // The solver gives `position` = top-left of the transformed bounding box.
-            // We drag to the cell where firstFilledCell should land.
-            const shape = getTransformedShape(solvedPiece);
-            const firstFilled = findFirstFilledCell(shape);
-            const targetCell = {
-                x: position.x + firstFilled.x,
-                y: position.y + firstFilled.y
-            };
-
-            // 3c. Ensure piece is visible for drag
-            if (layout !== "desktop") {
-                await game.scrollCarouselToPiece(carouselIndex);
-                await page.waitForTimeout(500);
-            }
-
-            // 3d. Drag piece to board
-            // Use .first() because Embla loop mode can duplicate slides
-            const pieceLocator = game.carouselPiece(pieceId).first();
-            await expect(pieceLocator).toBeVisible({ timeout: 5_000 });
-
-            if (layout === "desktop") {
-                const targetLocator = game.boardCell(targetCell.x, targetCell.y);
-                await dragPieceToBoard(page, pieceLocator, targetLocator, layout);
-            }
-            else {
-                // Mobile: use center-most filled cell as touch anchor to avoid
-                // clipping by toolbar (especially in landscape mode).
-                const anchorCell = findCenterAnchorCell(shape);
-                await mobileDragFromCell(page, pieceLocator, shape, anchorCell, game, position);
-            }
-
-            // 3e. Verify piece was placed
-            const cellCount = shape.flat().filter(Boolean).length;
-            const placedCells = game.pieceCellsOnBoard(pieceId);
-            await expect(placedCells).toHaveCount(cellCount, { timeout: 5_000 });
-
-            placedPieceIds.push(pieceId);
-        }
+        const placedPieceIds = await solveByHand(page, game, layout, solution!);
 
         // 4. Assert puzzle is solved (progress bar reaches 100%)
         await expect(page.getByRole("progressbar", { name: "Puzzle completion progress" }))
@@ -321,5 +329,34 @@ test.describe("Solve puzzle via UI", () => {
         const segmentIds = await page.locator("[data-segment-piece-id]")
             .evaluateAll(els => els.map(el => Number(el.getAttribute("data-segment-piece-id"))));
         expect(segmentIds).toEqual(placedPieceIds);
+    });
+
+    test("a signed-in solve of today shows one dialog that names the date and offers the next", async ({ page }) => {
+        test.setTimeout(180_000);
+
+        const jan1: PuzzleDate = { month: 0, day: 1 };
+        const solution = findSolution(initializeBoard(jan1), initializePieces(), jan1);
+        expect(solution).toBeTruthy();
+
+        await mockApiRoutes(page, {
+            authMe: {
+                user: { id: "e2e-solver", isAdmin: false, name: "Solver" },
+                completedDates: [],
+                playedDates: [],
+                settings: { tokenIntroSeen: true }
+            }
+        });
+        await mockDate(page, new Date(2024, jan1.month, jan1.day));
+        game = new GamePage(page, layout);
+        await game.goto();
+
+        await solveByHand(page, game, layout, solution!);
+
+        await expect(page.getByRole("heading", { name: "Jan 1 solved" }).first()).toBeVisible({ timeout: 10_000 });
+        // Solving today must not also read as "already solved".
+        await expect(page.getByText(SOLVE_COPY.solvedTodayNotice)).toHaveCount(0);
+
+        await page.getByRole("button", { name: "Play Dec 31" }).first().click();
+        await expect(page).toHaveTitle("Calendar Puzzle - 31/12");
     });
 });

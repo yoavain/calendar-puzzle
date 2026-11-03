@@ -16,6 +16,7 @@ import type { PuzzleDate } from "../../common/types";
 import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
 import { useUser } from "../context/UserContext";
 import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
+import { formatDayName } from "../copy/solveCopy";
 import {
     DayFelt,
     DayTile,
@@ -40,7 +41,7 @@ const formatDate = (date: PuzzleDate): string => {
 };
 
 const describeDay = (month: number, day: number, isToday: boolean, status: DayStatus): string => {
-    const parts = [`${MONTHS[month]} ${day}`];
+    const parts = [formatDayName({ month, day })];
     if (isToday) {
         parts.push("today");
     }

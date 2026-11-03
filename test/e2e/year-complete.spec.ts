@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { SOLVE_COPY } from "../../src/client/copy/solveCopy";
 import { GamePage } from "./fixtures/gamePage";
 import { layoutFromProject, mockDate, mockApiRoutes, clearStorage } from "./helpers/testUtils";
 import { DAYS_IN_MONTH, TOTAL_DATES } from "../../src/common/consts";
@@ -25,9 +26,8 @@ const COMPLETED_SESSION = {
 
 /**
  * Under the Vite dev server React StrictMode mounts each MUI Dialog portal
- * twice, so every dialog node has a twin. This is pre-existing behaviour — the
- * older PlayAnotherDialog duplicates identically — so these tests assert on the
- * first match rather than working around it per-assertion.
+ * twice, so every dialog node has a twin. These tests assert on the first match
+ * rather than working around it per-assertion.
  */
 const TITLE = "Every date on the calendar";
 
@@ -47,9 +47,8 @@ test.describe("Year complete", () => {
         await expect(dialog.getByText(`${TOTAL_DATES} / ${TOTAL_DATES}`)).toBeVisible();
         await expect(dialog.getByRole("button", { name: "Play a random date" })).toBeVisible();
 
-        // The "play another?" prompt must not appear — there is no date to suggest.
-        await expect(page.getByText("Want to play another puzzle?")).toHaveCount(0);
-        await expect(page.getByRole("button", { name: "Let's go!" })).toHaveCount(0);
+        // The "solved today" notice must not appear: there is no date to suggest.
+        await expect(page.getByText(SOLVE_COPY.solvedTodayNotice)).toHaveCount(0);
     });
 
     test("'Play a random date' loads a date other than today", async ({ page }, testInfo) => {

@@ -11,10 +11,16 @@ import { ProgressBarWithLabel } from "./ProgressBarWithLabel";
 import { useUser } from "../context/UserContext.js";
 import { calculateStreaks } from "../../common/streakUtils.js";
 import { TOTAL_DATES } from "../../common/consts.js";
+import type { PuzzleDate } from "../../common/types";
+import { SOLVE_COPY } from "../copy/solveCopy";
+import type { SolveResult } from "../layouts/common/useGameModals";
 
 interface StatsModalProps {
     open: boolean;
     onClose: () => void;
+    /** Set when a solve opened the dialog. */
+    solveResult?: SolveResult | null;
+    onPlayNext?: (date: PuzzleDate) => void;
 }
 
 interface StatItemProps {
@@ -33,17 +39,18 @@ const StatItem: React.FC<StatItemProps> = ({ value, label }) => (
     </Box>
 );
 
-export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
+export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose, solveResult, onPlayNext }) => {
     const { completedDates, playedDates } = useUser();
     const playedCount = playedDates.length;
 
     const stats = calculateStreaks(completedDates);
     const winPercent = playedCount > 0 ? Math.round((completedDates.length / playedCount) * 100) : 0;
+    const nextDate = solveResult?.nextDate ?? null;
 
     return (
         <BaseDialog open={open} onClose={onClose}>
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
-                STATISTICS
+                {solveResult ? SOLVE_COPY.solvedTitle(solveResult.solvedDate) : "STATISTICS"}
             </DialogTitle>
             <DialogContent>
                 <Grid container spacing={1} sx={{ mb: 2 }}>
@@ -76,6 +83,11 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose }) => {
                 <Button onClick={onClose} color="inherit" variant="outlined">
                     Close
                 </Button>
+                {nextDate && onPlayNext && (
+                    <Button onClick={() => onPlayNext(nextDate)} color="primary" variant="contained" autoFocus>
+                        {SOLVE_COPY.playDate(nextDate)}
+                    </Button>
+                )}
             </DialogActions>
         </BaseDialog>
     );

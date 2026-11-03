@@ -42,6 +42,8 @@ interface GameColorTokens {
         bronze: string;
     };
     onPieceText: string;
+    // The notice bar is dark in both themes, so its action colour is the same in both.
+    snackbarAction: string;
     switch: {
         track: string;
         thumb: string;
@@ -144,7 +146,8 @@ const sharedGameColorTokens = {
         silver: "#C0C0C0",
         bronze: "#CD7F32"
     },
-    onPieceText: "#ffffff"
+    onPieceText: "#ffffff",
+    snackbarAction: "#58a6ff"
 };
 
 const lightGameColorTokens: GameColorTokens = {
@@ -354,7 +357,7 @@ const sharedOptions: ThemeOptions = {
                 // MuiButtonBase above already draws a :focus-visible outline.
                 // MUI's focus ripple stacks a 2.5s infinite scale loop on top of
                 // it, which reads as a slow "hum" on the autoFocus'd buttons in
-                // YearCompleteDialog and PlayAnotherDialog for as long as they
+                // YearCompleteDialog and StatsModal for as long as they
                 // hold focus. Only the focus ripple is dropped — press ripples
                 // still fire.
                 disableFocusRipple: true
