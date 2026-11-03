@@ -32,7 +32,7 @@ describe("StatsModal after a solve", () => {
 
     it("keeps its title and one button when opened from the toolbar", () => {
         renderStats({ solveResult: null });
-        expect(screen.getByRole("heading", { name: "STATISTICS" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Statistics" })).toBeInTheDocument();
         expect(screen.getAllByRole("button")).toHaveLength(1);
     });
 

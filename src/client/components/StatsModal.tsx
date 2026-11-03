@@ -50,7 +50,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose, solveResu
     return (
         <BaseDialog open={open} onClose={onClose}>
             <DialogTitle sx={{ m: 0, p: 2, textAlign: "center", fontWeight: "bold" }}>
-                {solveResult ? SOLVE_COPY.solvedTitle(solveResult.solvedDate) : "STATISTICS"}
+                {solveResult ? SOLVE_COPY.solvedTitle(solveResult.solvedDate) : "Statistics"}
             </DialogTitle>
             <DialogContent>
                 <Grid container spacing={1} sx={{ mb: 2 }}>
@@ -70,7 +70,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ open, onClose, solveResu
 
                 <Box sx={{ mt: 3, mb: 1 }}>
                     <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1, textAlign: "center" }}>
-                        OVERALL PROGRESS
+                        Overall progress
                     </Typography>
                     <ProgressBarWithLabel
                         value={(completedDates.length / TOTAL_DATES) * 100}
