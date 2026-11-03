@@ -100,6 +100,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
                 {
                     ...(isCurrentDatePlayed && !isCurrentDateCompleted && {
                         bgcolor: theme.game.extensionColor,
+                        color: theme.palette.getContrastText(theme.game.extensionColor),
                         "&:hover": {
                             bgcolor: theme.game.extensionColor,
                             opacity: 0.9

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import type { ButtonProps } from "@mui/material/Button";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -14,10 +15,11 @@ interface HintButtonProps {
     availability: HintAvailability;
     tokenBalance: number;
     fullWidth?: boolean;
+    color?: ButtonProps["color"];
     sx?: SxProps<Theme>;
 }
 
-export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, tokenBalance, fullWidth, sx }) => {
+export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, tokenBalance, fullWidth, color = "secondary", sx }) => {
     const copy = HINT_TOKEN_COPY.hintButton[availability];
     const isEnabled = availability === "free" || availability === "token";
     const isLoading = availability === "loading";
@@ -37,7 +39,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, to
     const button = (
         <Button
             variant="contained"
-            color="secondary"
+            color={color}
             onClick={onHint}
             disabled={!isEnabled}
             loading={isLoading}

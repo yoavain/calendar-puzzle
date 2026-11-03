@@ -1,7 +1,7 @@
 import React from "react";
-import type { ButtonProps } from "@mui/material/Button";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 
 interface ToolbarIconButtonProps {
@@ -10,7 +10,7 @@ interface ToolbarIconButtonProps {
     icon: React.ReactNode;
     ariaLabel: string;
     disabled?: boolean;
-    color?: ButtonProps["color"];
+    sx?: SxProps<Theme>;
 }
 
 /**
@@ -24,7 +24,7 @@ export const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
     icon,
     ariaLabel,
     disabled = false,
-    color = "primary"
+    sx
 }) => (
     <Tooltip title={tooltip} arrow>
         <TooltipDisabledWrapper disabled={disabled}>
@@ -32,8 +32,7 @@ export const ToolbarIconButton: React.FC<ToolbarIconButtonProps> = ({
                 variant="contained"
                 onClick={onClick}
                 size="small"
-                sx={(theme) => ({ minWidth: 40, px: 1, minHeight: theme.game.toolbarButtonHeight })}
-                color={color}
+                sx={[{ minWidth: 40, px: 1 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
                 disabled={disabled}
                 aria-label={ariaLabel}
             >

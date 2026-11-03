@@ -7,12 +7,25 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { Board as BoardComponent } from "./Board";
 import { initializeBoard } from "../../common/initialize";
 import type { PieceId } from "../../common/pieceData";
 import { getPieceShape, PIECE_IDS } from "../../common/pieceData";
 import { getPieceColor } from "../utils/pieceColors";
-import { AnimatedPieceWrapper, ScaledBoardWrapper } from "./HelpModal.styled";
+import { AnimatedPieceWrapper, ScaledBoardWrapper, ShortcutGrid, ShortcutKey } from "./HelpModal.styled";
+
+const SHORTCUTS: ReadonlyArray<{ keys: string; action: string }> = [
+    { keys: "R", action: "Rotate the selected piece" },
+    { keys: "Shift+R", action: "Rotate the other way" },
+    { keys: "F", action: "Flip the selected piece" },
+    { keys: "Shift+F", action: "Flip the other way" },
+    { keys: "Ctrl+Z", action: "Undo" },
+    { keys: "Ctrl+Y", action: "Redo" },
+    { keys: "Arrows", action: "Move around the board" },
+    { keys: "Enter", action: "Place the selected piece" },
+    { keys: "Esc", action: "Clear the selection" }
+];
 
 // Simple piece component for the animation that doesn't use complex CSS transforms
 const SimplePiece: React.FC<{ pieceId: PieceId }> = ({ pieceId }) => {
@@ -93,6 +106,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
         };
     }, [randomPieceId]);
 
+    // Touch devices have no keyboard to use these with.
+    const hasKeyboard = useMediaQuery("(hover: hover) and (pointer: fine)");
+
     return (
         <BaseDialog
             open={open}
@@ -118,6 +134,19 @@ export const HelpModal: React.FC<HelpModalProps> = ({ open, onClose }) => {
                         <Box component="span" sx={{ display: "block", mb: 1 }}>• Rotate and flip pieces using the controls.</Box>
                         <Box component="span" sx={{ display: "block" }}>• Every day has at least one solution!</Box>
                     </Typography>
+                    {hasKeyboard && (
+                        <Box>
+                            <Typography variant="subtitle2" component="h3">Keyboard shortcuts</Typography>
+                            <ShortcutGrid>
+                                {SHORTCUTS.map(({ keys, action }) => (
+                                    <React.Fragment key={keys}>
+                                        <ShortcutKey>{keys}</ShortcutKey>
+                                        <span>{action}</span>
+                                    </React.Fragment>
+                                ))}
+                            </ShortcutGrid>
+                        </Box>
+                    )}
 
                     <ScaledBoardWrapper>
                         <Box className="scaling-container">

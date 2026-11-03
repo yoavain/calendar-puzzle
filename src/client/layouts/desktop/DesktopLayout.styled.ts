@@ -1,10 +1,13 @@
 import { styled } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 
-// Scaling constants for desktop layout
+// Scaling constants for desktop layout. The toolbar sits outside the scaled
+// area, so BASELINE_HEIGHT covers only the title, board and pieces.
 export const BASELINE_SIZE = 1200;
-export const BASELINE_HEIGHT = 1350; // Increased to accommodate pieces container and controls
+export const BASELINE_HEIGHT = 1252;
 export const MIN_HEIGHT = 800;
 
 // Responsive layout constants
@@ -24,6 +27,91 @@ export const AppWrapper = styled(Box)({
     flexDirection: "column",
     alignItems: "center",
     overflowX: "hidden"
+});
+
+/**
+ * Holds the top toolbar outside the scaled area, so its controls keep their
+ * full size at every window size.
+ */
+export const ToolbarContainer = styled(Container)(({ theme }) => ({
+    flexShrink: 0,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2)
+}));
+
+/**
+ * The toolbar's three groups: information, date and hint, then moves. A narrow
+ * window wraps whole groups to a second row.
+ */
+export const ToolbarGroups = styled("div")(({ theme }) => ({
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    columnGap: theme.spacing(3.5),
+    rowGap: theme.spacing(1),
+    minWidth: 0
+}));
+
+export const ToolbarGroup = styled("div")(({ theme }) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing(1)
+}));
+
+/** Joins Undo and Redo into one pair, split by a 1px line of the page colour. */
+export const UndoRedoPair = styled("div")({
+    display: "flex",
+    gap: 1,
+    "& > span:first-of-type button": {
+        borderTopRightRadius: 0,
+        borderBottomRightRadius: 0
+    },
+    "& > span:last-of-type button": {
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0
+    },
+    // Keeps the focus ring above the button it touches.
+    "& > span:focus-visible, & button:focus-visible": {
+        position: "relative",
+        zIndex: 1
+    }
+});
+
+// Toolbar colours each mean one job, and a disabled button has no fill or
+// border, so it can never be mistaken for an enabled one.
+export const toolbarButtonSx = (theme: Theme) => ({
+    minHeight: theme.game.toolbarButtonHeight,
+    "&.Mui-disabled": {
+        backgroundColor: "transparent",
+        borderColor: "transparent",
+        color: theme.game.colors.toolbar.disabledText
+    }
+});
+
+export const toolbarActionSx = (theme: Theme) => ({
+    ...toolbarButtonSx(theme),
+    "&:hover": {
+        backgroundColor: theme.game.colors.toolbar.actionHover
+    }
+});
+
+export const toolbarInfoSx = (theme: Theme) => ({
+    ...toolbarButtonSx(theme),
+    backgroundColor: theme.game.colors.toolbar.info.main,
+    color: theme.game.colors.toolbar.info.text,
+    "&:hover": {
+        backgroundColor: theme.game.colors.toolbar.info.hover
+    }
+});
+
+export const toolbarResetSx = (theme: Theme) => ({
+    ...toolbarButtonSx(theme),
+    backgroundColor: theme.game.colors.toolbar.reset.main,
+    color: theme.game.colors.toolbar.reset.text,
+    "&:hover": {
+        backgroundColor: theme.game.colors.toolbar.reset.hover
+    }
 });
 
 /**
