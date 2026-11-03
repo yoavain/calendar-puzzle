@@ -35,6 +35,30 @@ test.describe("Toolbar, Esc and Help", () => {
         await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
     });
 
+    test("Esc clears the selection and leaves the board unchanged", async ({ page }, testInfo) => {
+        test.skip(testInfo.project.name !== "desktop", "Selecting by click is the desktop flow");
+        await placePiece(page);
+        const selected = page.locator("[aria-pressed=\"true\"]");
+
+        await game.carouselPiece(PIECE_ID + 1).first().click();
+        await expect(selected).toHaveCount(1);
+
+        await page.keyboard.press("Escape");
+        await expect(selected).toHaveCount(0);
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
+    });
+
+    test("Esc closes an open dialog and leaves the board unchanged", async ({ page }, testInfo) => {
+        test.skip(testInfo.project.name !== "desktop", "Help sits behind the mobile drawer");
+        await placePiece(page);
+        await page.getByRole("button", { name: "How to play" }).click();
+        await expect(page.getByRole("dialog").first()).toBeVisible();
+
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("dialog")).toHaveCount(0);
+        await expect(game.pieceCellsOnBoard(PIECE_ID)).toHaveCount(PIECE_CELL_COUNT);
+    });
+
     test("the Reset button still clears the board", async ({ page }, testInfo) => {
         test.skip(testInfo.project.name !== "desktop", "Mobile labels Reset through its icon button");
         await placePiece(page);

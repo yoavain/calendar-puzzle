@@ -503,7 +503,7 @@
     "typographyMeta": {
       "headline": {
         "displayName": "Headline",
-        "purpose": "Dialog titles and major headings."
+        "purpose": "Major headings. Dialog titles are not standardised."
       },
       "title": {
         "displayName": "Title",

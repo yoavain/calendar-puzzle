@@ -175,7 +175,7 @@ The palette is a neutral table with eight saturated pieces, one yellow date mark
 **Character:** The block-built wordmark supplies the personality, and the system stack stays invisible so that it feels native on every device.
 
 ### Hierarchy
-- **Headline** (600, 1.5rem, 1.35): Dialog titles and major headings.
+- **Headline** (600, 1.5rem, 1.35): Major headings. Dialog titles are not standardised: they range from 1.25rem to 1.5rem, at weight 600 or 700.
 - **Title** (600, 1.25rem, 1.5): Section headings inside dialogs and panels.
 - **Body** (400, 1rem, 1.5): Help text and dialog content.
 - **Label** (500, 0.875rem, 1.5): Buttons and toolbar actions, in sentence case and never uppercase.
@@ -196,7 +196,7 @@ The board is built on a 50px cell with no gap, and its padding is one cell. Othe
 
 ## Elevation & Depth
 
-Depth is reserved for things you could pick up. The board and pieces lift off the table, while toolbars, trays, and buttons stay flat and separate by tone.
+Depth is reserved for things you could pick up. The board and pieces lift off the table, while toolbars, trays, dialogs, and buttons stay flat and separate by tone.
 
 ### Shadow Vocabulary
 - **Board rest** (`0 4px 16px rgba(0,0,0,0.10), 0 1.5px 4px rgba(0,0,0,0.08)`): The board on the table.
@@ -209,7 +209,7 @@ Depth is reserved for things you could pick up. The board and pieces lift off th
 
 ## Shapes
 
-Corners encode what an element is. The board has a deliberately large radius (22px) so it reads as a physical object, and the poster slab shares it. Trays and piece cards use gently curved corners (8px). Buttons, icon buttons, and piece cells use a tight radius (4px). The token and switch shapes use full pills. Piece silhouettes are square-celled polyomino blocks, and their cells have a subtle 135-degree bevel from light to dark.
+Corners encode what an element is. The board has a deliberately large radius (22px) so it reads as a physical object, and the poster slab shares it. Trays, piece cards, and dialogs use gently curved corners (8px). Buttons, icon buttons, and piece cells use a tight radius (4px). The token and switch shapes use full pills. Piece silhouettes are square-celled polyomino blocks, and their cells have a subtle 135-degree bevel from light to dark.
 
 ## Components
 
@@ -223,6 +223,14 @@ Corners encode what an element is. The board has a deliberately large radius (22
 ### Cards / Containers
 - **Piece tray:** A tonal panel (8px radius, 16px padding) holding the piece cards, with no shadow.
 - **Piece card:** A 250 x 300px tile on the page background, holding one piece and its transform controls.
+
+### Dialogs
+- **Surface:** Flat and neutral, with 8px corners, no shadow, and no elevation overlay.
+- **Width:** 444px for a short confirm and the date picker, and 600px for everything else. Year Complete grows to 760px for its mosaic, and narrows on a short window.
+- **Actions:** They end on the same edge as the text, 24px in and 24px up, or 16px on a phone. At most one action is solid blue. Cancel and any button that only dismisses use a neutral outline, and there is no X.
+- **Phones:** 16px margins, and buttons at least 44px high on a touch screen.
+- **After a solve:** One dialog, titled with the solved date, offers the next unsolved date. If today was solved earlier, a notice does this on load and leaves the board usable.
+- **Date picker:** Flat tiles on the board's lines, using the date button's status colours, with today in yellow and a legend.
 
 ### Navigation
 - **Desktop:** A single toolbar row, with the theme switch and sign-in on the left and actions on the right.
@@ -250,5 +258,5 @@ A pill-shaped track above the board, showing placed pieces out of eight.
 ### Don't:
 - **Don't** let the game look like a generic admin dashboard, with grey toolbars and bordered cards and no sense of play.
 - **Don't** use Date Marker Yellow for anything except today's cells.
-- **Don't** add elevation to buttons, toolbars, or trays.
+- **Don't** add elevation to buttons, toolbars, trays, or dialogs.
 - **Don't** set button labels in uppercase.
