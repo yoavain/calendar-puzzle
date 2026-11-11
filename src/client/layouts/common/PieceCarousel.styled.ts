@@ -1,12 +1,31 @@
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import { THUMBNAIL_SIZE } from "../../components/PieceThumbnail.styled";
 
 /**
- * Height of the carousel container (horizontal axis).
- * Includes the 48px thumbnail strip (40px tiles + 8px bottom padding).
- * `getAvailableBoardHeight` reads this, so it also sets the board and piece scale.
+ * Space around the thumbnail strip, in px. It equals `theme.spacing(1)` at the default 8px spacing.
+ * It is a plain number because `CAROUSEL_HEIGHT` is a number that other code uses in sums.
  */
-export const CAROUSEL_HEIGHT = 292;
+const THUMBNAIL_STRIP_GUTTER = 8;
+
+/**
+ * Size of the thumbnail strip across its axis, in px: one tile plus the gutter on the open side.
+ * Horizontal: the strip height. Vertical: the strip width.
+ */
+const THUMBNAIL_STRIP_SIZE = THUMBNAIL_SIZE + THUMBNAIL_STRIP_GUTTER;
+
+/**
+ * Height of the carousel container above the thumbnail strip (horizontal axis), in px.
+ * It holds the container padding, the slide, the piece and the controls.
+ */
+const CAROUSEL_SLIDE_AREA_HEIGHT = 244;
+
+/**
+ * Height of the carousel container (horizontal axis): the slide area plus the thumbnail strip.
+ * `getAvailableBoardHeight` reads this, so it also sets the board and piece scale.
+ * A change to `THUMBNAIL_SIZE` changes this value and shrinks or grows the board.
+ */
+export const CAROUSEL_HEIGHT = CAROUSEL_SLIDE_AREA_HEIGHT + THUMBNAIL_STRIP_SIZE;
 
 /**
  * Width of the carousel container (vertical axis).
@@ -168,8 +187,8 @@ export const IndicatorContainer = styled(Box)<{ axis?: CarouselAxis }>(({ theme,
     gap: theme.spacing(0.25),
     flexShrink: 0,
     ...(axis === "y"
-        // Fixed width: left padding + one 40px tile. Without it the flex item grows to its
+        // Fixed width: left gutter + one tile. Without it the flex item grows to its
         // intrinsic width, which is wrong for tiles that size themselves with aspect-ratio.
-        ? { boxSizing: "border-box", width: theme.spacing(6), paddingLeft: theme.spacing(1), minHeight: 0 }
-        : { padding: theme.spacing(0, 1, 1), minWidth: 0 })
+        ? { boxSizing: "border-box", width: THUMBNAIL_STRIP_SIZE, paddingLeft: THUMBNAIL_STRIP_GUTTER, minHeight: 0 }
+        : { padding: `0 ${THUMBNAIL_STRIP_GUTTER}px ${THUMBNAIL_STRIP_GUTTER}px`, minWidth: 0 })
 }));

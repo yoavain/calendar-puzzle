@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { Piece } from "../../common/types";
 
 /**
@@ -9,28 +9,29 @@ import type { Piece } from "../../common/types";
  * counter-clockwise) to a running total, so the transition always turns the short way.
  *
  * Every view of a piece (the piece itself, its carousel thumbnail) uses this hook with the
- * same transition, so they turn together.
+ * same transition, so they turn together. Each view keeps its own total. The totals can differ
+ * by a multiple of 360 (a view that mounts late starts at `rotation`), which looks the same,
+ * because every view adds the same turn.
+ *
+ * The total updates during render, not in an effect. A rotation change then never commits
+ * a frame with the new rotation and the old total.
  */
 export const useCumulativeRotation = (rotation: Piece["rotation"]): number => {
-    const prevRotation = useRef<number>(rotation);
-    const [cumulativeRotation, setCumulativeRotation] = useState<number>(rotation);
+    const [state, setState] = useState({ prevRotation: rotation as number, total: rotation as number });
 
-    useEffect(() => {
-        const prev = prevRotation.current;
-        if (prev === rotation) {
-            return;
-        }
-        const cwDelta = (rotation - prev + 360) % 360; // Clockwise distance
-        const ccwDelta = (prev - rotation + 360) % 360; // Counter-clockwise distance
-        // Take the shorter path. A tie goes clockwise.
-        const delta = cwDelta <= ccwDelta ? cwDelta : -ccwDelta;
+    if (state.prevRotation === rotation) {
+        return state.total;
+    }
 
-        // When exactly one flip is active, the CSS scale reverses the visual direction.
-        // The Game state handlers invert the logical rotation for that case, so the visual
-        // rotation always follows the logical rotation here.
-        setCumulativeRotation(r => r + delta);
-        prevRotation.current = rotation;
-    }, [rotation]);
+    const cwDelta = (rotation - state.prevRotation + 360) % 360; // Clockwise distance
+    const ccwDelta = (state.prevRotation - rotation + 360) % 360; // Counter-clockwise distance
+    // Take the shorter path. A tie goes clockwise.
+    const delta = cwDelta <= ccwDelta ? cwDelta : -ccwDelta;
 
-    return cumulativeRotation;
+    // When exactly one flip is active, the CSS scale reverses the visual direction.
+    // The Game state handlers invert the logical rotation for that case, so the visual
+    // rotation always follows the logical rotation here.
+    const next = { prevRotation: rotation as number, total: state.total + delta };
+    setState(next);
+    return next.total;
 };
