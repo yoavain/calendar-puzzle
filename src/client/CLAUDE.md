@@ -7,6 +7,14 @@
 - `keyframes` always belong in the sibling `.styled.ts` (never inline in `.tsx`).
 - Prefer theme tokens (`theme.game.radius.*`, `theme.spacing()`, `theme.palette.*`) over raw px / hex values inside `.styled.ts` files.
 
+## Piece Carousel
+
+- The thumbnail strip (`PieceThumbnail`, `IndicatorContainer`) sits outside the Embla viewport. Touches on it never reach Embla's drag handler. Keep it outside.
+- `CAROUSEL_HEIGHT` (portrait) and `CAROUSEL_WIDTH` (landscape) feed `getAvailableBoardHeight` and `getAvailableBoardWidth`. A larger value shrinks the board and the pieces on phones where that side limits the board.
+- The strip has one fixed tile per piece, in id order. A placed piece keeps its tile, dimmed, in its board orientation. The e2e tab index is the piece id minus one.
+- A tile turns and flips like the carousel piece. Both use `useCumulativeRotation`, `buildPieceTransform` and `PIECE_TRANSFORM_TRANSITION`. Change them together.
+- The landscape strip needs a fixed width. Without it the column grows to its intrinsic width and squeezes the slide. The landscape controls form a 2 x 2 grid.
+
 ## Drag-and-Drop Architecture
 
 **Key patterns:**

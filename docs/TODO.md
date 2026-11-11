@@ -9,7 +9,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### Accessibility
 - [ ] High contrast mode
-- [ ] Touch target audit failed in PageSpeed (Accessibility 95). The 8 carousel dots are now 24 to 40 px piece thumbnails (`PieceThumbnail.tsx`). The rotate and flip buttons measure 50 by 50 px at every size tested. Run PageSpeed on Production after the deploy, and close this item when the audit passes. Test one touch drag on a real phone: the carousel and dnd-kit race is in `src/client/CLAUDE.md`.
+- [x] Touch target audit failed in PageSpeed (Accessibility 95). Done 2026-11-11: the 8 carousel dots are now 24 to 40 px piece thumbnails (`PieceThumbnail.tsx`), and the owner reports that the PageSpeed run on Dev shows no accessibility issue. The owner tested drag and layout on a real phone: fine. Not yet re-run on Production.
 - [ ] Look at the progress bar count and the carousel piece names on a phone in the three layouts. Only the isolated component was checked. The light `progress.placementTrack` (`#757575`) is redundant now that the count sits on a pill. Set it back to `#e0e0e0` in `theme.ts` if the heavy empty bar is not wanted.
 
 ### Hint Tokens
