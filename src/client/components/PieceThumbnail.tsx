@@ -1,13 +1,16 @@
 import React from "react";
-import { getPieceShape, PIECE_IDS, type PieceId } from "../../common/pieceData";
+import { getTransformedShape } from "../../common/gameLogic";
+import { PIECE_IDS, type PieceId } from "../../common/pieceData";
+import type { Piece } from "../../common/types";
 import { getPieceColor } from "../utils/pieceColors";
 import { ThumbnailButton } from "./PieceThumbnail.styled";
 
-/** Cells along one side of the thumbnail grid. The tallest piece is 4 cells. */
+/** Cells along one side of the thumbnail grid. The tallest piece is 4 cells, in every orientation. */
 const GRID_CELLS = 4;
 
 interface PieceThumbnailProps {
-    pieceId: PieceId;
+    /** The piece to draw. The thumbnail follows its rotation and flips, also after the piece is placed. */
+    piece: Piece;
     /** The piece the carousel is showing now. */
     isActive: boolean;
     /** The piece is on the board, so the carousel does not hold it. */
@@ -17,15 +20,15 @@ interface PieceThumbnailProps {
 
 /**
  * Tab button of the carousel strip. Draws the piece's own shape in its own colour,
- * in the start orientation, so it does not change when the player rotates or flips.
- * A placed piece is dimmed and does nothing when tapped.
+ * in its current orientation. A placed piece is dimmed, keeps the orientation it has
+ * on the board, and does nothing when tapped.
  */
-export const PieceThumbnail: React.FC<PieceThumbnailProps> = ({ pieceId, isActive, isPlaced, onSelect }) => {
-    const shape = getPieceShape(pieceId);
-    const color = getPieceColor(pieceId);
+export const PieceThumbnail: React.FC<PieceThumbnailProps> = ({ piece, isActive, isPlaced, onSelect }) => {
+    const shape = getTransformedShape(piece);
+    const color = getPieceColor(piece.id);
     const offsetX = (GRID_CELLS - shape[0].length) / 2;
     const offsetY = (GRID_CELLS - shape.length) / 2;
-    // A cell is identified by its grid position, which never changes for a piece.
+    // A cell is identified by its grid position within this orientation.
     const cells: { x: number; y: number }[] = [];
     shape.forEach((row, y) => row.forEach((filled, x) => {
         if (filled) {
@@ -39,13 +42,13 @@ export const PieceThumbnail: React.FC<PieceThumbnailProps> = ({ pieceId, isActiv
             role="tab"
             isActive={isActive}
             isPlaced={isPlaced}
-            aria-label={`Piece ${pieceId} of ${PIECE_IDS.length}${isPlaced ? ", placed" : ""}`}
+            aria-label={`Piece ${piece.id} of ${PIECE_IDS.length}${isPlaced ? ", placed" : ""}`}
             aria-selected={isActive}
             aria-disabled={isPlaced || undefined}
             tabIndex={isPlaced ? -1 : 0}
             onClick={() => {
                 if (!isPlaced) {
-                    onSelect(pieceId);
+                    onSelect(piece.id);
                 }
             }}
         >

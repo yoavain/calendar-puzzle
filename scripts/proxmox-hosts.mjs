@@ -48,8 +48,8 @@ const PUBLIC_URLS = {
     production: "https://calendar-puzzle.yoavain.org"
 };
 
-/** Health endpoint to test end to end, through DNS, TLS and the tunnel. */
-export const publicHealthUrl = (env) => `${PUBLIC_URLS[env]}/api/health`;
+/** Address of the game, to open in a browser and test end to end, through DNS, TLS and the tunnel. */
+export const publicUrl = (env) => PUBLIC_URLS[env];
 
 /** Unprivileged account used for deploys, backups and restores. */
 export const deployUser = () => process.env.CALENDAR_PUZZLE_DEPLOY_USER || "deploy";

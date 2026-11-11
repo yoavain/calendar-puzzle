@@ -88,6 +88,7 @@ export const PortraitLayout: React.FC = () => {
                 {/* Piece Carousel at Bottom */}
                 <PieceCarousel
                     pieces={unplacedPieces}
+                    allPieces={game.gameState.pieces}
                     selectedPieceId={game.gameState.selectedPieceId}
                     onPieceSelect={game.handlePieceSelect}
                     onRotatePiece={game.handleRotatePiece}

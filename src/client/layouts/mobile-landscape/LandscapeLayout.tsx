@@ -88,6 +88,7 @@ export const LandscapeLayout: React.FC = () => {
                         <CarouselColumn>
                             <PieceCarousel
                                 pieces={unplacedPieces}
+                                allPieces={game.gameState.pieces}
                                 selectedPieceId={game.gameState.selectedPieceId}
                                 onPieceSelect={game.handlePieceSelect}
                                 onRotatePiece={game.handleRotatePiece}

@@ -80,6 +80,8 @@ function watchDragYieldToActivePiece(emblaApi: EmblaCarouselType, evt: MouseEven
 interface PieceCarouselProps {
     /** Array of pieces to display (unplaced pieces only) */
     pieces: PieceType[];
+    /** All eight pieces, placed or not. The thumbnail strip draws each one in its current orientation. */
+    allPieces: PieceType[];
     /** Currently selected piece ID */
     selectedPieceId: PieceId | null;
     /** Handler when a piece is selected */
@@ -159,6 +161,7 @@ function buildSlides(pieces: PieceType[]): SlideEntry[] {
  */
 export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     pieces,
+    allPieces,
     selectedPieceId,
     onPieceSelect,
     onRotatePiece,
@@ -395,6 +398,11 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     // The strip sits outside the Embla viewport, so touches on it never reach Embla's drag handler.
     const activePieceId = slides[activeIndex]?.piece.id ?? null;
     const unplacedIds = useMemo(() => new Set(pieces.map(p => p.id)), [pieces]);
+    // One tile per piece, in piece order, so a tile keeps its slot when the piece is placed.
+    const stripPieces = useMemo(
+        () => PIECE_IDS.flatMap(id => allPieces.find(p => p.id === id) ?? []),
+        [allPieces]
+    );
 
     // Handle thumbnail tap - scroll to the first slide that holds that piece
     const scrollToPiece = useCallback((pieceId: PieceId) => {
@@ -473,12 +481,12 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
 
             {/* Thumbnail strip - one fixed tile per piece, in piece order; placed pieces are dimmed */}
             <IndicatorContainer axis={axis} role="tablist" aria-label="Pieces">
-                {PIECE_IDS.map(pieceId => (
+                {stripPieces.map(piece => (
                     <PieceThumbnail
-                        key={pieceId}
-                        pieceId={pieceId}
-                        isActive={pieceId === activePieceId}
-                        isPlaced={!unplacedIds.has(pieceId)}
+                        key={piece.id}
+                        piece={piece}
+                        isActive={piece.id === activePieceId}
+                        isPlaced={!unplacedIds.has(piece.id)}
                         onSelect={scrollToPiece}
                     />
                 ))}
