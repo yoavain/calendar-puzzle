@@ -3,8 +3,10 @@ import Box from "@mui/material/Box";
 
 /**
  * Height of the carousel container (horizontal axis).
+ * Includes the 48px thumbnail strip (40px tiles + 8px bottom padding).
+ * `getAvailableBoardHeight` reads this, so it also sets the board and piece scale.
  */
-export const CAROUSEL_HEIGHT = 260;
+export const CAROUSEL_HEIGHT = 292;
 
 /**
  * Width of the carousel container (vertical axis).
@@ -133,12 +135,15 @@ export const PieceWrapper = styled(Box)({
  * Only the active slide shows its controls. Hiding them with visibility keeps
  * the slide's layout, removes them from the tab order, and lets a touch on the
  * empty space reach the slide, so a swipe still starts there.
+ * Horizontal: one row of four. Vertical: a 2 x 2 grid, because the slide is too
+ * narrow for one row of four.
  */
 export const ControlsWrapper = styled(Box, {
-    shouldForwardProp: (prop) => prop !== "isActive"
-})<{ isActive: boolean }>(({ theme, isActive }) => ({
-    display: "flex",
-    flexDirection: "row",
+    shouldForwardProp: (prop) => prop !== "isActive" && prop !== "axis"
+})<{ isActive: boolean; axis?: CarouselAxis }>(({ theme, isActive, axis }) => ({
+    ...(axis === "y"
+        ? { display: "grid", gridTemplateColumns: "repeat(2, auto)" }
+        : { display: "flex", flexDirection: "row" }),
     alignItems: "center",
     justifyContent: "center",
     gap: theme.spacing(1),
@@ -151,36 +156,20 @@ export const ControlsWrapper = styled(Box, {
 }));
 
 /**
- * Indicator dots showing current position in carousel.
- * Horizontal: row below viewport. Vertical: column to the right of viewport.
+ * Strip of piece thumbnails (one per piece).
+ * Horizontal: row below the viewport. Vertical: column to the right of the viewport.
+ * The tiles shrink to fit, so the strip never scrolls and never clips.
  */
 export const IndicatorContainer = styled(Box)<{ axis?: CarouselAxis }>(({ theme, axis }) => ({
     display: "flex",
     flexDirection: axis === "y" ? "column" : "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: theme.spacing(0.75),
+    gap: theme.spacing(0.25),
     flexShrink: 0,
-    ...(axis === "y" ? { paddingLeft: theme.spacing(1) } : { paddingBottom: theme.spacing(1) })
-}));
-
-/**
- * Individual indicator dot.
- */
-export const IndicatorDot = styled(Box)<{ isActive?: boolean }>(({ theme, isActive }) => ({
-    width: 8,
-    height: 8,
-    borderRadius: "50%",
-    backgroundColor: isActive
-        ? theme.palette.primary.main
-        : theme.palette.action.disabled,
-    transition: "background-color 0.2s ease, transform 0.15s ease",
-    cursor: "pointer",
-    "&:hover": {
-        transform: "scale(1.2)"
-    },
-    "&:focus-visible": {
-        outline: `2px solid ${theme.palette.primary.main}`,
-        outlineOffset: 2
-    }
+    ...(axis === "y"
+        // Fixed width: left padding + one 40px tile. Without it the flex item grows to its
+        // intrinsic width, which is wrong for tiles that size themselves with aspect-ratio.
+        ? { boxSizing: "border-box", width: theme.spacing(6), paddingLeft: theme.spacing(1), minHeight: 0 }
+        : { padding: theme.spacing(0, 1, 1), minWidth: 0 })
 }));

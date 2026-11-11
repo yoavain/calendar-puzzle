@@ -223,7 +223,7 @@ async function transformPiece(
 
 /** Places every piece of the solution through the UI. Returns the piece ids in placement order. */
 async function solveByHand(page: Page, game: GamePage, layout: LayoutKind, solution: GameState): Promise<number[]> {
-    // Track placed piece IDs to compute correct carousel index
+    // Track placed piece IDs, in placement order
     const placedPieceIds: number[] = [];
 
     // Place in reverse id order (the solver returns pieces sorted by id), so
@@ -236,13 +236,8 @@ async function solveByHand(page: Page, game: GamePage, layout: LayoutKind, solut
         const pieceId = solvedPiece.id;
         const { rotation, isFlippedH, isFlippedV, position } = solvedPiece;
 
-        // The carousel only shows unplaced pieces. Compute the
-        // current index of this piece in the filtered carousel.
-        const carouselIndex = solution.pieces
-            .filter(p => p.position !== null)
-            .filter(p => !placedPieceIds.includes(p.id))
-            .sort((a, b) => a.id - b.id)
-            .findIndex(p => p.id === pieceId);
+        // The thumbnail strip has one fixed tab per piece, so the tab index is the id minus one.
+        const carouselIndex = pieceId - 1;
 
         // 3a. Apply rotation/flip transforms
         await transformPiece(page, game, layout, pieceId, carouselIndex, rotation, isFlippedH, isFlippedV);

@@ -65,6 +65,48 @@ export const TwoPieces: Story = {
     }
 };
 
+export const ThreePlaced: Story = {
+    name: "Three placed (dimmed tiles)",
+    render: () => {
+        // Pieces 2, 5 and 7 are on the board, so the carousel does not hold them.
+        const pieces = makeMockPieces().filter(p => ![2, 5, 7].includes(p.id));
+        return (
+            <div style={{ width: 350 }}>
+                <PieceCarousel
+                    pieces={pieces}
+                    selectedPieceId={pieces[0].id}
+                    onPieceSelect={noop}
+                    onRotatePiece={noop}
+                    onRotateCCWPiece={noop}
+                    onFlipHPiece={noop}
+                    onFlipVPiece={noop}
+                />
+            </div>
+        );
+    }
+};
+
+export const Landscape: Story = {
+    name: "Landscape (vertical axis)",
+    render: () => {
+        const pieces = makeMockPieces();
+        return (
+            <div style={{ height: 390 }}>
+                <PieceCarousel
+                    pieces={pieces}
+                    selectedPieceId={pieces[0].id}
+                    onPieceSelect={noop}
+                    onRotatePiece={noop}
+                    onRotateCCWPiece={noop}
+                    onFlipHPiece={noop}
+                    onFlipVPiece={noop}
+                    axis="y"
+                />
+            </div>
+        );
+    }
+};
+
 const DesktopWidthStory = (): React.JSX.Element => {
     const [pieces, setPieces] = useState(makeMockPieces);
     const [selectedPieceId, setSelectedPieceId] = useState<PieceId | null>(pieces[0]?.id ?? null);

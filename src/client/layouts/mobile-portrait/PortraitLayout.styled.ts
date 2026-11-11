@@ -22,10 +22,10 @@ export const PortraitContainer = styled(Box)({
 });
 
 /**
- * Content area between toolbar and carousel.
+ * Content area between toolbar and carousel. It is the page's `main` landmark.
  * Contains the board and takes remaining space.
  */
-export const ContentArea = styled(Box)(({ theme }) => ({
+export const ContentArea = styled("main")(({ theme }) => ({
     flex: 1,
     display: "flex",
     flexDirection: "column",

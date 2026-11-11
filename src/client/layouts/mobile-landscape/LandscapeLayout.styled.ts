@@ -43,9 +43,9 @@ export const ToolbarColumn = styled(Box)(({ theme }) => ({
 }));
 
 /**
- * Main content column: content row (board column | carousel).
+ * Main content column: content row (board column | carousel). It is the page's `main` landmark.
  */
-export const MainColumn = styled(Box)({
+export const MainColumn = styled("main")({
     flex: 1,
     minWidth: 0,
     display: "flex",
