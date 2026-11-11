@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { useTheme } from "@mui/material/styles";
 import type { Piece as PieceType } from "../../common/types";
 import { getTransformedShape } from "../../common/gameLogic";
@@ -6,6 +6,8 @@ import { getPieceShape } from "../../common/pieceData";
 import { getPieceColor } from "../utils/pieceColors";
 import { logToServer } from "../service/logService.js";
 import { getScaledCellSize } from "../utils/measureUtils";
+import { buildPieceTransform } from "../utils/pieceTransform";
+import { useCumulativeRotation } from "../hooks/useCumulativeRotation";
 import { PieceCell, PieceGrid, PieceWrapper } from "./Piece.styled";
 
 interface PieceProps {
@@ -29,41 +31,9 @@ interface PieceProps {
 export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDragEnd, cellSizePx, keyboardSelectable = false, isSelected = false }) => {
     const theme = useTheme();
     
-    // Track cumulative rotation to ensure smooth clockwise animation
-    // (avoids counter-clockwise jump when going from 270° to 0°)
-    const prevRotation = useRef<number>(piece.rotation);
-    const [cumulativeRotation, setCumulativeRotation] = useState<number>(piece.rotation);
-
-    useEffect(() => {
-        const prev = prevRotation.current;
-        const curr = piece.rotation;
-
-        if (prev !== curr) {
-            // Calculate the delta, detecting shortest rotation path (CW or CCW)
-            const cwDelta = (curr - prev + 360) % 360; // Clockwise distance
-            const ccwDelta = (prev - curr + 360) % 360; // Counter-clockwise distance
-            
-            // Choose the shorter path
-            let delta: number;
-            if (cwDelta <= ccwDelta) {
-                // Clockwise is shorter or equal
-                delta = cwDelta;
-            }
-            else {
-                // Counter-clockwise is shorter (use negative delta)
-                delta = -ccwDelta;
-            }
-            
-            // When exactly one flip is active (XOR), the CSS scale transform reverses
-            // the visual rotation direction. However, we now handle this by inverting
-            // the logical rotation in the Game state handlers, so the visual rotation
-            // here should always follow the logical rotation to stay in sync.
-            const adjustedDelta = delta;
-            
-            setCumulativeRotation(r => r + adjustedDelta);
-            prevRotation.current = curr;
-        }
-    }, [piece.rotation]);
+    // Cumulative rotation keeps the animation on the short way round
+    // (avoids a jump back from 270° to 0°). The carousel thumbnail uses the same hook.
+    const cumulativeRotation = useCumulativeRotation(piece.rotation);
 
     // Use base shape for visual rendering (CSS handles rotation/flip)
     const baseShape = getPieceShape(piece.id);
@@ -73,15 +43,8 @@ export const Piece: React.FC<PieceProps> = ({ piece, onClick, onDragStart, onDra
     // Still need transformed shape for drag preview (used for placement)
     const transformedShape = getTransformedShape(piece);
 
-    // Build CSS transform string
-    // CSS applies transforms RIGHT-TO-LEFT, so we need to reverse the order
-    // to match getTransformedShape which applies: rotation → flipH → flipV
-    // Always include all transforms to maintain consistent structure for smooth animations
-    const transformStyle = [
-        `scaleY(${piece.isFlippedV ? -1 : 1})`,
-        `scaleX(${piece.isFlippedH ? -1 : 1})`,
-        `rotate(${cumulativeRotation}deg)`
-    ].join(" ");
+    // CSS transform that matches getTransformedShape (rotation → flipH → flipV)
+    const transformStyle = buildPieceTransform(piece, cumulativeRotation);
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
         // Notify parent that drag started

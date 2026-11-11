@@ -23,8 +23,8 @@ It ships no secrets; those live on each LXC.
 
 | Environment | Deploy command | DB backup |
 |---|---|---|
-| **Dev** | `npm run deploy:dev:proxmox` | `npm run backup:dev:proxmox` |
-| **Production** | `npm run deploy:production:proxmox` | `npm run backup:production:proxmox` |
+| **Dev** | `npm run deploy:dev` | `npm run backup:dev:proxmox` |
+| **Production** | `npm run deploy:production` | `npm run backup:production:proxmox` |
 
 **Every change must be deployed to Dev first and manually tested before being promoted to Production.**
 Deploy to Production only after Dev validation.

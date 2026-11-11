@@ -28,7 +28,7 @@ import {
     SERVICE_NAME,
     SERVICE_PORT,
     proxmoxHost,
-    publicHealthUrl,
+    publicUrl,
     sshDestination,
     sshOptions
 } from "./proxmox-hosts.mjs";
@@ -274,11 +274,11 @@ const main = async () => {
         // The origin answered the health check above, so testing it again from
         // inside the network proves nothing new. What is still untested is the
         // path the players take: DNS, TLS and the tunnel in front of this LXC.
+        // Print the game, not the health endpoint, so one click opens it in a browser.
         console.log("  Test it end to end:");
-        console.log(`    ${publicHealthUrl(env)}`);
-        console.log(`    curl -sS -o /dev/null -w '%{http_code}\\n' ${publicHealthUrl(env)}`);
+        console.log(`    ${publicUrl(env)}`);
         if (env === "dev") {
-            console.log("\n  Dev must pass before production. Then run: npm run deploy:production:proxmox");
+            console.log("\n  Dev must pass before production. Then run: npm run deploy:production");
         }
     }
     finally {

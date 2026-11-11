@@ -9,7 +9,7 @@ const PIECE_CAROUSEL_INDEX = 3;
 const PIECE_CELL_COUNT = 5;
 
 const activeDotIndex = (page: Page) => page.locator("[role='tab']").evaluateAll(
-    (dots) => dots.findIndex((dot) => dot.getAttribute("aria-selected") === "true")
+    (tabs) => tabs.findIndex((tab) => tab.getAttribute("aria-selected") === "true")
 );
 
 /** Swipes along the carousel axis, starting on a neighbour's hidden controls. */

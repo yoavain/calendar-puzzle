@@ -2,6 +2,7 @@ import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import { keyframes } from "@emotion/react";
 import { getPieceColor, PIECE_CELL_GRADIENT } from "../utils/pieceColors";
+import { PIECE_TRANSFORM_TRANSITION } from "../utils/pieceTransform";
 
 // Animations
 export const pieceDropIn = keyframes`
@@ -94,7 +95,7 @@ export const PieceGrid = styled("div", {
         margin: 0,
         padding: 0,
         transform: transformStyle,
-        transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, filter 0.25s ease",
+        transition: `${PIECE_TRANSFORM_TRANSITION}, box-shadow 0.25s ease, filter 0.25s ease`,
         borderRadius: theme.game.radius.sm,
         // Prevent sub-pixel gaps between cells during transforms
         backfaceVisibility: "hidden",

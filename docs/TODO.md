@@ -9,7 +9,7 @@ This document tracks planned features and improvements for the Calendar Puzzle p
 
 ### Accessibility
 - [ ] High contrast mode
-- [ ] Touch target audit fails in PageSpeed (Accessibility 95, the only audit left). Elements: the 8 carousel indicator dots (`role="tab"`, `aria-label="Piece N of 8"`) and the rotate and flip icon buttons in `PieceCarousel.tsx`. Lighthouse wants a target of at least 24 by 24 px, or enough space around it. Measure the sizes and gaps first. If the look changes, ask the owner. Pad the hit area and keep the dot size. Test one touch drag after the change: the carousel and dnd-kit race is in `src/client/CLAUDE.md`.
+- [x] Touch target audit failed in PageSpeed (Accessibility 95). Done 2026-11-11: the 8 carousel dots are now 24 to 40 px piece thumbnails (`PieceThumbnail.tsx`), and the owner reports that the PageSpeed run on Dev shows no accessibility issue. The owner tested drag and layout on a real phone: fine. Not yet re-run on Production.
 - [ ] Look at the progress bar count and the carousel piece names on a phone in the three layouts. Only the isolated component was checked. The light `progress.placementTrack` (`#757575`) is redundant now that the count sits on a pill. Set it back to `#e0e0e0` in `theme.ts` if the heavy empty bar is not wanted.
 
 ### Hint Tokens

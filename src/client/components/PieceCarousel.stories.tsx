@@ -33,6 +33,7 @@ export const AllPieces: Story = {
             <div style={{ width: 350 }}>
                 <PieceCarousel
                     pieces={pieces}
+                    allPieces={pieces}
                     selectedPieceId={pieces[0].id}
                     onPieceSelect={noop}
                     onRotatePiece={noop}
@@ -48,17 +49,64 @@ export const AllPieces: Story = {
 export const TwoPieces: Story = {
     name: "Two Pieces (slide duplication)",
     render: () => {
-        const pieces = makeMockPieces().slice(0, 2);
+        const allPieces = makeMockPieces();
+        const pieces = allPieces.slice(0, 2);
         return (
             <div style={{ width: 350 }}>
                 <PieceCarousel
                     pieces={pieces}
+                    allPieces={allPieces}
                     selectedPieceId={pieces[0].id}
                     onPieceSelect={noop}
                     onRotatePiece={noop}
                     onRotateCCWPiece={noop}
                     onFlipHPiece={noop}
                     onFlipVPiece={noop}
+                />
+            </div>
+        );
+    }
+};
+
+export const ThreePlaced: Story = {
+    name: "Three placed (dimmed tiles)",
+    render: () => {
+        // Pieces 2, 5 and 7 are on the board, so the carousel does not hold them.
+        const allPieces = makeMockPieces();
+        const pieces = allPieces.filter(p => ![2, 5, 7].includes(p.id));
+        return (
+            <div style={{ width: 350 }}>
+                <PieceCarousel
+                    pieces={pieces}
+                    allPieces={allPieces}
+                    selectedPieceId={pieces[0].id}
+                    onPieceSelect={noop}
+                    onRotatePiece={noop}
+                    onRotateCCWPiece={noop}
+                    onFlipHPiece={noop}
+                    onFlipVPiece={noop}
+                />
+            </div>
+        );
+    }
+};
+
+export const Landscape: Story = {
+    name: "Landscape (vertical axis)",
+    render: () => {
+        const pieces = makeMockPieces();
+        return (
+            <div style={{ height: 390 }}>
+                <PieceCarousel
+                    pieces={pieces}
+                    allPieces={pieces}
+                    selectedPieceId={pieces[0].id}
+                    onPieceSelect={noop}
+                    onRotatePiece={noop}
+                    onRotateCCWPiece={noop}
+                    onFlipHPiece={noop}
+                    onFlipVPiece={noop}
+                    axis="y"
                 />
             </div>
         );
@@ -76,6 +124,7 @@ const DesktopWidthStory = (): React.JSX.Element => {
         <PiecesContainer>
             <PieceCarousel
                 pieces={pieces}
+                allPieces={pieces}
                 selectedPieceId={selectedPieceId}
                 onPieceSelect={setSelectedPieceId}
                 onRotatePiece={id => {
@@ -110,6 +159,7 @@ export const Empty: Story = {
         <div style={{ width: 350 }}>
             <PieceCarousel
                 pieces={[] as Piece[]}
+                allPieces={[] as Piece[]}
                 selectedPieceId={null}
                 onPieceSelect={noop}
                 onRotatePiece={noop}

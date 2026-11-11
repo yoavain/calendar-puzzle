@@ -113,13 +113,14 @@ export class GamePage {
     // ─── Carousel ─────────────────────────────────────────────────
 
     /**
-     * Scroll the piece carousel so that the piece at `pieceIndex` (0-based)
-     * becomes the active slide.  Clicks the indicator dot and waits for
-     * the scroll animation to settle.
+     * Scroll the piece carousel so that the piece in thumbnail slot `pieceIndex`
+     * becomes the active slide.  The strip has one fixed slot per piece, so the
+     * index is the piece id minus one (0-based).  Clicks the thumbnail and waits
+     * for the scroll animation to settle.  A placed piece does not respond.
      */
     async scrollCarouselToPiece(pieceIndex: number) {
-        const dot = this.page.locator("[role=\"tab\"]").nth(pieceIndex);
-        await dot.click({ force: true });
+        const thumbnail = this.page.locator("[role=\"tab\"]").nth(pieceIndex);
+        await thumbnail.click({ force: true });
         await this.page.waitForTimeout(400);
     }
 

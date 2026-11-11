@@ -1,7 +1,7 @@
 # Database Backup & Restore
 
 Each environment's Postgres runs on its Proxmox LXC. The backup and restore scripts reach it over SSH as
-the deploy account, with the same key and host settings as `npm run deploy:<env>:proxmox`.
+the deploy account, with the same key and host settings as `npm run deploy:<env>`.
 
 - `scripts/db-backup.js` streams a plain-SQL `pg_dump` from the LXC to a local file.
 - `scripts/db-restore.js` streams a local file back into `psql` on the LXC, after a Y/N prompt.

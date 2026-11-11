@@ -9,8 +9,9 @@ import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import FlipIcon from "@mui/icons-material/Flip";
 
 import { DraggablePiece } from "../../components/DraggablePiece";
+import { PieceThumbnail } from "../../components/PieceThumbnail";
 import type { Piece as PieceType } from "../../../common/types";
-import type { PieceId } from "../../../common/pieceData";
+import { PIECE_IDS, type PieceId } from "../../../common/pieceData";
 import {
     CarouselContainer,
     CarouselViewport,
@@ -19,7 +20,6 @@ import {
     PieceWrapper,
     ControlsWrapper,
     IndicatorContainer,
-    IndicatorDot,
     type SlideState
 } from "./PieceCarousel.styled";
 
@@ -80,6 +80,8 @@ function watchDragYieldToActivePiece(emblaApi: EmblaCarouselType, evt: MouseEven
 interface PieceCarouselProps {
     /** Array of pieces to display (unplaced pieces only) */
     pieces: PieceType[];
+    /** All eight pieces, placed or not. The thumbnail strip draws each one in its current orientation. */
+    allPieces: PieceType[];
     /** Currently selected piece ID */
     selectedPieceId: PieceId | null;
     /** Handler when a piece is selected */
@@ -155,10 +157,11 @@ function buildSlides(pieces: PieceType[]): SlideEntry[] {
  * - Shows current piece centered with controls
  * - Adjacent pieces are partially visible and dimmed, without their controls
  * - Non-adjacent slides hidden to prevent loop animation glitches
- * - Indicator dots show position
+ * - A strip of piece thumbnails shows all eight pieces; placed ones are dimmed
  */
 export const PieceCarousel: React.FC<PieceCarouselProps> = ({
     pieces,
+    allPieces,
     selectedPieceId,
     onPieceSelect,
     onRotatePiece,
@@ -391,10 +394,20 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
         }
     }, [emblaApi, selectedPieceId, pieces, slides, activeRealIndex, scheduleTimeout]);
 
-    // Handle indicator dot click - scroll to first slide matching that real index
-    const scrollToIndex = useCallback((realIndex: number) => {
+    // Thumbnail strip: the piece in the active slide, and the pieces still in the carousel.
+    // The strip sits outside the Embla viewport, so touches on it never reach Embla's drag handler.
+    const activePieceId = slides[activeIndex]?.piece.id ?? null;
+    const unplacedIds = useMemo(() => new Set(pieces.map(p => p.id)), [pieces]);
+    // One tile per piece, in piece order, so a tile keeps its slot when the piece is placed.
+    const stripPieces = useMemo(
+        () => PIECE_IDS.flatMap(id => allPieces.find(p => p.id === id) ?? []),
+        [allPieces]
+    );
+
+    // Handle thumbnail tap - scroll to the first slide that holds that piece
+    const scrollToPiece = useCallback((pieceId: PieceId) => {
         if (emblaApi) {
-            const slideIndex = slides.findIndex(s => s.realIndex === realIndex);
+            const slideIndex = slides.findIndex(s => s.piece.id === pieceId);
             if (slideIndex >= 0) {
                 emblaApi.scrollTo(slideIndex);
             }
@@ -426,7 +439,7 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                                     />
                                 </PieceWrapper>
 
-                                <ControlsWrapper isActive={slideState === "active"}>
+                                <ControlsWrapper isActive={slideState === "active"} axis={axis}>
                                     <IconButton
                                         size="large"
                                         onClick={() => onRotatePiece(piece.id)}
@@ -466,22 +479,15 @@ export const PieceCarousel: React.FC<PieceCarouselProps> = ({
                 </CarouselTrack>
             </CarouselViewport>
 
-            {/* Position indicator dots - one per real piece, not per slide */}
+            {/* Thumbnail strip - one fixed tile per piece, in piece order; placed pieces are dimmed */}
             <IndicatorContainer axis={axis} role="tablist" aria-label="Pieces">
-                {pieces.map((piece, index) => (
-                    <IndicatorDot
+                {stripPieces.map(piece => (
+                    <PieceThumbnail
                         key={piece.id}
-                        isActive={index === activeRealIndex}
-                        onClick={() => scrollToIndex(index)}
-                        role="tab"
-                        aria-label={`Piece ${index + 1} of ${pieces.length}`}
-                        aria-selected={index === activeRealIndex}
-                        tabIndex={0}
-                        onKeyDown={(e: React.KeyboardEvent) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                                scrollToIndex(index);
-                            }
-                        }}
+                        piece={piece}
+                        isActive={piece.id === activePieceId}
+                        isPlaced={!unplacedIds.has(piece.id)}
+                        onSelect={scrollToPiece}
                     />
                 ))}
             </IndicatorContainer>
