@@ -33,7 +33,7 @@ import { TokenFlight } from "../../components/TokenFlight";
 import { HintErrorToast } from "../../components/HintErrorToast";
 import { TokenIntroDialog } from "../../components/TokenIntroDialog";
 import { TokenConfirmDialog } from "../../components/TokenConfirmDialog";
-import { ShareDialog } from "../../components/ShareDialog";
+import { LazyShareDialog } from "../../components/LazyShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
 import { ToolbarIconButton } from "../../components/ToolbarIconButton";
 import calendarImg from "../../assets/CALENDAR.png";
@@ -262,7 +262,7 @@ export const DesktopLayout: React.FC = () => {
                         <HelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
 
                         {/* Share Modal */}
-                        <ShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
+                        <LazyShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
 
                         {/* Year Complete Dialog */}
                         <YearCompleteDialog

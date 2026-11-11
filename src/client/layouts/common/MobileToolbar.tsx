@@ -27,7 +27,7 @@ import { SolutionButton } from "../../components/SolutionButton";
 import { HintButton } from "../../components/HintButton";
 import { TokenMenuBadge } from "../../components/TokenMenuBadge";
 import { HallOfFameModal } from "../../components/HallOfFameModal";
-import { ShareDialog } from "../../components/ShareDialog";
+import { LazyShareDialog } from "../../components/LazyShareDialog";
 
 import type { GameController } from "./useGameController";
 import {
@@ -267,7 +267,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
             />
 
             {/* Share Modal */}
-            <ShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
+            <LazyShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
         </>
     );
 };
