@@ -7,5 +7,5 @@ import { lazyDialog } from "./lazyDialog";
  */
 export const LazyShareDialog = lazyDialog<ComponentProps<typeof ShareDialog>>(
     () => import("./ShareDialog").then(module => ({ default: module.ShareDialog })),
-    "ShareDialog"
+    { name: "ShareDialog", isOpen: props => props.open, close: props => props.onClose() }
 );

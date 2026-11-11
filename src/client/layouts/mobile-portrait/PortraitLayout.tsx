@@ -5,7 +5,7 @@ import { StatsModal } from "../../components/StatsModal";
 import { IssueModal } from "../../components/IssueModal";
 import { HelpModal } from "../../components/HelpModal";
 import { SolvedTodayNotice } from "../../components/SolvedTodayNotice";
-import { YearCompleteDialog } from "../../components/YearCompleteDialog";
+import { LazyYearCompleteDialog } from "../../components/LazyYearCompleteDialog";
 import { TokenFlight } from "../../components/TokenFlight";
 import { HintErrorToast } from "../../components/HintErrorToast";
 import { TokenIntroDialog } from "../../components/TokenIntroDialog";
@@ -115,7 +115,7 @@ export const PortraitLayout: React.FC = () => {
                     open={game.modals.help.isOpen}
                     onClose={game.modals.help.close}
                 />
-                <YearCompleteDialog
+                <LazyYearCompleteDialog
                     isOpen={game.modals.yearComplete.isOpen}
                     onPlayRandom={game.handlePlayRandomDate}
                     onClose={game.modals.yearComplete.close}

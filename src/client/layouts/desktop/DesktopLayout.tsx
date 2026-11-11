@@ -28,7 +28,7 @@ import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 import { GoalHint } from "../../components/GoalHint";
 import { HelpModal } from "../../components/HelpModal";
 import { SolvedTodayNotice } from "../../components/SolvedTodayNotice";
-import { YearCompleteDialog } from "../../components/YearCompleteDialog";
+import { LazyYearCompleteDialog } from "../../components/LazyYearCompleteDialog";
 import { TokenFlight } from "../../components/TokenFlight";
 import { HintErrorToast } from "../../components/HintErrorToast";
 import { TokenIntroDialog } from "../../components/TokenIntroDialog";
@@ -265,7 +265,7 @@ export const DesktopLayout: React.FC = () => {
                         <LazyShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
 
                         {/* Year Complete Dialog */}
-                        <YearCompleteDialog
+                        <LazyYearCompleteDialog
                             isOpen={game.modals.yearComplete.isOpen}
                             onPlayRandom={game.handlePlayRandomDate}
                             onClose={game.modals.yearComplete.close}

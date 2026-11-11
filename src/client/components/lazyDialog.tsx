@@ -1,9 +1,15 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { logToServer } from "../service/logService.js";
 
-interface DialogProps {
-    open: boolean;
-    onClose: () => void;
+interface LazyDialogOptions<P> {
+    /** Dialog name, used in the log line when the chunk fails to load. */
+    name: string;
+    /** Reads the open state from the dialog props. Dialogs name this prop differently. */
+    isOpen: (props: P) => boolean;
+    /** Closes the dialog. The wrapper calls it when the chunk fails to load. */
+    close: (props: P) => void;
+    /** Fetch the chunk in the background after the page loads. Turn this off for a rare dialog. Default: true. */
+    preload?: boolean;
 }
 
 /** Wait this long after the page `load` event before fetching the dialog chunk in the background. */
@@ -38,25 +44,29 @@ class ChunkErrorBoundary extends React.Component<BoundaryProps, { failed: boolea
  * Wraps a dialog so its code loads on first open and not with the first page.
  *
  * The wrapper renders nothing until the dialog first opens. After that it stays mounted,
- * so the close transition can finish. The chunk also loads in the background shortly after
- * the page loads, so the first open rarely waits for the network.
+ * so the close transition can finish. By default the chunk also loads in the background
+ * shortly after the page loads, so the first open rarely waits for the network.
  *
  * @param load Dynamic import that resolves to the dialog component as `default`.
- * @param name Dialog name, used in the log line when the chunk fails to load.
+ * @param options Name, open-state reader, close function and preload switch.
  */
-export const lazyDialog = <P extends DialogProps>(
+export const lazyDialog = <P extends object>(
     load: () => Promise<{ default: React.ComponentType<P> }>,
-    name: string
+    { name, isOpen, close, preload = true }: LazyDialogOptions<P>
 ): React.FC<P> => {
     const LazyComponent = lazy(load);
 
     const LazyDialog: React.FC<P> = (props) => {
-        const [hasOpened, setHasOpened] = useState(props.open);
-        if (props.open && !hasOpened) {
+        const open = isOpen(props);
+        const [hasOpened, setHasOpened] = useState(open);
+        if (open && !hasOpened) {
             setHasOpened(true);
         }
 
         useEffect(() => {
+            if (!preload) {
+                return undefined;
+            }
             let timer: ReturnType<typeof setTimeout> | undefined;
             const startPreload = () => {
                 timer = setTimeout(() => {
@@ -75,11 +85,10 @@ export const lazyDialog = <P extends DialogProps>(
             };
         }, []);
 
-        const { onClose } = props;
-        const handleError = useMemo(() => (error: unknown) => {
+        const handleError = (error: unknown) => {
             logToServer("error", `lazyDialog: failed to load ${name}`, error);
-            onClose();
-        }, [onClose]);
+            close(props);
+        };
 
         if (!hasOpened) {
             return null;

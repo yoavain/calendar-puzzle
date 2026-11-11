@@ -71,12 +71,13 @@ describe("useGameController solve detection", () => {
         expect(result.current.gameState.solutionRevealed).toBe(false);
     });
 
-    it("fires the confetti after a tap or keyboard solve", () => {
+    it("fires the confetti after a tap or keyboard solve", async () => {
         const { result } = renderWithOnePieceLeft();
 
         act(() => result.current.handlePieceSelect(lastPiece.id));
         act(() => result.current.handleCellClick(lastPiece.position!));
-        act(() => {
+        // The confetti library loads on demand, so the call lands after the dynamic import settles.
+        await act(async () => {
             jest.advanceTimersByTime(400);
         });
 
