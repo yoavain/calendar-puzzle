@@ -8,6 +8,17 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <title>Calendar Puzzle</title>
 
+    <!-- Paint the page colour before the script runs, so the visitor does not see a blank page.
+         The values match background.default in src/client/theme/theme.ts. A visitor who chose a theme that
+         differs from the system theme sees the system colour first, then a short fade to the chosen one.
+         The server policy blocks an inline script, so the stored choice cannot be read here. -->
+    <style>
+        html { background-color: #fff; }
+        @media (prefers-color-scheme: dark) {
+            html { background-color: #1a1a1a; }
+        }
+    </style>
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://calendar-puzzle.yoavain.org/">
