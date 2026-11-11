@@ -1,10 +1,21 @@
 import { styled, alpha } from "@mui/material/styles";
+import { PIECE_TRANSFORM_TRANSITION } from "../utils/pieceTransform";
 
 /** Preferred side of a thumbnail tile, in px. Above the 24px WCAG 2.2 target minimum. */
 export const THUMBNAIL_SIZE = 40;
 
 /** Smallest side a tile shrinks to when the strip is short of room, in px. */
 export const THUMBNAIL_MIN_SIZE = 24;
+
+/**
+ * Group that holds the cells of a thumbnail. It rotates and flips with the same transition as the
+ * piece in the carousel, around the centre of the 4 x 4 grid (2, 2). The transform itself is dynamic,
+ * so the component sets it through `style`.
+ */
+export const ThumbnailShape = styled("g")({
+    transformOrigin: "2px 2px",
+    transition: PIECE_TRANSFORM_TRANSITION
+});
 
 /**
  * One tile of the carousel strip: a button that draws a piece's shape.

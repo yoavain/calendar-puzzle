@@ -1,9 +1,10 @@
 import React from "react";
-import { getTransformedShape } from "../../common/gameLogic";
-import { PIECE_IDS, type PieceId } from "../../common/pieceData";
+import { PIECE_IDS, getPieceShape, type PieceId } from "../../common/pieceData";
 import type { Piece } from "../../common/types";
+import { useCumulativeRotation } from "../hooks/useCumulativeRotation";
 import { getPieceColor } from "../utils/pieceColors";
-import { ThumbnailButton } from "./PieceThumbnail.styled";
+import { buildPieceTransform } from "../utils/pieceTransform";
+import { ThumbnailButton, ThumbnailShape } from "./PieceThumbnail.styled";
 
 /** Cells along one side of the thumbnail grid. The tallest piece is 4 cells, in every orientation. */
 const GRID_CELLS = 4;
@@ -22,13 +23,18 @@ interface PieceThumbnailProps {
  * Tab button of the carousel strip. Draws the piece's own shape in its own colour,
  * in its current orientation. A placed piece is dimmed, keeps the orientation it has
  * on the board, and does nothing when tapped.
+ *
+ * The thumbnail draws the base shape and turns it with the same CSS transform and
+ * transition as the piece in the carousel (see `Piece`), so both turn together.
  */
 export const PieceThumbnail: React.FC<PieceThumbnailProps> = ({ piece, isActive, isPlaced, onSelect }) => {
-    const shape = getTransformedShape(piece);
+    const shape = getPieceShape(piece.id);
     const color = getPieceColor(piece.id);
+    const cumulativeRotation = useCumulativeRotation(piece.rotation);
+    // Centre the base shape in the grid. The transform then turns it around the grid centre.
     const offsetX = (GRID_CELLS - shape[0].length) / 2;
     const offsetY = (GRID_CELLS - shape.length) / 2;
-    // A cell is identified by its grid position within this orientation.
+    // A cell is identified by its grid position within the base shape.
     const cells: { x: number; y: number }[] = [];
     shape.forEach((row, y) => row.forEach((filled, x) => {
         if (filled) {
@@ -60,9 +66,11 @@ export const PieceThumbnail: React.FC<PieceThumbnailProps> = ({ piece, isActive,
                 aria-hidden="true"
                 focusable="false"
             >
-                {cells.map(({ x, y }) => (
-                    <rect key={`${x}-${y}`} x={x + offsetX} y={y + offsetY} width={1} height={1} fill={color} />
-                ))}
+                <ThumbnailShape style={{ transform: buildPieceTransform(piece, cumulativeRotation) }}>
+                    {cells.map(({ x, y }) => (
+                        <rect key={`${x}-${y}`} x={x + offsetX} y={y + offsetY} width={1} height={1} fill={color} />
+                    ))}
+                </ThumbnailShape>
             </svg>
         </ThumbnailButton>
     );
