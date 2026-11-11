@@ -65,7 +65,8 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
             style={style}
             data-piece-id={piece.id}
             data-testid={`carousel-piece-${piece.id}`}
-            {...(canDrag ? { ...listeners, ...attributes } : {})}
+            // dnd-kit sets role="button" in `attributes` and gives it no name. Same text as Piece.tsx on desktop.
+            {...(canDrag ? { ...listeners, ...attributes, "aria-label": `Piece ${piece.id}` } : {})}
         >
             <Piece
                 piece={piece}

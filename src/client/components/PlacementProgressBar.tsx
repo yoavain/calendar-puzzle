@@ -4,7 +4,7 @@ import { PIECE_IDS } from "../../common/pieceData";
 import type { PieceId } from "../../common/pieceData";
 import { getPieceColor } from "../utils/pieceColors";
 import { ProgressContainer } from "./ProgressBar.styled";
-import { Segment, SEGMENT_GROW_MS, SegmentLabel, SegmentTrack } from "./PlacementProgressBar.styled";
+import { Segment, SEGMENT_GROW_MS, SegmentLabel, SegmentLabelPill, SegmentTrack } from "./PlacementProgressBar.styled";
 
 interface PlacementProgressBarProps {
     /** Ids of the pieces on the board, in placement order (oldest first). */
@@ -52,7 +52,7 @@ export const PlacementProgressBar: React.FC<PlacementProgressBarProps> = ({ orde
                     />
                 ))}
                 <SegmentLabel labelColor={theme.game.colors.onPieceText} aria-hidden="true">
-                    {order.length}/{total}
+                    <SegmentLabelPill>{order.length}/{total}</SegmentLabelPill>
                 </SegmentLabel>
             </SegmentTrack>
         </ProgressContainer>

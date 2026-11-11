@@ -10,7 +10,7 @@ import { darkTheme, lightTheme } from "./theme";
 // Descendant text/border/fill cascade via inheritance, so a wider `*` rule isn't
 // needed and would add unwanted fades on hover transitions.
 const themeTransitionStyles = {
-    "body, .MuiPaper-root, [data-theme-transition]": {
+    "html, body, .MuiPaper-root, [data-theme-transition]": {
         transition: "background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, fill 0.25s ease, stroke 0.25s ease"
     }
 };
@@ -103,6 +103,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             <MuiThemeProvider theme={theme}>
                 <CssBaseline />
                 <GlobalStyles styles={themeTransitionStyles} />
+                {/* public/index.html paints the system colour on <html> before this script runs. Follow the theme from here on,
+                    or a saved theme that differs from the system theme leaves a wrong-colour strip outside <body>. */}
+                <GlobalStyles styles={(muiTheme) => ({ html: { backgroundColor: muiTheme.palette.background.default } })} />
                 {children}
             </MuiThemeProvider>
         </ColorModeContext.Provider>

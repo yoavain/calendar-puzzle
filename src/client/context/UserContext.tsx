@@ -110,6 +110,19 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return () => window.removeEventListener("app:unauthorized", handleUnauthorized);
     }, []);
 
+    // The back/forward cache can restore this page with the user from before the visitor left.
+    // The visitor may have logged in or out since then, so ask the server again.
+    useEffect(() => {
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) {
+                fetchUser().catch(() => {});
+            }
+        };
+
+        window.addEventListener("pageshow", handlePageShow);
+        return () => window.removeEventListener("pageshow", handlePageShow);
+    }, [fetchUser]);
+
     const logout = useCallback(async () => {
         const headers: Record<string, string> = {};
         try {

@@ -22,18 +22,15 @@ import { HintButton } from "../../components/HintButton";
 import { LoginButton } from "../../components/LoginButton";
 import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
-import { StatsModal } from "../../components/StatsModal";
-import { IssueModal } from "../../components/IssueModal";
+import { LazyStatsModal, LazyIssueModal, LazyHelpModal, LazyTokenConfirmDialog } from "../../components/lazyDialogs";
 import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 import { GoalHint } from "../../components/GoalHint";
-import { HelpModal } from "../../components/HelpModal";
 import { SolvedTodayNotice } from "../../components/SolvedTodayNotice";
-import { YearCompleteDialog } from "../../components/YearCompleteDialog";
+import { LazyYearCompleteDialog } from "../../components/LazyYearCompleteDialog";
 import { TokenFlight } from "../../components/TokenFlight";
 import { HintErrorToast } from "../../components/HintErrorToast";
 import { TokenIntroDialog } from "../../components/TokenIntroDialog";
-import { TokenConfirmDialog } from "../../components/TokenConfirmDialog";
-import { ShareDialog } from "../../components/ShareDialog";
+import { LazyShareDialog } from "../../components/LazyShareDialog";
 import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
 import { ToolbarIconButton } from "../../components/ToolbarIconButton";
 import calendarImg from "../../assets/CALENDAR.png";
@@ -248,7 +245,7 @@ export const DesktopLayout: React.FC = () => {
                         <PlacementProgressBar order={game.placementOrder} />
 
                         {/* Statistics Modal */}
-                        <StatsModal
+                        <LazyStatsModal
                             open={game.modals.stats.isOpen}
                             onClose={game.modals.stats.close}
                             solveResult={game.modals.stats.solveResult}
@@ -256,16 +253,16 @@ export const DesktopLayout: React.FC = () => {
                         />
 
                         {/* Issue Modal */}
-                        <IssueModal open={game.modals.issue.isOpen} onClose={game.modals.issue.close} />
+                        <LazyIssueModal open={game.modals.issue.isOpen} onClose={game.modals.issue.close} />
 
                         {/* Help Modal */}
-                        <HelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
+                        <LazyHelpModal open={game.modals.help.isOpen} onClose={game.modals.help.close} />
 
                         {/* Share Modal */}
-                        <ShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
+                        <LazyShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />
 
                         {/* Year Complete Dialog */}
-                        <YearCompleteDialog
+                        <LazyYearCompleteDialog
                             isOpen={game.modals.yearComplete.isOpen}
                             onPlayRandom={game.handlePlayRandomDate}
                             onClose={game.modals.yearComplete.close}
@@ -290,7 +287,7 @@ export const DesktopLayout: React.FC = () => {
                             isFirstView={game.modals.tokenIntro.isFirstView}
                             onClose={game.modals.tokenIntro.close}
                         />
-                        <TokenConfirmDialog
+                        <LazyTokenConfirmDialog
                             open={game.modals.tokenConfirm.isOpen}
                             tokenBalance={game.tokenBalance}
                             onConfirm={(dontAskAgain) => {

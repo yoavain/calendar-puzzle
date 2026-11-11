@@ -10,7 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useUser } from "../context/UserContext";
 import { hasCompletedAllDates } from "../../common/streakUtils";
-import { HallOfFameModal } from "./HallOfFameModal";
+import { LazyHallOfFameModal } from "./lazyDialogs";
 import { CompletionBadge } from "./CompletionBadge";
 import { TokenCoin } from "./TokenCoin";
 import { HINT_TOKEN_COPY } from "../copy/hintTokenCopy";
@@ -148,7 +148,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
                     Logout
                 </MenuItem>
             </Menu>
-            <HallOfFameModal 
+            <LazyHallOfFameModal 
                 open={dashboardOpen} 
                 onClose={() => setDashboardOpen(false)} 
             />

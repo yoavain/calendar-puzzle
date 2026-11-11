@@ -35,6 +35,10 @@ interface ToolbarColorTokens {
 interface GameColorTokens {
     progress: {
         track: string;
+        // Track of the placement bar only. The stats bar keeps `track`: its label is dark text on that track.
+        placementTrack: string;
+        // Backdrop of the count in the placement bar, so white text stays readable over any piece colour.
+        labelBackground: string;
     };
     medal: {
         gold: string;
@@ -153,7 +157,9 @@ const sharedGameColorTokens = {
 const lightGameColorTokens: GameColorTokens = {
     ...sharedGameColorTokens,
     progress: {
-        track: "#e0e0e0"
+        track: "#e0e0e0",
+        placementTrack: "#757575",
+        labelBackground: "rgba(0, 0, 0, 0.65)"
     },
     switch: {
         track: "#aab4be",
@@ -170,7 +176,9 @@ const lightGameColorTokens: GameColorTokens = {
 const darkGameColorTokens: GameColorTokens = {
     ...sharedGameColorTokens,
     progress: {
-        track: "#333333"
+        track: "#333333",
+        placementTrack: "#333333",
+        labelBackground: "rgba(0, 0, 0, 0.65)"
     },
     switch: {
         track: "#8796A5",

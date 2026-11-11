@@ -5,6 +5,10 @@ import path from "node:path";
 
 const nodeModulesRe: RegExp = /node_modules\/(@[^/]+\/[^/]+|[^/]+)/;
 
+// Keep these packages in two stable chunks. Do not remove the "vendor" entries to split MUI by route.
+// Measured on 2026-11-11 with the lazy dialogs in place. Without the "vendor" entries, only 44 KB raw of
+// MUI left the first load, and FCP did not change. The app chunk grew from 166 KB to 346 KB raw and
+// changed on every deploy, so a returning visitor downloaded the MUI code again.
 const vendorPackagesChunk: Record<string, string> = {
     "react": "react",
     "react-dom": "react",

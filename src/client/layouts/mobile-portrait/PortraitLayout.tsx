@@ -1,15 +1,12 @@
 import React, { useCallback } from "react";
 
 import { MobileBoard } from "../../components/MobileBoard";
-import { StatsModal } from "../../components/StatsModal";
-import { IssueModal } from "../../components/IssueModal";
-import { HelpModal } from "../../components/HelpModal";
+import { LazyStatsModal, LazyIssueModal, LazyHelpModal, LazyTokenConfirmDialog } from "../../components/lazyDialogs";
 import { SolvedTodayNotice } from "../../components/SolvedTodayNotice";
-import { YearCompleteDialog } from "../../components/YearCompleteDialog";
+import { LazyYearCompleteDialog } from "../../components/LazyYearCompleteDialog";
 import { TokenFlight } from "../../components/TokenFlight";
 import { HintErrorToast } from "../../components/HintErrorToast";
 import { TokenIntroDialog } from "../../components/TokenIntroDialog";
-import { TokenConfirmDialog } from "../../components/TokenConfirmDialog";
 import { PlacementProgressBar } from "../../components/PlacementProgressBar";
 import { GoalHint } from "../../components/GoalHint";
 
@@ -101,21 +98,21 @@ export const PortraitLayout: React.FC = () => {
                 />
 
                 {/* Modals */}
-                <StatsModal
+                <LazyStatsModal
                     open={game.modals.stats.isOpen}
                     onClose={game.modals.stats.close}
                     solveResult={game.modals.stats.solveResult}
                     onPlayNext={game.handlePlayNext}
                 />
-                <IssueModal 
+                <LazyIssueModal 
                     open={game.modals.issue.isOpen} 
                     onClose={game.modals.issue.close} 
                 />
-                <HelpModal
+                <LazyHelpModal
                     open={game.modals.help.isOpen}
                     onClose={game.modals.help.close}
                 />
-                <YearCompleteDialog
+                <LazyYearCompleteDialog
                     isOpen={game.modals.yearComplete.isOpen}
                     onPlayRandom={game.handlePlayRandomDate}
                     onClose={game.modals.yearComplete.close}
@@ -140,7 +137,7 @@ export const PortraitLayout: React.FC = () => {
                     isFirstView={game.modals.tokenIntro.isFirstView}
                     onClose={game.modals.tokenIntro.close}
                 />
-                <TokenConfirmDialog
+                <LazyTokenConfirmDialog
                     open={game.modals.tokenConfirm.isOpen}
                     tokenBalance={game.tokenBalance}
                     onConfirm={(dontAskAgain) => {

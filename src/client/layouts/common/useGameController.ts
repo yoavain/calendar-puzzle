@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react";
-import confetti from "canvas-confetti";
+import type confetti from "canvas-confetti";
 import type { DragItem, GameState, Piece as PieceType, Position, PuzzleDate } from "../../../common/types";
 import { isDragItem, toPuzzleDate } from "../../../common/types";
 import type { PieceId } from "../../../common/pieceData";
@@ -48,7 +48,12 @@ const getInitialGameState = (): { state: GameState; date: PuzzleDate } => {
     };
 };
 
-const fireConfetti = () => {
+// The confetti library loads on demand. Only a solve needs it, so it stays out of the first page.
+// The first placement starts the download. The win then fires without a wait.
+const loadConfetti = () => import("canvas-confetti");
+
+const fireConfetti = async () => {
+    const { default: confetti } = await loadConfetti();
     const count = 400;
     const defaults = { origin: { y: 0.7 }, zIndex: 2000, scalar: 1.4 };
     const fire = (particleRatio: number, opts: confetti.Options) => {
@@ -336,6 +341,7 @@ export function useGameController() {
     // (drag, tap, keyboard Enter) goes through here, so the puzzle is solved
     // however the last piece arrives.
     const finalizePlacement = useCallback((piece: PieceType, position: Position) => {
+        loadConfetti().catch(() => {});
         const { board: newBoard, pieces: newPieces } = updateBoardAndPieces(
             piece,
             position,
@@ -354,7 +360,7 @@ export function useGameController() {
                 window.clearTimeout(confettiTimeoutRef.current);
             }
             confettiTimeoutRef.current = window.setTimeout(() => {
-                fireConfetti();
+                fireConfetti().catch(() => {});
                 confettiTimeoutRef.current = null;
             }, 400);
             // Automatically show stats on completion after a short delay. A first
