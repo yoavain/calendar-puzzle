@@ -18,7 +18,7 @@ export const SegmentTrack = styled(Box)(({ theme }) => ({
     height: 25,
     borderRadius: theme.game.radius.pill,
     overflow: "hidden",
-    backgroundColor: theme.game.colors.progress.track,
+    backgroundColor: theme.game.colors.progress.placementTrack,
     // The segments are empty block boxes: without this, a click drops a
     // blinking text caret into them.
     userSelect: "none",
@@ -50,3 +50,12 @@ export const Segment = styled(Box, {
 export const SegmentLabel = styled(ProgressLabel)({
     textShadow: "0 0 3px rgba(0, 0, 0, 0.8)"
 });
+
+// The count sits on a dark pill. White text alone fails the contrast check on the light track
+// and on most piece colours. `lineHeight: 1` keeps the pill inside the 25 px bar.
+export const SegmentLabelPill = styled("span")(({ theme }) => ({
+    backgroundColor: theme.game.colors.progress.labelBackground,
+    padding: "3px 9px",
+    borderRadius: theme.game.radius.pill,
+    lineHeight: 1
+}));
