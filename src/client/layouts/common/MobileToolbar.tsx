@@ -26,7 +26,7 @@ import { DatePicker } from "../../components/DatePicker";
 import { SolutionButton } from "../../components/SolutionButton";
 import { HintButton } from "../../components/HintButton";
 import { TokenMenuBadge } from "../../components/TokenMenuBadge";
-import { HallOfFameModal } from "../../components/HallOfFameModal";
+import { LazyHallOfFameModal } from "../../components/lazyDialogs";
 import { LazyShareDialog } from "../../components/LazyShareDialog";
 
 import type { GameController } from "./useGameController";
@@ -261,7 +261,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
             </Drawer>
 
             {/* Hall of Fame Modal */}
-            <HallOfFameModal
+            <LazyHallOfFameModal
                 open={isHallOfFameOpen}
                 onClose={() => setIsHallOfFameOpen(false)}
             />
