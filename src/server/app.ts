@@ -191,12 +191,14 @@ export const buildApp = async (): Promise<FastifyInstance> => {
 
     const clientBuildPath = path.join(__dirname, "..", "..", "build");
     
-    // Serve index.html for SPA routes (never cache to ensure fresh deployments)
+    // Serve index.html for SPA routes. "no-cache" makes the browser revalidate on every load, so a deploy
+    // shows at once. Do not use "no-store": it stops the back/forward cache when a session cookie changes.
+    // The page holds no user data. The client reloads the user on "pageshow" after a cache restore.
     const serveIndexHtml = async (request: FastifyRequest, reply: FastifyReply) => {
         const file = await getCachedFile(clientBuildPath, "index.html");
         if (file) {
             return reply
-                .header("Cache-Control", "no-store")
+                .header("Cache-Control", "no-cache")
                 .type(file.contentType)
                 .send(file.content);
         }
