@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { logToServer } from "../service/logService.js";
+import { HintErrorToast } from "./HintErrorToast";
 
 interface LazyDialogOptions<P> {
     /** Dialog name, used in the log line when the chunk fails to load. */
@@ -15,6 +16,8 @@ interface LazyDialogOptions<P> {
 /** Wait this long after the page `load` event before fetching the dialog chunk in the background. */
 const PRELOAD_DELAY_MS = 1500;
 
+const LOAD_ERROR_MESSAGE = "This window could not load. Check your connection and try again.";
+
 interface BoundaryProps {
     onError: (error: unknown) => void;
     children: React.ReactNode;
@@ -23,6 +26,7 @@ interface BoundaryProps {
 /**
  * Catches a failed chunk load. A tab that was open during a deploy can ask for a chunk
  * that no longer exists. The dialog closes and the failure goes to the server log.
+ * The wrapper gives the boundary a new `key` on the next open, which resets it.
  */
 class ChunkErrorBoundary extends React.Component<BoundaryProps, { failed: boolean }> {
     state = { failed: false };
@@ -54,13 +58,28 @@ export const lazyDialog = <P extends object>(
     load: () => Promise<{ default: React.ComponentType<P> }>,
     { name, isOpen, close, preload = true }: LazyDialogOptions<P>
 ): React.FC<P> => {
-    const LazyComponent = lazy(load);
+    // `lazy` caches a rejected promise for good. A failed load swaps in a fresh `lazy` so a later open can retry.
+    let LazyComponent = lazy(load);
 
     const LazyDialog: React.FC<P> = (props) => {
         const open = isOpen(props);
         const [hasOpened, setHasOpened] = useState(open);
         if (open && !hasOpened) {
             setHasOpened(true);
+        }
+
+        // After a failed load, the next open mounts a new boundary, which tries the import again.
+        const [wasOpen, setWasOpen] = useState(open);
+        const [failed, setFailed] = useState(false);
+        const [attempt, setAttempt] = useState(0);
+        const [showError, setShowError] = useState(false);
+        if (open !== wasOpen) {
+            setWasOpen(open);
+            if (open && failed) {
+                setFailed(false);
+                setShowError(false);
+                setAttempt(attempt + 1);
+            }
         }
 
         useEffect(() => {
@@ -87,6 +106,9 @@ export const lazyDialog = <P extends object>(
 
         const handleError = (error: unknown) => {
             logToServer("error", `lazyDialog: failed to load ${name}`, error);
+            LazyComponent = lazy(load);
+            setFailed(true);
+            setShowError(true);
             close(props);
         };
 
@@ -94,11 +116,14 @@ export const lazyDialog = <P extends object>(
             return null;
         }
         return (
-            <ChunkErrorBoundary onError={handleError}>
-                <Suspense fallback={null}>
-                    <LazyComponent {...props} />
-                </Suspense>
-            </ChunkErrorBoundary>
+            <>
+                <ChunkErrorBoundary key={attempt} onError={handleError}>
+                    <Suspense fallback={null}>
+                        <LazyComponent {...props} />
+                    </Suspense>
+                </ChunkErrorBoundary>
+                <HintErrorToast message={showError ? LOAD_ERROR_MESSAGE : null} onClose={() => setShowError(false)} />
+            </>
         );
     };
     LazyDialog.displayName = `LazyDialog(${name})`;
