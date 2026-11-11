@@ -16,7 +16,8 @@ interface LazyDialogOptions<P> {
 /** Wait this long after the page `load` event before fetching the dialog chunk in the background. */
 const PRELOAD_DELAY_MS = 1500;
 
-const LOAD_ERROR_MESSAGE = "This window could not load. Check your connection and try again.";
+// A dropped connection and a stale tab (the deploy replaced the chunk) both land here. Only a reload fixes the second.
+const LOAD_ERROR_MESSAGE = "This window could not load. Try again, or reload the page.";
 
 interface BoundaryProps {
     onError: (error: unknown) => void;
@@ -58,10 +59,10 @@ export const lazyDialog = <P extends object>(
     load: () => Promise<{ default: React.ComponentType<P> }>,
     { name, isOpen, close, preload = true }: LazyDialogOptions<P>
 ): React.FC<P> => {
-    // `lazy` caches a rejected promise for good. A failed load swaps in a fresh `lazy` so a later open can retry.
-    let LazyComponent = lazy(load);
-
     const LazyDialog: React.FC<P> = (props) => {
+        // `lazy` caches a rejected promise for good. A failed load swaps in a fresh `lazy` so a later open can retry.
+        // Each instance owns its `lazy`, so a failure in one instance cannot start a load in another.
+        const [LazyComponent, setLazyComponent] = useState(() => lazy(load));
         const open = isOpen(props);
         const [hasOpened, setHasOpened] = useState(open);
         if (open && !hasOpened) {
@@ -106,7 +107,7 @@ export const lazyDialog = <P extends object>(
 
         const handleError = (error: unknown) => {
             logToServer("error", `lazyDialog: failed to load ${name}`, error);
-            LazyComponent = lazy(load);
+            setLazyComponent(lazy(load));
             setFailed(true);
             setShowError(true);
             close(props);
