@@ -26,3 +26,4 @@
 /find-vuln*.bat
 /static/*-autosave.kra
 /static/*~
+/docs/TODO.md
