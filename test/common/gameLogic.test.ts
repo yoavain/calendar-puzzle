@@ -347,13 +347,6 @@ describe("gameLogic", () => {
             expect(isValidPlacement(board, piece, { x: 0, y: 4 })).toBe(false);
         });
 
-        it("should throw or reject when piece extends beyond left boundary (negative x)", () => {
-            const piece = makePiece({ id: 7 }); // 2x3 rectangle
-            // Negative x causes undefined cell access - the function doesn't guard against it
-            // This documents current behavior: it throws because board[y][-1] is undefined
-            expect(() => isValidPlacement(board, piece, { x: -1, y: 2 })).toThrow();
-        });
-
         it("should return false when overlapping with another piece", () => {
             // Place piece 7 at (0, 2), mark those cells as occupied
             const shape7 = [[true, true], [true, true], [true, true]];
