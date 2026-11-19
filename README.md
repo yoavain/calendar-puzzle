@@ -1,14 +1,14 @@
 # Calendar Puzzle
 
-A daily puzzle game where players arrange pieces on a calendar board to leave only the current date exposed. Built with React and Fastify.
+A puzzle game where players arrange pieces on a calendar board so that only one date, today's by default, stays uncovered. Built with React and Fastify.
 
 ![Calendar Puzzle Game](docs/resources/Screenshot-1.png)
 
 ## Game Overview
 
-Each day presents a unique puzzle challenge:
-- **Objective**: Place all 8 puzzle pieces on the board so that only the current month and day cells remain uncovered.
-- **Daily Challenge**: The puzzle changes every day based on the date.
+Each puzzle date is a different challenge:
+- **Objective**: Place all 8 puzzle pieces on the board so that only the date cells (the month and day of the puzzle date) remain uncovered.
+- **Puzzle dates**: The game opens on today's puzzle date. Any of the 366 puzzle dates can be played.
 - **Controls**:
   - **Drag and Drop**: Move pieces onto the board.
   - **Rotate/Flip**: Use the controls on each piece to orient it correctly.
@@ -16,7 +16,7 @@ Each day presents a unique puzzle challenge:
   - **Reset**: Use the Reset button to clear the board. Undo brings it back.
 - **Hint System**: Get help by requesting a hint that places one piece correctly.
 - **Solution Reveal**: Stuck? Request the full solution (requires sign-in).
-- **Statistics**: Track your progress, win percentage, and streaks.
+- **Statistics**: Track dates played, solved percentage, and streaks.
 
 ## Tech Stack
 
@@ -35,7 +35,7 @@ calendar-puzzle/
 │  │  ├─ layouts/      # Three layouts: desktop/, mobile-portrait/, mobile-landscape/
 │  │  │  └─ common/    # Shared hooks and components across layouts
 │  │  ├─ context/      # React context (auth state)
-│  │  ├─ hooks/        # Custom hooks (game history, session, layout detection)
+│  │  ├─ hooks/        # Custom hooks (game history, saved game, layout detection)
 │  │  ├─ pages/        # Page-level components (LandingPage)
 │  │  ├─ service/      # REST API client
 │  │  ├─ theme/        # MUI theme and color mode
@@ -176,7 +176,7 @@ npm run deploy:dev:docker
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture, layer separation, directory structure, testing strategy |
 | [AUTH.md](docs/AUTH.md) | Google OAuth implementation, session management, protected endpoints |
 | [DB_SCHEMA.md](docs/DB_SCHEMA.md) | Database tables and relationships |
-| [SESSION.md](docs/SESSION.md) | Local storage session persistence (board state across reloads) |
+| [SAVED_GAME.md](docs/SAVED_GAME.md) | Saved game in local storage (board state across reloads) |
 | [drag-drop-guidelines.md](docs/drag-drop-guidelines.md) | Drag-and-drop implementation: anchor cell, visual rect, empty-cell snap |
 | [e2e-drag-drop-tests.md](docs/e2e-drag-drop-tests.md) | Deterministic E2E drag-and-drop test suite (happy path + failing path) |
 | [TODO.md](docs/TODO.md) | Open items and completed feature history |

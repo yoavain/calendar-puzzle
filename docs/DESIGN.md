@@ -283,9 +283,9 @@ Celebrate the user's success with a satisfying confetti animation when they comp
 
 ## Features
 
-### Session (Local Storage)
+### Saved Game (Local Storage)
 
-Persist game state locally for all users (regardless of authentication) to prevent progress loss on page reload.
+Persist game state locally for all players (logged in or not) to prevent progress loss on page reload.
 
 **Low-level design:**
 
@@ -300,12 +300,12 @@ interface SessionData {
 }
 ```
 
-> **Note:** The original design included `playedDates` and `completedDates` arrays in localStorage. In the implemented version these are server-side only (stored in the `userPuzzleStats` PostgreSQL table for authenticated users). The session only stores the current day's board state.
+> **Note:** The original design included `playedDates` and `completedDates` arrays in localStorage. In the implemented version these are server-side only (stored in the `userPuzzleStats` PostgreSQL table for authenticated users). The saved game only stores the board of one puzzle date.
 
 **Behavior:**
-- **On page load:** Restore today's board state if session date matches today; otherwise start fresh.
+- **On page load:** Restore the saved board if its puzzle date matches today's puzzle date; otherwise start fresh.
 - **On board change:** Save the full piece array and solved flag.
-- **On solution revealed:** Clear the session (prevent restoring a revealed solution).
+- **On revealed solution:** Clear the saved game (prevent restoring a revealed solution).
 
 ---
 
@@ -422,21 +422,23 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
   themselves cannot be undone, so adopting a new hint from the server clears the history. Reset on a solved
   board has no undo step.
 
-### Personal Statistics Dashboard (Future)
+### Personal Statistics Dashboard
 
-Provide users with a comprehensive dashboard showing their puzzle completion progress across the year.
+> **As implemented:** The dashboard is `StatsModal`. It shows dates played, solved percentage, current and max streak, and an overall progress bar (solved / 366). The data is `playedDates` and `completedDates` from `UserContext`, which are server-side data of logged-in players. **Not built:** the year heatmap, click-to-navigate, solve time, a `/api/stats` endpoint, and stats for anonymous players. The design below describes what is still open.
+
+Provide players with a comprehensive dashboard showing their solved dates across the year.
 
 **Low-level design:**
 - Create a new `StatsPage` or `StatsModal` component.
-- Display a year calendar heatmap showing completed vs. incomplete dates.
+- Display a year calendar heatmap showing solved vs. unsolved dates.
 - Show key metrics:
-  - Total puzzles completed (X / 365)
-  - Completion percentage
+  - Puzzle dates solved (X / 366)
+  - Share of puzzle dates solved
   - Current streak
   - Longest streak
   - Average solve time (if tracking time)
-- Use color coding: green for completed, gray for incomplete, gold for today.
+- Use color coding: green for solved, gray for unsolved, gold for today.
 - Allow clicking on a date to navigate to that puzzle.
 - For logged-in users: Fetch stats from `/api/stats` endpoint.
-- For anonymous users: Calculate from localStorage session data.
-- Cache stats client-side and invalidate on new completion.
+- For anonymous users: Calculate from localStorage.
+- Cache stats client-side and invalidate on a new solve.

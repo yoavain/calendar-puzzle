@@ -4,7 +4,7 @@ This document describes the Google OAuth implementation for the Calendar Puzzle 
 
 ## Overview
 
-Authentication is used to gate access to hint and solution features. Authenticated users can see and use the Hint and Solution buttons; anonymous users cannot.
+Authentication is used to gate access to hint and solution features. Logged-in players can see and use the Hint and Solution buttons; anonymous players cannot.
 
 **Current scope:**
 - [x] Google OAuth sign-in

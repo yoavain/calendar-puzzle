@@ -64,7 +64,7 @@ The grid has `columns="C" rows="R"` attributes; children are row-major. **There 
 
 ### Reading the board
 
-Cells expose only `data-cell-x`, `data-cell-y`, `data-testid="board-cell"`. **Highlighted (today's date) and non-playable (dead corner) cells have no data attributes** — visible only via styling and content text. The four dead corners on a 7×7 board are `(6,0), (6,1)` (right of months) and `(3,6), (4,6), (5,6), (6,6)` (right of days 29-31).
+Cells expose only `data-cell-x`, `data-cell-y`, `data-testid="board-cell"`. **Date cells and non-playable (dead corner) cells have no data attributes** — visible only via styling and content text. The four dead corners on a 7×7 board are `(6,0), (6,1)` (right of months) and `(3,6), (4,6), (5,6), (6,6)` (right of days 29-31).
 
 ## Catalogue — JavaScript helpers that work
 
@@ -95,7 +95,7 @@ Confirmed placements: piece dropped at board cell where its **top-left filled ce
 
 So as long as the shape's first filled cell is at column 0 of row 0, dropping at the target board cell snaps the piece's bounding box to (target.x − 0, target.y − 0). For shapes whose first filled cell is NOT at (0,0) of the bounding box, dropping at (tx, ty) lands `firstFilled` at (tx, ty) (i.e. the piece bounding box top-left ends up at (tx − ff.x, ty − ff.y)). **This needs more empirical verification — see "Open questions" below.**
 
-A drag can silently fail (no exception, `ok:true`) — for example, if the destination would overlap an occupied / non-playable / highlighted cell. **Always re-query `[data-piece-id='N']` after a drop to see if it actually landed**, and check the progress bar for forward motion.
+A drag can silently fail (no exception, `ok:true`) — for example, if the destination would overlap an occupied / non-playable / date cell. **Always re-query `[data-piece-id='N']` after a drop to see if it actually landed**, and check the progress bar for forward motion.
 
 ### Transforms persist on the piece in the pool
 
@@ -146,13 +146,13 @@ Piece 7  (6 cells, 2×3):   ##    Piece 8  (5 cells, 2×4):   #.
                                                             ##
 ```
 
-Cell sum: 5+5+5+5+5+5+6+5 = **41** ⇒ matches 43 playable − 2 highlighted on May 18.
+Cell sum: 5+5+5+5+5+5+6+5 = **41** ⇒ matches 43 playable − 2 date cells on May 18.
 
 ## Strategy — how to play (no algorithm)
 
 These are heuristics for a human player. They are guidelines, not rules.
 
-1. **Read the date first.** Identify the two highlighted cells (month name, day number). These must stay uncovered.
+1. **Read the date first.** Identify the two date cells (month name, day number). These must stay uncovered.
 2. **Identify the "forced shapes" around each highlight.** Cells adjacent to a highlight, bounded by board edges or dead corners, often have only one piece shape (across rotation/flip) that can fit. Identify those *before* placing anything.
    - *Example (May 18):* MAY at (4,0) is bordered by APR/JUN/NOV. The 3×2 region around it minus MAY is the U-pentomino footprint ⇒ piece 2 is forced there.
 3. **Pieces are scarce resources, not interchangeable.** Each unique pentomino shape (P=piece 5, U=piece 2, Z=3, N=4, L=6, Y=1, L'=8) appears exactly once. Treat them as keys: the puzzle is choosing *which lock each key unlocks*. If the same key fits two locks, you must decide before opening either.

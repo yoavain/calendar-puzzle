@@ -7,7 +7,7 @@ This document describes the deterministic end-to-end drag-and-drop tests for the
 | Test | Date | Expected outcome |
 |---|---|---|
 | Happy path | Jan 1, 2024 | Piece 4 placed at board position (2, 2) |
-| Failing path | Oct 11, 2024 | Piece 4 rejected — highlighted cell collision |
+| Failing path | Oct 11, 2024 | Piece 4 rejected — date cell collision |
 
 Each test runs for all three Playwright projects (`desktop`, `mobile-portrait`, `mobile-landscape`), giving **6 total tests**.
 
@@ -81,10 +81,10 @@ After releasing the piece, verify:
 
 On October 11:
 
-- **Month "Oct"** (index 9) → cell **(3, 1)** is highlighted.
-- **Day 11** → `DAYS_LAYOUT[1][3]` → cell **(3, 3)** is highlighted.
+- **Month "Oct"** (index 9) → cell **(3, 1)** is a date cell.
+- **Day 11** → `DAYS_LAYOUT[1][3]` → cell **(3, 3)** is a date cell.
 
-Piece 4 at position (2, 2) occupies cell **(3, 3)**, which collides with the highlighted day cell. The game's `isValidPlacement` function rejects the placement.
+Piece 4 at position (2, 2) occupies cell **(3, 3)**, which collides with the day date cell. The game's `isValidPlacement` function rejects the placement.
 
 ### Assertions
 

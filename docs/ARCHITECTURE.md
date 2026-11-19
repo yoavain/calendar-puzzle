@@ -109,7 +109,7 @@ src/
 │  │     ├─ useBoardScale.ts          # Board scale hook (resize-aware)
 │  │     ├─ useGameModals.ts          # Modal open/close state, token intro gating
 │  │     ├─ useServerSync.ts          # Server sync (stats) and hint token grants
-│  │     ├─ useSessionPersistence.ts  # Session save/restore
+│  │     ├─ useSessionPersistence.ts  # Saved game save/restore
 │  │     └─ useKeyboardShortcuts.ts   # Keyboard shortcut bindings
 │  ├─ copy/
 │  │  └─ hintTokenCopy.ts      # Hint token UI strings
@@ -117,7 +117,7 @@ src/
 │  │  └─ UserContext.tsx       # Auth state (useUser hook)
 │  ├─ hooks/                   # React hooks
 │  │  ├─ useGameHistory.ts     # Undo/redo functionality
-│  │  ├─ useGameSession.ts     # Session persistence helpers (load/save/clear)
+│  │  ├─ useGameSession.ts     # Saved game helpers (load/save/clear)
 │  │  └─ useLayout.ts          # Responsive layout detection
 │  ├─ pages/
 │  │  └─ LandingPage.tsx       # Marketing/landing page
@@ -463,7 +463,7 @@ React hooks and components tested with Jest + Testing Library:
 | `test/client/dragDrop.test.ts` | Drag-and-drop logic |
 | `test/client/initialize.test.ts` | Game initialization |
 | `test/client/useGameHistory.test.ts` | Undo/redo hook |
-| `test/client/useGameSession.test.ts` | Session persistence hook |
+| `test/client/useGameSession.test.ts` | Saved game hook |
 | `test/client/useGameController.test.ts` | Solve detection, hint token flow, post-solve timing |
 | `test/client/useGameModals.test.ts` | Token intro gating, the solve result, the solved-today notice |
 | `test/client/useServerSync.test.ts` | Token grant on first solve |

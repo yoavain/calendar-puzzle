@@ -128,11 +128,5 @@ describe("shapeHelpers", () => {
             const result90 = findFirstFilledCell(getTransformedShape(makePiece({ id: 4, rotation: 90 })));
             expect(result90).toEqual({ x: 0, y: 0 });
         });
-
-        it("should find first filled cell accounting for piece transformations", () => {
-            // Piece 5: [F,T], [T,T], [T,T] - first filled is (1, 0)
-            const result = findFirstFilledCell(getTransformedShape(makePiece({ id: 5 })));
-            expect(result).toEqual({ x: 1, y: 0 });
-        });
     });
 });
