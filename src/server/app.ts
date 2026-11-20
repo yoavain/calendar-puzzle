@@ -139,11 +139,13 @@ export const buildApp = async (): Promise<FastifyInstance> => {
                 connectSrc: ["'self'", "https://yoavain.goatcounter.com"], // GoatCounter pageview beacon
                 workerSrc: ["'self'", "blob:"],
                 objectSrc: ["'none'"],
-                frameAncestors: ["'none'"],
+                frameAncestors: ["'self'", "kamario.games"], // kamario.games embeds the game in an iframe
                 baseUri: ["'self'"],
                 formAction: ["'self'"]
             }
-        }
+        },
+        // frame-ancestors replaces X-Frame-Options. Helmet's default SAMEORIGIN would block kamario.games.
+        frameguard: false
     });
 
     // Read secret key for secure session

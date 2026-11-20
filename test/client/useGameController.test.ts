@@ -661,9 +661,10 @@ describe("useGameController post-solve timing", () => {
         expect(result.current.tokenBalance).toBe(3);
     });
 
-    it("opens stats at 1500 ms when the date was already solved", () => {
+    it("opens stats at 1500 ms when the date was already solved", async () => {
         (recordCompletion as jest.Mock).mockResolvedValue({ success: true, tokenGranted: false });
         const { result } = renderSolvable([{ month: 0, day: 1 }]);
+        await act(async () => {}); // let the load-time hint fetch settle
 
         act(() => result.current.handlePieceDrop(lastPiece.position!, { pieceId: lastPiece.id }));
         act(() => {
