@@ -132,11 +132,11 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "https://static.cloudflareinsights.com"],
+                scriptSrc: ["'self'", "https://static.cloudflareinsights.com", "https://gc.zgo.at"], // gc.zgo.at: GoatCounter
                 styleSrc: ["'self'", "'unsafe-inline'"], // Required for MUI/Emotion
                 imgSrc: ["'self'", "data:", "https://api.dicebear.com", "https://lh3.googleusercontent.com"], // data: for inline SVGs, dicebear/Google for avatars
                 fontSrc: ["'self'"],
-                connectSrc: ["'self'"],
+                connectSrc: ["'self'", "https://yoavain.goatcounter.com"], // GoatCounter pageview beacon
                 workerSrc: ["'self'", "blob:"],
                 objectSrc: ["'none'"],
                 frameAncestors: ["'none'"],
