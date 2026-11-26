@@ -408,9 +408,11 @@ All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
 - **Balance during the flight**: the token counts in the balance from the grant. The shown balance holds it
   back until the landing.
 - **Post-solve timing**: the win sweep runs 0 to about 1020 ms and confetti fires at 400 ms. The flight
-  starts no earlier than 1050 ms. When a token is expected, the stats dialog opens 250 ms after the
-  landing (fallback 2500 ms if no grant arrives, 3000 ms if a granted token never lands). Otherwise stats
-  opens at 1500 ms. That dialog names the solved date and offers the next unsolved one.
+  starts no earlier than 1050 ms. When a token is expected, the stats dialog waits for the server to answer
+  the save. With a token it opens 250 ms after the landing (3000 ms if a granted token never lands).
+  Without one it opens at 1500 ms, or at the answer if that comes later. A failed save opens no dialog.
+  When no token is expected, stats opens at 1500 ms. That dialog names the solved date and offers the next
+  unsolved one.
 - **Today already solved**: on load, a notice offers the next unsolved date, without blocking the board.
   It waits for any open dialog, gives way to a hint error, and closes after 8 s or on a date change.
 - **Errors**: hint errors show as a toast in every layout (5 s). A stale hint number shows nothing: the

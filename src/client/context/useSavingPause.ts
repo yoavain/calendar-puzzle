@@ -5,13 +5,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PuzzleDate } from "../../common/types";
 import type { SavingNoticeKind } from "../copy/savingCopy";
-import { flushPendingSaves } from "../service/pendingSaves.js";
+import { flushPendingSaves, hasPendingSaves } from "../service/pendingSaves.js";
 import { getDatabaseStatus, SERVER_FAILURE_EVENT } from "../service/serverStatus.js";
 import { logToServer } from "../service/logService.js";
 
 const RECOVERY_POLL_MS = 30_000;
 // The health answer is cached for 10 s, so a first "ok" can be out of date.
 const RECHECK_MS = 11_000;
+// The window of the server rate limit
+const RETRY_MS = 60_000;
 
 export function useSavingPause({ userId, loading, refreshUser, addPlayedDate, addCompletedDate }: {
     userId: string | null;
@@ -28,8 +30,25 @@ export function useSavingPause({ userId, loading, refreshUser, addPlayedDate, ad
 
     const savingPaused = paused && userId !== null;
     const wasPausedRef = useRef(false);
+    // First solves sent since the pause, for the recovery notice
+    const tokensGrantedRef = useRef(0);
+    const lastUserRef = useRef<string | null>(null);
 
     const dismissSavingNotice = useCallback(() => setNotice(null), []);
+
+    // Nothing of one account carries into another. A sign-out alone keeps the notice, which can ask to sign in.
+    useEffect(() => {
+        if (userId === null) {
+            return;
+        }
+        if (lastUserRef.current !== null && lastUserRef.current !== userId) {
+            wasPausedRef.current = false;
+            tokensGrantedRef.current = 0;
+            setSentSolves([]);
+            setNotice(null);
+        }
+        lastUserRef.current = userId;
+    }, [userId]);
 
     // A failed API call may mean that the database is gone. Health decides.
     useEffect(() => {
@@ -102,11 +121,12 @@ export function useSavingPause({ userId, loading, refreshUser, addPlayedDate, ad
         };
     }, [savingPaused, refreshUser]);
 
-    // Send what is pending: on a visit, on recovery, and when the browser is back online.
+    // Send what is pending: on a visit, on recovery, when the browser is back online, and while anything is left.
     useEffect(() => {
         if (userId === null || loading || paused) {
             return;
         }
+        let isActive = true;
 
         const flush = async () => {
             const { started, solved, tokensGranted } = await flushPendingSaves(userId);
@@ -119,19 +139,31 @@ export function useSavingPause({ userId, loading, refreshUser, addPlayedDate, ad
                 // The token balance comes from the server
                 await refreshUser();
             }
-            if (wasPausedRef.current) {
-                wasPausedRef.current = false;
+            tokensGrantedRef.current += tokensGranted;
+            // "Saving is back" must be true: nothing left to send, and no new pause meanwhile
+            if (isActive && wasPausedRef.current && !hasPendingSaves(userId)) {
                 // Only a first solve grants a token, so only then is the solve news
-                setNotice(tokensGranted > 0 ? "back-saved" : "back");
+                setNotice(tokensGrantedRef.current > 0 ? "back-saved" : "back");
+                wasPausedRef.current = false;
+                tokensGrantedRef.current = 0;
             }
         };
-        const handleOnline = () => {
+        const run = () => {
             flush().catch((error) => logToServer("error", "Saving: Failed to send pending saves", error));
         };
 
-        handleOnline();
-        window.addEventListener("online", handleOnline);
-        return () => window.removeEventListener("online", handleOnline);
+        run();
+        const retry = window.setInterval(() => {
+            if (hasPendingSaves(userId)) {
+                run();
+            }
+        }, RETRY_MS);
+        window.addEventListener("online", run);
+        return () => {
+            isActive = false;
+            window.clearInterval(retry);
+            window.removeEventListener("online", run);
+        };
     }, [userId, loading, paused, refreshUser, addPlayedDate, addCompletedDate]);
 
     return { savingPaused, setPaused, sentSolves, notice, showSavingNotice: setNotice, dismissSavingNotice };

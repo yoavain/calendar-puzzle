@@ -22,10 +22,19 @@ export interface FlushResult {
 
 const keyOf = (save: Pick<PendingSave, "userId" | "kind" | "date">) => `${save.userId}|${save.kind}|${save.date.month}-${save.date.day}`;
 
+// Storage can hold anything: an older format, or a damaged entry
+const isPendingSave = (value: unknown): value is PendingSave => {
+    const entry = value as { userId?: unknown; kind?: unknown; date?: { month?: unknown; day?: unknown }; pieces?: unknown } | null;
+    return typeof entry?.userId === "string"
+        && typeof entry.date?.month === "number"
+        && typeof entry.date.day === "number"
+        && (entry.kind === "start" || (entry.kind === "complete" && Array.isArray(entry.pieces)));
+};
+
 const load = (): PendingSave[] => {
     try {
         const stored: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
-        return Array.isArray(stored) ? stored as PendingSave[] : [];
+        return Array.isArray(stored) ? stored.filter(isPendingSave) : [];
     }
     catch {
         return [];
@@ -48,21 +57,23 @@ export const addPendingSave = (save: PendingSave): void => {
 export const hasPendingSave = (userId: string, kind: PendingSave["kind"], date: PuzzleDate): boolean =>
     load().some(save => keyOf(save) === keyOf({ userId, kind, date }));
 
+export const hasPendingSaves = (userId: string): boolean => load().some(save => save.userId === userId);
+
 const inFlight = new Map<string, Promise<SaveResult>>();
 
 const send = async (save: PendingSave): Promise<SaveResult> => {
     let result: SaveResult;
     try {
         result = save.kind === "start"
-            ? { outcome: await recordStart(save.date), tokenGranted: false }
-            : await recordCompletion(save.date, save.pieces);
+            ? { outcome: await recordStart(save.date, save.userId), tokenGranted: false }
+            : await recordCompletion(save.date, save.pieces, save.userId);
     }
     catch {
         result = { outcome: "failed", tokenGranted: false };
     }
 
     // A rejected save can never succeed. Anything else that failed is sent again later.
-    if (result.outcome !== "failed") {
+    if (result.outcome === "saved" || result.outcome === "rejected") {
         store(load().filter(other => keyOf(other) !== keyOf(save)));
     }
     return result;

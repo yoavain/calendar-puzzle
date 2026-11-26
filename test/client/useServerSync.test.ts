@@ -36,7 +36,9 @@ const render = (gameState: GameState, { savingPaused = false } = {}) => {
         addCompletedDate: jest.fn(),
         onTokenGranted: jest.fn(),
         savingPaused,
-        onSolveDeferred: jest.fn()
+        onSolveDeferred: jest.fn(),
+        onSolveWithoutToken: jest.fn(),
+        onSignInNeeded: jest.fn()
     };
     renderHook(() => useServerSync(props));
     return props;
@@ -67,6 +69,43 @@ describe("useServerSync", () => {
 
         await waitFor(() => expect(props.addCompletedDate).toHaveBeenCalled());
         expect(props.onTokenGranted).not.toHaveBeenCalled();
+        expect(props.onSolveWithoutToken).toHaveBeenCalledTimes(1);
+    });
+
+    it("asks for a sign-in, and keeps the solve, when the login has expired", async () => {
+        mockRecordCompletion.mockResolvedValue({ outcome: "signed-out", tokenGranted: false });
+        const props = render(solvedState());
+
+        await waitFor(() => expect(props.onSignInNeeded).toHaveBeenCalledTimes(1));
+        expect(props.onSolveDeferred).not.toHaveBeenCalled();
+        expect(isPending()).toBe(true);
+    });
+
+    it("sends a date that is solved again, although an earlier save is pending", async () => {
+        addPendingSave({ userId: "u1", date: JAN_1, kind: "complete", pieces: [] });
+        mockRecordCompletion.mockResolvedValue({ outcome: "failed", tokenGranted: false });
+        const onSolveDeferred = jest.fn();
+        const base = {
+            user: { id: "u1", isAdmin: false },
+            userLoading: false,
+            playedDates: [JAN_1],
+            completedDates: [],
+            addPlayedDate: jest.fn(),
+            addCompletedDate: jest.fn(),
+            onTokenGranted: jest.fn(),
+            savingPaused: false,
+            onSolveDeferred,
+            onSolveWithoutToken: jest.fn(),
+            onSignInNeeded: jest.fn()
+        };
+        const { rerender } = renderHook((gameState: GameState) => useServerSync({ ...base, gameState }), {
+            initialProps: solvedState({ isSolved: false })
+        });
+
+        rerender(solvedState());
+
+        await waitFor(() => expect(onSolveDeferred).toHaveBeenCalledTimes(1));
+        expect(mockRecordCompletion).toHaveBeenCalledWith(JAN_1, solution0101.pieces, "u1");
     });
 
     it("does not report a revealed solution", () => {

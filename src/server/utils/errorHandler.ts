@@ -9,7 +9,11 @@ export const errorHandler = (error: FastifyError, request: FastifyRequest, reply
     // The browser navigates here from Google, so an error must lead back to the game.
     if (request.routeOptions.url === AUTH_GOOGLE_CALLBACK) {
         request.log.error(error, "[Auth] Sign-in failed");
-        return reply.redirect(`/?error=${SIGN_IN_ERROR.unavailable}`);
+        // passport-oauth2 errors carry "status", not "statusCode". A reused or expired code is marked 500.
+        const { code, status: oauthStatus } = error as { code?: string; status?: number };
+        const status = error.statusCode ?? oauthStatus ?? 500;
+        const isRequestFault = code === "invalid_grant" || (status >= 400 && status < 500);
+        return reply.redirect(`/?error=${isRequestFault ? SIGN_IN_ERROR.failed : SIGN_IN_ERROR.unavailable}`);
     }
 
     const status = error.statusCode ?? 500;

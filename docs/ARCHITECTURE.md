@@ -356,7 +356,7 @@ Server:
   limit. A transaction takes its own client and destroys it on any error.
 - The error handler sends no detail for a 5xx. A Google callback that hits a server error redirects to
   `/?error=auth_unavailable`, and the client says that sign-in is unavailable. A sign-in that the player does not
-  complete redirects with `auth_failed`, and the client says nothing.
+  complete, or a reused code, redirects with `auth_failed`, and the client says nothing.
 - Migrations run before `listen`, so an app that restarts during an outage serves nothing until the database returns.
 
 Client:
@@ -364,7 +364,9 @@ Client:
 - `useSavingPause` enters "saving paused" when `/api/auth/me` says so, or when a call fails and `/api/health` answers
   503. It leaves the state when health answers 200 again.
 - Each start and solve goes to `localStorage` first (`pendingSaves.ts`), tagged with the user. It is removed when the
-  server confirms it or rejects it with 400.
+  server confirms it or rejects it with 400. While any are left, the client retries each minute.
+- A save names its user in the `x-expected-user` header. The server answers 409 when the login is another account,
+  because a tab can outlive a sign-in made in another tab.
 - While paused, Hint and Statistics are off, and a toolbar icon shows the state. On mobile the icon takes the place of
   the Hall of Fame button, which the drawer also offers.
 

@@ -5,8 +5,10 @@ import pg from "pg";
 import { config } from "../config.js";
 
 export const runMigrations = async (log: FastifyBaseLogger): Promise<void> => {
-    // Not the app pool: its query timeout must not cut off a long migration.
-    const pool = new pg.Pool({ connectionString: config.database.url as string });
+    // Not the app pool: its query timeout must not cut off a long migration. Startup is not urgent, so the
+    // connection gets longer than in the app. Without a limit, a frozen database hangs the start for good.
+    const pool = new pg.Pool({ connectionString: config.database.url as string, connectionTimeoutMillis: 10_000 });
+    pool.on("error", (error) => log.error({ reason: error.message }, "[Migrations] Idle database connection error"));
 
     try {
         log.info("[Migrations] Running database migrations");

@@ -689,6 +689,28 @@ describe("useGameController post-solve timing", () => {
         expect(result.current.modals.stats.isOpen).toBe(true);
     });
 
+    it("opens no stats before the server has answered the save", async () => {
+        let answer: (value: unknown) => void = () => {};
+        (recordCompletion as jest.Mock).mockReturnValue(new Promise((resolve) => {
+            answer = resolve;
+        }));
+        const { result } = renderSolvable([]);
+
+        act(() => result.current.handlePieceDrop(lastPiece.position!, { pieceId: lastPiece.id }));
+        act(() => {
+            jest.advanceTimersByTime(5000);
+        });
+        expect(result.current.modals.stats.isOpen).toBe(false);
+
+        await act(async () => {
+            answer({ outcome: "saved", tokenGranted: false });
+        });
+        act(() => {
+            jest.advanceTimersByTime(0);
+        });
+        expect(result.current.modals.stats.isOpen).toBe(true);
+    });
+
     it("opens no stats when the solve cannot be saved", async () => {
         (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "failed", tokenGranted: false });
         const { result } = renderSolvable([]);

@@ -67,10 +67,9 @@ const fireConfetti = async () => {
 };
 
 // Post-solve timing: docs/DESIGN.md, Hint Tokens
-const STATS_DELAY_MS = 1500; // stats dialog after a solve that earns no token
+const STATS_DELAY_MS = 1500; // earliest stats dialog after a solve that earns no token
 const TOKEN_FLIGHT_EARLIEST_MS = 1050; // the flight waits for the win sweep
 const STATS_AFTER_LANDING_MS = 250; // stats dialog after the token lands
-const STATS_FALLBACK_MS = 2500; // stats dialog when an expected token never arrives
 const STATS_SAFETY_MS = 3000; // stats dialog if a granted token never lands
 
 /** The player-facing text for a known hint failure, or "" to fall back to the raw message. */
@@ -181,7 +180,9 @@ export function useGameController() {
     });
 
     // Post-solve: when stats should wait for the token flight, and when the flight may start
+    // True while the stats dialog of a first solve waits: for the save answer, then for the token to land
     const statsAfterFlightRef = useRef(false);
+    const solvedAtRef = useRef(0);
     const [tokenFlightNotBefore, setTokenFlightNotBefore] = useState(0);
 
     // (Re)schedules the post-solve stats dialog; a later call replaces an earlier one
@@ -376,7 +377,15 @@ export function useGameController() {
                 const expectsToken = !completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day);
                 statsAfterFlightRef.current = expectsToken;
                 setTokenFlightNotBefore(Date.now() + TOKEN_FLIGHT_EARLIEST_MS);
-                scheduleStatsOpen(expectsToken ? STATS_FALLBACK_MS : STATS_DELAY_MS);
+                solvedAtRef.current = Date.now();
+                // A solve that gets sent has no timer yet: a failed save must not end up behind the dialog
+                if (!expectsToken) {
+                    scheduleStatsOpen(STATS_DELAY_MS);
+                }
+                else if (statsAutoOpenTimeoutRef.current !== null) {
+                    window.clearTimeout(statsAutoOpenTimeoutRef.current);
+                    statsAutoOpenTimeoutRef.current = null;
+                }
             }
         }
 
@@ -737,14 +746,27 @@ export function useGameController() {
         }
     }, [adjustTokenBalance, scheduleStatsOpen]);
 
-    const handleSolveDeferred = useCallback(() => {
+    // A solve that the server does not have: no stats, only the reason
+    const dropStatsFor = useCallback((notice: "solved-paused" | "signin-needed") => {
         if (statsAutoOpenTimeoutRef.current !== null) {
             window.clearTimeout(statsAutoOpenTimeoutRef.current);
             statsAutoOpenTimeoutRef.current = null;
         }
         statsAfterFlightRef.current = false;
-        showSavingNotice("solved-paused");
+        showSavingNotice(notice);
     }, [statsAutoOpenTimeoutRef, showSavingNotice]);
+
+    const handleSolveDeferred = useCallback(() => dropStatsFor("solved-paused"), [dropStatsFor]);
+    const handleSignInNeeded = useCallback(() => dropStatsFor("signin-needed"), [dropStatsFor]);
+
+    const handleSolveWithoutToken = useCallback(() => {
+        // A restored board is also sent, and no stats are owed for it
+        if (!statsAfterFlightRef.current) {
+            return;
+        }
+        statsAfterFlightRef.current = false;
+        scheduleStatsOpen(Math.max(solvedAtRef.current + STATS_DELAY_MS - Date.now(), 0));
+    }, [scheduleStatsOpen]);
 
     // The paused notice replaces a hint error that the outage caused, and takes the same place on screen
     useEffect(() => {
@@ -763,7 +785,9 @@ export function useGameController() {
         addCompletedDate,
         onTokenGranted: handleTokenGranted,
         savingPaused,
-        onSolveDeferred: handleSolveDeferred
+        onSolveDeferred: handleSolveDeferred,
+        onSolveWithoutToken: handleSolveWithoutToken,
+        onSignInNeeded: handleSignInNeeded
     });
 
     useEffect(() => () => {

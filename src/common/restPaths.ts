@@ -10,6 +10,9 @@ export const API_AUTH_ME = "/api/auth/me";
 export const API_AUTH_PUBLIC_KEY = "/api/auth/public-key";
 export const API_AUTH_CSRF_TOKEN = "/api/auth/csrf-token";
 
+/** Request header: the user that a stored save belongs to */
+export const EXPECTED_USER_HEADER = "x-expected-user";
+
 /** Codes in the `error` query parameter after a sign-in that did not complete */
 export const SIGN_IN_ERROR = {
     /** The player did not complete it, for example with Cancel at Google */

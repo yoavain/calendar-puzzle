@@ -5,7 +5,7 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import Fastify from "fastify";
 import { deserializeSessionUser } from "../../../src/server/auth/passport";
-import { requireDatabaseUser } from "../../../src/server/auth/requireAuth";
+import { requireDatabaseUser, requireSameUser } from "../../../src/server/auth/requireAuth";
 import { errorHandler } from "../../../src/server/utils/errorHandler";
 import { db } from "../../../src/server/db/connection";
 import { mockUser } from "../rest/helpers/fixtures";
@@ -76,6 +76,62 @@ describe("deserializeSessionUser", () => {
 
         await expect(deserializeSessionUser(sessionUser, requestFor(route))).resolves.toEqual({ ...sessionUser, isAdmin: false });
         expect(mockSelect).not.toHaveBeenCalled();
+    });
+});
+
+describe("a stored save", () => {
+    let server: FastifyInstance;
+
+    beforeAll(async () => {
+        server = Fastify({ logger: false });
+        server.addHook("preHandler", async (request) => {
+            request.user = mockUser;
+        });
+        server.post("/api/save", { preHandler: requireSameUser }, async () => "saved");
+        await server.ready();
+    });
+
+    afterAll(async () => {
+        await server.close();
+    });
+
+    it.each([
+        [{ "x-expected-user": mockUser.id }, 200],
+        [{}, 200],
+        [{ "x-expected-user": "someone-else" }, 409]
+    ])("with headers %j answers %i", async (headers: Record<string, string>, status) => {
+        const res = await server.inject({ method: "POST", url: "/api/save", headers });
+        expect(res.statusCode).toBe(status);
+    });
+});
+
+describe("sign-in errors", () => {
+    let server: FastifyInstance;
+    let thrown: Record<string, unknown>;
+
+    beforeAll(async () => {
+        server = Fastify({ logger: false });
+        server.setErrorHandler(errorHandler);
+        server.get("/auth/google/callback", async () => {
+            throw Object.assign(new Error("sign-in"), thrown);
+        });
+        await server.ready();
+    });
+
+    afterAll(async () => {
+        await server.close();
+    });
+
+    it.each([
+        [{}, "auth_unavailable"],
+        [{ status: 502, code: "server_error" }, "auth_unavailable"],
+        [{ status: 500, code: "invalid_grant" }, "auth_failed"],
+        [{ status: 403, code: "access_denied" }, "auth_failed"],
+        [{ statusCode: 429 }, "auth_failed"]
+    ])("redirects %j with %s", async (error, code) => {
+        thrown = error;
+        const res = await server.inject("/auth/google/callback");
+        expect(res.headers.location).toBe(`/?error=${code}`);
     });
 });
 

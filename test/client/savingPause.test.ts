@@ -22,7 +22,7 @@ let solved: boolean;
 
 const json = (status: number, body: unknown) => ({ ok: status < 400, status, statusText: "", json: async () => body }) as Response;
 
-const fetchMock = jest.fn(async (url: string) => {
+const normalFetch = async (url: string) => {
     if (url === "/api/auth/me") {
         // After the pending solve arrives, the server lists it
         return json(200, solved && (me as { accountDataAvailable: boolean }).accountDataAvailable ? available([JUN_10]) : me);
@@ -38,7 +38,8 @@ const fetchMock = jest.fn(async (url: string) => {
         return json(200, { publicKey: "" });
     }
     return json(200, { csrfToken: "csrf" });
-});
+};
+const fetchMock = jest.fn(normalFetch);
 
 const wrapper = ({ children }: { children: ReactNode }) => React.createElement(UserProvider, null, children);
 
@@ -59,7 +60,8 @@ describe("saving paused", () => {
     beforeEach(() => {
         jest.useFakeTimers();
         localStorage.clear();
-        fetchMock.mockClear();
+        fetchMock.mockReset();
+        fetchMock.mockImplementation(normalFetch);
         global.fetch = fetchMock as unknown as typeof fetch;
         window.history.replaceState(null, "", "/");
         me = available();
@@ -100,6 +102,50 @@ describe("saving paused", () => {
         expect(result.current.completedDates).toContainEqual(JUN_10);
         expect(result.current.sentSolves).toContainEqual(JUN_10);
         expect(hasPendingSave("u1", "complete", JUN_10)).toBe(false);
+    });
+
+    it("retries each minute and says saving is back only when nothing is left", async () => {
+        me = unavailable;
+        health = 503;
+        addPendingSave({ userId: "u1", date: JUN_10, kind: "complete", pieces: [] });
+        const { result } = await renderUser();
+
+        health = 200;
+        me = available();
+        fetchMock.mockImplementation(async (url: string) => {
+            if (url === "/api/stats/complete") {
+                return json(429, {});
+            }
+            return normalFetch(url);
+        });
+        await wait(30_000);
+
+        expect(result.current.savingPaused).toBe(false);
+        expect(result.current.savingNotice).toBe("paused");
+        expect(hasPendingSave("u1", "complete", JUN_10)).toBe(true);
+
+        fetchMock.mockImplementation(normalFetch);
+        await wait(60_000);
+
+        expect(hasPendingSave("u1", "complete", JUN_10)).toBe(false);
+        expect(result.current.savingNotice).toBe("back-saved");
+    });
+
+    it("carries nothing into another account", async () => {
+        me = unavailable;
+        health = 503;
+        const { result } = await renderUser();
+        expect(result.current.savingNotice).toBe("paused");
+
+        me = { ...available(), user: { id: "u2", isAdmin: false } };
+        await act(async () => {
+            window.dispatchEvent(new CustomEvent("app:user-changed"));
+            await jest.advanceTimersByTimeAsync(0);
+        });
+
+        expect(result.current.user?.id).toBe("u2");
+        expect(result.current.savingNotice).toBeNull();
+        expect(result.current.sentSolves).toEqual([]);
     });
 
     it("stays signed in when the account read fails during recovery", async () => {

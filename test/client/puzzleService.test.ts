@@ -83,18 +83,32 @@ describe("getHintState", () => {
 describe("recordCompletion", () => {
     it("reports whether the server granted a token", async () => {
         routes["/api/stats/complete"] = () => json(200, { success: true, tokenGranted: true });
-        await expect(recordCompletion({ month: 0, day: 1 }, [piece])).resolves.toEqual({ outcome: "saved", tokenGranted: true });
+        await expect(recordCompletion({ month: 0, day: 1 }, [piece], "u1")).resolves.toEqual({ outcome: "saved", tokenGranted: true });
     });
 
     it.each([
         [400, "rejected"],
-        [401, "failed"],
+        [401, "signed-out"],
         [403, "failed"],
+        [409, "failed"],
         [429, "failed"],
         [503, "failed"]
     ])("reads a %i answer as %s, without a token", async (status, outcome) => {
         routes["/api/stats/complete"] = () => json(status, { error: "no" });
-        await expect(recordCompletion({ month: 0, day: 1 }, [piece])).resolves.toEqual({ outcome, tokenGranted: false });
+        await expect(recordCompletion({ month: 0, day: 1 }, [piece], "u1")).resolves.toEqual({ outcome, tokenGranted: false });
+    });
+
+    it("names the user of the save, and signals a login that is another account", async () => {
+        const onUserChanged = jest.fn();
+        window.addEventListener("app:user-changed", onUserChanged);
+        routes["/api/stats/complete"] = () => json(409, { error: "Signed in as another account" });
+
+        await recordCompletion({ month: 0, day: 1 }, [piece], "u1");
+
+        const [, options] = fetchMock.mock.calls.find(([url]) => url === "/api/stats/complete") as unknown as [string, RequestInit];
+        expect(options.headers).toMatchObject({ "x-expected-user": "u1" });
+        expect(onUserChanged).toHaveBeenCalledTimes(1);
+        window.removeEventListener("app:user-changed", onUserChanged);
     });
 
     it("signals a server failure on a 5xx answer only", async () => {
@@ -102,11 +116,11 @@ describe("recordCompletion", () => {
         window.addEventListener("app:server-failure", onFailure);
 
         routes["/api/stats/complete"] = () => json(400, { error: "no" });
-        await recordCompletion({ month: 0, day: 1 }, [piece]);
+        await recordCompletion({ month: 0, day: 1 }, [piece], "u1");
         expect(onFailure).not.toHaveBeenCalled();
 
         routes["/api/stats/complete"] = () => json(503, { error: "no" });
-        await recordCompletion({ month: 0, day: 1 }, [piece]);
+        await recordCompletion({ month: 0, day: 1 }, [piece], "u1");
         expect(onFailure).toHaveBeenCalledTimes(1);
 
         window.removeEventListener("app:server-failure", onFailure);

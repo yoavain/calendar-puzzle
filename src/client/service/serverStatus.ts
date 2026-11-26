@@ -3,6 +3,9 @@ import { API_HEALTH } from "../../common/restPaths.js";
 /** Dispatched on window when an API call gets a 5xx answer or no answer. */
 export const SERVER_FAILURE_EVENT = "app:server-failure";
 
+/** Dispatched on window when the server says that the login belongs to another account. */
+export const USER_CHANGED_EVENT = "app:user-changed";
+
 /**
  * "down" only when the server says so. Any other failure, an offline browser included, is "unknown".
  */

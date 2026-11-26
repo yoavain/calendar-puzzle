@@ -56,7 +56,8 @@ describe("pendingSaves", () => {
     it.each([
         ["saved", false],
         ["rejected", false],
-        ["failed", true]
+        ["failed", true],
+        ["signed-out", true]
     ])("after a %s answer, keeps the save: %s", async (outcome, kept) => {
         mockCompletion.mockResolvedValue({ outcome, tokenGranted: false });
         addPendingSave(completion);
@@ -81,6 +82,15 @@ describe("pendingSaves", () => {
         await Promise.all([sendPendingSave(completion), sendPendingSave(completion)]);
 
         expect(mockCompletion).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores damaged entries and sends the rest", async () => {
+        localStorage.setItem("calendar-puzzle-pending-saves", JSON.stringify([null, 5, { userId: "u1" }, { userId: "u1", kind: "complete", date: JAN_1 }, completion]));
+
+        await expect(flushPendingSaves("u1")).resolves.toMatchObject({ solved: [JAN_1] });
+
+        expect(mockCompletion).toHaveBeenCalledTimes(1);
+        expect(mockCompletion).toHaveBeenCalledWith(JAN_1, [], "u1");
     });
 
     it("ignores stored data that is not a list", async () => {

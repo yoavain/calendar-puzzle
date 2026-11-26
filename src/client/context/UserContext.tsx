@@ -3,6 +3,7 @@ import type { PuzzleDate } from "../../common/types.js";
 import type { AccountUser, MeResponse, UserSettings } from "../../common/restTypes.js";
 import type { SavingNoticeKind } from "../copy/savingCopy";
 import { useSavingPause } from "./useSavingPause";
+import { USER_CHANGED_EVENT } from "../service/serverStatus.js";
 import { clearCsrfToken, getCsrfToken } from "../service/csrfService";
 import { logToServer } from "../service/logService.js";
 import { saveUserSettings } from "../service/puzzleService.js";
@@ -140,6 +141,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
         window.addEventListener("pageshow", handlePageShow);
         return () => window.removeEventListener("pageshow", handlePageShow);
+    }, [fetchUser]);
+
+    useEffect(() => {
+        const handleUserChanged = () => {
+            fetchUser().catch(() => {});
+        };
+
+        window.addEventListener(USER_CHANGED_EVENT, handleUserChanged);
+        return () => window.removeEventListener(USER_CHANGED_EVENT, handleUserChanged);
     }, [fetchUser]);
 
     const logout = useCallback(async () => {

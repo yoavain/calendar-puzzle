@@ -19,12 +19,13 @@ import type { HintErrorCode } from "../../common/hintTokens";
 import { encryptPayload } from "../utils/encryption.js";
 import { logToServer } from "./logService.js";
 import { getCsrfToken, clearCsrfToken } from "./csrfService.js";
-import { SERVER_FAILURE_EVENT } from "./serverStatus.js";
+import { SERVER_FAILURE_EVENT, USER_CHANGED_EVENT } from "./serverStatus.js";
 import {
     API_AUTH_PUBLIC_KEY,
     API_HALL_OF_FAME,
     API_HINT,
     API_ISSUE,
+    EXPECTED_USER_HEADER,
     API_STATS_COMPLETE,
     API_STATS_START,
     API_USER_SETTINGS,
@@ -34,12 +35,18 @@ import {
 
 let cachedPublicKey: string | null = null;
 
-/** "rejected": the server will never accept it. "failed": send it again later. */
-export type SaveOutcome = "saved" | "rejected" | "failed";
+/** "rejected": the server will never accept it. "signed-out" and "failed": send it again later. */
+export type SaveOutcome = "saved" | "rejected" | "signed-out" | "failed";
 
 const toSaveOutcome = (response: Response): SaveOutcome => {
     if (response.ok) {
         return "saved";
+    }
+    if (response.status === 409) {
+        window.dispatchEvent(new CustomEvent(USER_CHANGED_EVENT));
+    }
+    if (response.status === 401) {
+        return "signed-out";
     }
     return response.status === 400 ? "rejected" : "failed";
 };
@@ -209,9 +216,9 @@ export const getHintState = async (date: PuzzleDate): Promise<Piece[]> => {
 /**
  * Record that a user started a puzzle
  */
-export const recordStart = async (date: PuzzleDate): Promise<SaveOutcome> => {
+export const recordStart = async (date: PuzzleDate, userId: string): Promise<SaveOutcome> => {
     let body: StartPuzzleRequest | EncryptedPayload = { month: date.month, day: date.day };
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = { "Content-Type": "application/json", [EXPECTED_USER_HEADER]: userId };
 
     const publicKey = await getPublicKey();
     if (publicKey) {
@@ -237,13 +244,13 @@ export const recordStart = async (date: PuzzleDate): Promise<SaveOutcome> => {
 /**
  * Record that a user completed a puzzle
  */
-export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promise<{ outcome: SaveOutcome; tokenGranted: boolean }> => {
+export const recordCompletion = async (date: PuzzleDate, pieces: Piece[], userId: string): Promise<{ outcome: SaveOutcome; tokenGranted: boolean }> => {
     let body: CompletePuzzleRequest | EncryptedPayload = { 
         month: date.month, 
         day: date.day,
         pieces 
     };
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = { "Content-Type": "application/json", [EXPECTED_USER_HEADER]: userId };
 
     const publicKey = await getPublicKey();
     if (publicKey) {
