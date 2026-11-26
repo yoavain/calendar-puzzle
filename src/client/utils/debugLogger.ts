@@ -11,6 +11,8 @@
  *   3. Hit the "Dump Log" button in DebugPanel to download a JSON file.
  */
 
+import { readStorage, writeStorage } from "./safeStorage";
+
 const MAX_ENTRIES = 2000;
 const STORAGE_KEY = "puzzle:debugEnabled";
 
@@ -25,7 +27,7 @@ let enabled = false;
 
 export const debugLogger = {
     init: (): void => {
-        enabled = localStorage.getItem(STORAGE_KEY) === "true";
+        enabled = readStorage(STORAGE_KEY) === "true";
         if (enabled) {
             // eslint-disable-next-line no-console
             console.info("[DebugLogger] enabled — buffer size:", MAX_ENTRIES);
@@ -34,7 +36,7 @@ export const debugLogger = {
 
     setEnabled: (value: boolean): void => {
         enabled = value;
-        localStorage.setItem(STORAGE_KEY, String(value));
+        writeStorage(STORAGE_KEY, String(value));
         window.dispatchEvent(new Event("debug:mode-changed"));
         if (value) {
             // eslint-disable-next-line no-console

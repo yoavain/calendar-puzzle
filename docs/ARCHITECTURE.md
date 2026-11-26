@@ -226,6 +226,24 @@ export const getPieceShape = (id: PieceId): boolean[][] => ...
 
 The client layer contains all UI code, including React components and DOM interactions.
 
+### Embedded in Another Site
+
+`kamario.games` shows the Production game in a frame. `context/EmbeddedContext.ts` detects any frame, and
+the server CSP (`frameAncestors`) limits which sites can frame the game. Sign-in does not work there:
+
+- **Sign in** opens `FullSiteDialog`, which links to `/?ref=embed` on the game's own origin. The dialog shows
+  pictures of the Hall of Fame and the Hint button with made-up data (`FullSitePreviews`). A phone on its
+  side leaves about 245px of height in the Kamario frame, so check that size after a change to the dialog.
+- The "Sign in to..." tooltips show `EMBED_COPY.signInTooltip`.
+- In the mobile menu, Hall of Fame, Statistics, Report a bug and Hint open `FullSiteDialog` instead.
+- `service/analytics.ts` counts embedded views under the GoatCounter path `/embed`.
+
+To test the embedded state in any environment, sign out (or use a private window), open the game and run
+this in the browser console:
+`document.body.innerHTML = '<iframe src="/" style="width:100vw;height:100vh;border:0"></iframe>'`.
+This frame has the same origin as the game, so it does not reproduce the cookie and storage limits of a
+frame on another site.
+
 ### Key Modules
 
 #### `utils/dragHelpers.ts`

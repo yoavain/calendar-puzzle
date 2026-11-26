@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 import type { ThemeMode } from "./theme";
 import { darkTheme, lightTheme } from "./theme";
+import { readStorage, writeStorage } from "../utils/safeStorage";
 
 // Smooth theme cross-fade — scoped to surfaces whose colors change on theme swap.
 // Descendant text/border/fill cascade via inheritance, so a wider `*` rule isn't
@@ -36,9 +37,9 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-    // Initialize from localStorage or default to system
+    // Initialize from storage or default to system
     const [mode, setModeState] = useState<ThemeMode>(() => {
-        const savedTheme = localStorage.getItem("theme");
+        const savedTheme = readStorage("theme");
         if (savedTheme === "light" || savedTheme === "dark" || savedTheme === "system") {
             return savedTheme as ThemeMode;
         }
@@ -85,11 +86,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
                 // Compute and persist outside the setter. React may call an updater
                 // more than once, which would repeat the write.
                 const newMode = effectiveMode === "light" ? "dark" : "light";
-                localStorage.setItem("theme", newMode);
+                writeStorage("theme", newMode);
                 setModeState(newMode);
             },
             setMode: (newMode: ThemeMode) => {
-                localStorage.setItem("theme", newMode);
+                writeStorage("theme", newMode);
                 setModeState(newMode);
             }
         }),

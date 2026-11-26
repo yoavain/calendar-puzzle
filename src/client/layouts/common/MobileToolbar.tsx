@@ -4,6 +4,7 @@ import Drawer from "@mui/material/Drawer";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import type { ButtonProps } from "@mui/material/Button";
 import Switch from "@mui/material/Switch";
 import Tooltip from "@mui/material/Tooltip";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -32,6 +33,9 @@ import { HintButton } from "../../components/HintButton";
 import { TokenMenuBadge } from "../../components/TokenMenuBadge";
 import { LazyHallOfFameModal } from "../../components/lazyDialogs";
 import { LazyShareDialog } from "../../components/LazyShareDialog";
+import { FullSiteDialog } from "../../components/FullSiteDialog";
+import { SIGN_IN_COPY } from "../../copy/signInCopy";
+import { useIsEmbedded } from "../../context/EmbeddedContext";
 
 import type { GameController } from "./useGameController";
 import {
@@ -51,6 +55,26 @@ const drawerButtonSx = {
     justifyContent: "flex-start",
     pl: 3,
     gap: 1.5
+};
+
+/** A drawer button that is disabled when it has a reason. A tap shows the reason. */
+const ReasonedDrawerButton: React.FC<ButtonProps & { disabledReason: string }> = ({ disabledReason, ...props }) => {
+    const [isReasonOpen, setIsReasonOpen] = useState(false);
+    return (
+        // The click opens the tooltip. In Chromium, a quick tap ends before the touch delay timer
+        // fires, so the touch alone shows nothing.
+        <Tooltip
+            title={disabledReason}
+            open={isReasonOpen}
+            onOpen={() => setIsReasonOpen(true)}
+            onClose={() => setIsReasonOpen(false)}
+            enterTouchDelay={0}
+        >
+            <TooltipDisabledWrapper disabled={!!disabledReason} onClick={() => setIsReasonOpen(!!disabledReason)}>
+                <DrawerButton fullWidth variant="outlined" {...props} disabled={!!disabledReason} />
+            </TooltipDisabledWrapper>
+        </Tooltip>
+    );
 };
 
 interface MobileToolbarProps {
@@ -73,11 +97,19 @@ interface MobileToolbarProps {
  * - Hall of Fame
  * - Help, Stats, Bug Report
  * - Solution, Hint
+ *
+ * Hall of Fame, Stats, Bug Report and Hint need a signed-in player. In a frame on another site,
+ * they open FullSiteDialog. Elsewhere, they are disabled.
  */
 export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation = "horizontal" }) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isHallOfFameOpen, setIsHallOfFameOpen] = useState(false);
     const [debugEnabled, setDebugEnabled] = useState(() => debugLogger.isEnabled());
+    const [isFullSiteOpen, setIsFullSiteOpen] = useState(false);
+    const isEmbedded = useIsEmbedded();
+    const offersFullSite = isEmbedded && !game.user;
+    const needsSignIn = !isEmbedded && !game.user;
+    const statsPaused = !offersFullSite && game.savingPaused;
 
     const openDrawer = () => setIsDrawerOpen(true);
     const closeDrawer = () => setIsDrawerOpen(false);
@@ -87,6 +119,9 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
         action();
         closeDrawer();
     };
+
+    const handleSignedInAction = (action: () => void) =>
+        handleAction(offersFullSite ? () => setIsFullSiteOpen(true) : action);
 
     return (
         <>
@@ -158,17 +193,13 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             fullWidth
                             sx={drawerButtonSx}
                         />
-                        <DrawerButton
-                            fullWidth
-                            variant="outlined"
+                        <ReasonedDrawerButton
                             startIcon={<EmojiEventsIcon />}
-                            onClick={() => {
-                                setIsHallOfFameOpen(true);
-                                closeDrawer();
-                            }}
+                            onClick={() => handleSignedInAction(() => setIsHallOfFameOpen(true))}
+                            disabledReason={needsSignIn ? SIGN_IN_COPY.hallOfFameTooltip : ""}
                         >
                             Hall of Fame
-                        </DrawerButton>
+                        </ReasonedDrawerButton>
                     </DrawerSection>
 
                     <Divider />
@@ -184,29 +215,21 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                         >
                             How to play
                         </DrawerButton>
-                        <Tooltip title={game.savingPaused ? SAVING_COPY.statsTooltip : ""} enterTouchDelay={0}>
-                            <TooltipDisabledWrapper disabled={game.savingPaused}>
-                                <DrawerButton
-                                    fullWidth
-                                    variant="outlined"
-                                    startIcon={<BarChartIcon />}
-                                    onClick={() => handleAction(game.modals.stats.open)}
-                                    disabled={!game.user || game.savingPaused}
-                                >
-                                    Statistics
-                                </DrawerButton>
-                            </TooltipDisabledWrapper>
-                        </Tooltip>
-                        <DrawerButton
-                            fullWidth
-                            variant="outlined"
+                        <ReasonedDrawerButton
+                            startIcon={<BarChartIcon />}
+                            onClick={() => handleSignedInAction(game.modals.stats.open)}
+                            disabledReason={needsSignIn ? SIGN_IN_COPY.statsTooltip : statsPaused ? SAVING_COPY.statsTooltip : ""}
+                        >
+                            Statistics
+                        </ReasonedDrawerButton>
+                        <ReasonedDrawerButton
                             startIcon={<BugReportIcon />}
-                            onClick={() => handleAction(game.modals.issue.open)}
-                            disabled={!game.user}
+                            onClick={() => handleSignedInAction(game.modals.issue.open)}
+                            disabledReason={needsSignIn ? SIGN_IN_COPY.issueTooltip : ""}
                             color="info"
                         >
                             Report a bug
-                        </DrawerButton>
+                        </ReasonedDrawerButton>
                         <DrawerButton
                             fullWidth
                             variant="outlined"
@@ -235,6 +258,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                             onHint={() => handleAction(() => {
                                 game.handleHint().catch(() => {});
                             })}
+                            onSignInRequired={offersFullSite ? () => handleAction(() => setIsFullSiteOpen(true)) : undefined}
                             availability={game.hintAvailability}
                             tokenBalance={game.tokenBalance}
                             fullWidth
@@ -277,6 +301,8 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                 open={isHallOfFameOpen}
                 onClose={() => setIsHallOfFameOpen(false)}
             />
+
+            {isEmbedded && <FullSiteDialog open={isFullSiteOpen} onClose={() => setIsFullSiteOpen(false)} />}
 
             {/* Share Modal */}
             <LazyShareDialog open={game.modals.share.isOpen} onClose={game.modals.share.close} />

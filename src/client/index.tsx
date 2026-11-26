@@ -7,8 +7,11 @@ import { ThemeProvider } from "./theme/ColorModeContext";
 import { UserProvider } from "./context/UserContext";
 import { LandingPage } from "./pages/LandingPage";
 import { debugLogger } from "./utils/debugLogger";
+import { isFramed } from "./context/EmbeddedContext";
+import { loadAnalytics } from "./service/analytics";
 
 debugLogger.init();
+loadAnalytics(isFramed());
 
 const root = ReactDOM.createRoot(
     document.getElementById("root") as HTMLElement

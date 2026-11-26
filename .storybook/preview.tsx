@@ -2,6 +2,7 @@ import React from "react";
 import type { Preview, Decorator } from "@storybook/react";
 import { StoryThemeProvider } from "../src/client/storybook/StoryThemeProvider";
 import { MockUserProvider, MOCK_USER_REGULAR } from "../src/client/storybook/MockUserProvider";
+import { EmbeddedContext } from "../src/client/context/EmbeddedContext";
 
 const withProviders: Decorator = (Story, context) => {
     const mode = context.globals["theme"] === "light" ? "light" : "dark";
@@ -14,9 +15,12 @@ const withProviders: Decorator = (Story, context) => {
     } = context.parameters["userContext"] ?? {};
     return (
         <MockUserProvider user={user} completedDates={completedDates} playedDates={playedDates} loading={loading} tokenBalance={tokenBalance}>
-            <StoryThemeProvider mode={mode}>
-                <Story />
-            </StoryThemeProvider>
+            {/* Storybook shows each story in a frame, so set the value instead of the detection */}
+            <EmbeddedContext.Provider value={context.parameters["embedded"] ?? false}>
+                <StoryThemeProvider mode={mode}>
+                    <Story />
+                </StoryThemeProvider>
+            </EmbeddedContext.Provider>
         </MockUserProvider>
     );
 };

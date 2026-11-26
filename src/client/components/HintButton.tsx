@@ -8,10 +8,14 @@ import type { HintAvailability } from "../../common/hintTokens";
 import { HINT_TOKEN_COPY } from "../copy/hintTokenCopy";
 import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 import { TokenCoin } from "./TokenCoin";
+import { useIsEmbedded } from "../context/EmbeddedContext";
+import { EMBED_COPY } from "../copy/embedCopy";
 import { BalanceDivider, TokenBalance } from "./HintButton.styled";
 
 interface HintButtonProps {
     onHint: () => void;
+    /** Takes a signed-out player's click. Without it, the button is disabled for them. */
+    onSignInRequired?: () => void;
     availability: HintAvailability;
     tokenBalance: number;
     fullWidth?: boolean;
@@ -19,9 +23,12 @@ interface HintButtonProps {
     sx?: SxProps<Theme>;
 }
 
-export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, tokenBalance, fullWidth, color = "secondary", sx }) => {
+export const HintButton: React.FC<HintButtonProps> = ({ onHint, onSignInRequired, availability, tokenBalance, fullWidth, color = "secondary", sx }) => {
     const copy = HINT_TOKEN_COPY.hintButton[availability];
-    const isEnabled = availability === "free" || availability === "token";
+    const isEmbedded = useIsEmbedded();
+    const tooltip = isEmbedded && availability === "login-required" ? EMBED_COPY.signInTooltip : copy.tooltip(tokenBalance);
+    const signInAction = availability === "login-required" ? onSignInRequired : undefined;
+    const isEnabled = availability === "free" || availability === "token" || !!signInAction;
     const isLoading = availability === "loading";
     const showBalance = availability !== "login-required" && availability !== "paused" && !isLoading;
 
@@ -40,7 +47,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, to
         <Button
             variant="contained"
             color={color}
-            onClick={onHint}
+            onClick={signInAction ?? onHint}
             disabled={!isEnabled}
             loading={isLoading}
             loadingPosition="start"
@@ -63,7 +70,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, to
     );
 
     return (
-        <Tooltip title={copy.tooltip(tokenBalance)} arrow>
+        <Tooltip title={tooltip} arrow>
             <TooltipDisabledWrapper disabled={!isEnabled}>{button}</TooltipDisabledWrapper>
         </Tooltip>
     );

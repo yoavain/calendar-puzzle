@@ -14,3 +14,9 @@ type Story = StoryObj<typeof LoginButton>;
 export const Default: Story = {
     render: () => <LoginButton />
 };
+
+/** In a frame on another site. A click opens the dialog that links to the original site. */
+export const Embedded: Story = {
+    parameters: { embedded: true, userContext: { user: null } },
+    render: () => <LoginButton />
+};
