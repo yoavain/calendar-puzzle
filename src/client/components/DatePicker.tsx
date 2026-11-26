@@ -15,6 +15,8 @@ import { toPuzzleDate } from "../../common/types";
 import type { PuzzleDate } from "../../common/types";
 import { DAYS_IN_MONTH, MONTHS } from "../../common/consts";
 import { useUser } from "../context/UserContext";
+import { useIsEmbedded } from "../context/EmbeddedContext";
+import { EMBED_COPY } from "../copy/embedCopy";
 import { TooltipDisabledWrapper } from "./TooltipDisabledWrapper";
 import { formatDayName } from "../copy/solveCopy";
 import {
@@ -62,6 +64,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
     const theme = useTheme();
     const { user, completedDates, playedDates } = useUser();
     const isLoginRequired = !user;
+    const isEmbedded = useIsEmbedded();
+    const signInTooltip = isEmbedded ? EMBED_COPY.signInTooltip : "Sign in to select a different date";
     
     const [isOpen, setIsOpen] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(currentDate.month);
@@ -146,7 +150,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({ currentDate, onDateChang
 
     return (
         <>
-            <Tooltip title={isLoginRequired ? "Sign in to select a different date" : "Change date"} arrow>
+            <Tooltip title={isLoginRequired ? signInTooltip : "Change date"} arrow>
                 <TooltipDisabledWrapper disabled={isLoginRequired}>{button}</TooltipDisabledWrapper>
             </Tooltip>
 

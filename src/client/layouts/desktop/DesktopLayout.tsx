@@ -22,6 +22,8 @@ import { HintButton } from "../../components/HintButton";
 import { LoginButton } from "../../components/LoginButton";
 import { SavingPausedButton } from "../../components/SavingNotice";
 import { SAVING_COPY } from "../../copy/savingCopy";
+import { EMBED_COPY } from "../../copy/embedCopy";
+import { useIsEmbedded } from "../../context/EmbeddedContext";
 import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
 import { LazyStatsModal, LazyIssueModal, LazyHelpModal, LazyTokenConfirmDialog } from "../../components/lazyDialogs";
@@ -70,6 +72,8 @@ import {
  */
 export const DesktopLayout: React.FC = () => {
     const game = useGameController();
+    const isEmbedded = useIsEmbedded();
+    const signInTooltip = (text: string) => (isEmbedded ? EMBED_COPY.signInTooltip : text);
 
     // Responsive scaling logic
     const [scale, setScale] = useState(1);
@@ -136,7 +140,7 @@ export const DesktopLayout: React.FC = () => {
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? "Sign in to submit a bug or request a feature" : "Report a bug or request a feature"}
+                                    tooltip={!game.user ? signInTooltip("Sign in to submit a bug or request a feature") : "Report a bug or request a feature"}
                                     onClick={game.modals.issue.open}
                                     icon={<BugReportIcon />}
                                     ariaLabel="Report a bug or request a feature"
@@ -144,7 +148,7 @@ export const DesktopLayout: React.FC = () => {
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? "Sign in to see statistics" : game.savingPaused ? SAVING_COPY.statsTooltip : "Statistics"}
+                                    tooltip={!game.user ? signInTooltip("Sign in to see statistics") : game.savingPaused ? SAVING_COPY.statsTooltip : "Statistics"}
                                     onClick={game.modals.stats.open}
                                     icon={<BarChartIcon />}
                                     ariaLabel="Statistics"
