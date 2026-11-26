@@ -20,6 +20,8 @@ import ThemeToggle from "../../components/ThemeToggle";
 import { SolutionButton } from "../../components/SolutionButton";
 import { HintButton } from "../../components/HintButton";
 import { LoginButton } from "../../components/LoginButton";
+import { SavingPausedButton } from "../../components/SavingNotice";
+import { SAVING_COPY } from "../../copy/savingCopy";
 import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
 import { LazyStatsModal, LazyIssueModal, LazyHelpModal, LazyTokenConfirmDialog } from "../../components/lazyDialogs";
@@ -117,6 +119,7 @@ export const DesktopLayout: React.FC = () => {
                         <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexShrink: 0 }}>
                             <ThemeToggle />
                             {!game.userLoading && (game.user ? <UserMenu onShowTokenIntro={game.modals.tokenIntro.open} /> : <LoginButton />)}
+                            <SavingPausedButton />
                         </Stack>
                         <ToolbarGroups>
                             {game.solverError && (
@@ -141,11 +144,11 @@ export const DesktopLayout: React.FC = () => {
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? "Sign in to see statistics" : "Statistics"}
+                                    tooltip={!game.user ? "Sign in to see statistics" : game.savingPaused ? SAVING_COPY.statsTooltip : "Statistics"}
                                     onClick={game.modals.stats.open}
                                     icon={<BarChartIcon />}
                                     ariaLabel="Statistics"
-                                    disabled={!game.user}
+                                    disabled={!game.user || game.savingPaused}
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton

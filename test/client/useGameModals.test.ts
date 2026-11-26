@@ -8,15 +8,21 @@ import { DAYS_IN_MONTH } from "../../src/common/consts";
 
 const user = { id: "u1", isAdmin: false };
 
-const renderModals = (settings: UserSettings, options: { completedDates?: { month: number; day: number }[] } = {}) => {
+const NO_DATES: { month: number; day: number }[] = [];
+
+const renderModals = (settings: UserSettings, options: { completedDates?: { month: number; day: number }[]; savingPaused?: boolean; sentSolves?: { month: number; day: number }[]; isSavingNoticeOpen?: boolean } = {}) => {
     const onTokenIntroSeen = jest.fn();
+    const completedDates = options.completedDates ?? [];
     const hook = renderHook(() => useGameModals({
         user,
         userLoading: false,
-        completedDates: options.completedDates ?? [],
+        completedDates,
         currentDate: { month: 5, day: 10 },
         settings,
-        onTokenIntroSeen
+        onTokenIntroSeen,
+        savingPaused: options.savingPaused ?? false,
+        sentSolves: options.sentSolves ?? NO_DATES,
+        isSavingNoticeOpen: options.isSavingNoticeOpen ?? false
     }));
     return { ...hook, onTokenIntroSeen };
 };
@@ -77,6 +83,27 @@ describe("useGameModals token intro", () => {
         act(() => result.current.modals.tokenIntro.open());
         expect(result.current.modals.tokenIntro.isOpen).toBe(true);
     });
+
+    it("waits while saving is paused, because the settings are unknown", () => {
+        const { result } = renderModals({}, { savingPaused: true });
+        expect(result.current.modals.tokenIntro.isOpen).toBe(false);
+    });
+
+    it("shows no solved-today notice while saving is paused", () => {
+        const { result } = renderModals({ tokenIntroSeen: true }, { savingPaused: true, completedDates: [{ month: 5, day: 10 }] });
+        expect(result.current.modals.solvedNotice.isOpen).toBe(false);
+    });
+
+    it("holds the solved-today notice while a saving notice is open", () => {
+        const { result } = renderModals({ tokenIntroSeen: true }, { completedDates: [{ month: 5, day: 10 }], isSavingNoticeOpen: true });
+        expect(result.current.modals.solvedNotice.isOpen).toBe(false);
+    });
+
+    it("does not call a solve that was sent late 'already solved'", () => {
+        const today = { month: 5, day: 10 };
+        const { result } = renderModals({ tokenIntroSeen: true }, { completedDates: [today], sentSolves: [today] });
+        expect(result.current.modals.solvedNotice.isOpen).toBe(false);
+    });
 });
 
 describe("useGameModals after a solve", () => {
@@ -94,7 +121,7 @@ describe("useGameModals after a solve", () => {
 
     const renderFlow = (completedDates: { month: number; day: number }[] = []) => renderHook(
         (props: { completedDates: { month: number; day: number }[]; currentDate: { month: number; day: number } }) => useGameModals({
-            user, userLoading: false, settings, onTokenIntroSeen: jest.fn(), ...props
+            user, userLoading: false, settings, onTokenIntroSeen: jest.fn(), savingPaused: false, sentSolves: NO_DATES, isSavingNoticeOpen: false, ...props
         }),
         { initialProps: { completedDates, currentDate: JUN_10 } }
     );

@@ -67,10 +67,9 @@ const fireConfetti = async () => {
 };
 
 // Post-solve timing: docs/DESIGN.md, Hint Tokens
-const STATS_DELAY_MS = 1500; // stats dialog after a solve that earns no token
+const STATS_DELAY_MS = 1500; // earliest stats dialog after a solve that earns no token
 const TOKEN_FLIGHT_EARLIEST_MS = 1050; // the flight waits for the win sweep
 const STATS_AFTER_LANDING_MS = 250; // stats dialog after the token lands
-const STATS_FALLBACK_MS = 2500; // stats dialog when an expected token never arrives
 const STATS_SAFETY_MS = 3000; // stats dialog if a granted token never lands
 
 /** The player-facing text for a known hint failure, or "" to fall back to the raw message. */
@@ -104,7 +103,11 @@ export function useGameController() {
         setTokenBalance,
         settings,
         updateSettings,
-        adjustTokenBalance
+        adjustTokenBalance,
+        savingPaused,
+        sentSolves,
+        savingNotice,
+        showSavingNotice
     } = useUser();
 
     // Get initial state (from session or fresh game)
@@ -170,11 +173,16 @@ export function useGameController() {
         completedDates,
         currentDate: gameState.currentDate,
         settings,
-        onTokenIntroSeen: markTokenIntroSeen
+        onTokenIntroSeen: markTokenIntroSeen,
+        savingPaused,
+        sentSolves,
+        isSavingNoticeOpen: savingNotice !== null
     });
 
     // Post-solve: when stats should wait for the token flight, and when the flight may start
+    // True while the stats dialog of a first solve waits: for the save answer, then for the token to land
     const statsAfterFlightRef = useRef(false);
+    const solvedAtRef = useRef(0);
     const [tokenFlightNotBefore, setTokenFlightNotBefore] = useState(0);
 
     // (Re)schedules the post-solve stats dialog; a later call replaces an earlier one
@@ -270,7 +278,7 @@ export function useGameController() {
     const isResetDisabled = gameState.pieces.every(piece => piece.position === null || piece.isLocked);
 
     // What the Hint button offers right now (free, token, or why not)
-    const hintAvailability = getHintAvailability({
+    const hintAvailability = savingPaused ? "paused" : getHintAvailability({
         isLoggedIn: !!user,
         isSolved: gameState.isSolved,
         isDateSolved: completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day),
@@ -365,11 +373,19 @@ export function useGameController() {
             }, 400);
             // Automatically show stats on completion after a short delay. A first
             // solve earns a token: then stats waits for the token flight to land.
-            if (user) {
+            if (user && !savingPaused) {
                 const expectsToken = !completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day);
                 statsAfterFlightRef.current = expectsToken;
                 setTokenFlightNotBefore(Date.now() + TOKEN_FLIGHT_EARLIEST_MS);
-                scheduleStatsOpen(expectsToken ? STATS_FALLBACK_MS : STATS_DELAY_MS);
+                solvedAtRef.current = Date.now();
+                // A solve that gets sent has no timer yet: a failed save must not end up behind the dialog
+                if (!expectsToken) {
+                    scheduleStatsOpen(STATS_DELAY_MS);
+                }
+                else if (statsAutoOpenTimeoutRef.current !== null) {
+                    window.clearTimeout(statsAutoOpenTimeoutRef.current);
+                    statsAutoOpenTimeoutRef.current = null;
+                }
             }
         }
 
@@ -388,7 +404,7 @@ export function useGameController() {
             pieceId: piece.id,
             position
         });
-    }, [gameState, pushState, user, completedDates, noteSolve, scheduleStatsOpen]);
+    }, [gameState, pushState, user, savingPaused, completedDates, noteSolve, scheduleStatsOpen]);
 
     const handleCellClick = useCallback((position: Position) => {
         // Tap-to-place: If a piece is selected, try to place it at this position
@@ -702,10 +718,10 @@ export function useGameController() {
     // getGameState already holds the board that the fetched hints are for.
     useEffect(() => {
         const { currentDate, isSolved } = getGameState();
-        if (!userLoading && !isSolved) {
+        if (!userLoading && !isSolved && !savingPaused) {
             reconcileHints(currentDate).catch(() => {});
         }
-    }, [userLoading, reconcileHints, hintSyncKey]);
+    }, [userLoading, reconcileHints, hintSyncKey, savingPaused]);
 
     // Earned tokens count in the balance from the grant on. The shown balance holds
     // them back until their flight lands. If this layout remounts mid-flight (a
@@ -730,7 +746,49 @@ export function useGameController() {
         }
     }, [adjustTokenBalance, scheduleStatsOpen]);
 
-    useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate, onTokenGranted: handleTokenGranted });
+    // A solve that the server does not have: no stats, only the reason
+    const dropStatsFor = useCallback((notice: "solved-paused" | "signin-needed") => {
+        if (statsAutoOpenTimeoutRef.current !== null) {
+            window.clearTimeout(statsAutoOpenTimeoutRef.current);
+            statsAutoOpenTimeoutRef.current = null;
+        }
+        statsAfterFlightRef.current = false;
+        showSavingNotice(notice);
+    }, [statsAutoOpenTimeoutRef, showSavingNotice]);
+
+    const handleSolveDeferred = useCallback(() => dropStatsFor("solved-paused"), [dropStatsFor]);
+    const handleSignInNeeded = useCallback(() => dropStatsFor("signin-needed"), [dropStatsFor]);
+
+    const handleSolveWithoutToken = useCallback(() => {
+        // A restored board is also sent, and no stats are owed for it
+        if (!statsAfterFlightRef.current) {
+            return;
+        }
+        statsAfterFlightRef.current = false;
+        scheduleStatsOpen(Math.max(solvedAtRef.current + STATS_DELAY_MS - Date.now(), 0));
+    }, [scheduleStatsOpen]);
+
+    // The paused notice replaces a hint error that the outage caused, and takes the same place on screen
+    useEffect(() => {
+        if (savingPaused) {
+            setHintMessage(null);
+        }
+    }, [savingPaused]);
+
+    useServerSync({
+        user,
+        userLoading,
+        gameState,
+        playedDates,
+        completedDates,
+        addPlayedDate,
+        addCompletedDate,
+        onTokenGranted: handleTokenGranted,
+        savingPaused,
+        onSolveDeferred: handleSolveDeferred,
+        onSolveWithoutToken: handleSolveWithoutToken,
+        onSignInNeeded: handleSignInNeeded
+    });
 
     useEffect(() => () => {
         if (confettiTimeoutRef.current !== null) {
@@ -784,6 +842,7 @@ export function useGameController() {
         // User state
         user,
         userLoading,
+        savingPaused,
 
         // Game state
         gameState,

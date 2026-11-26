@@ -1,19 +1,15 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { PuzzleDate } from "../../common/types.js";
-import type { UserSettings } from "../../common/restTypes.js";
+import type { AccountUser, MeResponse, UserSettings } from "../../common/restTypes.js";
+import type { SavingNoticeKind } from "../copy/savingCopy";
+import { useSavingPause } from "./useSavingPause";
+import { USER_CHANGED_EVENT } from "../service/serverStatus.js";
 import { clearCsrfToken, getCsrfToken } from "../service/csrfService";
 import { logToServer } from "../service/logService.js";
 import { saveUserSettings } from "../service/puzzleService.js";
-import { API_AUTH_ME, AUTH_LOGOUT } from "../../common/restPaths.js";
+import { API_AUTH_ME, AUTH_LOGOUT, SIGN_IN_ERROR } from "../../common/restPaths.js";
 
-export interface User {
-    id: string;
-    isAdmin: boolean;
-    // PII from session only
-    email?: string;
-    name?: string;
-    avatarUrl?: string | null;
-}
+export type User = AccountUser;
 
 interface UserContextValue {
     user: User | null;
@@ -29,6 +25,12 @@ interface UserContextValue {
     setTokenBalance: (balance: number) => void;
     adjustTokenBalance: (delta: number) => void;
     updateSettings: (patch: UserSettings) => Promise<void>;
+    /** The database does not answer: account features wait */
+    savingPaused: boolean;
+    sentSolves: PuzzleDate[];
+    savingNotice: SavingNoticeKind | null;
+    showSavingNotice: (notice: SavingNoticeKind) => void;
+    dismissSavingNotice: () => void;
 }
 
 export const UserContext = createContext<UserContextValue | null>(null);
@@ -41,56 +43,79 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [tokenBalance, setTokenBalance] = useState(0);
     const [settings, setSettings] = useState<UserSettings>({});
 
+    // The user whose account data is on screen
+    const dataOwnerRef = useRef<string | null>(null);
+    const isSignedInRef = useRef(false);
+    // useSavingPause needs fetchUser, and fetchUser sets its state
+    const setPausedRef = useRef<(paused: boolean) => void>(() => {});
+
+    const clearAccountData = useCallback(() => {
+        dataOwnerRef.current = null;
+        setCompletedDates([]);
+        setPlayedDates([]);
+        setTokenBalance(0);
+        setSettings({});
+    }, []);
+
+    const clearUser = useCallback(() => {
+        isSignedInRef.current = false;
+        setUser(null);
+        clearAccountData();
+        setPausedRef.current(false);
+        clearCsrfToken();
+    }, [clearAccountData]);
+
     const fetchUser = useCallback(async () => {
         try {
             const res = await fetch(API_AUTH_ME, {
                 credentials: "include"
             });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.user) {
-                    setUser(data.user);
-                    setCompletedDates(data.completedDates || []);
-                    setPlayedDates(data.playedDates || []);
-                    setTokenBalance(data.tokenBalance ?? 0);
-                    setSettings(data.settings ?? {});
-                    
-                    // Fetch CSRF token separately after authenticated session is established
-                    getCsrfToken().catch(err => {
-                        logToServer("error", "UserContext: Failed to fetch CSRF token", err);
-                    });
+            // A signed-out answer is a 200. Any other status says nothing about the login.
+            if (!res.ok) {
+                if (!isSignedInRef.current) {
+                    clearUser();
                 }
-                else {
-                    setUser(null);
-                    setCompletedDates([]);
-                    setPlayedDates([]);
-                    setTokenBalance(0);
-                    setSettings({});
-                    clearCsrfToken();
+                return;
+            }
+            const data = await res.json() as MeResponse;
+            if (!data.user) {
+                clearUser();
+                return;
+            }
+
+            isSignedInRef.current = true;
+            setUser(data.user);
+            if (data.accountDataAvailable === false) {
+                // Keep what is on screen, unless it belongs to someone else
+                if (dataOwnerRef.current !== data.user.id) {
+                    clearAccountData();
                 }
+                setPausedRef.current(true);
             }
             else {
-                setUser(null);
-                setCompletedDates([]);
-                setPlayedDates([]);
-                setTokenBalance(0);
-                setSettings({});
-                clearCsrfToken();
+                dataOwnerRef.current = data.user.id;
+                setCompletedDates(data.completedDates || []);
+                setPlayedDates(data.playedDates || []);
+                setTokenBalance(data.tokenBalance ?? 0);
+                setSettings(data.settings ?? {});
+                setPausedRef.current(false);
             }
+
+            // Fetch CSRF token separately after authenticated session is established
+            getCsrfToken().catch(err => {
+                logToServer("error", "UserContext: Failed to fetch CSRF token", err);
+            });
         }
         catch (error) {
             logToServer("error", "UserContext: Failed to fetch user", error);
-            setUser(null);
-            setCompletedDates([]);
-            setPlayedDates([]);
-            setTokenBalance(0);
-            setSettings({});
-            clearCsrfToken();
+            if (!isSignedInRef.current) {
+                clearUser();
+            }
         }
         finally {
             setLoading(false);
         }
-    }, []);
+    }, [clearUser, clearAccountData]);
 
     useEffect(() => {
         fetchUser().catch(() => {});
@@ -98,17 +123,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         const handleUnauthorized = () => {
-            setUser(null);
-            setCompletedDates([]);
-            setPlayedDates([]);
-            setTokenBalance(0);
-            setSettings({});
-            clearCsrfToken();
+            clearUser();
         };
 
         window.addEventListener("app:unauthorized", handleUnauthorized);
         return () => window.removeEventListener("app:unauthorized", handleUnauthorized);
-    }, []);
+    }, [clearUser]);
 
     // The back/forward cache can restore this page with the user from before the visitor left.
     // The visitor may have logged in or out since then, so ask the server again.
@@ -121,6 +141,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
         window.addEventListener("pageshow", handlePageShow);
         return () => window.removeEventListener("pageshow", handlePageShow);
+    }, [fetchUser]);
+
+    useEffect(() => {
+        const handleUserChanged = () => {
+            fetchUser().catch(() => {});
+        };
+
+        window.addEventListener(USER_CHANGED_EVENT, handleUserChanged);
+        return () => window.removeEventListener(USER_CHANGED_EVENT, handleUserChanged);
     }, [fetchUser]);
 
     const logout = useCallback(async () => {
@@ -145,13 +174,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         catch (err) {
             logToServer("error", "UserContext: Logout request failed", err);
         }
-        setUser(null);
-        setCompletedDates([]);
-        setPlayedDates([]);
-        setTokenBalance(0);
-        setSettings({});
-        clearCsrfToken();
-    }, [user]);
+        clearUser();
+    }, [clearUser]);
 
     const addCompletedDate = useCallback((date: PuzzleDate) => {
         setCompletedDates(prev => {
@@ -189,6 +213,27 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }
     }, []);
 
+    const { savingPaused, setPaused, sentSolves, notice: savingNotice, showSavingNotice, dismissSavingNotice } = useSavingPause({
+        userId: user?.id ?? null,
+        loading,
+        refreshUser: fetchUser,
+        addPlayedDate,
+        addCompletedDate
+    });
+    setPausedRef.current = setPaused;
+
+    // The server sends an incomplete Google sign-in back here. Only a server fault is news to the player.
+    useEffect(() => {
+        const code = new URLSearchParams(window.location.search).get("error");
+        if (code !== SIGN_IN_ERROR.failed && code !== SIGN_IN_ERROR.unavailable) {
+            return;
+        }
+        if (code === SIGN_IN_ERROR.unavailable) {
+            showSavingNotice("signin-failed");
+        }
+        window.history.replaceState(window.history.state, "", window.location.pathname);
+    }, [showSavingNotice]);
+
     const contextValue = useMemo(() => ({
         user,
         completedDates,
@@ -202,8 +247,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         settings,
         setTokenBalance,
         adjustTokenBalance,
-        updateSettings
-    }), [user, completedDates, playedDates, loading, logout, fetchUser, addCompletedDate, addPlayedDate, tokenBalance, settings, adjustTokenBalance, updateSettings]);
+        updateSettings,
+        savingPaused,
+        sentSolves,
+        savingNotice,
+        showSavingNotice,
+        dismissSavingNotice
+    }), [user, completedDates, playedDates, loading, logout, fetchUser, addCompletedDate, addPlayedDate, tokenBalance, settings, adjustTokenBalance, updateSettings,
+        savingPaused, sentSolves, savingNotice, showSavingNotice, dismissSavingNotice]);
 
     return (
         <UserContext.Provider value={contextValue}>

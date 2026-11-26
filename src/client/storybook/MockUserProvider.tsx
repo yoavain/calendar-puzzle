@@ -41,6 +41,7 @@ interface Props {
     adjustTokenBalance?: (delta: number) => void;
     updateSettings?: (patch: UserSettings) => Promise<void>;
     addCompletedDate?: (date: PuzzleDate) => void;
+    savingPaused?: boolean;
 }
 
 export const MockUserProvider = ({
@@ -54,7 +55,8 @@ export const MockUserProvider = ({
     setTokenBalance = noop,
     adjustTokenBalance = noop,
     updateSettings = noopAsync,
-    addCompletedDate = noop
+    addCompletedDate = noop,
+    savingPaused = false
 }: Props) => {
     const value = useMemo(() => ({
         user,
@@ -69,8 +71,13 @@ export const MockUserProvider = ({
         settings,
         setTokenBalance,
         adjustTokenBalance,
-        updateSettings
-    }), [user, completedDates, playedDates, loading, tokenBalance, settings, setTokenBalance, adjustTokenBalance, updateSettings, addCompletedDate]);
+        updateSettings,
+        savingPaused,
+        sentSolves: NO_COMPLETED_DATES,
+        savingNotice: null,
+        showSavingNotice: noop,
+        dismissSavingNotice: noop
+    }), [user, completedDates, playedDates, loading, tokenBalance, settings, setTokenBalance, adjustTokenBalance, updateSettings, addCompletedDate, savingPaused]);
 
     return (
         <UserContext.Provider value={value}>

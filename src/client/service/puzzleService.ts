@@ -19,11 +19,13 @@ import type { HintErrorCode } from "../../common/hintTokens";
 import { encryptPayload } from "../utils/encryption.js";
 import { logToServer } from "./logService.js";
 import { getCsrfToken, clearCsrfToken } from "./csrfService.js";
+import { SERVER_FAILURE_EVENT, USER_CHANGED_EVENT } from "./serverStatus.js";
 import {
     API_AUTH_PUBLIC_KEY,
     API_HALL_OF_FAME,
     API_HINT,
     API_ISSUE,
+    EXPECTED_USER_HEADER,
     API_STATS_COMPLETE,
     API_STATS_START,
     API_USER_SETTINGS,
@@ -33,13 +35,44 @@ import {
 
 let cachedPublicKey: string | null = null;
 
+/** "rejected": the server will never accept it. "signed-out" and "failed": send it again later. */
+export type SaveOutcome = "saved" | "rejected" | "signed-out" | "failed";
+
+const toSaveOutcome = (response: Response): SaveOutcome => {
+    if (response.ok) {
+        return "saved";
+    }
+    if (response.status === 409) {
+        window.dispatchEvent(new CustomEvent(USER_CHANGED_EVENT));
+    }
+    if (response.status === 401) {
+        return "signed-out";
+    }
+    return response.status === 400 ? "rejected" : "failed";
+};
+
+/** fetch, plus a signal when the server fails or does not answer. */
+const watchedFetch = async (url: string, options: RequestInit): Promise<Response> => {
+    try {
+        const response = await fetch(url, options);
+        if (response.status >= 500) {
+            window.dispatchEvent(new CustomEvent(SERVER_FAILURE_EVENT));
+        }
+        return response;
+    }
+    catch (error) {
+        window.dispatchEvent(new CustomEvent(SERVER_FAILURE_EVENT));
+        throw error;
+    }
+};
+
 /**
  * Custom fetch wrapper to handle 401s and other global concerns.
  * On a 403, if the request carried a CSRF token, the cache is cleared,
  * a fresh token is fetched, and the request is retried once.
  */
 const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const response = await fetch(url, options);
+    const response = await watchedFetch(url, options);
 
     if (response.status === 401) {
         window.dispatchEvent(new CustomEvent("app:unauthorized"));
@@ -51,7 +84,7 @@ const apiFetch = async (url: string, options: RequestInit = {}): Promise<Respons
         const freshToken = await getCsrfToken();
         if (freshToken) {
             const retryHeaders = { ...headers, "X-CSRF-Token": freshToken };
-            const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
+            const retryResponse = await watchedFetch(url, { ...options, headers: retryHeaders });
             if (retryResponse.status === 401) {
                 window.dispatchEvent(new CustomEvent("app:unauthorized"));
             }
@@ -183,9 +216,9 @@ export const getHintState = async (date: PuzzleDate): Promise<Piece[]> => {
 /**
  * Record that a user started a puzzle
  */
-export const recordStart = async (date: PuzzleDate): Promise<boolean> => {
+export const recordStart = async (date: PuzzleDate, userId: string): Promise<SaveOutcome> => {
     let body: StartPuzzleRequest | EncryptedPayload = { month: date.month, day: date.day };
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = { "Content-Type": "application/json", [EXPECTED_USER_HEADER]: userId };
 
     const publicKey = await getPublicKey();
     if (publicKey) {
@@ -205,22 +238,19 @@ export const recordStart = async (date: PuzzleDate): Promise<boolean> => {
         credentials: "include"
     });
     
-    if (!response.ok) {
-        return false;
-    }
-    return true;
+    return toSaveOutcome(response);
 };
 
 /**
  * Record that a user completed a puzzle
  */
-export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promise<{ success: boolean; tokenGranted: boolean }> => {
+export const recordCompletion = async (date: PuzzleDate, pieces: Piece[], userId: string): Promise<{ outcome: SaveOutcome; tokenGranted: boolean }> => {
     let body: CompletePuzzleRequest | EncryptedPayload = { 
         month: date.month, 
         day: date.day,
         pieces 
     };
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = { "Content-Type": "application/json", [EXPECTED_USER_HEADER]: userId };
 
     const publicKey = await getPublicKey();
     if (publicKey) {
@@ -241,10 +271,10 @@ export const recordCompletion = async (date: PuzzleDate, pieces: Piece[]): Promi
     });
     
     if (!response.ok) {
-        return { success: false, tokenGranted: false };
+        return { outcome: toSaveOutcome(response), tokenGranted: false };
     }
     const data = await response.json() as CompletePuzzleResponse;
-    return { success: true, tokenGranted: data.tokenGranted === true };
+    return { outcome: "saved", tokenGranted: data.tokenGranted === true };
 };
 
 /**
