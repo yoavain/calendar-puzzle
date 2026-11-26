@@ -235,6 +235,7 @@ the server CSP (`frameAncestors`) limits which sites can frame the game. Sign-in
   pictures of the Hall of Fame and the Hint button with made-up data (`FullSitePreviews`). A phone on its
   side leaves about 245px of height in the Kamario frame, so check that size after a change to the dialog.
 - The "Sign in to..." tooltips show `EMBED_COPY.signInTooltip`.
+- In the mobile menu, Hall of Fame, Statistics, Report a bug and Hint open `FullSiteDialog` instead.
 - `service/analytics.ts` counts embedded views under the GoatCounter path `/embed`.
 
 To test the embedded state in any environment, sign out (or use a private window), open the game and run

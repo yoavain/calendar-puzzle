@@ -31,12 +31,12 @@ export const Body = styled("div")(({ theme }) => ({
     }
 }));
 
-export const Intro = styled("div")({
+export const Intro = styled("div")(({ theme }) => ({
     [SHORT_AND_WIDE]: {
         gridArea: "intro",
-        "& .MuiTypography-root": { fontSize: "0.875rem", lineHeight: 1.35 }
+        "& .MuiTypography-root": { fontSize: theme.game.fontSize.sm, lineHeight: 1.35 }
     }
-});
+}));
 
 export const FamePreview = styled("div")(({ theme }) => ({
     border: `1px solid ${theme.palette.divider}`,

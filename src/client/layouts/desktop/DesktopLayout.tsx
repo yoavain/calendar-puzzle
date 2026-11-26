@@ -23,6 +23,7 @@ import { LoginButton } from "../../components/LoginButton";
 import { SavingPausedButton } from "../../components/SavingNotice";
 import { SAVING_COPY } from "../../copy/savingCopy";
 import { EMBED_COPY } from "../../copy/embedCopy";
+import { SIGN_IN_COPY } from "../../copy/signInCopy";
 import { useIsEmbedded } from "../../context/EmbeddedContext";
 import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
@@ -140,7 +141,7 @@ export const DesktopLayout: React.FC = () => {
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? signInTooltip("Sign in to submit a bug or request a feature") : "Report a bug or request a feature"}
+                                    tooltip={!game.user ? signInTooltip(SIGN_IN_COPY.issueTooltip) : "Report a bug or request a feature"}
                                     onClick={game.modals.issue.open}
                                     icon={<BugReportIcon />}
                                     ariaLabel="Report a bug or request a feature"
@@ -148,7 +149,7 @@ export const DesktopLayout: React.FC = () => {
                                     sx={toolbarInfoSx}
                                 />
                                 <ToolbarIconButton
-                                    tooltip={!game.user ? signInTooltip("Sign in to see statistics") : game.savingPaused ? SAVING_COPY.statsTooltip : "Statistics"}
+                                    tooltip={!game.user ? signInTooltip(SIGN_IN_COPY.statsTooltip) : game.savingPaused ? SAVING_COPY.statsTooltip : "Statistics"}
                                     onClick={game.modals.stats.open}
                                     icon={<BarChartIcon />}
                                     ariaLabel="Statistics"

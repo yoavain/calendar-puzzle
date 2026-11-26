@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
 import "@testing-library/jest-dom";
 import { HintButton } from "../../src/client/components/HintButton";
@@ -30,6 +30,19 @@ describe("HintButton", () => {
             expect(screen.getByRole("button")).toBeDisabled();
         }
     );
+
+    it("hands a signed-out click to onSignInRequired, not onHint", () => {
+        const onHint = jest.fn();
+        const onSignInRequired = jest.fn();
+        render(React.createElement(
+            ThemeProvider,
+            { theme: lightTheme },
+            React.createElement(HintButton, { onHint, onSignInRequired, availability: "login-required", tokenBalance: 0 })
+        ));
+        fireEvent.click(screen.getByRole("button"));
+        expect(onSignInRequired).toHaveBeenCalledTimes(1);
+        expect(onHint).not.toHaveBeenCalled();
+    });
 
     it("shows the balance inside the button, on the flight target", () => {
         const { container } = renderButton("token", 5);
