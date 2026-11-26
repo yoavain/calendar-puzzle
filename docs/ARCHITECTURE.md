@@ -479,6 +479,7 @@ Server routes and services tested with Fastify's inject API:
 | `test/server/rest/authRest.test.ts` | Auth endpoints |
 | `test/server/rest/hintRest.test.ts` | Hint endpoints (token spend, replay, 409 codes) |
 | `test/server/rest/userRest.test.ts` | User settings endpoint |
+| `test/server/rest/healthRest.test.ts` | Health endpoint (database check, cache, 503) |
 | `test/server/service/solverService.test.ts` | Fixed hint sequence |
 | `test/server/rest/statsRest.test.ts` | Stats endpoints |
 | `test/server/auth/requireAuth.test.ts` | Auth middleware |

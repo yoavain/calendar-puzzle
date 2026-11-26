@@ -1,6 +1,14 @@
 import type { Piece, PuzzleDate } from "./types";
 import type { HintErrorCode } from "./hintTokens";
 
+// ============================================
+// GET /api/health
+// 200 when the database answers, 503 when it does not
+// ============================================
+export interface HealthResponse {
+    status: "ok" | "error";
+}
+
 // Common path params for date-based endpoints
 export interface DatePathParams {
     date: string; // Format: MM-DD
