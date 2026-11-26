@@ -3,7 +3,7 @@ import { createHmac } from "node:crypto";
 import { db } from "../db/connection.js";
 import { userPuzzleStats, users } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
-import { requireAdmin, requireAuth } from "../auth/requireAuth.js";
+import { requireAdmin, requireDatabaseUser } from "../auth/requireAuth.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { solvePuzzle } from "../service/solverService.js";
 import { dateParamSchema } from "./schemas.js";
@@ -57,7 +57,7 @@ export const registerAdminRoutes = (app: FastifyInstance): void => {
     app.get<{ Reply: UserDataResponse | ErrorResponse }>(
         API_HALL_OF_FAME,
         { 
-            preHandler: requireAuth,
+            preHandler: requireDatabaseUser,
             config: {
                 rateLimit: {
                     max: 5,

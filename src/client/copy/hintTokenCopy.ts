@@ -2,6 +2,7 @@
  * User-facing strings for hint tokens. Where each one appears: docs/DESIGN.md, Hint Tokens.
  */
 import type { HintAvailability, HintErrorCode } from "../../common/hintTokens";
+import { SAVING_COPY } from "./savingCopy";
 
 export interface HintTokenCopy {
     hintButton: Record<HintAvailability, { label: string; tooltip: (tokenBalance: number) => string }>;
@@ -52,7 +53,8 @@ export const HINT_TOKEN_COPY: HintTokenCopy = {
         "date-solved": { label: "Hint", tooltip: () => ALREADY_SOLVED },
         "solved": { label: "Hint", tooltip: () => "Puzzle solved" },
         "login-required": { label: "Hint", tooltip: () => "Sign in to see a hint" },
-        "loading": { label: "Getting hint...", tooltip: () => "Getting hint..." }
+        "loading": { label: "Getting hint...", tooltip: () => "Getting hint..." },
+        "paused": { label: "Hint", tooltip: () => SAVING_COPY.hintTooltip }
     },
     confirm: {
         title: "Use a hint token?",

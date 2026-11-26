@@ -8,25 +8,8 @@ import { eq } from "drizzle-orm";
 import fs from "node:fs/promises";
 import { config } from "../config.js";
 import { requireAuth } from "../auth/requireAuth.js";
-import { API_AUTH_CSRF_TOKEN, API_AUTH_ME, API_AUTH_PUBLIC_KEY, AUTH_GOOGLE, AUTH_GOOGLE_CALLBACK, AUTH_LOGOUT } from "../../common/restPaths.js";
-import type { CsrfTokenResponse, ErrorResponse, PublicKeyResponse, SuccessResponse, UserSettings } from "../../common/restTypes.js";
-import type { PuzzleDate } from "../../common/types.js";
-
-interface MeResponse {
-    user: SessionUser;
-    completedDates: PuzzleDate[];
-    playedDates: PuzzleDate[];
-    tokenBalance: number;
-    settings: UserSettings;
-}
-
-interface LoggedOutMeResponse {
-    user: null;
-    completedDates: [];
-    playedDates: [];
-    tokenBalance: 0;
-    settings: Record<string, never>;
-}
+import { API_AUTH_CSRF_TOKEN, API_AUTH_ME, API_AUTH_PUBLIC_KEY, AUTH_GOOGLE, AUTH_GOOGLE_CALLBACK, AUTH_LOGOUT, SIGN_IN_ERROR } from "../../common/restPaths.js";
+import type { CsrfTokenResponse, ErrorResponse, MeResponse, PublicKeyResponse, SuccessResponse } from "../../common/restTypes.js";
 
 export const registerAuthRoutes = (app: FastifyInstance): void => {
     // Initiate Google OAuth flow
@@ -41,7 +24,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     // Handle Google OAuth callback
     app.get(AUTH_GOOGLE_CALLBACK, {
         preValidation: fastifyPassport.authenticate("google", {
-            failureRedirect: "/?error=auth_failed"
+            failureRedirect: `/?error=${SIGN_IN_ERROR.failed}`
         })
     }, async (request, reply) => {
         // Authentication successful, redirect to home
@@ -49,7 +32,7 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
     });
 
     // Get current authenticated user profile and completion history
-    app.get<{ Reply: MeResponse | LoggedOutMeResponse }>(API_AUTH_ME, {
+    app.get<{ Reply: MeResponse }>(API_AUTH_ME, {
         config: {
             rateLimit: {
                 max: 20,
@@ -57,9 +40,18 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
             }
         }
     }, async (request) => {
-        if (request.user) {
-            const user = request.user as SessionUser;
+        const user = request.user as SessionUser | undefined;
+        if (!user) {
+            return { user: null, accountDataAvailable: true, completedDates: [], playedDates: [], tokenBalance: 0, settings: {} };
+        }
 
+        // Identity only. Empty lists would read as real data.
+        const unavailable: MeResponse = { user, accountDataAvailable: false };
+        if (request.databaseUnavailable) {
+            return unavailable;
+        }
+
+        try {
             // Fetch all stats for this user: played/completed dates and the token balance
             const stats = await db.select({
                 month: userPuzzleStats.month,
@@ -86,13 +78,17 @@ export const registerAuthRoutes = (app: FastifyInstance): void => {
 
             return {
                 user,
+                accountDataAvailable: true,
                 completedDates,
                 playedDates,
                 tokenBalance,
                 settings: userRow?.settings ?? {}
             };
         }
-        return { user: null, completedDates: [], playedDates: [], tokenBalance: 0, settings: {} };
+        catch (error) {
+            request.log.error(error, "[AuthRoute] Failed to read account data");
+            return unavailable;
+        }
     });
 
     // Get server's public key for encryption (Authenticated)

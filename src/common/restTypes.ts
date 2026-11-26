@@ -9,6 +9,30 @@ export interface HealthResponse {
     status: "ok" | "error";
 }
 
+// ============================================
+// GET /api/auth/me
+// accountDataAvailable is false when the database does not answer. The user stays signed in.
+// ============================================
+export interface AccountUser {
+    id: string;
+    isAdmin: boolean;
+    // PII from the session only
+    email?: string;
+    name?: string;
+    avatarUrl?: string | null;
+}
+
+export type MeResponse =
+    | {
+        user: AccountUser | null;
+        accountDataAvailable: true;
+        completedDates: PuzzleDate[];
+        playedDates: PuzzleDate[];
+        tokenBalance: number;
+        settings: UserSettings;
+    }
+    | { user: AccountUser; accountDataAvailable: false };
+
 // Common path params for date-based endpoints
 export interface DatePathParams {
     date: string; // Format: MM-DD

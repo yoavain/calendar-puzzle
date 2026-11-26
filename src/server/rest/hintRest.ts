@@ -4,7 +4,7 @@ import type { HintErrorCode } from "../../common/hintTokens.js";
 import { parseDate } from "../utils/dateUtils.js";
 import { getHintPieces } from "../service/solverService.js";
 import { getHintsUsed, spendHint } from "../db/hintRepository.js";
-import { requireAuth } from "../auth/requireAuth.js";
+import { requireDatabaseUser } from "../auth/requireAuth.js";
 import { dateParamSchema, hintRequestSchema } from "./schemas.js";
 import type { SessionUser } from "../auth/passport.js";
 import { API_HINT, API_HINT_STATE } from "../../common/restPaths.js";
@@ -20,7 +20,7 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
     app.put<{ Body: HintRequest; Reply: HintResponse | HintErrorResponse | HintFailureResponse }>(
         API_HINT,
         {
-            preHandler: requireAuth,
+            preHandler: requireDatabaseUser,
             schema: {
                 body: hintRequestSchema
             },
@@ -68,7 +68,7 @@ export const registerHintRoutes = (app: FastifyInstance): void => {
     app.get<{ Params: DatePathParams; Reply: HintStateResponse | ErrorResponse }>(
         API_HINT_STATE,
         {
-            preHandler: requireAuth,
+            preHandler: requireDatabaseUser,
             schema: {
                 params: dateParamSchema
             }

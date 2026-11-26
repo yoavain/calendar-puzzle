@@ -22,7 +22,10 @@ export function useGameModals({
     completedDates,
     currentDate,
     settings,
-    onTokenIntroSeen
+    onTokenIntroSeen,
+    savingPaused,
+    sentSolves,
+    isSavingNoticeOpen
 }: {
     user: User | null;
     userLoading: boolean;
@@ -30,6 +33,9 @@ export function useGameModals({
     currentDate: PuzzleDate;
     settings: UserSettings;
     onTokenIntroSeen: () => void;
+    savingPaused: boolean;
+    sentSolves: PuzzleDate[];
+    isSavingNoticeOpen: boolean;
 }) {
     const [isStatsOpen, setIsStatsOpen] = useState(false);
     const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
@@ -80,9 +86,13 @@ export function useGameModals({
 
     // On page load or after login, say so if today is already solved.
     useEffect(() => {
-        if (!userLoading && user && !hasCheckedTodayRef.current) {
+        if (!userLoading && user && !savingPaused && !hasCheckedTodayRef.current) {
             const today = toPuzzleDate(new Date());
-            if (completedDates.some(d => isSameDate(d, today))) {
+            // A solve that was sent late is this player's recent solve, not old news
+            if (sentSolves.some(d => isSameDate(d, today))) {
+                hasCheckedTodayRef.current = true;
+            }
+            else if (completedDates.some(d => isSameDate(d, today))) {
                 hasCheckedTodayRef.current = true;
                 const nextDate = findLastUnsolvedDate(completedDates, today);
                 if (nextDate) {
@@ -95,7 +105,7 @@ export function useGameModals({
                 }
             }
         }
-    }, [userLoading, user, completedDates]);
+    }, [userLoading, user, completedDates, savingPaused, sentSolves]);
 
     // The notice is about the date the player just left, so it closes with a date change.
     // The game history copies the date on every move, so this compares the values.
@@ -113,11 +123,12 @@ export function useGameModals({
     const hasRequestedTokenIntroRef = useRef(false);
 
     useEffect(() => {
-        if (!userLoading && user && !settings.tokenIntroSeen && !hasRequestedTokenIntroRef.current) {
+        // While paused the settings are unknown, so the intro waits
+        if (!userLoading && user && !savingPaused && !settings.tokenIntroSeen && !hasRequestedTokenIntroRef.current) {
             hasRequestedTokenIntroRef.current = true;
             setIsTokenIntroRequested(true);
         }
-    }, [userLoading, user, settings.tokenIntroSeen]);
+    }, [userLoading, user, savingPaused, settings.tokenIntroSeen]);
 
     const isAnyOtherModalOpen = isStatsOpen || isIssueModalOpen || isHelpModalOpen || isShareOpen
         || isYearCompleteOpen || isTokenConfirmOpen;
@@ -167,8 +178,9 @@ export function useGameModals({
                 close: () => setIsHelpModalOpen(false)
             },
             solvedNotice: {
-                // It waits for any dialog, so its time doesn't run out unseen behind one.
-                isOpen: isSolvedNoticeRequested && !isAnyOtherModalOpen && !isTokenIntroOpen,
+                // It waits for any dialog and for a saving notice, which takes the same place,
+                // so its time doesn't run out unseen behind one.
+                isOpen: isSolvedNoticeRequested && !isAnyOtherModalOpen && !isTokenIntroOpen && !isSavingNoticeOpen,
                 nextDate: solvedNoticeNextDate,
                 close: () => setIsSolvedNoticeRequested(false)
             },

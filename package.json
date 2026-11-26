@@ -13,7 +13,6 @@
         "@fastify/passport": "4.0.4",
         "@fastify/rate-limit": "11.2.2",
         "@fastify/secure-session": "8.4.2",
-        "@fastify/static": "10.1.11",
         "@octokit/rest": "22.0.1",
         "dlx": "0.2.1",
         "drizzle-orm": "0.45.4",

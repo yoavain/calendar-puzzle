@@ -3,7 +3,7 @@ import { db } from "../db/connection.js";
 import { userPuzzleStats } from "../db/schema.js";
 import { isNull } from "drizzle-orm";
 import type { SessionUser } from "../auth/passport.js";
-import { requireAuth } from "../auth/requireAuth.js";
+import { requireDatabaseUser } from "../auth/requireAuth.js";
 import { puzzleSolvedForDate } from "../../common/gameLogic.js";
 import { statsCompleteSchema, statsStartSchema } from "./schemas.js";
 import { submitInvalidSolutionReport } from "../service/issueSubmitter.js";
@@ -18,7 +18,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
     app.post<{ Body: StartPuzzleRequest; Reply: SuccessResponse | ErrorResponse }>(
         API_STATS_START,
         { 
-            preHandler: requireAuth,
+            preHandler: requireDatabaseUser,
             schema: {
                 body: statsStartSchema
             },
@@ -57,7 +57,7 @@ export const registerStatsRoutes = (app: FastifyInstance): void => {
     app.post<{ Body: CompletePuzzleRequest; Reply: CompletePuzzleResponse | ErrorResponse }>(
         API_STATS_COMPLETE,
         { 
-            preHandler: requireAuth,
+            preHandler: requireDatabaseUser,
             schema: {
                 body: statsCompleteSchema
             },

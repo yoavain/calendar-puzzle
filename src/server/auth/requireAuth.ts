@@ -10,8 +10,22 @@ export const requireAuth = async (request: FastifyRequest, reply: FastifyReply) 
     }
 };
 
+/**
+ * For routes that read or write the database. After a failed user lookup it answers at once,
+ * so one request does not wait for the database a second time.
+ */
+export const requireDatabaseUser = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!request.user) {
+        return reply.code(401).send({ error: "Not authenticated" });
+    }
+    if (request.databaseUnavailable) {
+        // The player sees this text when a hint fails.
+        return reply.code(503).send({ error: "Saving is paused. Please try again later." });
+    }
+};
+
 export const requireAdmin = async (request: FastifyRequest, reply: FastifyReply) => {
-    await requireAuth(request, reply);
+    await requireDatabaseUser(request, reply);
     if (reply.sent) {
         return;
     }

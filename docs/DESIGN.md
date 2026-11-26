@@ -394,7 +394,8 @@ first time they solve a date. The API and the balance rule are under [Solver and
 All player-facing strings live in `src/client/copy/hintTokenCopy.ts`.
 
 - **Hint button**: the balance sits inside the button, after a divider, as a gold coin and a count.
-  The tooltip names the cost or the reason the button is disabled.
+  The tooltip names the cost or the reason the button is disabled. While saving is paused (see
+  [ARCHITECTURE.md](ARCHITECTURE.md), Database Outage), the button is disabled and shows no balance.
 - **Mobile**: the Hint button is in the drawer, so a gold badge on the menu button also shows the balance.
 - **Confirm dialog**: hint 2 and later ask first, unless the player ticked "Don't ask me again"
   (`users.settings.skipTokenConfirm`). The user menu then offers "Ask before spending a token", which clears the flag.

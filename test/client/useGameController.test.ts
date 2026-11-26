@@ -162,8 +162,8 @@ describe("useGameController hint tokens", () => {
         addCompletedDate = jest.fn();
         mockGetHint.mockReset();
         mockGetHintState.mockReset().mockResolvedValue([]);
-        (recordStart as jest.Mock).mockResolvedValue(true);
-        (recordCompletion as jest.Mock).mockResolvedValue({ success: true, tokenGranted: false });
+        (recordStart as jest.Mock).mockResolvedValue("saved");
+        (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "saved", tokenGranted: false });
     });
 
     afterEach(() => {
@@ -603,7 +603,7 @@ describe("useGameController post-solve timing", () => {
         jest.useFakeTimers({ now: new Date(2024, 0, 1, 12) });
         localStorage.clear();
         (getHintState as jest.Mock).mockReset().mockResolvedValue([]);
-        (recordStart as jest.Mock).mockResolvedValue(true);
+        (recordStart as jest.Mock).mockResolvedValue("saved");
     });
 
     afterEach(() => {
@@ -611,7 +611,7 @@ describe("useGameController post-solve timing", () => {
     });
 
     it("waits for the token to land before opening stats on a first solve", async () => {
-        (recordCompletion as jest.Mock).mockResolvedValue({ success: true, tokenGranted: true });
+        (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "saved", tokenGranted: true });
         const { result } = renderSolvable([]);
 
         act(() => result.current.handlePieceDrop(lastPiece.position!, { pieceId: lastPiece.id }));
@@ -637,7 +637,7 @@ describe("useGameController post-solve timing", () => {
     it("adds the earned token at the grant, and shows it once the flight lands", async () => {
         // Counting at the grant keeps the balance right if the layout remounts mid-flight
         // (a rotation) or a server balance arrives during the flight
-        (recordCompletion as jest.Mock).mockResolvedValue({ success: true, tokenGranted: true });
+        (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "saved", tokenGranted: true });
         const adjustTokenBalance = jest.fn();
         const pieces = solvedPieces.map(p => (p.id === lastPiece.id ? { ...p, position: null } : p));
         localStorage.setItem(SESSION_KEY, JSON.stringify({ date: { month: 0, day: 1 }, pieces, isSolved: false }));
@@ -662,7 +662,7 @@ describe("useGameController post-solve timing", () => {
     });
 
     it("opens stats at 1500 ms when the date was already solved", async () => {
-        (recordCompletion as jest.Mock).mockResolvedValue({ success: true, tokenGranted: false });
+        (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "saved", tokenGranted: false });
         const { result } = renderSolvable([{ month: 0, day: 1 }]);
         await act(async () => {}); // let the load-time hint fetch settle
 
@@ -675,7 +675,7 @@ describe("useGameController post-solve timing", () => {
     });
 
     it("falls back to opening stats when an expected token never arrives", async () => {
-        (recordCompletion as jest.Mock).mockResolvedValue({ success: false, tokenGranted: false });
+        (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "saved", tokenGranted: false });
         const { result } = renderSolvable([]);
 
         act(() => result.current.handlePieceDrop(lastPiece.position!, { pieceId: lastPiece.id }));
@@ -687,5 +687,20 @@ describe("useGameController post-solve timing", () => {
         });
 
         expect(result.current.modals.stats.isOpen).toBe(true);
+    });
+
+    it("opens no stats when the solve cannot be saved", async () => {
+        (recordCompletion as jest.Mock).mockResolvedValue({ outcome: "failed", tokenGranted: false });
+        const { result } = renderSolvable([]);
+
+        act(() => result.current.handlePieceDrop(lastPiece.position!, { pieceId: lastPiece.id }));
+        await act(async () => {
+            await Promise.resolve();
+        });
+        act(() => {
+            jest.advanceTimersByTime(5000);
+        });
+
+        expect(result.current.modals.stats.isOpen).toBe(false);
     });
 });

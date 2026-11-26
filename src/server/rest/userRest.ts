@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { users } from "../db/schema.js";
-import { requireAuth } from "../auth/requireAuth.js";
+import { requireDatabaseUser } from "../auth/requireAuth.js";
 import type { SessionUser } from "../auth/passport.js";
 import { API_USER_SETTINGS } from "../../common/restPaths.js";
 import type { ErrorResponse, UserSettings, UserSettingsResponse } from "../../common/restTypes.js";
@@ -13,7 +13,7 @@ export const registerUserRoutes = (app: FastifyInstance): void => {
     app.patch<{ Body: UserSettings; Reply: UserSettingsResponse | ErrorResponse }>(
         API_USER_SETTINGS,
         {
-            preHandler: requireAuth,
+            preHandler: requireDatabaseUser,
             schema: {
                 body: userSettingsSchema
             },

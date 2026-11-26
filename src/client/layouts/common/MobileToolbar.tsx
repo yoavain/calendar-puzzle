@@ -5,6 +5,7 @@ import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Switch from "@mui/material/Switch";
+import Tooltip from "@mui/material/Tooltip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
@@ -21,6 +22,9 @@ import { debugLogger } from "../../utils/debugLogger";
 
 import ThemeToggle from "../../components/ThemeToggle";
 import { LoginButton } from "../../components/LoginButton";
+import { SavingPausedButton } from "../../components/SavingNotice";
+import { TooltipDisabledWrapper } from "../../components/TooltipDisabledWrapper";
+import { SAVING_COPY } from "../../copy/savingCopy";
 import { UserMenu } from "../../components/UserMenu";
 import { DatePicker } from "../../components/DatePicker";
 import { SolutionButton } from "../../components/SolutionButton";
@@ -89,7 +93,11 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
             <ToolbarContainer orientation={orientation}>
                 <ToolbarLeft orientation={orientation}>
                     <ThemeToggle showIcons={false} />
-                    {!game.userLoading && (game.user ? <UserMenu onShowTokenIntro={game.modals.tokenIntro.open} /> : <LoginButton />)}
+                    {!game.userLoading && (game.user
+                        // The paused icon takes the place of Hall of Fame, which the drawer also offers
+                        ? <UserMenu onShowTokenIntro={game.modals.tokenIntro.open} hideHallOfFameButton={game.savingPaused} />
+                        : <LoginButton />)}
+                    <SavingPausedButton />
                 </ToolbarLeft>
 
                 <ToolbarCenter orientation={orientation}>
@@ -122,7 +130,7 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                         onClick={openDrawer}
                         aria-label="Open menu"
                     >
-                        <TokenMenuBadge tokenBalance={game.tokenBalance} invisible={!game.user}>
+                        <TokenMenuBadge tokenBalance={game.tokenBalance} invisible={!game.user || game.savingPaused}>
                             <MenuIcon />
                         </TokenMenuBadge>
                     </ToolbarActionButton>
@@ -176,15 +184,19 @@ export const MobileToolbar: React.FC<MobileToolbarProps> = ({ game, orientation 
                         >
                             How to play
                         </DrawerButton>
-                        <DrawerButton
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<BarChartIcon />}
-                            onClick={() => handleAction(game.modals.stats.open)}
-                            disabled={!game.user}
-                        >
-                            Statistics
-                        </DrawerButton>
+                        <Tooltip title={game.savingPaused ? SAVING_COPY.statsTooltip : ""} enterTouchDelay={0}>
+                            <TooltipDisabledWrapper disabled={game.savingPaused}>
+                                <DrawerButton
+                                    fullWidth
+                                    variant="outlined"
+                                    startIcon={<BarChartIcon />}
+                                    onClick={() => handleAction(game.modals.stats.open)}
+                                    disabled={!game.user || game.savingPaused}
+                                >
+                                    Statistics
+                                </DrawerButton>
+                            </TooltipDisabledWrapper>
+                        </Tooltip>
                         <DrawerButton
                             fullWidth
                             variant="outlined"

@@ -104,7 +104,11 @@ export function useGameController() {
         setTokenBalance,
         settings,
         updateSettings,
-        adjustTokenBalance
+        adjustTokenBalance,
+        savingPaused,
+        sentSolves,
+        savingNotice,
+        showSavingNotice
     } = useUser();
 
     // Get initial state (from session or fresh game)
@@ -170,7 +174,10 @@ export function useGameController() {
         completedDates,
         currentDate: gameState.currentDate,
         settings,
-        onTokenIntroSeen: markTokenIntroSeen
+        onTokenIntroSeen: markTokenIntroSeen,
+        savingPaused,
+        sentSolves,
+        isSavingNoticeOpen: savingNotice !== null
     });
 
     // Post-solve: when stats should wait for the token flight, and when the flight may start
@@ -270,7 +277,7 @@ export function useGameController() {
     const isResetDisabled = gameState.pieces.every(piece => piece.position === null || piece.isLocked);
 
     // What the Hint button offers right now (free, token, or why not)
-    const hintAvailability = getHintAvailability({
+    const hintAvailability = savingPaused ? "paused" : getHintAvailability({
         isLoggedIn: !!user,
         isSolved: gameState.isSolved,
         isDateSolved: completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day),
@@ -365,7 +372,7 @@ export function useGameController() {
             }, 400);
             // Automatically show stats on completion after a short delay. A first
             // solve earns a token: then stats waits for the token flight to land.
-            if (user) {
+            if (user && !savingPaused) {
                 const expectsToken = !completedDates.some(d => d.month === gameState.currentDate.month && d.day === gameState.currentDate.day);
                 statsAfterFlightRef.current = expectsToken;
                 setTokenFlightNotBefore(Date.now() + TOKEN_FLIGHT_EARLIEST_MS);
@@ -388,7 +395,7 @@ export function useGameController() {
             pieceId: piece.id,
             position
         });
-    }, [gameState, pushState, user, completedDates, noteSolve, scheduleStatsOpen]);
+    }, [gameState, pushState, user, savingPaused, completedDates, noteSolve, scheduleStatsOpen]);
 
     const handleCellClick = useCallback((position: Position) => {
         // Tap-to-place: If a piece is selected, try to place it at this position
@@ -702,10 +709,10 @@ export function useGameController() {
     // getGameState already holds the board that the fetched hints are for.
     useEffect(() => {
         const { currentDate, isSolved } = getGameState();
-        if (!userLoading && !isSolved) {
+        if (!userLoading && !isSolved && !savingPaused) {
             reconcileHints(currentDate).catch(() => {});
         }
-    }, [userLoading, reconcileHints, hintSyncKey]);
+    }, [userLoading, reconcileHints, hintSyncKey, savingPaused]);
 
     // Earned tokens count in the balance from the grant on. The shown balance holds
     // them back until their flight lands. If this layout remounts mid-flight (a
@@ -730,7 +737,34 @@ export function useGameController() {
         }
     }, [adjustTokenBalance, scheduleStatsOpen]);
 
-    useServerSync({ user, userLoading, gameState, playedDates, completedDates, addPlayedDate, addCompletedDate, onTokenGranted: handleTokenGranted });
+    const handleSolveDeferred = useCallback(() => {
+        if (statsAutoOpenTimeoutRef.current !== null) {
+            window.clearTimeout(statsAutoOpenTimeoutRef.current);
+            statsAutoOpenTimeoutRef.current = null;
+        }
+        statsAfterFlightRef.current = false;
+        showSavingNotice("solved-paused");
+    }, [statsAutoOpenTimeoutRef, showSavingNotice]);
+
+    // The paused notice replaces a hint error that the outage caused, and takes the same place on screen
+    useEffect(() => {
+        if (savingPaused) {
+            setHintMessage(null);
+        }
+    }, [savingPaused]);
+
+    useServerSync({
+        user,
+        userLoading,
+        gameState,
+        playedDates,
+        completedDates,
+        addPlayedDate,
+        addCompletedDate,
+        onTokenGranted: handleTokenGranted,
+        savingPaused,
+        onSolveDeferred: handleSolveDeferred
+    });
 
     useEffect(() => () => {
         if (confettiTimeoutRef.current !== null) {
@@ -784,6 +818,7 @@ export function useGameController() {
         // User state
         user,
         userLoading,
+        savingPaused,
 
         // Game state
         gameState,

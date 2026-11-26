@@ -21,10 +21,12 @@ const AVATAR_BADGE_SIZE = 19;
 interface UserMenuProps {
     /** Opens the hint token intro dialog */
     onShowTokenIntro?: () => void;
+    /** For a toolbar without room for it. The caller then offers Hall of Fame elsewhere. */
+    hideHallOfFameButton?: boolean;
 }
 
-export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
-    const { user, logout, completedDates, tokenBalance, settings, updateSettings } = useUser();
+export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro, hideHallOfFameButton = false }) => {
+    const { user, logout, completedDates, tokenBalance, settings, updateSettings, savingPaused } = useUser();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [dashboardOpen, setDashboardOpen] = useState(false);
     const open = Boolean(anchorEl);
@@ -90,25 +92,27 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
                     </Avatar>
                 </Badge>
             </Button>
-            <Tooltip title="Hall of Fame">
-                <span>
-                    <IconButton 
-                        onClick={() => setDashboardOpen(true)}
-                        size="small"
-                        aria-label="Hall of Fame"
-                        sx={{ 
-                            ml: 1,
-                            backgroundColor: "primary.main",
-                            color: "primary.contrastText",
-                            "&:hover": {
-                                backgroundColor: "primary.dark"
-                            }
-                        }}
-                    >
-                        <EmojiEventsIcon fontSize="small" />
-                    </IconButton>
-                </span>
-            </Tooltip>
+            {!hideHallOfFameButton && (
+                <Tooltip title="Hall of Fame">
+                    <span>
+                        <IconButton 
+                            onClick={() => setDashboardOpen(true)}
+                            size="small"
+                            aria-label="Hall of Fame"
+                            sx={{ 
+                                ml: 1,
+                                backgroundColor: "primary.main",
+                                color: "primary.contrastText",
+                                "&:hover": {
+                                    backgroundColor: "primary.dark"
+                                }
+                            }}
+                        >
+                            <EmojiEventsIcon fontSize="small" />
+                        </IconButton>
+                    </span>
+                </Tooltip>
+            )}
             <Menu
                 anchorEl={anchorEl}
                 open={open}
@@ -119,18 +123,20 @@ export const UserMenu: React.FC<UserMenuProps> = ({ onShowTokenIntro }) => {
                         {user.email}
                     </MenuItem>
                 )}
-                <MenuItem
-                    onClick={() => {
-                        handleClose();
-                        onShowTokenIntro?.();
-                    }}
-                    sx={{ gap: 1 }}
-                >
-                    <TokenCoin />
-                    {HINT_TOKEN_COPY.menu.balance(tokenBalance)} {"·"}
-                    <Box component="span" sx={{ color: "primary.main" }}>{HINT_TOKEN_COPY.menu.howItWorks}</Box>
-                </MenuItem>
-                {settings.skipTokenConfirm && (
+                {!savingPaused && (
+                    <MenuItem
+                        onClick={() => {
+                            handleClose();
+                            onShowTokenIntro?.();
+                        }}
+                        sx={{ gap: 1 }}
+                    >
+                        <TokenCoin />
+                        {HINT_TOKEN_COPY.menu.balance(tokenBalance)} {"·"}
+                        <Box component="span" sx={{ color: "primary.main" }}>{HINT_TOKEN_COPY.menu.howItWorks}</Box>
+                    </MenuItem>
+                )}
+                {!savingPaused && settings.skipTokenConfirm && (
                     <MenuItem
                         onClick={() => {
                             handleClose();

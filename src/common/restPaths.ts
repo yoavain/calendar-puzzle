@@ -10,6 +10,14 @@ export const API_AUTH_ME = "/api/auth/me";
 export const API_AUTH_PUBLIC_KEY = "/api/auth/public-key";
 export const API_AUTH_CSRF_TOKEN = "/api/auth/csrf-token";
 
+/** Codes in the `error` query parameter after a sign-in that did not complete */
+export const SIGN_IN_ERROR = {
+    /** The player did not complete it, for example with Cancel at Google */
+    failed: "auth_failed",
+    /** The server could not complete it */
+    unavailable: "auth_unavailable"
+} as const;
+
 /**
  * Hall of Fame paths
  */

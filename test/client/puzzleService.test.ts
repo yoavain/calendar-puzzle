@@ -83,12 +83,33 @@ describe("getHintState", () => {
 describe("recordCompletion", () => {
     it("reports whether the server granted a token", async () => {
         routes["/api/stats/complete"] = () => json(200, { success: true, tokenGranted: true });
-        await expect(recordCompletion({ month: 0, day: 1 }, [piece])).resolves.toEqual({ success: true, tokenGranted: true });
+        await expect(recordCompletion({ month: 0, day: 1 }, [piece])).resolves.toEqual({ outcome: "saved", tokenGranted: true });
     });
 
-    it("reports failure without a token", async () => {
-        routes["/api/stats/complete"] = () => json(400, { error: "Invalid solution" });
-        await expect(recordCompletion({ month: 0, day: 1 }, [piece])).resolves.toEqual({ success: false, tokenGranted: false });
+    it.each([
+        [400, "rejected"],
+        [401, "failed"],
+        [403, "failed"],
+        [429, "failed"],
+        [503, "failed"]
+    ])("reads a %i answer as %s, without a token", async (status, outcome) => {
+        routes["/api/stats/complete"] = () => json(status, { error: "no" });
+        await expect(recordCompletion({ month: 0, day: 1 }, [piece])).resolves.toEqual({ outcome, tokenGranted: false });
+    });
+
+    it("signals a server failure on a 5xx answer only", async () => {
+        const onFailure = jest.fn();
+        window.addEventListener("app:server-failure", onFailure);
+
+        routes["/api/stats/complete"] = () => json(400, { error: "no" });
+        await recordCompletion({ month: 0, day: 1 }, [piece]);
+        expect(onFailure).not.toHaveBeenCalled();
+
+        routes["/api/stats/complete"] = () => json(503, { error: "no" });
+        await recordCompletion({ month: 0, day: 1 }, [piece]);
+        expect(onFailure).toHaveBeenCalledTimes(1);
+
+        window.removeEventListener("app:server-failure", onFailure);
     });
 });
 

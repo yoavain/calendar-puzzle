@@ -66,7 +66,8 @@ export type HintAvailability =
     | "no-tokens"
     | "date-solved"
     | "free"
-    | "token";
+    | "token"
+    | "paused";
 
 /** Client-side: can the user ask for the next hint right now, and what does it cost? */
 export const getHintAvailability = ({ isLoggedIn, isSolved, isDateSolved, isLoading, pieces, tokenBalance }: {

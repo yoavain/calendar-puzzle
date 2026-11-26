@@ -84,6 +84,7 @@ describe("authRest", () => {
             expect(res.statusCode).toBe(200);
             expect(res.json()).toEqual({
                 user: null,
+                accountDataAvailable: true,
                 completedDates: [],
                 playedDates: [],
                 tokenBalance: 0,
@@ -155,6 +156,34 @@ describe("authRest", () => {
         it("defaults settings to {} when the user row has none", async () => {
             const res = await authServer.inject({ method: "GET", url: "/api/auth/me" });
             expect(res.json()).toMatchObject({ tokenBalance: 0, settings: {} });
+        });
+
+        it("returns the identity alone when its query fails", async () => {
+            mockSelect.mockReturnValue({
+                from: jest.fn().mockReturnValue({
+                    where: jest.fn().mockRejectedValue(new Error("Query read timeout"))
+                })
+            });
+
+            const res = await authServer.inject({ method: "GET", url: "/api/auth/me" });
+
+            expect(res.statusCode).toBe(200);
+            expect(res.json()).toEqual({ user: mockUser, accountDataAvailable: false });
+        });
+
+        it("answers at once, without a query, after a failed user lookup", async () => {
+            const server = await buildTestServer((app) => {
+                app.addHook("preHandler", async (request) => {
+                    request.databaseUnavailable = true;
+                });
+                registerAuthRoutes(app);
+            }, mockUser);
+
+            const res = await server.inject({ method: "GET", url: "/api/auth/me" });
+
+            expect(res.json()).toEqual({ user: mockUser, accountDataAvailable: false });
+            expect(mockSelect).not.toHaveBeenCalled();
+            await server.close();
         });
     });
 

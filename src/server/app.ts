@@ -1,6 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import Fastify from "fastify";
-import fastifyStatic from "@fastify/static";
 import type { Session } from "@fastify/secure-session";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyPassport from "@fastify/passport";
@@ -21,6 +20,7 @@ import { registerUserRoutes } from "./rest/userRest.js";
 import { registerIssueRoutes } from "./rest/issueRest.js";
 import { registerLogRoutes } from "./rest/logRest.js";
 import { setupPassport } from "./auth/passport.js";
+import { errorHandler } from "./utils/errorHandler.js";
 import { decryptPayload } from "./utils/encryption.js";
 import { getCachedFile, validatePath } from "./utils/resourceUtils.js";
 import { rateLimitKey } from "./utils/rateLimitKey.js";
@@ -36,6 +36,9 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         logger: true,
         trustProxy: config.server.trustProxy
     });
+
+    // Before any route, so that every route uses it
+    app.setErrorHandler(errorHandler);
 
     // Polyfill for Express compatibility (some passport strategies expect req.connection.encrypted)
     // Note: The primary fix for passport-oauth2 is the `proxy: true` option in GoogleStrategy
@@ -267,12 +270,6 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         }
         
         return reply.code(404).send({ error: "Not found" });
-    });
-
-    // Register fastify-static for sendFile support (but not serving automatically)
-    app.register(fastifyStatic, {
-        root: clientBuildPath,
-        serve: false // Don't auto-serve, we handle it manually
     });
 
     // CSRF Protection Hook - Apply to all non-GET/HEAD/OPTIONS requests

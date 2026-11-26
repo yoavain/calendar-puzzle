@@ -23,7 +23,7 @@ export const HintButton: React.FC<HintButtonProps> = ({ onHint, availability, to
     const copy = HINT_TOKEN_COPY.hintButton[availability];
     const isEnabled = availability === "free" || availability === "token";
     const isLoading = availability === "loading";
-    const showBalance = availability !== "login-required" && !isLoading;
+    const showBalance = availability !== "login-required" && availability !== "paused" && !isLoading;
 
     // Pulse the balance when it grows (a token landed). A new key remounts the
     // span, which restarts its animation.

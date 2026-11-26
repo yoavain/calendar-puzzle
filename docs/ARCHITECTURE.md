@@ -341,6 +341,35 @@ flowchart TD
 
 ---
 
+### Database Outage
+
+Anyone can load and play while the database does not answer. A signed-in player stays signed in.
+
+Server:
+
+- The session deserializer looks the user up for `/api/` and `/auth/` routes only, not for `/api/health`. When the
+  lookup fails it returns the session user without admin rights and flags the request. It must not throw or return a
+  falsy value: passport signs the user out in both cases.
+- Routes that use the database take `requireDatabaseUser`, which answers 503 for a flagged request.
+  `/api/auth/me` answers 200 with `accountDataAvailable: false` and no account data.
+- The app pool has a connection timeout and a query timeout. Migrations use their own connection, without the query
+  limit. A transaction takes its own client and destroys it on any error.
+- The error handler sends no detail for a 5xx. A Google callback that hits a server error redirects to
+  `/?error=auth_unavailable`, and the client says that sign-in is unavailable. A sign-in that the player does not
+  complete redirects with `auth_failed`, and the client says nothing.
+- Migrations run before `listen`, so an app that restarts during an outage serves nothing until the database returns.
+
+Client:
+
+- `useSavingPause` enters "saving paused" when `/api/auth/me` says so, or when a call fails and `/api/health` answers
+  503. It leaves the state when health answers 200 again.
+- Each start and solve goes to `localStorage` first (`pendingSaves.ts`), tagged with the user. It is removed when the
+  server confirms it or rejects it with 400.
+- While paused, Hint and Statistics are off, and a toolbar icon shows the state. On mobile the icon takes the place of
+  the Hall of Fame button, which the drawer also offers.
+
+---
+
 ## Layout Architecture
 
 The app supports three layouts with two drag-and-drop implementations. All layouts share `useGameController.ts` for game logic.
@@ -466,8 +495,9 @@ React hooks and components tested with Jest + Testing Library:
 | `test/client/useGameSession.test.ts` | Saved game hook |
 | `test/client/useGameController.test.ts` | Solve detection, hint token flow, post-solve timing |
 | `test/client/useGameModals.test.ts` | Token intro gating, the solve result, the solved-today notice |
-| `test/client/useServerSync.test.ts` | Token grant on first solve |
+| `test/client/useServerSync.test.ts` | Token grant on first solve; a solve that cannot be sent |
 | `test/client/puzzleService.test.ts` | Hint, completion and settings API calls |
+| `test/client/pendingSaves.test.ts`, `savingPause.test.ts` | Saves kept during an outage; entering and leaving "saving paused" |
 | `test/client/HintButton.test.ts`, `TokenFlight.test.ts` | Hint token components |
 
 ### Unit Tests — Server Layer
@@ -483,6 +513,8 @@ Server routes and services tested with Fastify's inject API:
 | `test/server/service/solverService.test.ts` | Fixed hint sequence |
 | `test/server/rest/statsRest.test.ts` | Stats endpoints |
 | `test/server/auth/requireAuth.test.ts` | Auth middleware |
+| `test/server/auth/databaseOutage.test.ts` | No sign-out, 503 routes, error bodies, failed sign-in |
+| `test/server/db/hintRepository.test.ts` | The connection of the hint transaction |
 | `test/server/dateUtils.test.ts` | Date parsing utilities |
 | `test/server/service/issueSubmitter.test.ts` | Issue submission service |
 
