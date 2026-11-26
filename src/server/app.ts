@@ -14,6 +14,7 @@ import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { registerAdminRoutes } from "./rest/adminRest.js";
 import { registerHintRoutes } from "./rest/hintRest.js";
+import { registerHealthRoutes } from "./rest/healthRest.js";
 import { registerAuthRoutes } from "./rest/authRest.js";
 import { registerStatsRoutes } from "./rest/statsRest.js";
 import { registerUserRoutes } from "./rest/userRest.js";
@@ -324,10 +325,7 @@ export const buildApp = async (): Promise<FastifyInstance> => {
         }
     });
 
-    // Health check endpoint
-    app.get(API_HEALTH, async () => {
-        return { status: "ok" };
-    });
+    registerHealthRoutes(app);
 
     // Register auth routes
     registerAuthRoutes(app);
